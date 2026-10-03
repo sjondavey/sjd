@@ -16,23 +16,6 @@ namespace sjd
         return "contract";
     }
 
-    void Contract::recordIssue(const std::string& code,
-                               const std::string& message,
-                               const std::vector<std::string>& tail)
-    {
-        std::vector<std::string> path(1, validationRoot());
-        path.insert(path.end(), tail.begin(), tail.end());
-        errorTracking->record(code, message, path);
-    }
-
-    void Contract::absorbChildReport(const ValidationReport& child,
-                                     const std::vector<std::string>& extra)
-    {
-        std::vector<std::string> prefix(1, validationRoot());
-        prefix.insert(prefix.end(), extra.begin(), extra.end());
-        errorTracking->absorb(child, prefix);
-    }
-
     void Contract::validate()
     {
         errorTracking->clear();
@@ -49,22 +32,7 @@ namespace sjd
 
     bool Contract::isOK()
     {      
-        return !errorTracking->getHasErrors();
-    }
-
-    vector<string> Contract::getErrorMessages() const
-    {      
-        return errorTracking->getErrorMessages();
-    }
-
-    string Contract::getErrorMessagesAsString() const
-    {
-        return errorTracking->getErrorMessagesAsString();
-    }
-
-    ValidationReport Contract::validationReport() const
-    {
-        return errorTracking->snapshot();
+        return !hasErrors();
     }
 
     ValidationReport Contract::validateReport()

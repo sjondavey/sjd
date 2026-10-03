@@ -12,13 +12,13 @@ namespace sjd {
    bool CVA::isOK()
    {
         errorTracking->clear();
-      return !errorTracking->getHasErrors();
+      return !hasErrors();
    }
 
-   vector<string> CVA::getErrorMessage() const
-   {
-      return errorTracking->getErrorMessages();
-   }
+    std::string CVA::validationRoot() const
+    {
+        return "cva";
+    }
 
 
     void CVA::setAnchorDate(Date date)

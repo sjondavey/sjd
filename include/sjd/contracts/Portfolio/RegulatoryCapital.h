@@ -14,7 +14,7 @@ namespace sjd
 
     Capital is calculated for a portfolio. It is not a kind of portfolio.
     =======================================================================================*/
-    class RegulatoryCapital
+    class RegulatoryCapital : public Validatable
     {
     public:
         virtual ~RegulatoryCapital() {}
@@ -22,12 +22,11 @@ namespace sjd
         virtual bool isOK();
         virtual void validate();
         virtual void validate(boost::shared_ptr<RatesEnvironment> re);
-        virtual ValidationReport validationReport() const;
 
         virtual double getRegulatoryCapital(boost::shared_ptr<RatesEnvironment> re) = 0;
 
     protected:
-        boost::shared_ptr<sjd::IssueTracker> errorTracking;
+        std::string validationRoot() const override;
     };
 
     /*======================================================================================
@@ -51,7 +50,6 @@ namespace sjd
         bool isOK() override;
         void validate() override;
         void validate(boost::shared_ptr<RatesEnvironment> re) override;
-        ValidationReport validationReport() const override;
         double getRegulatoryCapital(boost::shared_ptr<RatesEnvironment> re) override;
 
         bool hasStructureConversionError() const;

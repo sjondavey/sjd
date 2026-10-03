@@ -21,7 +21,8 @@ namespace sjd {
    Margin
 
     =======================================================================================*/
-    class Margin {
+    class Margin : public Validatable
+    {
     public:
         virtual ~Margin() {};
 
@@ -55,9 +56,8 @@ namespace sjd {
 
         virtual double getMarginCall(double mtm) = 0;
 
-        boost::shared_ptr<sjd::IssueTracker> errorTracking;
-
     protected:
+        std::string validationRoot() const override;
 
         bool useMyThreshold; 
         bool useCptyThreshold;

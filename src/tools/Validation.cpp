@@ -151,4 +151,50 @@ namespace sjd
     {
         return log.snapshot();
     }
+
+    Validatable::Validatable()
+        : errorTracking(new IssueTracker(""))
+    {}
+
+    bool Validatable::hasErrors() const
+    {
+        return errorTracking->getHasErrors();
+    }
+
+    std::vector<std::string> Validatable::getErrorMessages() const
+    {
+        return errorTracking->getErrorMessages();
+    }
+
+    std::string Validatable::getErrorMessagesAsString() const
+    {
+        return errorTracking->getErrorMessagesAsString();
+    }
+
+    ValidationReport Validatable::validationReport() const
+    {
+        return errorTracking->snapshot();
+    }
+
+    void Validatable::resetErrorMessages()
+    {
+        errorTracking->clear();
+    }
+
+    void Validatable::recordIssue(const std::string& code,
+                                  const std::string& message,
+                                  const std::vector<std::string>& tail)
+    {
+        std::vector<std::string> path(1, validationRoot());
+        path.insert(path.end(), tail.begin(), tail.end());
+        errorTracking->record(code, message, path);
+    }
+
+    void Validatable::absorbChildReport(const ValidationReport& child,
+                                        const std::vector<std::string>& extra)
+    {
+        std::vector<std::string> prefix(1, validationRoot());
+        prefix.insert(prefix.end(), extra.begin(), extra.end());
+        errorTracking->absorb(child, prefix);
+    }
 }

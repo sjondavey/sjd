@@ -17,9 +17,9 @@ namespace sjd
         }
     }
 
-    void Path::resetErrorMessages()
+    std::string Path::validationRoot() const
     {
-        errorTracking->clear();
+        return "path";
     }
 
     bool Path::isOK()
@@ -42,12 +42,7 @@ namespace sjd
                 errorTracking->absorb(ratesPath[i]->validationReport(), {"path", "rates", std::to_string(i)});
             }
         }
-        return !(errorTracking->getHasErrors());
-    }
-
-    vector<string> Path::getErrorMessage()
-    {
-        return errorTracking->getErrorMessages();
+        return !hasErrors();
     }
 
     vector<Date> Path::getPathDates() const
@@ -68,7 +63,7 @@ namespace sjd
     vector<double> Path::getSpotRates()
     {
         vector<double> spot = vector<double>(ratesPath.size());
-        vector<boost::shared_ptr<RatesEnvironment>>::iterator it;
+        vector<boost::shared_ptr<RatesEnvironment>>::iterator it = ratesPath.begin();
         size_t i = 0;
         while (it != ratesPath.end())
         {

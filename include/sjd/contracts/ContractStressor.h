@@ -12,7 +12,7 @@
 
 namespace sjd 
 {
-    class ContractStressor
+    class ContractStressor : public Validatable
     {
     public:
         // Use this for unmargined portfolios or portfolios that do not require Holding QuantLib::Period calculations
@@ -20,15 +20,12 @@ namespace sjd
                          boost::shared_ptr<RatesEnvironment> rates);
 
         bool isOK();
-        std::vector<std::string> getErrorMessages() const;
-        std::string getErrorMessagesAsString() const;
 
         std::vector<std::pair<std::string, double> > getStressedValues();
 
     protected:
         std::vector<std::pair<std::string, boost::shared_ptr<RatesEnvironment>> > getAllRatesEnvironments();
-
-        boost::shared_ptr<sjd::IssueTracker> errorTracking;
+        std::string validationRoot() const override;
 
         boost::shared_ptr<Contract> contract;
         boost::shared_ptr<RatesEnvironment> baseRates;

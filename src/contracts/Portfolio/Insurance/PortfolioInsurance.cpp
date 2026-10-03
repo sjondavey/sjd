@@ -85,10 +85,10 @@ namespace sjd {
         return !errorTracking->getHasErrors();
    }
 
-   vector<string> PortfolioInsurance::getErrorMessages() const
-   {
-      return errorTracking->getErrorMessages();
-   }
+    std::string PortfolioInsurance::validationRoot() const
+    {
+        return "portfolio_insurance";
+    }
 
     void PortfolioInsurance::checkSizesAndCalcuateSpreads(vector<Date> dates, vector<double> mtm, vector<double> &insurancePayments)
     {

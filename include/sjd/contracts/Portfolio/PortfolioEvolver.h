@@ -33,7 +33,7 @@ namespace sjd
         std::vector<double> byTrade;
     };
 
-    class PortfolioEvolver 
+    class PortfolioEvolver : public Validatable
     {
     public:
         // Use this for unmargined portfolios or portfolios that do not require Holding QuantLib::Period calculations
@@ -51,10 +51,7 @@ namespace sjd
                          boost::shared_ptr<RegulatoryCapital> capital = boost::shared_ptr<RegulatoryCapital>());
 
         bool isOK();
-        ValidationReport validationReport() const;
         ValidationReport validateReport();
-        std::vector<std::string> getErrorMessages() const;
-        std::string getErrorMessagesAsString() const;
 
         std::vector<QuantLib::Date> getSimulationDates();
         std::vector<QuantLib::Date> getExposureDates();
@@ -148,10 +145,7 @@ namespace sjd
                                                     boost::shared_ptr<DiscountRateSource> zeroCurve,
                                                 boost::shared_ptr<DiscountRateSource> spreadCurve);
 
-        boost::shared_ptr<sjd::IssueTracker> errorTracking;
-        void recordIssue(const std::string& code,
-                         const std::string& message,
-                         const std::vector<std::string>& tail);
+        std::string validationRoot() const override;
 
         bool portfolioIsMargined;
         bool portfolioAttractsCapital;

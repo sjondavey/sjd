@@ -118,28 +118,13 @@ std::vector<boost::shared_ptr<sjd::SingleInstrumentContract>> contracts_from(con
     std::vector<boost::shared_ptr<sjd::SingleInstrumentContract>> inputs;
     for (const py::handle& item : contracts)
     {
-        if (py::isinstance<sjd::EuropeanOption>(item))
-        {
-            inputs.push_back(item.cast<boost::shared_ptr<sjd::EuropeanOption>>());
-        }
-        else if (py::isinstance<sjd::AsianOption>(item))
-        {
-            inputs.push_back(item.cast<boost::shared_ptr<sjd::AsianOption>>());
-        }
-        else if (py::isinstance<sjd::EuropeanForward>(item))
-        {
-            inputs.push_back(item.cast<boost::shared_ptr<sjd::EuropeanForward>>());
-        }
-        else if (py::isinstance<sjd::AsianForward>(item))
-        {
-            inputs.push_back(item.cast<boost::shared_ptr<sjd::AsianForward>>());
-        }
-        else
+        if (!py::isinstance<sjd::SingleInstrumentContract>(item))
         {
             throw py::type_error(
-                "Portfolio contracts must be EuropeanOption, AsianOption, "
-                "EuropeanForward, or AsianForward");
+                "Portfolio contracts must be single instruments, such as EuropeanOption "
+                "or AsianForward, not " + std::string(py::str(py::type::of(item).attr("__name__"))));
         }
+        inputs.push_back(item.cast<boost::shared_ptr<sjd::SingleInstrumentContract>>());
     }
     return inputs;
 }
@@ -698,7 +683,44 @@ PYBIND11_MODULE(sjd, m)
             re.setFixingRS(curve);
         });
 
-    py::class_<sjd::EuropeanOption, boost::shared_ptr<sjd::EuropeanOption>>(m, "EuropeanOption")
+    py::class_<sjd::Contract, boost::shared_ptr<sjd::Contract>>(
+        m, "Contract", "Base of every contract and portfolio. Not constructed directly.")
+        .def("is_ok", &sjd::Contract::isOK)
+        .def("error_messages", &sjd::Contract::getErrorMessagesAsString)
+        .def("validation_report", &sjd::Contract::validationReport)
+        .def("validate_report", [](sjd::Contract& contract,
+                                   boost::shared_ptr<sjd::RatesEnvironment> re) {
+            return re ? contract.validateReport(re) : contract.validateReport();
+        }, py::arg("rates_environment") = py::none(),
+           "Validate, against the environment when one is given, and return the report.")
+        .def("validate", [](sjd::Contract& contract,
+                            boost::shared_ptr<sjd::RatesEnvironment> re) {
+            if (re)
+                contract.validate(re);
+            else
+                contract.validate();
+        }, py::arg("rates_environment") = py::none())
+        .def("get_value", [](sjd::Contract& contract,
+                             boost::shared_ptr<sjd::RatesEnvironment> re) {
+            return contract.getValue(re);
+        }, py::arg("rates_environment"));
+
+    py::class_<sjd::SingleInstrumentContract, sjd::Contract,
+               boost::shared_ptr<sjd::SingleInstrumentContract>>(
+        m, "SingleInstrumentContract",
+        "One instrument. Any subclass can go into a Portfolio.")
+        .def("get_payoff", &sjd::SingleInstrumentContract::getPayoff, py::arg("spot"))
+        .def("maturity_date", [](const sjd::SingleInstrumentContract& contract) {
+            return from_ql_date(contract.getMaturityDate());
+        })
+        .def("settlement_date", [](const sjd::SingleInstrumentContract& contract) {
+            return from_ql_date(contract.getSettlementDate());
+        })
+        .def_property_readonly("volume", &sjd::SingleInstrumentContract::getVolume)
+        .def_property_readonly("buy_sell", &sjd::SingleInstrumentContract::getBuySell);
+
+    py::class_<sjd::EuropeanOption, sjd::SingleInstrumentContract,
+               boost::shared_ptr<sjd::EuropeanOption>>(m, "EuropeanOption")
         .def(py::init([](const py::object& maturity,
                          const py::object& settlement,
                          double strike,
@@ -726,27 +748,13 @@ PYBIND11_MODULE(sjd, m)
              py::arg("premium_payment_date"),
              py::arg("premium_amount"),
              py::arg("buy_sell"))
-        .def("is_ok", &sjd::EuropeanOption::isOK)
-        .def("error_messages", &sjd::EuropeanOption::getErrorMessagesAsString)
-        .def("validation_report", &sjd::EuropeanOption::validationReport)
-        .def("validate_report", [](sjd::EuropeanOption& option,
-                                   boost::shared_ptr<sjd::RatesEnvironment> re) {
-            return option.validateReport(re);
-        })
-        .def("validate", [](sjd::EuropeanOption& option,
-                            boost::shared_ptr<sjd::RatesEnvironment> re) {
-            option.validate(re);
-        })
-        .def("get_value", [](sjd::EuropeanOption& option,
-                             boost::shared_ptr<sjd::RatesEnvironment> re) {
-            return option.getValue(re);
-        })
         .def("get_option_value", [](sjd::EuropeanOption& option,
                                     boost::shared_ptr<sjd::RatesEnvironment> re) {
             return option.getOptionValue(re);
-        });
+        }, py::arg("rates_environment"), "The option alone, without the premium cashflow.");
 
-    py::class_<sjd::EuropeanForward, boost::shared_ptr<sjd::EuropeanForward>>(m, "EuropeanForward")
+    py::class_<sjd::EuropeanForward, sjd::SingleInstrumentContract,
+               boost::shared_ptr<sjd::EuropeanForward>>(m, "EuropeanForward")
         .def(py::init([](const py::object& maturity,
                          const py::object& settlement,
                          double strike,
@@ -781,31 +789,10 @@ PYBIND11_MODULE(sjd, m)
              py::arg("strike"),
              py::arg("volume"),
              py::arg("buy_sell"),
-             "Physically settled forward whose maturity equals settlement.")
-        .def("is_ok", &sjd::EuropeanForward::isOK)
-        .def("error_messages", &sjd::EuropeanForward::getErrorMessagesAsString)
-        .def("validation_report", &sjd::EuropeanForward::validationReport)
-        .def("validate_report", [](sjd::EuropeanForward& forward,
-                                   boost::shared_ptr<sjd::RatesEnvironment> re) {
-            return forward.validateReport(re);
-        })
-        .def("validate", [](sjd::EuropeanForward& forward,
-                            boost::shared_ptr<sjd::RatesEnvironment> re) {
-            forward.validate(re);
-        })
-        .def("get_value", [](sjd::EuropeanForward& forward,
-                             boost::shared_ptr<sjd::RatesEnvironment> re) {
-            return forward.getValue(re);
-        })
-        .def("get_payoff", &sjd::EuropeanForward::getPayoff, py::arg("spot"))
-        .def("maturity_date", [](const sjd::EuropeanForward& forward) {
-            return from_ql_date(forward.getMaturityDate());
-        })
-        .def("settlement_date", [](const sjd::EuropeanForward& forward) {
-            return from_ql_date(forward.getSettlementDate());
-        });
+             "Physically settled forward whose maturity equals settlement.");
 
-    py::class_<sjd::AsianForward, boost::shared_ptr<sjd::AsianForward>>(m, "AsianForward")
+    py::class_<sjd::AsianForward, sjd::SingleInstrumentContract,
+               boost::shared_ptr<sjd::AsianForward>>(m, "AsianForward", py::multiple_inheritance())
         .def(py::init([](const py::iterable& averaging_dates,
                          const py::object& settlement,
                          double strike,
@@ -826,36 +813,12 @@ PYBIND11_MODULE(sjd, m)
              py::arg("volume"),
              py::arg("buy_sell"),
              "Asian forward using caller-supplied, already-adjusted averaging dates.")
-        .def("is_ok", &sjd::AsianForward::isOK)
-        .def("error_messages", &sjd::AsianForward::getErrorMessagesAsString)
-        .def("validation_report", &sjd::AsianForward::validationReport)
-        .def("validate_report", [](sjd::AsianForward& forward,
-                                   boost::shared_ptr<sjd::RatesEnvironment> re) {
-            return forward.validateReport(re);
-        })
-        .def("validate", [](sjd::AsianForward& forward,
-                            boost::shared_ptr<sjd::RatesEnvironment> re) {
-            forward.validate(re);
-        })
-        .def("get_value", [](sjd::AsianForward& forward,
-                             boost::shared_ptr<sjd::RatesEnvironment> re) {
-            return forward.getValue(re);
-        })
-        .def("get_payoff", &sjd::AsianForward::getPayoff, py::arg("spot"))
         .def("averaging_dates", [](const sjd::AsianForward& forward) {
-            py::list dates;
-            for (const QuantLib::Date& date : forward.getAveragingDates())
-                dates.append(from_ql_date(date));
-            return dates;
-        })
-        .def("maturity_date", [](const sjd::AsianForward& forward) {
-            return from_ql_date(forward.getMaturityDate());
-        })
-        .def("settlement_date", [](const sjd::AsianForward& forward) {
-            return from_ql_date(forward.getSettlementDate());
+            return py_dates(forward.getAveragingDates());
         });
 
-    py::class_<sjd::AsianOption, boost::shared_ptr<sjd::AsianOption>>(m, "AsianOption")
+    py::class_<sjd::AsianOption, sjd::SingleInstrumentContract,
+               boost::shared_ptr<sjd::AsianOption>>(m, "AsianOption", py::multiple_inheritance())
         .def(py::init([](const py::iterable& averaging_dates,
                          const py::object& settlement,
                          double strike,
@@ -884,21 +847,13 @@ PYBIND11_MODULE(sjd, m)
              py::arg("premium_payment_date"),
              py::arg("premium_amount"),
              py::arg("buy_sell"))
-        .def("is_ok", &sjd::AsianOption::isOK)
-        .def("error_messages", &sjd::AsianOption::getErrorMessagesAsString)
-        .def("validation_report", &sjd::AsianOption::validationReport)
-        .def("validate_report", [](sjd::AsianOption& option,
-                                   boost::shared_ptr<sjd::RatesEnvironment> re) {
-            return option.validateReport(re);
+        .def("averaging_dates", [](const sjd::AsianOption& option) {
+            return py_dates(option.getAveragingDates());
         })
-        .def("validate", [](sjd::AsianOption& option,
-                            boost::shared_ptr<sjd::RatesEnvironment> re) {
-            option.validate(re);
-        })
-        .def("get_value", [](sjd::AsianOption& option,
-                             boost::shared_ptr<sjd::RatesEnvironment> re) {
-            return option.getValue(re);
-        });
+        .def("get_option_value", [](sjd::AsianOption& option,
+                                    boost::shared_ptr<sjd::RatesEnvironment> re) {
+            return option.getOptionValue(re);
+        }, py::arg("rates_environment"), "The option alone, without the premium cashflow.");
 
     py::class_<sjd::RegCapUnderlyingFactors, boost::shared_ptr<sjd::RegCapUnderlyingFactors>>(
         m, "RegCapUnderlyingFactors");
@@ -963,7 +918,7 @@ PYBIND11_MODULE(sjd, m)
              "Variation-margin CSA. Initial margin is not part of this model.")
         .def("get_margin_call", &sjd::SimpleMargin::getMarginCall, py::arg("mtm"));
 
-    py::class_<sjd::Portfolio, boost::shared_ptr<sjd::Portfolio>>(m, "Portfolio")
+    py::class_<sjd::Portfolio, sjd::Contract, boost::shared_ptr<sjd::Portfolio>>(m, "Portfolio")
         .def(py::init([](const py::list& contracts) {
                  return boost::shared_ptr<sjd::Portfolio>(new sjd::Portfolio(contracts_from(contracts)));
              }),
@@ -974,17 +929,9 @@ PYBIND11_MODULE(sjd, m)
              }),
              py::arg("contracts"),
              py::arg("margin"))
-        .def("is_ok", &sjd::Portfolio::isOK)
-        .def("error_messages", &sjd::Portfolio::getErrorMessagesAsString)
-        .def("validation_report", &sjd::Portfolio::validationReport)
-        .def("validate_report", [](sjd::Portfolio& portfolio,
-                                   boost::shared_ptr<sjd::RatesEnvironment> re) {
-            return portfolio.validateReport(re);
-        })
-        .def("get_value", [](sjd::Portfolio& portfolio,
-                             boost::shared_ptr<sjd::RatesEnvironment> re) {
-            return portfolio.getValue(re);
-        }, py::arg("rates_environment"))
+        .def("contracts", [](sjd::Portfolio& portfolio) {
+            return portfolio.getUnderlyingSingleInstrumentContracts();
+        }, "The single instruments in the portfolio.")
         .def("is_margined", &sjd::Portfolio::isMargined)
         .def("get_margin_balance", &sjd::Portfolio::getMarginBalance)
         .def("set_margin_balance", &sjd::Portfolio::setMarginBalance, py::arg("balance"))

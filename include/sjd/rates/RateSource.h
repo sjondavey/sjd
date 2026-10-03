@@ -26,15 +26,12 @@ namespace sjd
      * Flatten: every date from the anchor through the first observation uses the
      * first observation's value.
      */
-    class RateSource 
+    class RateSource : public Validatable
     {        
     public:
         virtual ~RateSource () {};
 
         virtual bool isOK();
-        void resetErrorMessages();
-        std::vector<std::string> getErrorMessages() const;
-        std::string getErrorMessagesAsString() const;
 
         QuantLib::Date getAnchorDate() const;
         QuantLib::Date getFinalDate() const;
@@ -48,17 +45,12 @@ namespace sjd
         
         bool getAllowsExtrapolation() const;
 
-        virtual ValidationReport validationReport() const;
         virtual ValidationReport validateReport();
 
     protected:
-        virtual std::string validationRoot() const;
-        void recordIssue(const std::string& code,
-                         const std::string& message,
-                         const std::vector<std::string>& tail);
+        std::string validationRoot() const override;
+        using Validatable::absorbChildReport;
         void absorbChildReport(const ValidationReport& child, const std::string& role);
-
-        boost::shared_ptr<sjd::IssueTracker> errorTracking;
 
         QuantLib::Date anchorDate;
         QuantLib::Date finalDate;

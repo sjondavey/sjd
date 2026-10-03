@@ -6,6 +6,8 @@ CMakeUserPresets.json
 # Python
 .venv/
 .ipynb_checkpoints/
+__pycache__/
+*.pyc
 python/sjd_runtime/
 #Ignore files build by Visual Studio
 *.VC.opendb

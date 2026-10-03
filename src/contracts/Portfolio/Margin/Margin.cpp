@@ -61,7 +61,12 @@ namespace sjd {
         {
             errorTracking->record("MARGIN_ROUNDING_NOT_POSITIVE", "Rounding must be strictly positive", {"margin", "rounding"});
         }
-        return !errorTracking->getHasErrors();
+        return !hasErrors();
+    }
+
+    std::string Margin::validationRoot() const
+    {
+        return "margin";
     }
 
     void Margin::setAnchorDate(Date anchorDateInput)

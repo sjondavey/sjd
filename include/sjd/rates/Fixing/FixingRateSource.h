@@ -16,7 +16,7 @@ namespace sjd
     * or it does not. A missing date is an error for the caller, not a rate
     * invented between neighbours.
     */
-    class FixingRateSource
+    class FixingRateSource : public Validatable
     {
     public:
         virtual ~FixingRateSource() {};
@@ -24,8 +24,6 @@ namespace sjd
         void setDatesAndRates(std::vector<QuantLib::Date> fixingDates, std::vector<double> fixingRates);
 
         virtual bool isOK();
-        std::vector<std::string> getErrorMessages() const;
-        ValidationReport validationReport() const;
 
         // The earliest date which this Rate Source can return a rate
         QuantLib::Date getEarliestDate() const;
@@ -37,13 +35,8 @@ namespace sjd
         // toDates must be strictly increasing
         virtual std::vector<double> getRateSetOn(std::vector<QuantLib::Date> toDates) const;
 
-        boost::shared_ptr<sjd::IssueTracker> errorTracking;
-
     protected:
-        virtual std::string validationRoot() const;
-        void recordIssue(const std::string& code,
-                         const std::string& message,
-                         const std::vector<std::string>& path);
+        std::string validationRoot() const override;
         QuantLib::Date firstDate;
         QuantLib::Date lastDate;
         std::vector<QuantLib::Date> fixingDates;

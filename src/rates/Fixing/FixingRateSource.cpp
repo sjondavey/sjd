@@ -23,20 +23,6 @@ namespace sjd
         return "fixing_rate_source";
     }
 
-    void FixingRateSource::recordIssue(const std::string& code,
-                                       const std::string& message,
-                                       const std::vector<std::string>& tail)
-    {
-        std::vector<std::string> path(1, validationRoot());
-        path.insert(path.end(), tail.begin(), tail.end());
-        errorTracking->record(code, message, path);
-    }
-
-    ValidationReport FixingRateSource::validationReport() const
-    {
-        return errorTracking->snapshot();
-    }
-
     bool FixingRateSource::isOK()
     {
         errorTracking->clear();
@@ -86,11 +72,6 @@ namespace sjd
         vector<Date>::const_iterator low;
         low = std::lower_bound (fixingDates.begin(), fixingDates.end(), date);
         return fixingRates[low - fixingDates.begin()];
-    }
-
-    vector<string> FixingRateSource::getErrorMessages() const 
-    {
-        return errorTracking->getErrorMessages();
     }
 
     Date FixingRateSource::getEarliestDate() const 

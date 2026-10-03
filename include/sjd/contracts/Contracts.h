@@ -32,7 +32,7 @@ namespace sjd
      * advances the revision, and the next getValue reprices. Editing the numbers
      * inside a curve object that is already attached does not.
      */
-    class Contract 
+    class Contract : public Validatable
     {
     public:
         Contract() {valueCalculated = false; cachedMarketRevision = 0;};
@@ -41,12 +41,9 @@ namespace sjd
 
         // Call validate before checking for errors
         virtual bool isOK();
-        std::vector<std::string> getErrorMessages() const; 
-        std::string getErrorMessagesAsString() const; 
-        virtual ValidationReport validationReport() const;
         ValidationReport validateReport();
         ValidationReport validateReport(boost::shared_ptr<RatesEnvironment> re);
-        virtual std::string validationRoot() const;
+        std::string validationRoot() const override;
 
         virtual void validate();
         virtual void validate(boost::shared_ptr<RatesEnvironment> re);
@@ -61,13 +58,6 @@ namespace sjd
         virtual std::string toStringRates(boost::shared_ptr<RatesEnvironment> re) = 0;
 
     protected:
-        boost::shared_ptr<sjd::IssueTracker> errorTracking;
-        void recordIssue(const std::string& code,
-                         const std::string& message,
-                         const std::vector<std::string>& tail);
-        void absorbChildReport(const ValidationReport& child,
-                               const std::vector<std::string>& extra);
-
         // When we get into a MC simulaiton, especially with Regulatory capital, we will
         // often call the same getValue(re) multiple times; The following variables allow
         // a slow class to cache the contract value for a given rates environement

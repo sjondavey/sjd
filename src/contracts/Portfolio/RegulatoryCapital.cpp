@@ -15,7 +15,12 @@ namespace sjd
 
     bool RegulatoryCapital::isOK()
     {
-        return errorTracking && !errorTracking->getHasErrors();
+        return !hasErrors();
+    }
+
+    std::string RegulatoryCapital::validationRoot() const
+    {
+        return "regulatory_capital";
     }
 
     void RegulatoryCapital::validate()
@@ -24,15 +29,6 @@ namespace sjd
 
     void RegulatoryCapital::validate(boost::shared_ptr<RatesEnvironment> /*re*/)
     {
-    }
-
-    ValidationReport RegulatoryCapital::validationReport() const
-    {
-        if (!errorTracking)
-        {
-            return ValidationReport(std::vector<ValidationIssue>());
-        }
-        return errorTracking->snapshot();
     }
 
     CurrentExposureMethod::CurrentExposureMethod(
@@ -159,11 +155,6 @@ namespace sjd
                 return;
             }
         }
-    }
-
-    ValidationReport CurrentExposureMethod::validationReport() const
-    {
-        return RegulatoryCapital::validationReport();
     }
 
     bool CurrentExposureMethod::hasStructureConversionError() const

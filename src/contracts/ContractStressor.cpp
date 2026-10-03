@@ -31,14 +31,9 @@ namespace sjd
         return true;
     }
 
-    vector<string> ContractStressor::getErrorMessages() const
+    std::string ContractStressor::validationRoot() const
     {
-        return errorTracking->getErrorMessages();
-    }
-
-    string ContractStressor::getErrorMessagesAsString() const
-    {
-        return errorTracking->getErrorMessagesAsString();
+        return "contract_stressor";
     }
 
     vector<pair<string, double> > ContractStressor::getStressedValues()

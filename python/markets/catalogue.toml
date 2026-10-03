@@ -75,6 +75,8 @@ forward = { kind = "gofo", interpolation = "LINEAR", extrapolate = false }
 volatility = { kind = "delta", interpolation = "BILINEAR", extrapolate = false }
 
 # The ZAR surface is stored. It is not made from the USD metal vol and the FX vol.
+# The Monte Carlo therefore simulates ZAR gold as one asset with one random
+# factor, not as USD gold and USDZAR moving separately.
 [markets.XAU.quotes.ZAR]
 dates = "LOCO_LONDON"
 forward = { kind = "metal_times_usdzar", metal_market = "XAU" }

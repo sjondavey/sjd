@@ -39,18 +39,9 @@ namespace sjd
         setSimulationDates(forwardDatesSet);
     }
 
-    void PortfolioEvolver::recordIssue(const std::string& code,
-                                       const std::string& message,
-                                       const std::vector<std::string>& tail)
+    std::string PortfolioEvolver::validationRoot() const
     {
-        std::vector<std::string> path(1, "portfolio_evolver");
-        path.insert(path.end(), tail.begin(), tail.end());
-        errorTracking->record(code, message, path);
-    }
-
-    ValidationReport PortfolioEvolver::validationReport() const
-    {
-        return errorTracking->snapshot();
+        return "portfolio_evolver";
     }
 
     ValidationReport PortfolioEvolver::validateReport()
@@ -84,14 +75,14 @@ namespace sjd
         portfolio->validate();
         if (!portfolio->isOK())
         {
-            errorTracking->absorb(portfolio->validationReport(), {"portfolio_evolver"});
+            absorbChildReport(portfolio->validationReport(), {});
             return false;
         }
         set<Date> valuationDatesSet = set<Date>(simulationDates.begin(), simulationDates.end());
         pathGenerator->setSimulationDates(valuationDatesSet);
         if (!pathGenerator->isOK())
         {
-            errorTracking->absorb(pathGenerator->validationReport(), {"portfolio_evolver"});
+            absorbChildReport(pathGenerator->validationReport(), {});
             return false;
         }
         boost::shared_ptr<Path> testPath = pathGenerator->getConfidenceInterval(0.95);
@@ -106,22 +97,12 @@ namespace sjd
                 recordIssue("SIMULATION_MARKET_INVALID",
                             descriptionStream.str(),
                             {"simulation_steps", boost::lexical_cast<std::string>(i)});
-                errorTracking->absorb(portfolio->validationReport(),
-                             {"portfolio_evolver", "simulation_steps", boost::lexical_cast<std::string>(i)});
+                absorbChildReport(portfolio->validationReport(),
+                                  {"simulation_steps", boost::lexical_cast<std::string>(i)});
                 return false;
             }
         }
         return !errorTracking->getHasErrors();
-    }
-
-    vector<string> PortfolioEvolver::getErrorMessages() const
-    {
-        return errorTracking->getErrorMessages();
-    }
-
-    string PortfolioEvolver::getErrorMessagesAsString() const
-    {
-        return errorTracking->getErrorMessagesAsString();
     }
 
     vector<Date> PortfolioEvolver::getSimulationDates()

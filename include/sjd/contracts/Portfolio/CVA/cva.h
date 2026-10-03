@@ -20,12 +20,12 @@ namespace sjd {
    CVA
 
     =======================================================================================*/
-    class CVA {
+    class CVA : public Validatable
+    {
     public:
         virtual ~CVA() {};
        
       virtual bool isOK();
-      std::vector<std::string> getErrorMessage() const;
 
       virtual double getLGD(QuantLib::Date d) = 0;
       // return 0 if t2 <= t1. 
@@ -34,9 +34,9 @@ namespace sjd {
       virtual bool extendsTo(QuantLib::Date date) = 0;
         virtual void setAnchorDate(QuantLib::Date date);
 
-        boost::shared_ptr<sjd::IssueTracker> errorTracking;
+    protected:
+        std::string validationRoot() const override;
 
-    protected:        
         QuantLib::Date anchorDate;
         std::string className;
     };

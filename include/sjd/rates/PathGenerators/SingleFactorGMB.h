@@ -24,14 +24,10 @@ namespace sjd
     /*======================================================================================
     EconomicScenarioGenerator
     =======================================================================================*/
-    class EconomicScenarioGenerator
+    class EconomicScenarioGenerator : public Validatable
     {
     public:
-        void resetErrorMessages();
         bool isOK();
-        std::vector<std::string> getErrorMessages();
-        std::string getErrorMessageAsString();
-        ValidationReport validationReport() const;
         QuantLib::Date getAnchorDate();
 
         virtual void setBaseRates(const boost::shared_ptr<RatesEnvironment> re);
@@ -44,11 +40,7 @@ namespace sjd
         virtual boost::shared_ptr<Path> getAntitheticPath() = 0;
 
     protected:
-
-        boost::shared_ptr<sjd::IssueTracker> errorTracking;
-        void recordIssue(const std::string& code,
-                         const std::string& message,
-                         const std::vector<std::string>& tail);
+        std::string validationRoot() const override;
 
         boost::shared_ptr<RatesEnvironment> re;
 

@@ -226,6 +226,29 @@ class PortfolioAnalysisTest(unittest.TestCase):
         self.book = sjd_setup.sample_contracts(sjd, self.market["forward"], self.market)
         self.environment = self.market["environment"]
 
+    def test_every_contract_shares_the_contract_api(self):
+        contracts = self.book["contracts"]
+        for contract in contracts:
+            self.assertIsInstance(contract, sjd.SingleInstrumentContract)
+            self.assertIsInstance(contract, sjd.Contract)
+            self.assertTrue(contract.validate_report(self.environment).ok)
+        portfolio = sjd.Portfolio(contracts)
+        self.assertIsInstance(portfolio, sjd.Contract)
+        self.assertEqual(
+            [type(contract) for contract in portfolio.contracts()],
+            [type(contract) for contract in contracts],
+        )
+        self.assertIs(portfolio.contracts()[0], contracts[0])
+        self.assertEqual(self.book["forward"].volume, self.book["volume"])
+        self.assertEqual(self.book["call"].buy_sell, sjd.BuySell.SELL)
+        self.assertTrue(sjd.Portfolio(contracts).validate_report().ok)
+
+    def test_a_portfolio_refuses_what_is_not_a_single_instrument(self):
+        with self.assertRaisesRegex(TypeError, "single instruments.*Portfolio"):
+            sjd.Portfolio([sjd.Portfolio(self.book["contracts"])])
+        with self.assertRaisesRegex(TypeError, "str"):
+            sjd.Portfolio(["forward"])
+
     def test_portfolio_value_matches_the_sum_of_the_legs(self):
         portfolio = sjd.Portfolio(self.book["contracts"])
         report = portfolio.validate_report(self.environment)

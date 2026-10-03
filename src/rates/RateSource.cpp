@@ -7,38 +7,15 @@ using namespace boost;
 namespace sjd 
 {
 
-    void RateSource::resetErrorMessages()
-    {
-        errorTracking->clear();
-    }
-
     std::string RateSource::validationRoot() const
     {
         return "rate_source";
     }
 
-    void RateSource::recordIssue(const std::string& code,
-                                 const std::string& message,
-                                 const std::vector<std::string>& tail)
-    {
-        std::vector<std::string> path(1, validationRoot());
-        path.insert(path.end(), tail.begin(), tail.end());
-        errorTracking->record(code, message, path);
-    }
-
     void RateSource::absorbChildReport(const ValidationReport& child, const std::string& role)
     {
-        std::vector<std::string> prefix(1, validationRoot());
-        if (!role.empty())
-        {
-            prefix.push_back(role);
-        }
-        errorTracking->absorb(child, prefix);
-    }
-
-    ValidationReport RateSource::validationReport() const
-    {
-        return errorTracking->snapshot();
+        absorbChildReport(child, role.empty() ? std::vector<std::string>()
+                                              : std::vector<std::string>(1, role));
     }
 
     ValidationReport RateSource::validateReport()
@@ -56,17 +33,7 @@ namespace sjd
                         "Anchor date after final date",
                         {"anchor_date"});
         }
-        return !errorTracking->getHasErrors();
-    }
-
-    vector<string> RateSource::getErrorMessages() const 
-    {
-        return errorTracking->getErrorMessages();
-    }
-
-    string RateSource::getErrorMessagesAsString() const 
-    {
-        return errorTracking->getErrorMessagesAsString();
+        return !hasErrors();
     }
 
     QuantLib::Date RateSource::getAnchorDate() const 

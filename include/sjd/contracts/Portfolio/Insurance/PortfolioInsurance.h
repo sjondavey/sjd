@@ -15,7 +15,7 @@ namespace sjd {
    Portfolio Insurance
 
     =======================================================================================*/
-    class PortfolioInsurance
+    class PortfolioInsurance : public Validatable
     {
     public:
         virtual ~PortfolioInsurance() {};
@@ -34,11 +34,9 @@ namespace sjd {
         virtual void getInsurancePayments(std::vector<QuantLib::Date> dates, std::vector<double> mtm, std::vector<double> &insurancePayments);
 
         bool isOK();
-        std::vector<std::string> getErrorMessages() const;
-
-        boost::shared_ptr<sjd::IssueTracker> errorTracking;
 
     protected:
+        std::string validationRoot() const override;
         void checkSizesAndCalcuateSpreads(std::vector<QuantLib::Date> dates, std::vector<double> mtm, std::vector<double> &insurancePayments);
 
         std::vector<QuantLib::Date> dates;

@@ -10,33 +10,9 @@ namespace sjd
     /*======================================================================================
     EconomicScenarioGenerator
     =======================================================================================*/
-    void EconomicScenarioGenerator::resetErrorMessages()
+    std::string EconomicScenarioGenerator::validationRoot() const
     {
-        errorTracking->clear();
-    }
-
-    void EconomicScenarioGenerator::recordIssue(const std::string& code,
-                                                const std::string& message,
-                                                const std::vector<std::string>& tail)
-    {
-        std::vector<std::string> path(1, "path_generator");
-        path.insert(path.end(), tail.begin(), tail.end());
-        errorTracking->record(code, message, path);
-    }
-
-    ValidationReport EconomicScenarioGenerator::validationReport() const
-    {
-        return errorTracking->snapshot();
-    }
-
-    vector<string> EconomicScenarioGenerator::getErrorMessages()    
-    {
-        return errorTracking->getErrorMessages();
-    }
-
-    string EconomicScenarioGenerator::getErrorMessageAsString()    
-    {
-        return errorTracking->getErrorMessagesAsString();
+        return "path_generator";
     }
 
     bool EconomicScenarioGenerator::isOK()
@@ -51,7 +27,7 @@ namespace sjd
         }
         if (!re->isOK())
         {
-            errorTracking->absorb(re->validationReport(), {"path_generator"});
+            absorbChildReport(re->validationReport(), {});
         }
         if ((simulationDates.size() > 0) && (simulationDates.front() < anchorDate)) 
         {
@@ -67,7 +43,7 @@ namespace sjd
                         {"simulation_dates"});
             return false;
         }
-        return !errorTracking->getHasErrors();
+        return !hasErrors();
     }
 
     Date EconomicScenarioGenerator::getAnchorDate()

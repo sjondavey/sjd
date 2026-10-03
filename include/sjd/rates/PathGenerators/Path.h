@@ -1,6 +1,6 @@
 ﻿
 #ifndef PATH_INCLUDED
-#define Path_INCLUDED
+#define PATH_INCLUDED
 
 #include <algorithm>
 #include <sjd/rates/RatesEnvironment.h>
@@ -11,16 +11,14 @@ namespace sjd
     /*======================================================================================
     Path
     =======================================================================================*/
-    class Path
+    class Path : public Validatable
     {
     public:
         Path() {};
 
         Path(std::vector<boost::shared_ptr<RatesEnvironment>> ratesPath);
 
-        void resetErrorMessages();
         bool isOK();
-        std::vector<std::string> getErrorMessage();
 
         boost::shared_ptr<RatesEnvironment> getRatesEnvironment(size_t i);  
         std::vector<QuantLib::Date>  getPathDates() const;
@@ -29,8 +27,7 @@ namespace sjd
         std::vector<double> getSpotRates();
 
     protected:
-
-        boost::shared_ptr<sjd::IssueTracker> errorTracking;
+        std::string validationRoot() const override;
 
         std::vector<boost::shared_ptr<RatesEnvironment>> ratesPath;
         std::vector<QuantLib::Date> pathDates;
