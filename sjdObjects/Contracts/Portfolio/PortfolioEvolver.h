@@ -1,11 +1,11 @@
-#ifndef SJD_OBJ_PORTFOLIOEVOLVER
+﻿#ifndef SJD_OBJ_PORTFOLIOEVOLVER
 #define SJD_OBJ_PORTFOLIOEVOLVER
 
-#include <sjd\Contracts\Portfolio\PortfolioEvolver.h>
+#include <sjd/contracts/Portfolio/PortfolioEvolver.h>
 
-#include <sjd\sjdObjects\Contracts\Portfolio\Portfolio.h>
-#include <sjd\sjdObjects\RateSource\PathGenerators\SingleFactorGMB.h>
-#include <sjd\sjdObjects\Contracts\Portfolio\CVA\CVA.h>
+#include <sjd/sjdObjects/Contracts/Portfolio/Portfolio.h>
+#include <sjd/sjdObjects/RateSource/PathGenerators/SingleFactorGMB.h>
+#include <sjd/sjdObjects/Contracts/Portfolio/CVA/CVA.h>
 
 using namespace std;
 using namespace QuantLib;

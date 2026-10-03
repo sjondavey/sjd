@@ -1,8 +1,8 @@
-#ifndef SJD_OBJ_MARGIN
+﻿#ifndef SJD_OBJ_MARGIN
 #define SJD_OBJ_MARGIN
 
 #include <oh/libraryobject.hpp>
-#include <sjd\Contracts\Portfolio\Margin\Margin.h>
+#include <sjd/contracts/Portfolio/Margin/Margin.h>
 
 namespace sjdObjects 
 {

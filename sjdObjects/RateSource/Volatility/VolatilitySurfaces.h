@@ -1,15 +1,15 @@
-#ifndef SJD_OBJ_VOLATILITYSURFACES
+﻿#ifndef SJD_OBJ_VOLATILITYSURFACES
 #define SJD_OBJ_VOLATILITYSURFACES
 
-#include <sjd\RateSource\Volatility\VolatilitySurfaces.h>
-#include <sjd\RateSource\Volatility\VolatilitySurfaceMoneyness.h>
-#include <sjd\RateSource\Volatility\VolatilitySurfaceMoneynessCMA.h>
-#include <sjd\RateSource\Volatility\VolatilitySurfaceDelta.h>
+#include <sjd/rates/Volatility/VolatilitySurfaces.h>
+#include <sjd/rates/Volatility/VolatilitySurfaceMoneyness.h>
+#include <sjd/rates/Volatility/VolatilitySurfaceMoneynessCMA.h>
+#include <sjd/rates/Volatility/VolatilitySurfaceDelta.h>
 
-#include <sjd\sjdObjects\RateSource\Volatility\VolatilityRateSource.h>
+#include <sjd/sjdObjects/RateSource/Volatility/VolatilityRateSource.h>
 
-#include <ql\time\date.hpp>
-#include <ql\time\daycounters\simpledaycounter.hpp>
+#include <ql/time/date.hpp>
+#include <ql/time/daycounters/simpledaycounter.hpp>
 
 using namespace std;
 using namespace QuantLib;

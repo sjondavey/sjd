@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "debug",
+            "compileCommands": "${workspaceFolder}/build/debug/compile_commands.json",
+            "compilerPath": "e:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.32.31326/bin/Hostx64/x64/cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-msvc-x64",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}",
+                    "${workspaceFolder}/../Tools",
+                    "${workspaceFolder}/build/debug/vcpkg_installed/x64-windows-static-md/include"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
+        }
+    ],
+    "version": 4
+}

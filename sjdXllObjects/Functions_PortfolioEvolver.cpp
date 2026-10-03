@@ -1,4 +1,4 @@
-#include <qlo/qladdindefines.hpp>
+﻿#include <qlo/qladdindefines.hpp>
 
 #include <ohxl/objecthandlerxl.hpp>
 #include <ohxl/callingrange.hpp>
@@ -6,10 +6,10 @@
 #include <qlxl/conversions/all.hpp>
 
 #include <Tools/vo_GenericUnimplemented.h>
-#include <sjd\sjdObjects\Contracts\Portfolio\PortfolioEvolver.h>
+#include <sjd/sjdObjects/Contracts/Portfolio/PortfolioEvolver.h>
 
-#include <Tools\vectorOfVectorsToOper.h>
-#include <sjd\sjdXllObjects\ObjectCommon.h>
+#include <Tools/vectorOfVectorsToOper.h>
+#include <sjd/sjdXllObjects/ObjectCommon.h>
 
 
 DLLEXPORT char *createPortfolioEvolver(char *objectID, char *portfolioID, char *pathGeneratorID, OPER* dates, int holdingPeriodInDays, bool *permanent) 

@@ -1,16 +1,16 @@
-
-#include <qlo\qladdindefines.hpp>
-#include <sjd\sjdObjects\Contracts\ContractStressor.h>
+﻿
+#include <qlo/qladdindefines.hpp>
+#include <sjd/sjdObjects/Contracts/ContractStressor.h>
 
 #include <ohxl/objecthandlerxl.hpp>
 #include <ohxl/callingrange.hpp>
 #include <qlxl/session.hpp>
 #include <qlxl/conversions/all.hpp>
 
-#include <Tools\vo_GenericUnimplemented.h>
-#include <sjd\sjdXllObjects\ObjectCommon.h>
+#include <Tools/vo_GenericUnimplemented.h>
+#include <sjd/sjdXllObjects/ObjectCommon.h>
 
-#include <Tools\vectorOfVectorsToOper.h>
+#include <Tools/vectorOfVectorsToOper.h>
 
 #define XLL_DEC DLLEXPORT
 

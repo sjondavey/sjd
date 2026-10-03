@@ -1,11 +1,11 @@
-#ifndef SJD_OBJ_RATESENVIRONMENT
+﻿#ifndef SJD_OBJ_RATESENVIRONMENT
 #define SJD_OBJ_RATESENVIRONMENT
 
-#include <sjd\RateSource\RatesEnvironment.h>
-#include <sjd\sjdObjects\RateSource\Forward\ForwardRateSource.h>
-#include <sjd\sjdObjects\RateSource\Discount\DiscountRateSource.h>
-#include <sjd\sjdObjects\RateSource\Fixing\FixingRateSource.h>
-#include <sjd\sjdObjects\RateSource\Volatility\VolatilityRateSource.h>
+#include <sjd/rates/RatesEnvironment.h>
+#include <sjd/sjdObjects/RateSource/Forward/ForwardRateSource.h>
+#include <sjd/sjdObjects/RateSource/Discount/DiscountRateSource.h>
+#include <sjd/sjdObjects/RateSource/Fixing/FixingRateSource.h>
+#include <sjd/sjdObjects/RateSource/Volatility/VolatilityRateSource.h>
 
 #include <oh/libraryobject.hpp>
 

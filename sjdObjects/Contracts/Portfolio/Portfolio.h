@@ -1,18 +1,18 @@
-#ifndef SJD_OBJ_PORTFOLIO
+﻿#ifndef SJD_OBJ_PORTFOLIO
 #define SJD_OBJ_PORTFOLIO
 
-#include <sjd\Contracts\Portfolio\Portfolio.h>
-#include <sjd\Contracts\Portfolio\RegCap\RegCapCreditParameters.h>
-#include <sjd\Contracts\Portfolio\RegCap\RegCapUnderlyingFactors.h>
+#include <sjd/contracts/Portfolio/Portfolio.h>
+#include <sjd/contracts/Portfolio/RegCap/RegCapCreditParameters.h>
+#include <sjd/contracts/Portfolio/RegCap/RegCapUnderlyingFactors.h>
 
-#include <sjd\sjdObjects\Contracts\Contracts.h>
-#include <sjd\sjdObjects\RateSource\Discount\DiscountRateSource.h>
-#include <sjd\sjdObjects\RateSource\Forward\ForwardRateSource.h>
-#include <sjd\sjdObjects\RateSource\Volatility\VolatilityRateSource.h>
+#include <sjd/sjdObjects/Contracts/Contracts.h>
+#include <sjd/sjdObjects/RateSource/Discount/DiscountRateSource.h>
+#include <sjd/sjdObjects/RateSource/Forward/ForwardRateSource.h>
+#include <sjd/sjdObjects/RateSource/Volatility/VolatilityRateSource.h>
 
-#include <sjd\sjdObjects\RateSource\PathGenerators\SingleFactorGMB.h>
-#include <sjd\sjdObjects\Contracts\Portfolio\Margin\Margin.h>
-#include <sjd\sjdObjects\Contracts\Portfolio\CVA\CVA.h>
+#include <sjd/sjdObjects/RateSource/PathGenerators/SingleFactorGMB.h>
+#include <sjd/sjdObjects/Contracts/Portfolio/Margin/Margin.h>
+#include <sjd/sjdObjects/Contracts/Portfolio/CVA/CVA.h>
 
 
 using namespace std;

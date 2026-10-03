@@ -1,4 +1,4 @@
-
+﻿
 #include <qlo/qladdindefines.hpp>
 
 #include <ohxl/objecthandlerxl.hpp>
@@ -6,16 +6,16 @@
 #include <qlxl/session.hpp>
 #include <qlxl/conversions/all.hpp>
 
-#include <sjd/Contracts/AsianForwardContract.h>
-#include <Tools\vo_GenericUnimplemented.h>
+#include <sjd/contracts/AsianForwardContract.h>
+#include <Tools/vo_GenericUnimplemented.h>
 #include <sjd/sjdObjects/Contracts/Contracts.h>
 
-#include <sjd\sjdObjects\RateSource\Discount\DiscountRateSource.h>
-#include <sjd\sjdObjects\RateSource\Forward\ForwardRateSource.h>
-#include <sjd\sjdObjects\RateSource\Volatility\VolatilityRateSource.h>
+#include <sjd/sjdObjects/RateSource/Discount/DiscountRateSource.h>
+#include <sjd/sjdObjects/RateSource/Forward/ForwardRateSource.h>
+#include <sjd/sjdObjects/RateSource/Volatility/VolatilityRateSource.h>
 
-#include <ql\time\calendars\all.hpp>
-#include <sjd\sjdXllObjects\ObjectCommon.h>
+#include <ql/time/calendars/all.hpp>
+#include <sjd/sjdXllObjects/ObjectCommon.h>
 
 
 DLLEXPORT char *createContractForwardAsian(char *objectID,

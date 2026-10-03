@@ -1,4 +1,4 @@
-
+﻿
 #include <qlo/qladdindefines.hpp>
 
 #include <ohxl/objecthandlerxl.hpp>
@@ -6,13 +6,13 @@
 #include <qlxl/session.hpp>
 #include <qlxl/conversions/all.hpp>
 
-#include <sjd\Contracts\Portfolio\Margin\Margin.h>
-#include <sjd\sjdObjects\Contracts\Portfolio\Margin\Margin.h>
-#include <Tools\vo_GenericUnimplemented.h>
+#include <sjd/contracts/Portfolio/Margin/Margin.h>
+#include <sjd/sjdObjects/Contracts/Portfolio/Margin/Margin.h>
+#include <Tools/vo_GenericUnimplemented.h>
 
-#include <boost\algorithm\string.hpp>
+#include <boost/algorithm/string.hpp>
 
-#include <sjd\sjdXllObjects\ObjectCommon.h>
+#include <sjd/sjdXllObjects/ObjectCommon.h>
 
 /*======================================================================================
 Create an instance of the object sjdObjects::SimpleMargin and return its ID

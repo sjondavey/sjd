@@ -1,0 +1,30 @@
+{
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/debug/compile_commands.json",
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.default.intelliSenseMode": "windows-msvc-x64",
+    "cmake.useCMakePresets": "always",
+    "cmake.configurePreset": "debug",
+    "cmake.buildPreset": "debug",
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}/build/debug",
+        "--query-driver=**/cl.exe",
+        "--background-index",
+        "--header-insertion=never"
+    ],
+    "files.watcherExclude": {
+        "**/build/**": true,
+        "**/python/sjd_runtime/**": true,
+        "**/python/.venv/**": true
+    },
+    "search.exclude": {
+        "**/build": true,
+        "**/python/sjd_runtime": true,
+        "**/python/.venv": true
+    },
+    "python.analysis.exclude": [
+        "**/build",
+        "**/python/sjd_runtime",
+        "**/python/.venv"
+    ],
+    "jupyter.variableExplorerExclude": "module;function;builtin_function_or_method"
+}

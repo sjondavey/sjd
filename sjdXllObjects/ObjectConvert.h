@@ -1,4 +1,4 @@
-
+﻿
 
 #include <ql/auto_link.hpp>
 
@@ -30,10 +30,10 @@
 #include <qlxl/session.hpp>
 #include <qlxl/conversions/all.hpp>
 
-#include <ql\time\date.hpp>
+#include <ql/time/date.hpp>
 #include <sjd/Volatility/VolatilityCurve.h>
-#include <ql\time\daycounter.hpp>
-#include <ql\time\daycounters\all.hpp>
+#include <ql/time/daycounter.hpp>
+#include <ql/time/daycounters/all.hpp>
 #include <sjd/sjdXllObjects/VolatilityCurveValueObject.h>
 #include <sjd/sjdXllObjects/VolatilityCurveObject.h>
 #include <oh/ohdefines.hpp>

@@ -1,21 +1,21 @@
-#include <qlo/qladdindefines.hpp>
+﻿#include <qlo/qladdindefines.hpp>
 
 #include <ohxl/objecthandlerxl.hpp>
 #include <ohxl/callingrange.hpp>
 #include <qlxl/session.hpp>
 #include <qlxl/conversions/all.hpp>
 
-#include <sjd\Contracts\Portfolio\Portfolio.h>
-#include <Tools\vo_GenericUnimplemented.h>
-#include <sjd\sjdObjects\Contracts\Portfolio\Portfolio.h>
-#include <sjd\sjdObjects\Contracts\Portfolio\Margin\Margin.h>
+#include <sjd/contracts/Portfolio/Portfolio.h>
+#include <Tools/vo_GenericUnimplemented.h>
+#include <sjd/sjdObjects/Contracts/Portfolio/Portfolio.h>
+#include <sjd/sjdObjects/Contracts/Portfolio/Margin/Margin.h>
 
-#include <sjd\sjdObjects\RateSource\Discount\DiscountRateSource.h>
-#include <sjd\sjdObjects\RateSource\Forward\ForwardRateSource.h>
-#include <sjd\sjdObjects\RateSource\Volatility\VolatilityRateSource.h>
+#include <sjd/sjdObjects/RateSource/Discount/DiscountRateSource.h>
+#include <sjd/sjdObjects/RateSource/Forward/ForwardRateSource.h>
+#include <sjd/sjdObjects/RateSource/Volatility/VolatilityRateSource.h>
 
 //#include "vectorOfVectorsToOper.h"
-#include <sjd\sjdXllObjects\ObjectCommon.h>
+#include <sjd/sjdXllObjects/ObjectCommon.h>
 
 
 DLLEXPORT OPER *getPortfolioMarginBalance(char *PortfolioObjectId, OPER *Trigger) 

@@ -1,9 +1,9 @@
-#ifndef SJD_OBJ_VOLATILITYRATESOURCE
+﻿#ifndef SJD_OBJ_VOLATILITYRATESOURCE
 #define SJD_OBJ_VOLATILITYRATESOURCE
 
 #include <oh/libraryobject.hpp>
-#include <sjd\RateSource\Volatility\VolatilityRateSource.h>
-#include <sjd\RateSource\Volatility\DeterministicVolatilityRateSource.h>
+#include <sjd/rates/Volatility/VolatilityRateSource.h>
+#include <sjd/rates/Volatility/DeterministicVolatilityRateSource.h>
 
 namespace sjdObjects 
 {        

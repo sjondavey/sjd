@@ -1,0 +1,346 @@
+﻿#include <sjd/rates/PathGenerators/SingleFactorGMB.h>
+
+
+using namespace std;
+using namespace QuantLib;
+using namespace boost;
+
+namespace sjd 
+{
+    /*======================================================================================
+    EconomicScenarioGenerator
+    =======================================================================================*/
+    void EconomicScenarioGenerator::resetErrorMessages()
+    {
+        errorTracking->clear();
+    }
+
+    void EconomicScenarioGenerator::recordIssue(const std::string& code,
+                                                const std::string& message,
+                                                const std::vector<std::string>& tail)
+    {
+        std::vector<std::string> path(1, "path_generator");
+        path.insert(path.end(), tail.begin(), tail.end());
+        errorTracking->record(code, message, path);
+    }
+
+    ValidationReport EconomicScenarioGenerator::validationReport() const
+    {
+        return errorTracking->snapshot();
+    }
+
+    vector<string> EconomicScenarioGenerator::getErrorMessages()    
+    {
+        return errorTracking->getErrorMessages();
+    }
+
+    string EconomicScenarioGenerator::getErrorMessageAsString()    
+    {
+        return errorTracking->getErrorMessagesAsString();
+    }
+
+    bool EconomicScenarioGenerator::isOK()
+    {
+        resetErrorMessages();
+        if (re == 0)
+        {
+            recordIssue("PATH_GENERATOR_RATES_MISSING",
+                        "Rates environment not set",
+                        {});
+            return false;
+        }
+        if (!re->isOK())
+        {
+            errorTracking->absorb(re->validationReport(), {"path_generator"});
+        }
+        if ((simulationDates.size() > 0) && (simulationDates.front() < anchorDate)) 
+        {
+            recordIssue("PATH_GENERATOR_DATES_BEFORE_ANCHOR",
+                        "Simulation dates before anchor date",
+                        {"simulation_dates"});
+            return false;
+        }
+        if ((simulationDates.size() > 0) && (!re->isInRange(simulationDates.back())))
+        {
+            recordIssue("PATH_GENERATOR_DATES_AFTER_END",
+                        "Simulation dates after rate source end",
+                        {"simulation_dates"});
+            return false;
+        }
+        return !errorTracking->getHasErrors();
+    }
+
+    Date EconomicScenarioGenerator::getAnchorDate()
+    {
+        return anchorDate;
+    }
+
+    void EconomicScenarioGenerator::setBaseRates(const boost::shared_ptr<RatesEnvironment> reInput)
+    {
+        re = reInput;
+        anchorDate = re->getAnchorDate();
+    }
+
+    boost::shared_ptr<RatesEnvironment> EconomicScenarioGenerator::getBaseRates()
+    {
+        return re;
+    }
+
+    bool EconomicScenarioGenerator::setSimulationDates(set<Date> simulationDatesSet)
+    {
+        simulationDates = vector<Date>(simulationDatesSet.begin(), simulationDatesSet.end());
+        numDates = simulationDates.size();
+        return true;
+    }
+
+    /*======================================================================================
+    SingleFactorEconomicScenarioGenerator
+    =======================================================================================*/
+    SingleFactorEconomicScenarioGenerator::SingleFactorEconomicScenarioGenerator(const boost::shared_ptr<RatesEnvironment> re)
+                                                : rng((boost::uint32_t) time(0)), nd(0,1), normalVariable(rng, nd)
+    {
+        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("SingleFactorEconomicScenarioGenerator"));
+        setBaseRates(re);
+    }
+
+    void SingleFactorEconomicScenarioGenerator::setBaseRates(const boost::shared_ptr<RatesEnvironment> re)
+    {
+        EconomicScenarioGenerator::setBaseRates(re);
+        frsDependsOnInterestRateDifferential = false;
+        if (re->hasDRS())
+        {
+            drs = boost::dynamic_pointer_cast<sjd::DeterministicDiscountRateSource>(re->getDRS()); 
+        }
+        if (re->hasForeignDRS())
+        {
+            foreigndrs = boost::dynamic_pointer_cast<sjd::DeterministicDiscountRateSource>(re->getForeignDRS()); 
+        }
+        if (re->hasVRS())
+        {
+            vrs = boost::dynamic_pointer_cast<sjd::DeterministicVolatilityRateSource>(re->getVRS()); 
+        }
+        if (re->hasFRS())
+        {
+            frs = boost::dynamic_pointer_cast<sjd::ForwardRateSourceStochastic>(re->getFRS()); 
+            boost::shared_ptr<sjd::UsesInterestRateDifferential> tmpFRS = 
+                boost::dynamic_pointer_cast<sjd::UsesInterestRateDifferential>(frs); 
+            if (tmpFRS != 0)
+            {
+                frsDependsOnInterestRateDifferential = true;
+            }
+        }
+        if (re->hasFixingRS())
+        {
+            fixingrs = boost::dynamic_pointer_cast<sjd::RollingFixingRateSource>(re->getFixingRS()); 
+        }
+    }
+
+    bool SingleFactorEconomicScenarioGenerator::isOK()
+    {
+        if (!EconomicScenarioGenerator::isOK())
+        {
+            return false;
+        }
+        if (drs == 0)
+        {
+            recordIssue("PATH_GENERATOR_DISCOUNT_NOT_DETERMINISTIC",
+                        "Rates environment does not contain a discounting rate source that rolls deterministically",
+                        {"discount_rate_source"});
+        }
+        if (foreigndrs == 0 && (re->hasForeignDRS())) // foreign DRS may not be required 
+        {
+            recordIssue("PATH_GENERATOR_FOREIGN_DISCOUNT_NOT_DETERMINISTIC",
+                        "Rates environment does not contain a foreign discounting rate source that rolls deterministically",
+                        {"foreign_discount_rate_source"});
+        }
+        if (vrs == 0)
+        {
+            recordIssue("PATH_GENERATOR_VOLATILITY_NOT_DETERMINISTIC",
+                        "Rates environment does not contain a volatility rate source that rolls deterministically",
+                        {"volatility_rate_source"});
+        }
+        if (frs == 0)
+        {
+            recordIssue("PATH_GENERATOR_FORWARD_NOT_STOCHASTIC",
+                        "Rates environment does not contain a forward rate source that rolls stochastically",
+                        {"forward_rate_source"});
+        }
+        if (frsDependsOnInterestRateDifferential && foreigndrs == 0)
+        {
+            recordIssue("PATH_GENERATOR_FOREIGN_DISCOUNT_REQUIRED",
+                        "FRS requires a foreign interest rate source but rates environment does not contain one that rolls deterministically",
+                        {"foreign_discount_rate_source"});
+        }
+        if (re->hasFixingRS() && (fixingrs == 0))
+        {
+            recordIssue("PATH_GENERATOR_FIXING_NOT_ROLLING",
+                        "Rates environment does not contain a fixing rate source that rolls",
+                        {"fixing_rate_source"});
+        }
+        return !errorTracking->getHasErrors();
+    }
+
+    bool SingleFactorEconomicScenarioGenerator::setSimulationDates(set<Date> simulationDatesSet)
+    {
+        EconomicScenarioGenerator::setSimulationDates(simulationDatesSet);
+        if (isOK())
+        {
+            drs->setForwardValuationDates(simulationDatesSet); 
+            drss = drs->rollForward();
+
+            if (foreigndrs != 0)
+            {
+                foreigndrs->setForwardValuationDates(simulationDatesSet); 
+                foreigndrss = foreigndrs->rollForward();
+            }
+
+            vrs->setForwardValuationDates(simulationDatesSet);
+            vrss = vrs->rollForward();
+
+            frs->setForwardValuationDates(simulationDatesSet);
+            // fill it with something
+            randomNumbers = vector<double>(numDates, 0);
+            frs->setRandomVariables(randomNumbers);
+            frss = frs->rollForward();
+
+            fixingrss.clear();
+            
+            vector<boost::shared_ptr<RatesEnvironment>> ratesPath;
+            for (size_t i = 0; i < numDates; ++i)
+            {
+                boost::shared_ptr<RatesEnvironment> tmpRE = boost::shared_ptr<RatesEnvironment>(
+                    new RatesEnvironment(simulationDates[i]));
+                tmpRE->setDRS(drss[i]);
+                if (foreigndrs != 0)
+                {
+                    tmpRE->setForeignDRS(foreigndrss[i]);
+                    if (frsDependsOnInterestRateDifferential)
+                    {
+                        updateFXForwardWithRolledDiscountRateSources(i);
+                    }
+                }
+                tmpRE->setFRS(frss[i]);
+                tmpRE->setVRS(vrss[i]);
+                if (re->hasFixingRS()) 
+                {
+                    allFixingDates = fixingrs->getFixingDatesFor(simulationDates);
+                    allFixingRates = vector<double>(allFixingDates.size(), 0);
+                    boost::shared_ptr<RollingFixingRateSource> rolledfixingrs = 
+                        fixingrs->rollForward(simulationDates[i], allFixingDates, allFixingRates);
+                    fixingrss.push_back(rolledfixingrs);
+                    tmpRE->setFixingRS(rolledfixingrs);
+                }
+                ratesPath.push_back(tmpRE);
+            }
+            path = boost::shared_ptr<Path>(new Path(ratesPath));
+            return true;
+        }
+        return false;
+    }
+
+    void SingleFactorEconomicScenarioGenerator::setRandomSeed(long seedInput)
+    {
+        seed = seedInput;
+        normalVariable.engine().seed(static_cast<RNGType::result_type>(seedInput));
+        normalVariable.distribution().reset();
+    }
+
+    boost::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getConfidenceInterval(double confidenceInterval)
+    {
+        boost::math::normal dist(0.0, 1.0);
+        double epsi = quantile(dist, confidenceInterval);
+
+        frs->setRandomVariables(vector<double>(numDates, epsi));
+        if (fixingrs == 0)
+        {
+            for (size_t i = 0; i < numDates; ++i)
+            {
+                frss[i] = frs->rollForward(simulationDates[i], epsi);
+                if (frsDependsOnInterestRateDifferential)
+                {
+                    updateFXForwardWithRolledDiscountRateSources(i);
+                }
+                path->getRatesEnvironment(i)->setFRS(frss[i]);
+            }
+        }
+        else
+        {
+            vector<Date>::iterator endIt;
+            for (size_t i = 0; i < numDates; ++i)
+            {
+                endIt = upper_bound(allFixingDates.begin(), allFixingDates.end(), simulationDates[i]);
+                vector<Date> datesSubset = vector<Date>(allFixingDates.begin(), endIt);
+                vector<double> rateSets = vector<double>(datesSubset.size());
+                frss[i] = frs->rollForward(simulationDates[i], epsi, datesSubset, rateSets);
+                if (frsDependsOnInterestRateDifferential)
+                {
+                    updateFXForwardWithRolledDiscountRateSources(i);
+                }
+                fixingrss[i]->updateAppedededRates(rateSets);
+                path->getRatesEnvironment(i)->setFRS(frss[i]);
+                path->getRatesEnvironment(i)->setFixingRS(fixingrss[i]);
+            }
+        }
+        return path;
+    }
+
+    boost::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getRandomPath()
+    {
+        for (size_t i = 0; i < numDates; ++i) 
+        {
+            randomNumbers[i] = normalVariable();
+        }
+        return getPathForRandomNumber(randomNumbers);
+    }
+
+    boost::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getAntitheticPath()
+    {
+        for (size_t i = 0; i < numDates; ++i) 
+        {
+            randomNumbers[i] = -randomNumbers[i];
+        }
+        return getPathForRandomNumber(randomNumbers);
+    }
+
+    boost::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getPathForRandomNumber(vector<double> randomNumbers)
+    {
+        frs->setRandomVariables(randomNumbers);
+        if (fixingrs == 0)
+        {
+            frss = frs->rollForward();
+        }
+        else
+        {
+            frss = frs->rollForward(allFixingDates, allFixingRates);
+            for (size_t i = 0; i < fixingrss.size(); ++i)
+            {
+                fixingrss[i]->updateAppedededRates(allFixingRates);
+            }
+        }
+
+        for (size_t i = 0; i < numDates; ++i) 
+        {
+            path->getRatesEnvironment(i)->setFRS(frss[i]);
+        }        
+        return path;
+    }
+
+    boost::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getPathForSpot(vector<double> spot)
+    {
+        vector<double> impliedRV = frs->getImpliedRandomNumbers(spot);
+        return getPathForRandomNumber(impliedRV);
+    }
+
+
+    void SingleFactorEconomicScenarioGenerator::updateFXForwardWithRolledDiscountRateSources(size_t stepNumber)
+    {
+        boost::shared_ptr<sjd::UsesInterestRateDifferential> tmpFRS = 
+            boost::dynamic_pointer_cast<sjd::UsesInterestRateDifferential>(frss[stepNumber]); 
+        if (tmpFRS != 0)
+        {
+            tmpFRS->setRateSources(drss[stepNumber], foreigndrss[stepNumber]);
+        }
+
+    }
+
+}

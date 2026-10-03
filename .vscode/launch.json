@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "sjdTest (Debug)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/debug/sjdTest.exe",
+            "args": [
+                "--log_level=message",
+                "--build_info=yes",
+                "--report_level=short"
+            ],
+            "cwd": "${workspaceFolder}/build/debug",
+            "console": "integratedTerminal",
+            "preLaunchTask": "CMake Build (debug)"
+        }
+    ]
+}

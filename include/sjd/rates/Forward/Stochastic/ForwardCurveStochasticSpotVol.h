@@ -1,0 +1,65 @@
+﻿#ifndef SJD_FORWARDCURVEROLLSATSPOTVOL_INCLUDED
+#define SJD_FORWARDCURVEROLLSATSPOTVOL_INCLUDED
+
+#include <sjd/rates/Forward/ForwardCurve.h>
+#include <sjd/rates/Forward/Deterministic/ForwardCurveDeterministic.h>
+#include <sjd/rates/Forward/ForwardRateSourceStochastic.h>
+
+
+namespace sjd 
+{
+
+   /*======================================================================================
+   ForwardCurveStochasticSpotVol 
+    
+    A curve containing date / rate inputs and a way to interpolate between these points.
+    
+    Note: If the first observation date is greater than the anchor date then, we will use
+          the first observation date for all points between the two if 
+          allowExtrapolation == false
+    =======================================================================================*/
+    class ForwardCurveStochasticSpotVol : public ForwardRateSourceStochastic
+    {
+    public:
+        ForwardCurveStochasticSpotVol() {};
+
+        ForwardCurveStochasticSpotVol(QuantLib::Date anchorDate, 
+                                      std::vector<QuantLib::Date> observationDates, 
+                                      std::vector<double> forwards,                                       
+                                      ArrayInterpolatorType type,
+                                      bool allowExtrapolation,
+                                      boost::shared_ptr<VolatilityRateSource> vrs);
+
+        virtual ~ForwardCurveStochasticSpotVol();
+
+        void setParameters(QuantLib::Date anchorDate, 
+                           std::vector<QuantLib::Date> observationDates, 
+                           std::vector<double> forwards,                            
+                           ArrayInterpolatorType type,
+                           bool allowExtrapolation,
+                           boost::shared_ptr<VolatilityRateSource> vrs);
+
+        virtual bool isOK();
+
+        virtual double getForward(QuantLib::Date toDate) const;
+        using ForwardRateSource::getForward;
+
+        virtual boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, double normalRV);
+        virtual boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, 
+                                                                 double normalRV,
+                                                                 std::vector<QuantLib::Date> rateSetDates,
+                                                                 std::vector<double> &rateSetsFromAnchorToDate);
+
+        virtual void setForwardValuationDates(std::set<QuantLib::Date> dates);
+        virtual std::vector<boost::shared_ptr<ForwardRateSource> > rollForward();
+        virtual std::vector<boost::shared_ptr<ForwardRateSource> > rollForward(std::vector<QuantLib::Date> rateSetDates,
+                                                              std::vector<double> &rateSetsFromAnchorToFinalRollDate);
+
+
+    protected:
+        ForwardCurve quotes;
+    };
+
+}
+
+#endif

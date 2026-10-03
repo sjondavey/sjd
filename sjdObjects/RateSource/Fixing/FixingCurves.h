@@ -1,10 +1,10 @@
-#ifndef SJD_OBJ_FIXINGCURVES
+﻿#ifndef SJD_OBJ_FIXINGCURVES
 #define SJD_OBJ_FIXINGCURVES
 
-#include <sjd\RateSource\Fixing\FixingCurves.h>
+#include <sjd/rates/Fixing/FixingCurves.h>
 #include "FixingRateSource.h"
 
-#include <ql\time\date.hpp>
+#include <ql/time/date.hpp>
 
 using namespace std;
 using namespace QuantLib;

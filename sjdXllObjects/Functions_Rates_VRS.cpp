@@ -1,4 +1,4 @@
-
+﻿
 #include <qlo/qladdindefines.hpp>
 
 #include <ohxl/objecthandlerxl.hpp>
@@ -6,14 +6,14 @@
 #include <qlxl/session.hpp>
 #include <qlxl/conversions/all.hpp>
 
-#include <sjd\RateSource\Volatility\VolatilityCurve.h>
-#include <sjd\sjdObjects\RateSource\Volatility\vo_VolatilityCurve.h>
-#include <sjd\sjdObjects\RateSource\Volatility\VolatilityCurve.h>
-#include <sjd\sjdObjects\RateSource\Volatility\VolatilitySurfaces.h>
+#include <sjd/rates/Volatility/VolatilityCurve.h>
+#include <sjd/sjdObjects/RateSource/Volatility/vo_VolatilityCurve.h>
+#include <sjd/sjdObjects/RateSource/Volatility/VolatilityCurve.h>
+#include <sjd/sjdObjects/RateSource/Volatility/VolatilitySurfaces.h>
 
-#include <Tools\vo_GenericUnimplemented.h>
+#include <Tools/vo_GenericUnimplemented.h>
 
-#include <sjd\sjdXllObjects\ObjectCommon.h>
+#include <sjd/sjdXllObjects/ObjectCommon.h>
 
 /*======================================================================================
 Any object which is derived from sjdObjects::VolatilityRateSource can be queried

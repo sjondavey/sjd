@@ -1,9 +1,9 @@
-#ifndef SJD_OBJ_DISCOUNTCURVE
+﻿#ifndef SJD_OBJ_DISCOUNTCURVE
 #define SJD_OBJ_DISCOUNTCURVE
 
 #include "DiscountRateSource.h"
-#include <Tools\vo_GenericUnimplemented.h>
-#include <sjd\RateSource\Discount\InterestRateConvention.h>
+#include <Tools/vo_GenericUnimplemented.h>
+#include <sjd/rates/Discount/InterestRateConvention.h>
 
 namespace sjdObjects 
 {

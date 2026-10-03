@@ -1,17 +1,17 @@
-#include <qlo/qladdindefines.hpp>
+﻿#include <qlo/qladdindefines.hpp>
 
 #include <ohxl/objecthandlerxl.hpp>
 #include <ohxl/callingrange.hpp>
 #include <qlxl/session.hpp>
 #include <qlxl/conversions/all.hpp>
 
-#include <sjd\RateSource\Forward\Deterministic\ForwardCurveDeterministic.h>
-#include <sjd\RateSource\Forward\Stochastic\ForwardCurveCMAStochasticFwdVol.h>
-#include <sjd\sjdObjects\RateSource\Forward\vo_FuturesCurve.h>
-#include <Tools\vo_GenericUnimplemented.h>
-#include <sjd\sjdObjects\RateSource\Forward\ForwardCurve.h>
+#include <sjd/rates/Forward/Deterministic/ForwardCurveDeterministic.h>
+#include <sjd/rates/Forward/Stochastic/ForwardCurveCMAStochasticFwdVol.h>
+#include <sjd/sjdObjects/RateSource/Forward/vo_FuturesCurve.h>
+#include <Tools/vo_GenericUnimplemented.h>
+#include <sjd/sjdObjects/RateSource/Forward/ForwardCurve.h>
 
-#include <sjd\sjdXllObjects\ObjectCommon.h>
+#include <sjd/sjdXllObjects/ObjectCommon.h>
 
 /*======================================================================================
 Any object which is derived from sjdObjects::ForwardRateSource can be queried

@@ -1,9 +1,9 @@
-#ifndef SJD_OBJ_FORWARDRATESOURCE
+﻿#ifndef SJD_OBJ_FORWARDRATESOURCE
 #define SJD_OBJ_FORWARDRATESOURCE
 
-#include <sjd\RateSource\Forward\ForwardRateSource.h>
-#include <sjd\RateSource\Forward\ForwardRateSourceDeterministic.h>
-#include <sjd\RateSource\Forward\ForwardRateSourceStochastic.h>
+#include <sjd/rates/Forward/ForwardRateSource.h>
+#include <sjd/rates/Forward/ForwardRateSourceDeterministic.h>
+#include <sjd/rates/Forward/ForwardRateSourceStochastic.h>
 #include <oh/libraryobject.hpp>
 
 namespace sjdObjects 

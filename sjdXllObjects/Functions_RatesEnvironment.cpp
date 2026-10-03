@@ -1,13 +1,13 @@
-#include <qlo/qladdindefines.hpp>
+﻿#include <qlo/qladdindefines.hpp>
 
 #include <ohxl/objecthandlerxl.hpp>
 #include <ohxl/callingrange.hpp>
 #include <qlxl/session.hpp>
 #include <qlxl/conversions/all.hpp>
 
-#include <sjd\sjdObjects\RateSource\RatesEnvironment.h>
-#include <Tools\vo_GenericUnimplemented.h>
-#include <sjd\sjdXllObjects\ObjectCommon.h>
+#include <sjd/sjdObjects/RateSource/RatesEnvironment.h>
+#include <Tools/vo_GenericUnimplemented.h>
+#include <sjd/sjdXllObjects/ObjectCommon.h>
 
 
 DLLEXPORT char *createRatesEnvironment(char *objectID,

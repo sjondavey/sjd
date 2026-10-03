@@ -1,19 +1,19 @@
-#ifndef SJD_OBJ_FUTURESCURVE
+﻿#ifndef SJD_OBJ_FUTURESCURVE
 #define SJD_OBJ_FUTURESCURVE
 
-#include <sjd\RateSource\Forward\Deterministic\ForwardCurveDeterministic.h>
-#include <sjd\RateSource\Forward\Stochastic\ForwardCurveStochasticFwdVol.h>
-#include <sjd\RateSource\Forward\Stochastic\ForwardCurveStochasticSpotVol.h>
-#include <sjd\RateSource\Forward\Deterministic\ForwardCurveCMADeterministic.h>
-#include <sjd\RateSource\Forward\Stochastic\ForwardCurveCMAStochasticFwdVol.h>
-#include <sjd\RateSource\Forward\Deterministic\ForwardCurveDeterministicFX.h>
-#include <sjd\RateSource\Forward\Stochastic\ForwardCurveStochasticFX.h>
-#include <sjd\sjdObjects\RateSource\Forward\ForwardRateSource.h>
-#include <sjd\sjdObjects\RateSource\Volatility\VolatilityRateSource.h>
-#include <sjd\sjdObjects\RateSource\Discount\DiscountRateSource.h>
+#include <sjd/rates/Forward/Deterministic/ForwardCurveDeterministic.h>
+#include <sjd/rates/Forward/Stochastic/ForwardCurveStochasticFwdVol.h>
+#include <sjd/rates/Forward/Stochastic/ForwardCurveStochasticSpotVol.h>
+#include <sjd/rates/Forward/Deterministic/ForwardCurveCMADeterministic.h>
+#include <sjd/rates/Forward/Stochastic/ForwardCurveCMAStochasticFwdVol.h>
+#include <sjd/rates/Forward/Deterministic/ForwardCurveDeterministicFX.h>
+#include <sjd/rates/Forward/Stochastic/ForwardCurveStochasticFX.h>
+#include <sjd/sjdObjects/RateSource/Forward/ForwardRateSource.h>
+#include <sjd/sjdObjects/RateSource/Volatility/VolatilityRateSource.h>
+#include <sjd/sjdObjects/RateSource/Discount/DiscountRateSource.h>
 
-#include <ql\time\date.hpp>
-#include <ql\time\daycounters\simpledaycounter.hpp>
+#include <ql/time/date.hpp>
+#include <ql/time/daycounters/simpledaycounter.hpp>
 
 using namespace std;
 using namespace QuantLib;

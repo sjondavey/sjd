@@ -1,13 +1,13 @@
-#ifndef SJD_OBJ_VOLATILITYCURVE
+﻿#ifndef SJD_OBJ_VOLATILITYCURVE
 #define SJD_OBJ_VOLATILITYCURVE
 
-#include <sjd\RateSource\Volatility\VolatilityCurve.h>
-#include <sjd\RateSource\Volatility\VolatilityCurveCMA.h>
-#include <sjd\RateSource\Volatility\VolatilitySurfaces.h>
-#include <sjd\sjdObjects\RateSource\Volatility\VolatilityRateSource.h>
+#include <sjd/rates/Volatility/VolatilityCurve.h>
+#include <sjd/rates/Volatility/VolatilityCurveCMA.h>
+#include <sjd/rates/Volatility/VolatilitySurfaces.h>
+#include <sjd/sjdObjects/RateSource/Volatility/VolatilityRateSource.h>
 
-#include <ql\time\date.hpp>
-#include <ql\time\daycounters\simpledaycounter.hpp>
+#include <ql/time/date.hpp>
+#include <ql/time/daycounters/simpledaycounter.hpp>
 
 using namespace std;
 using namespace QuantLib;

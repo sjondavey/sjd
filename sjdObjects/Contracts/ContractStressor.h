@@ -1,10 +1,10 @@
-#ifndef SJD_OBJ_CONTRACTSTRESSOR
+﻿#ifndef SJD_OBJ_CONTRACTSTRESSOR
 #define SJD_OBJ_CONTRACTSTRESSOR
 
-#include <sjd\Contracts\ContractStressor.h>
+#include <sjd/contracts/ContractStressor.h>
 
-#include <sjd\sjdObjects\Contracts\Contracts.h>
-#include <sjd\sjdObjects\RateSource\RatesEnvironment.h>
+#include <sjd/sjdObjects/Contracts/Contracts.h>
+#include <sjd/sjdObjects/RateSource/RatesEnvironment.h>
 
 using namespace std;
 using namespace QuantLib;

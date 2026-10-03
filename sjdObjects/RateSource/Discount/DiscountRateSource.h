@@ -1,8 +1,8 @@
-#ifndef SJD_OBJ_DISCOUNTINGRATESOURCE
+﻿#ifndef SJD_OBJ_DISCOUNTINGRATESOURCE
 #define SJD_OBJ_DISCOUNTINGRATESOURCE
 
-#include <sjd\RateSource\Discount\DiscountRateSource.h>
-#include <sjd\RateSource\Discount\DiscountCurves.h>
+#include <sjd/rates/Discount/DiscountRateSource.h>
+#include <sjd/rates/Discount/DiscountCurves.h>
 
 #include <oh/libraryobject.hpp>
 

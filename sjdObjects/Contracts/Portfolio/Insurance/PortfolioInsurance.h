@@ -1,9 +1,9 @@
-#ifndef SJD_OBJ_INSURANCE
+﻿#ifndef SJD_OBJ_INSURANCE
 #define SJD_OBJ_INSURANCE
 
 #include <oh/libraryobject.hpp>
-#include <sjd\Contracts\Portfolio\Insurance\PortfolioInsurance.h>
-#include <sjd\sjdObjects\RateSource\Discount\DiscountRateSource.h>
+#include <sjd/contracts/Portfolio/Insurance/PortfolioInsurance.h>
+#include <sjd/sjdObjects/RateSource/Discount/DiscountRateSource.h>
 
 
 namespace sjdObjects 

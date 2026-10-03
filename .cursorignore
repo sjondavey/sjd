@@ -1,0 +1,8 @@
+# Keep Cursor indexing off the CMake tree and the staged native module.
+build/
+python/sjd_runtime/
+python/.venv/
+**/*.pyd
+**/*.pdb
+**/*.ilk
+**/*.lib

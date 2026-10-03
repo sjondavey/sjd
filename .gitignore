@@ -1,5 +1,12 @@
 #ignore thumbnails created by windows
 Thumbs.db
+# CMake / vcpkg
+/build/
+CMakeUserPresets.json
+# Python
+.venv/
+.ipynb_checkpoints/
+python/sjd_runtime/
 #Ignore files build by Visual Studio
 *.VC.opendb
 *.VC.db

@@ -43,7 +43,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(dllLib)</OutDir>
     <TargetExt>.xll</TargetExt>
-    <IncludePath>$(sjdTools);$(qlxl);$(qlo);$(ql);$(oh);$(sjd);$(boost);$(VCInstallDir)include;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(FrameworkSDKDir)\include</IncludePath>
+    <IncludePath>$(qlxl);$(qlo);$(ql);$(oh);$(sjd);$(boost);$(VCInstallDir)include;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(FrameworkSDKDir)\include</IncludePath>
     <LibraryPath>$(ql)lib\;$(oh)lib\;$(qlo)lib\;$(boost)lib32-msvc-14.0\;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)</TargetName>
     <IntDir>$(Configuration)\</IntDir>
@@ -52,7 +52,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(dllLib)</OutDir>
     <TargetExt>.xll</TargetExt>
-    <IncludePath>$(sjdTools);$(qlxl);$(qlo);$(ql);$(oh);$(sjd);$(boost);$(VCInstallDir)include;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(FrameworkSDKDir)\include</IncludePath>
+    <IncludePath>$(qlxl);$(qlo);$(ql);$(oh);$(sjd);$(boost);$(VCInstallDir)include;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(FrameworkSDKDir)\include</IncludePath>
     <LibraryPath>$(ql)lib\;$(oh)lib\;$(qlo)lib\;$(boost)lib32-msvc-14.0\;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)</TargetName>
     <IntDir>$(Configuration)\</IntDir>
@@ -110,14 +110,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Tools\Tools.vcxproj">
-      <Project>{02d1ff4c-0dc2-4a35-9df7-864c8a9548f1}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\sjdObjects\sjdObjects.vcxproj">
       <Project>{bcc21be5-2747-4afe-a749-be9abfe6bbb3}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\sjd\sjd.vcxproj">
-      <Project>{dc36c245-316e-4aa0-b4c2-219f0a2e0bbf}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

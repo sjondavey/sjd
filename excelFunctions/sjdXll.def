@@ -1,8 +1,0 @@
-EXPORTS
-	
-	xlAutoOpen
-	xlAutoClose
-	xlAutoFree
-	xlAddInManagerInfo
-    
-	interpolateXLL

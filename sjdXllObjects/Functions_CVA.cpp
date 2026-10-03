@@ -1,4 +1,4 @@
-
+﻿
 #include <qlo/qladdindefines.hpp>
 
 #include <ohxl/objecthandlerxl.hpp>
@@ -6,14 +6,14 @@
 #include <qlxl/session.hpp>
 #include <qlxl/conversions/all.hpp>
 
-#include <sjd\Contracts\Portfolio\CVA\cva.h>
-#include <sjd\sjdObjects\Contracts\Portfolio\CVA\CVA.h>
+#include <sjd/contracts/Portfolio/CVA/cva.h>
+#include <sjd/sjdObjects/Contracts/Portfolio/CVA/CVA.h>
 
-#include <Tools\vo_GenericUnimplemented.h>
+#include <Tools/vo_GenericUnimplemented.h>
 
-#include <boost\algorithm\string.hpp>
+#include <boost/algorithm/string.hpp>
 
-#include <sjd\sjdXllObjects\ObjectCommon.h>
+#include <sjd/sjdXllObjects/ObjectCommon.h>
 
 /*======================================================================================
 Any object which is derived from sjdObjects::CVA be queried for it's LGD

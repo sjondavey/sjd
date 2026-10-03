@@ -1,15 +1,15 @@
-#ifndef SJD_OBJ_STRUCTURE
+﻿#ifndef SJD_OBJ_STRUCTURE
 #define SJD_OBJ_STRUCTURE
 
 #include <oh/libraryobject.hpp>
-#include <sjd\Contracts\Contracts.h>
-#include <sjd\Contracts\Cashflow.h>
-#include <sjd\Contracts\EuropeanForwardContract.h>
-#include <sjd\Contracts\AsianForwardContract.h>
-#include <sjd\Contracts\EuropeanOptionContract.h>
-#include <sjd\Contracts\AsianOptionContract.h>
+#include <sjd/contracts/Contracts.h>
+#include <sjd/contracts/Cashflow.h>
+#include <sjd/contracts/EuropeanForwardContract.h>
+#include <sjd/contracts/AsianForwardContract.h>
+#include <sjd/contracts/EuropeanOptionContract.h>
+#include <sjd/contracts/AsianOptionContract.h>
 
-#include <sjd\sjdObjects\RateSource\RatesEnvironment.h>
+#include <sjd/sjdObjects/RateSource/RatesEnvironment.h>
 
 
 namespace sjdObjects 

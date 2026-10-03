@@ -1,4 +1,4 @@
-
+﻿
 #include <qlo/qladdindefines.hpp>
 
 #include <ohxl/objecthandlerxl.hpp>
@@ -6,12 +6,12 @@
 #include <qlxl/session.hpp>
 #include <qlxl/conversions/all.hpp>
 
-#include <sjd\sjdObjects\Contracts\Portfolio\Insurance\PortfolioInsurance.h>
-#include <Tools\vo_GenericUnimplemented.h>
-#include <sjd\sjdObjects\RateSource\Discount\DiscountRateSource.h>
+#include <sjd/sjdObjects/Contracts/Portfolio/Insurance/PortfolioInsurance.h>
+#include <Tools/vo_GenericUnimplemented.h>
+#include <sjd/sjdObjects/RateSource/Discount/DiscountRateSource.h>
 
-#include <boost\algorithm\string.hpp>
-#include <sjd\sjdXllObjects\ObjectCommon.h>
+#include <boost/algorithm/string.hpp>
+#include <sjd/sjdXllObjects/ObjectCommon.h>
 
 
 /*======================================================================================

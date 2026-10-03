@@ -1,4 +1,4 @@
-#include <ohxl/objecthandlerxl.hpp>
+﻿#include <ohxl/objecthandlerxl.hpp>
 #include <qlo/qladdindefines.hpp>
 #include <qlo/enumerations/register/register_all.hpp>
 #include <qlo/serialization/serializationfactory.hpp>
@@ -6,9 +6,9 @@
 
 #if defined BOOST_MSVC       // Microsoft Visual C++
 #  define BOOST_LIB_DIAGNOSTIC
-#  include <qlo/auto_link.hpp>
-#  include <oh/auto_link.hpp>
-#  include <ql/auto_link.hpp>
+#include <qlo/auto_link.hpp>
+#include <oh/auto_link.hpp>
+#include <ql/auto_link.hpp>
 #  if defined(XLL_STATIC)
      #include <ohxl/register/register_all.hpp>
      #include <ohxl/functions/export.hpp>

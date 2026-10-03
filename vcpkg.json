@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "sjd",
+  "version-string": "0.1.0",
+  "builtin-baseline": "26abb5b33f976246a5f2cdc45cdd073d51caff06",
+  "dependencies": [
+    "quantlib",
+    "boost-algorithm",
+    "boost-assign",
+    "boost-lexical-cast",
+    "boost-math",
+    "boost-smart-ptr",
+    "boost-test",
+    "boost-timer"
+  ]
+}

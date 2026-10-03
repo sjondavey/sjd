@@ -1,0 +1,114 @@
+# Market conventions. specs.load_catalogue reads this file into frozen dataclasses.
+#
+# Pillars live in the SQLite database (schema.sql). schema.initialize copies the
+# quotes below into its key tables, so a new market is an entry here plus its
+# pillars. No Python or C++ change is needed unless the market brings a new
+# convention.
+#
+# Enum values are the member names in specs.py:
+#   interpolation  LINEAR | CUBIC for forwards and discounts,
+#                  BILINEAR | BICUBIC for surfaces
+#   averaging      POINT | CALENDAR_MONTH
+#   roll           DETERMINISTIC | FORWARD_VOLATILITY | SPOT_VOLATILITY
+#                  (optional, default DETERMINISTIC)
+#
+# Forward kinds:
+#   gofo                GOFO lease rates plus a stored spot, turned into outrights
+#   outright            pillars are the forward itself; needs averaging
+#   metal_times_usdzar  not stored; the USD metal outright times USDZAR
+# Volatility kinds:
+#   delta                     put delta in percent, 50 at the money
+#   calendar_month_moneyness  (strike - forward) / forward by contract month
+# Date kinds: point, calendar_month.
+#
+# Calendar names are those in sjd.Calendar.names(), such as "UnitedKingdom" or
+# "UnitedKingdom.Metals". A calendar with components is closed when any of them
+# is closed, and its name is only a label.
+
+[calendars.LONDON]
+name = "UnitedKingdom"
+
+# LBMA good London business days.
+[calendars.LONDON_METALS]
+name = "UnitedKingdom.Metals"
+
+[calendars.USDZAR]
+name = "USDZAR"
+components = ["UnitedStates", "SouthAfrica"]
+
+[dates.LOCO_LONDON]
+kind = "point"
+calendar = "LONDON_METALS"
+spot_lag_business_days = 2
+expiry_before_value_business_days = 2
+
+[dates.USDZAR]
+kind = "point"
+calendar = "USDZAR"
+spot_lag_business_days = 2
+expiry_before_value_business_days = 2
+
+# The forward and the vol are read inside the contract month. Cash settles
+# later, and that later date is only for the discount factor.
+[dates.DATED_BRENT]
+kind = "calendar_month"
+publication_calendar = "LONDON"
+settlement_calendar = "LONDON"
+settlement_lag_business_days = 5
+
+# One discount curve per currency, shared by every quote that settles in it.
+[discount.USD]
+interpolation = "LINEAR"
+extrapolate = false
+
+[discount.ZAR]
+interpolation = "LINEAR"
+extrapolate = false
+
+
+[markets.XAU]
+summary = "Loco London gold. USD forwards are GOFO lease rates. ZAR forwards are the USD outright times USDZAR."
+
+[markets.XAU.quotes.USD]
+dates = "LOCO_LONDON"
+forward = { kind = "gofo", interpolation = "LINEAR", extrapolate = false }
+volatility = { kind = "delta", interpolation = "BILINEAR", extrapolate = false }
+
+# The ZAR surface is stored. It is not made from the USD metal vol and the FX vol.
+[markets.XAU.quotes.ZAR]
+dates = "LOCO_LONDON"
+forward = { kind = "metal_times_usdzar", metal_market = "XAU" }
+volatility = { kind = "delta", interpolation = "BILINEAR", extrapolate = false }
+
+
+[markets.XPT]
+summary = "Loco London platinum. USD forwards are outrights. ZAR forwards are the USD outright times USDZAR."
+
+[markets.XPT.quotes.USD]
+dates = "LOCO_LONDON"
+forward = { kind = "outright", averaging = "POINT", interpolation = "LINEAR", extrapolate = false }
+volatility = { kind = "delta", interpolation = "BILINEAR", extrapolate = false }
+
+[markets.XPT.quotes.ZAR]
+dates = "LOCO_LONDON"
+forward = { kind = "metal_times_usdzar", metal_market = "XPT" }
+volatility = { kind = "delta", interpolation = "BILINEAR", extrapolate = false }
+
+
+[markets.DATED_BRENT]
+summary = "Dated Brent calendar-month average, USD only."
+
+# The moneyness surface extrapolates in time, matching the VolatilitySurfaceMoneynessCMA default.
+[markets.DATED_BRENT.quotes.USD]
+dates = "DATED_BRENT"
+forward = { kind = "outright", averaging = "CALENDAR_MONTH", interpolation = "LINEAR", extrapolate = false }
+volatility = { kind = "calendar_month_moneyness", interpolation = "BILINEAR", extrapolate = true }
+
+
+[markets.USDZAR]
+summary = "USDZAR outright, quoted as ZAR per 1 USD."
+
+[markets.USDZAR.quotes.ZAR]
+dates = "USDZAR"
+forward = { kind = "outright", averaging = "POINT", interpolation = "LINEAR", extrapolate = false }
+volatility = { kind = "delta", interpolation = "BILINEAR", extrapolate = false }

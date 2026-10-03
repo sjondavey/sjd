@@ -1,6 +1,6 @@
-
+﻿
 #include <qlo/qladdindefines.hpp>
-#include <sjd/Contracts/Contracts.h>
+#include <sjd/contracts/Contracts.h>
 #include <sjd/sjdObjects/Contracts/Contracts.h>
 
 #include <ohxl/objecthandlerxl.hpp>
@@ -8,8 +8,8 @@
 #include <qlxl/session.hpp>
 #include <qlxl/conversions/all.hpp>
 
-#include <Tools\vo_GenericUnimplemented.h>
-#include <sjd\sjdXllObjects\ObjectCommon.h>
+#include <Tools/vo_GenericUnimplemented.h>
+#include <sjd/sjdXllObjects/ObjectCommon.h>
 
 
 #define XLL_DEC DLLEXPORT

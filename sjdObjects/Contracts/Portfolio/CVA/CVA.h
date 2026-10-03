@@ -1,8 +1,8 @@
-#ifndef SJD_OBJ_CVA
+﻿#ifndef SJD_OBJ_CVA
 #define SJD_OBJ_CVA
 
 #include <oh/libraryobject.hpp>
-#include <sjd\Contracts\Portfolio\CVA\cva.h>
+#include <sjd/contracts/Portfolio/CVA/cva.h>
 
 namespace sjdObjects 
 {

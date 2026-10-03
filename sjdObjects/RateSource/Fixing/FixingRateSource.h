@@ -1,7 +1,7 @@
-#ifndef SJD_OBJ_FIXINGRATESOURCE
+﻿#ifndef SJD_OBJ_FIXINGRATESOURCE
 #define SJD_OBJ_FIXINGRATESOURCE
 
-#include <sjd\RateSource\Fixing\RollingFixingRateSource.h>
+#include <sjd/rates/Fixing/RollingFixingRateSource.h>
 #include <oh/libraryobject.hpp>
 
 using namespace std;

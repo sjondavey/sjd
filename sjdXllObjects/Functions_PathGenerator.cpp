@@ -1,4 +1,4 @@
-#include <qlo/qladdindefines.hpp>
+﻿#include <qlo/qladdindefines.hpp>
 
 #include <ohxl/objecthandlerxl.hpp>
 #include <ohxl/callingrange.hpp>
@@ -6,14 +6,14 @@
 #include <qlxl/conversions/all.hpp>
 
 
-#include <sjd\sjdObjects\RateSource\PathGenerators\SingleFactorGMB.h>
-#include <sjd\sjdObjects\RateSource\Forward\ForwardRateSource.h>
-#include <sjd\sjdObjects\RateSource\Volatility\VolatilityRateSource.h>
-#include <Tools\vo_GenericUnimplemented.h>
+#include <sjd/sjdObjects/RateSource/PathGenerators/SingleFactorGMB.h>
+#include <sjd/sjdObjects/RateSource/Forward/ForwardRateSource.h>
+#include <sjd/sjdObjects/RateSource/Volatility/VolatilityRateSource.h>
+#include <Tools/vo_GenericUnimplemented.h>
 
-#include <sjd\maths\maths.h>
+#include <sjd/maths/maths.h>
 
-#include <sjd\sjdXllObjects\ObjectCommon.h>
+#include <sjd/sjdXllObjects/ObjectCommon.h>
 
 
 DLLEXPORT char *createESGSingleFactor(char *objectID,

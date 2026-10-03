@@ -1,9 +1,9 @@
-#ifndef SJD_OBJ_SINGLEFACTORGMB
+﻿#ifndef SJD_OBJ_SINGLEFACTORGMB
 #define SJD_OBJ_SINGLEFACTORGMB
 
 #include <oh/libraryobject.hpp>
-#include <sjd\RateSource\PathGenerators\SingleFactorGMB.h>
-#include <sjd\sjdObjects\RateSource\RatesEnvironment.h>
+#include <sjd/rates/PathGenerators/SingleFactorGMB.h>
+#include <sjd/sjdObjects/RateSource/RatesEnvironment.h>
 
 namespace sjdObjects 
 {

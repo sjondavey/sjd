@@ -1,0 +1,8 @@
+# clangd ignores .vscode/c_cpp_properties.json. It uses this file plus
+# compile_commands.json from the CMake debug preset.
+CompileFlags:
+  CompilationDatabase: build/debug
+  Add:
+    - --std=c++17
+    - -IE:/Code
+    - -IE:/Code/sjd/build/debug/vcpkg_installed/x64-windows-static-md/include

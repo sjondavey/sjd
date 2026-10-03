@@ -1,4 +1,4 @@
-
+﻿
 #include <qlo/qladdindefines.hpp>
 
 #include <ohxl/objecthandlerxl.hpp>
@@ -6,14 +6,14 @@
 #include <qlxl/session.hpp>
 #include <qlxl/conversions/all.hpp>
 
-#include <sjd\RateSource\Discount\InterestRateConvention.h>
-#include <sjd\RateSource\Discount\DiscountCurves.h>
-#include <sjd\sjdObjects\RateSource\Discount\DiscountCurve.h>
-#include <sjd\sjdObjects\RateSource\Discount\vo_DiscountCurve.h>
+#include <sjd/rates/Discount/InterestRateConvention.h>
+#include <sjd/rates/Discount/DiscountCurves.h>
+#include <sjd/sjdObjects/RateSource/Discount/DiscountCurve.h>
+#include <sjd/sjdObjects/RateSource/Discount/vo_DiscountCurve.h>
 
-#include <boost\algorithm\string.hpp>
+#include <boost/algorithm/string.hpp>
 
-#include <sjd\sjdXllObjects\ObjectCommon.h>
+#include <sjd/sjdXllObjects/ObjectCommon.h>
 
 /*======================================================================================
 Create an instance of the object sjdObjects::DiscountCurve and return its ID

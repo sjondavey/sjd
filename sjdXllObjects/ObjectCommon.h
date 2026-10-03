@@ -1,10 +1,9 @@
-#ifndef SJD_OBJ_COMMON
+﻿#ifndef SJD_OBJ_COMMON
 #define SJD_OBJ_COMMON
 
 
 #include <oh/libraryobject.hpp>
-#include <Tools\Tools.h>
-#include <sjd\Tools\Common.h>
+#include <sjd/tools/Common.h>
 #include <boost/algorithm/string.hpp>
 
 
