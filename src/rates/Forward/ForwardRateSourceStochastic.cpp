@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Forward/ForwardRateSourceStochastic.h>
+#include <sjd/rates/Forward/ForwardRateSourceStochastic.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -6,7 +6,7 @@ using namespace boost;
 
 namespace sjd 
 {
-    void ForwardRateSourceStochastic::setVolitalityRateSource(boost::shared_ptr<VolatilityRateSource> vrsInput)
+    void ForwardRateSourceStochastic::setVolitalityRateSource(std::shared_ptr<VolatilityRateSource> vrsInput)
     {
         vrs = vrsInput;
     }
@@ -56,12 +56,12 @@ namespace sjd
         normalRVs = normalRVsInput;
     }
 
-    boost::shared_ptr<ForwardRateSource> ForwardRateSourceStochastic::rollForward(Date toDate, 
+    std::shared_ptr<ForwardRateSource> ForwardRateSourceStochastic::rollForward(Date toDate, 
                                                                                   double normalRV,
                                                                                   vector<Date> rateSetDates,
                                                                                   vector<double> &rateSetsFromAnchorToDate)
     {
-        boost::shared_ptr<ForwardRateSource> rolledRate = rollForward(toDate, normalRV);
+        std::shared_ptr<ForwardRateSource> rolledRate = rollForward(toDate, normalRV);
 
         double expectedFwd = getForward(toDate);
         double simulatedFwd = rolledRate->getForward(toDate);
@@ -76,10 +76,10 @@ namespace sjd
         return rolledRate;
     }
 
-    vector<boost::shared_ptr<ForwardRateSource> > ForwardRateSourceStochastic::rollForward(vector<Date> rateSetDates,
+    vector<std::shared_ptr<ForwardRateSource> > ForwardRateSourceStochastic::rollForward(vector<Date> rateSetDates,
                                                                                            vector<double> &rateSetsFromAnchorToFinalRollDate)
     {
-        vector<boost::shared_ptr<ForwardRateSource> > frss = rollForward();
+        vector<std::shared_ptr<ForwardRateSource> > frss = rollForward();
         rateSetsFromAnchorToFinalRollDate = vector<double>(rateSetDates.size(), 0);
         Date startDate = anchorDate;
         Date endDate = forwardSimulationDates[0];

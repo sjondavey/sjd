@@ -1,17 +1,8 @@
-import os
-import sys
 import unittest
 from datetime import date
-from pathlib import Path
-
-
-REPO = Path(__file__).resolve().parents[2]
-MODULE_DIR = Path(
-    os.environ.get("SJD_PYTHON_MODULE_DIR", REPO / "python" / "sjd_runtime")
-)
-sys.path.insert(0, str(MODULE_DIR))
 
 import sjd
+from sjd import examples
 
 
 class ValidationReportTest(unittest.TestCase):
@@ -216,14 +207,8 @@ class PortfolioValidationTest(unittest.TestCase):
 
 class PortfolioAnalysisTest(unittest.TestCase):
     def setUp(self):
-        notebooks = REPO / "python" / "notebooks"
-        if str(notebooks) not in sys.path:
-            sys.path.insert(0, str(notebooks))
-        import sjd_setup
-
-        self.setup = sjd_setup
-        self.market = sjd_setup.sample_market(sjd)
-        self.book = sjd_setup.sample_contracts(sjd, self.market["forward"], self.market)
+        self.market = examples.sample_market()
+        self.book = examples.sample_contracts(self.market["forward"], self.market)
         self.environment = self.market["environment"]
 
     def test_every_contract_shares_the_contract_api(self):
@@ -292,7 +277,7 @@ class PortfolioAnalysisTest(unittest.TestCase):
 
     def test_posted_margin_reduces_capital_when_the_book_is_an_asset(self):
         factors = sjd.reg_cap_factors("commodity")
-        credit = self.setup.credit_parameters(sjd)
+        credit = examples.credit_parameters()
         contracts = self.book["contracts"]
         bare = sjd.PortfolioB2CEM(contracts, factors, credit, False)
         margin = sjd.SimpleMargin(
@@ -305,7 +290,7 @@ class PortfolioAnalysisTest(unittest.TestCase):
             1_000.0,
         )
         margined = sjd.PortfolioB2CEM(
-            self.setup.sample_contracts(sjd, self.market["forward"], self.market)["contracts"],
+            examples.sample_contracts(self.market["forward"], self.market)["contracts"],
             factors,
             credit,
             False,
@@ -325,17 +310,17 @@ class PortfolioAnalysisTest(unittest.TestCase):
         self.assertLess(margined.get_regulatory_capital(self.environment), uncollateralised)
 
     def test_commodity_capital_exceeds_fx_and_netting_does_not_increase_it(self):
-        credit = self.setup.credit_parameters(sjd)
+        credit = examples.credit_parameters()
         collar = [self.book["put"], self.book["call"]]
         separate = sjd.PortfolioB2CEM(collar, sjd.reg_cap_factors("commodity"), credit, False)
         netted = sjd.PortfolioB2CEM(
-            self.setup.sample_contracts(sjd, self.market["forward"], self.market)["contracts"][:2],
+            examples.sample_contracts(self.market["forward"], self.market)["contracts"][:2],
             sjd.reg_cap_factors("commodity"),
             credit,
             True,
         )
         fx_book = sjd.PortfolioB2CEM(
-            self.setup.sample_contracts(sjd, self.market["forward"], self.market)["contracts"][:2],
+            examples.sample_contracts(self.market["forward"], self.market)["contracts"][:2],
             sjd.reg_cap_factors("fx"),
             credit,
             True,
@@ -351,9 +336,9 @@ class PortfolioAnalysisTest(unittest.TestCase):
         self.assertGreater(netted_capital, fx_capital)
 
     def test_stochastic_forward_exposes_spot_and_monte_carlo_detail(self):
-        market = self.setup.sample_market(sjd, stochastic=True)
-        book = self.setup.sample_contracts(sjd, market["forward"], market)
-        credit = self.setup.credit_parameters(sjd)
+        market = examples.sample_market(stochastic=True)
+        book = examples.sample_contracts(market["forward"], market)
+        credit = examples.credit_parameters()
         portfolio = sjd.PortfolioB2CEM(
             book["contracts"],
             sjd.reg_cap_factors("commodity"),
@@ -379,7 +364,7 @@ class PortfolioAnalysisTest(unittest.TestCase):
 
         margin = sjd.SimpleMargin(market["anchor"], True, 50_000.0, True, 50_000.0, 10_000.0, 1_000.0)
         margined = sjd.PortfolioB2CEM(
-            self.setup.sample_contracts(sjd, market["forward"], market)["contracts"],
+            examples.sample_contracts(market["forward"], market)["contracts"],
             sjd.reg_cap_factors("commodity"),
             credit,
             True,
@@ -405,8 +390,8 @@ class PortfolioAnalysisTest(unittest.TestCase):
         self.assertGreater(len(monte_carlo["rows"][0]), 2)
 
     def test_seeded_monte_carlo_repeats(self):
-        market = self.setup.sample_market(sjd, stochastic=True)
-        book = self.setup.sample_contracts(sjd, market["forward"], market)
+        market = examples.sample_market(stochastic=True)
+        book = examples.sample_contracts(market["forward"], market)
         portfolio = sjd.Portfolio(book["contracts"])
         portfolio.validate_report(market["environment"])
         generator = sjd.SingleFactorEconomicScenarioGenerator(market["environment"])

@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Volatility/VolatilitySurfaceDelta.h>
+#include <sjd/rates/Volatility/VolatilitySurfaceDelta.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -19,7 +19,7 @@ namespace sjd
                                                    SurfaceInterpolatorType interpolatorTypeInput,
                                                    bool extrapolateInput)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceDelta"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceDelta"));
 
         setInputs(anchorDateInput, 
                   observationDatesInput, 
@@ -36,7 +36,7 @@ namespace sjd
                                                    SurfaceInterpolatorType interpolatorTypeInput,
                                                    bool extrapolateInput)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceDelta"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceDelta"));
 
         setInputs(anchorDateInput, 
                   observationDatesInput, 
@@ -154,7 +154,7 @@ namespace sjd
         return strike;      
     }
 
-    boost::shared_ptr<VolatilityRateSource> VolatilitySurfaceDelta::parallelBump(double spread)
+    std::shared_ptr<VolatilityRateSource> VolatilitySurfaceDelta::parallelBump(double spread)
     {
         vector<Date> newDates;
         QuantLib::Matrix volatilitySubset;
@@ -163,7 +163,7 @@ namespace sjd
         Matrix spreadMatrix = Matrix(volatilitySubset.rows(), volatilitySubset.columns(), spread);
         Matrix bumpedVolMatrix = volatilitySubset + spreadMatrix;
 
-        return boost::shared_ptr<VolatilityRateSource>(
+        return std::shared_ptr<VolatilityRateSource>(
             new VolatilitySurfaceDelta(anchorDate, 
                                        newDates, 
                                        strikeDimension,
@@ -172,14 +172,14 @@ namespace sjd
                                        allowExtrapolation));
     }
 
-    boost::shared_ptr<VolatilityRateSource> VolatilitySurfaceDelta::rollForward(Date toDate)
+    std::shared_ptr<VolatilityRateSource> VolatilitySurfaceDelta::rollForward(Date toDate)
     {
         vector<Date> newDates;
         QuantLib::Matrix volatilitySubset;
       
         getRolledVariables(toDate, newDates, volatilitySubset);
 
-        return boost::shared_ptr<VolatilityRateSource>(
+        return std::shared_ptr<VolatilityRateSource>(
             new VolatilitySurfaceDelta(toDate, 
                                        newDates, 
                                        strikeDimension,
@@ -266,7 +266,7 @@ namespace sjd
         }
         if (interpolationType.compare("bilinear") == 0)
         {
-            interpolator = boost::shared_ptr<Interpolation2D>(
+            interpolator = std::shared_ptr<Interpolation2D>(
                 new BilinearInterpolation(times.begin(), 
                                           times.end(), 
                                           delta.begin(), 
@@ -275,7 +275,7 @@ namespace sjd
         }
         else 
         {
-            interpolator = boost::shared_ptr<Interpolation2D>(
+            interpolator = std::shared_ptr<Interpolation2D>(
                 new BicubicSpline(times.begin(), 
                                   times.end(), 
                                   delta.begin(), 

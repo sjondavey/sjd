@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/RatesEnvironment.h>
+#include <sjd/rates/RatesEnvironment.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -8,7 +8,7 @@ namespace sjd
 {
     RatesEnvironment::RatesEnvironment(Date anchorDateInput)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("RatesEnvironment"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("RatesEnvironment"));
         anchorDate = anchorDateInput;
         finalDate = anchorDate;
         allowExtrapolation = false;
@@ -108,7 +108,7 @@ namespace sjd
         return "rates_environment";
     }
 
-    void RatesEnvironment::setFRS(boost::shared_ptr<ForwardRateSource> frsInput)
+    void RatesEnvironment::setFRS(std::shared_ptr<ForwardRateSource> frsInput)
     {
         frs = frsInput;
         frsSet = true;
@@ -120,12 +120,12 @@ namespace sjd
         return frsSet;
     }
 
-    boost::shared_ptr<ForwardRateSource> RatesEnvironment::getFRS()
+    std::shared_ptr<ForwardRateSource> RatesEnvironment::getFRS()
     {
         return frs;
     }
 
-    void RatesEnvironment::setDRS(boost::shared_ptr<DiscountRateSource> drsInput)
+    void RatesEnvironment::setDRS(std::shared_ptr<DiscountRateSource> drsInput)
     {
         drs = drsInput;
         drsSet = true;
@@ -137,12 +137,12 @@ namespace sjd
         return drsSet;
     }
 
-    boost::shared_ptr<DiscountRateSource> RatesEnvironment::getDRS()
+    std::shared_ptr<DiscountRateSource> RatesEnvironment::getDRS()
     {
         return drs;
     }
 
-    void RatesEnvironment::setForeignDRS(boost::shared_ptr<DiscountRateSource> foreigndrsInput)
+    void RatesEnvironment::setForeignDRS(std::shared_ptr<DiscountRateSource> foreigndrsInput)
     {
         foreigndrs = foreigndrsInput;
         foreignDrsSet = true;
@@ -154,12 +154,12 @@ namespace sjd
         return foreignDrsSet;
     }
 
-    boost::shared_ptr<DiscountRateSource> RatesEnvironment::getForeignDRS()
+    std::shared_ptr<DiscountRateSource> RatesEnvironment::getForeignDRS()
     {
         return foreigndrs;
     }
 
-    void RatesEnvironment::setVRS(boost::shared_ptr<VolatilityRateSource> vrsInput)
+    void RatesEnvironment::setVRS(std::shared_ptr<VolatilityRateSource> vrsInput)
     {
         vrs = vrsInput;
         vrsSet = true;
@@ -171,12 +171,12 @@ namespace sjd
         return vrsSet;
     }
 
-    boost::shared_ptr<VolatilityRateSource> RatesEnvironment::getVRS()
+    std::shared_ptr<VolatilityRateSource> RatesEnvironment::getVRS()
     {
         return vrs;
     }
 
-    void RatesEnvironment::setFixingRS(boost::shared_ptr<FixingRateSource> fixingrsInput)
+    void RatesEnvironment::setFixingRS(std::shared_ptr<FixingRateSource> fixingrsInput)
     {
         fixingrs = fixingrsInput;
         fixingrsSet = true;
@@ -187,7 +187,7 @@ namespace sjd
         return fixingrsSet;
     }
 
-    boost::shared_ptr<FixingRateSource> RatesEnvironment::getFixingRS()
+    std::shared_ptr<FixingRateSource> RatesEnvironment::getFixingRS()
     {
         return fixingrs;
     }

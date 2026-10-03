@@ -1,4 +1,4 @@
-﻿
+
 #ifndef SINGLEFACTORGMB_INCLUDED
 #define SINGLEFACTORGMB_INCLUDED
 
@@ -30,26 +30,26 @@ namespace sjd
         bool isOK();
         QuantLib::Date getAnchorDate();
 
-        virtual void setBaseRates(const boost::shared_ptr<RatesEnvironment> re);
-        boost::shared_ptr<RatesEnvironment> getBaseRates();
+        virtual void setBaseRates(const std::shared_ptr<RatesEnvironment> re);
+        std::shared_ptr<RatesEnvironment> getBaseRates();
 
         // returns a false if there was any problem setting the dates and calculating the values used in the simulation
         virtual bool setSimulationDates(std::set<QuantLib::Date> simulationDates);
         
-        virtual boost::shared_ptr<Path> getRandomPath() = 0;        
-        virtual boost::shared_ptr<Path> getAntitheticPath() = 0;
+        virtual std::shared_ptr<Path> getRandomPath() = 0;        
+        virtual std::shared_ptr<Path> getAntitheticPath() = 0;
 
     protected:
         std::string validationRoot() const override;
 
-        boost::shared_ptr<RatesEnvironment> re;
+        std::shared_ptr<RatesEnvironment> re;
 
-        boost::shared_ptr<Path> path;
-        std::vector<boost::shared_ptr<DiscountRateSource>> drss;
-        std::vector<boost::shared_ptr<DiscountRateSource>> foreigndrss;
-        std::vector<boost::shared_ptr<VolatilityRateSource>> vrss;
-        std::vector<boost::shared_ptr<ForwardRateSource>> frss;
-        std::vector<boost::shared_ptr<RollingFixingRateSource>> fixingrss;
+        std::shared_ptr<Path> path;
+        std::vector<std::shared_ptr<DiscountRateSource>> drss;
+        std::vector<std::shared_ptr<DiscountRateSource>> foreigndrss;
+        std::vector<std::shared_ptr<VolatilityRateSource>> vrss;
+        std::vector<std::shared_ptr<ForwardRateSource>> frss;
+        std::vector<std::shared_ptr<RollingFixingRateSource>> fixingrss;
 
         QuantLib::Date anchorDate;
 
@@ -68,9 +68,9 @@ namespace sjd
     class SingleFactorEconomicScenarioGenerator : public EconomicScenarioGenerator
     {
     public:
-        SingleFactorEconomicScenarioGenerator(const boost::shared_ptr<RatesEnvironment> re);
+        SingleFactorEconomicScenarioGenerator(const std::shared_ptr<RatesEnvironment> re);
 
-        virtual void setBaseRates(const boost::shared_ptr<RatesEnvironment> re);
+        virtual void setBaseRates(const std::shared_ptr<RatesEnvironment> re);
         bool isOK();
 
         // returns a false if there was any problem setting the dates and calculating the values used in the simulation
@@ -79,11 +79,11 @@ namespace sjd
         virtual void setRandomSeed(long seed);
 
         // 0 < confidenceInterval < 1
-        virtual boost::shared_ptr<Path> getConfidenceInterval(double confidenceInterval);
-        virtual boost::shared_ptr<Path> getRandomPath();        
-        virtual boost::shared_ptr<Path> getAntitheticPath();
-        virtual boost::shared_ptr<Path> getPathForRandomNumber(std::vector<double> randomNumbers);
-        virtual boost::shared_ptr<Path> getPathForSpot(std::vector<double> spot);
+        virtual std::shared_ptr<Path> getConfidenceInterval(double confidenceInterval);
+        virtual std::shared_ptr<Path> getRandomPath();        
+        virtual std::shared_ptr<Path> getAntitheticPath();
+        virtual std::shared_ptr<Path> getPathForRandomNumber(std::vector<double> randomNumbers);
+        virtual std::shared_ptr<Path> getPathForSpot(std::vector<double> spot);
 
 
     protected:
@@ -91,11 +91,11 @@ namespace sjd
         void updateFXForwardWithRolledDiscountRateSources(size_t stepNumber);
         bool frsDependsOnInterestRateDifferential;
 
-        boost::shared_ptr<DeterministicDiscountRateSource> drs;
-        boost::shared_ptr<DeterministicDiscountRateSource> foreigndrs;
-        boost::shared_ptr<DeterministicVolatilityRateSource> vrs;
-        boost::shared_ptr<ForwardRateSourceStochastic> frs;
-        boost::shared_ptr<RollingFixingRateSource> fixingrs;
+        std::shared_ptr<DeterministicDiscountRateSource> drs;
+        std::shared_ptr<DeterministicDiscountRateSource> foreigndrs;
+        std::shared_ptr<DeterministicVolatilityRateSource> vrs;
+        std::shared_ptr<ForwardRateSourceStochastic> frs;
+        std::shared_ptr<RollingFixingRateSource> fixingrs;
         std::vector<QuantLib::Date> allFixingDates;
         std::vector<double> allFixingRates;
 

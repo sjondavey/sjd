@@ -1,4 +1,4 @@
-﻿#ifndef optioncontract_test
+#ifndef optioncontract_test
 #define optioncontract_test
 
 #include <iostream>
@@ -23,7 +23,7 @@ class OptionContactTest
 {
   public:
 
-    static boost::shared_ptr<EuropeanOption> getDefaultEuropeanOption(QuantLib::Date anchorDate);
+    static std::shared_ptr<EuropeanOption> getDefaultEuropeanOption(QuantLib::Date anchorDate);
 
     static void testBuySell();
     static void testStrike();

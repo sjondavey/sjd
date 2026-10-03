@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/PathGenerators/Path.h>
+#include <sjd/rates/PathGenerators/Path.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -6,9 +6,9 @@ using namespace boost;
 
 namespace sjd 
 {
-    Path::Path(vector<boost::shared_ptr<RatesEnvironment>> ratesPathInput)
+    Path::Path(vector<std::shared_ptr<RatesEnvironment>> ratesPathInput)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("Path"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("Path"));
         ratesPath = ratesPathInput;
         pathDates.clear();
         for (size_t i = 0; i < ratesPath.size(); i++)
@@ -50,7 +50,7 @@ namespace sjd
         return pathDates;
     }
 
-    boost::shared_ptr<RatesEnvironment> Path::getRatesEnvironment(size_t i)
+    std::shared_ptr<RatesEnvironment> Path::getRatesEnvironment(size_t i)
     {
         return ratesPath[i];
     }
@@ -63,7 +63,7 @@ namespace sjd
     vector<double> Path::getSpotRates()
     {
         vector<double> spot = vector<double>(ratesPath.size());
-        vector<boost::shared_ptr<RatesEnvironment>>::iterator it = ratesPath.begin();
+        vector<std::shared_ptr<RatesEnvironment>>::iterator it = ratesPath.begin();
         size_t i = 0;
         while (it != ratesPath.end())
         {

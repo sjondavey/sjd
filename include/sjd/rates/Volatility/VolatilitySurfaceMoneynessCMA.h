@@ -1,4 +1,4 @@
-﻿
+
 #ifndef SJD_CALENDARMONTHMONEYNESS_INCLUDED
 #define SJD_CALENDARMONTHMONEYNESS_INCLUDED
 
@@ -64,8 +64,8 @@ namespace sjd
                                  std::vector<double> &vols, 
                                  std::vector<double> &sds) const;
 
-        virtual boost::shared_ptr<VolatilityRateSource> rollForward(QuantLib::Date toDate);
-        virtual boost::shared_ptr<VolatilityRateSource> parallelBump(double spread);
+        virtual std::shared_ptr<VolatilityRateSource> rollForward(QuantLib::Date toDate);
+        virtual std::shared_ptr<VolatilityRateSource> parallelBump(double spread);
 
         virtual void getRolledVariables(QuantLib::Date rolltoDate,
                                         std::vector<QuantLib::Date>& rolledObservationDates, 
@@ -75,7 +75,7 @@ namespace sjd
     protected:
 
         QuantLib::Date beginningOfAnchorDateMonth;
-        boost::shared_ptr<QuantLib::DayCounter> simpleDayCounter;
+        std::shared_ptr<QuantLib::DayCounter> simpleDayCounter;
     };
 }
 

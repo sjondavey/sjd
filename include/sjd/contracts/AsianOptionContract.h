@@ -1,4 +1,4 @@
-﻿#ifndef ASIANOPTIONCONTRACT_INCLUDED
+#ifndef ASIANOPTIONCONTRACT_INCLUDED
 #define ASIANOPTIONCONTRACT_INCLUDED
 #pragma once
 
@@ -47,22 +47,22 @@ namespace sjd {
 
         virtual void validate();
         virtual std::string validationRoot() const { return "asian_option"; } 
-        virtual void validate(boost::shared_ptr<RatesEnvironment> re);
+        virtual void validate(std::shared_ptr<RatesEnvironment> re);
 
         virtual void setAveragingDates(std::set<QuantLib::Date> averagingDates); 
         virtual void setType(PutCall pc);
 
         //virtual double getOptionValue(QuantLib::Date valueDate, std::vector<double> sds);
-        virtual double getOptionValue(boost::shared_ptr<RatesEnvironment> re);
+        virtual double getOptionValue(std::shared_ptr<RatesEnvironment> re);
 
         virtual void getRates(QuantLib::Date valuationDate, 
                               std::vector<double> &fixingRates, 
                               std::vector<double> &forwardRates,
                               std::vector<double> &sd, 
                               std::vector<double> &vol,
-                              boost::shared_ptr<RatesEnvironment> re);
+                              std::shared_ptr<RatesEnvironment> re);
 
-        virtual std::string toStringRates(boost::shared_ptr<RatesEnvironment> re);
+        virtual std::string toStringRates(std::shared_ptr<RatesEnvironment> re);
 
     protected:
         void constructorCommon(std::set<QuantLib::Date> averagingDates, 
@@ -75,7 +75,7 @@ namespace sjd {
                                BuySell buySell);
         
 
-       boost::shared_ptr<AverageRateOption> option;
+       std::shared_ptr<AverageRateOption> option;
     };
 }
 

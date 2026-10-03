@@ -1,24 +1,13 @@
-"""sjd.simulate returns every path, and mcstats summarises them."""
+"""sjd.simulate returns every path, and sjd.stats summarises them."""
 
-import os
-import sys
 import unittest
 from datetime import date
-from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
 
-REPO = Path(__file__).resolve().parents[2]
-MODULE_DIR = Path(os.environ.get("SJD_PYTHON_MODULE_DIR", REPO / "python" / "sjd_runtime"))
-sys.path.insert(0, str(MODULE_DIR))
-sys.path.insert(0, str(REPO / "python"))
-sys.path.insert(0, str(REPO / "python" / "notebooks"))
-
 import sjd
-import sjd_setup
-
-import mcstats
+from sjd import examples, stats
 
 
 def _column(detail, heading):
@@ -28,12 +17,12 @@ def _column(detail, heading):
 
 class SimulateTest(unittest.TestCase):
     def setUp(self):
-        self.market = sjd_setup.sample_market(sjd, stochastic=True)
+        self.market = examples.sample_market(stochastic=True)
         self.environment = self.market["environment"]
         self.dates = self.market["simulation_dates"]
 
     def _contracts(self):
-        return sjd_setup.sample_contracts(sjd, self.market["forward"], self.market)["contracts"]
+        return examples.sample_contracts(self.market["forward"], self.market)["contracts"]
 
     def _portfolio(self):
         portfolio = sjd.Portfolio(self._contracts())
@@ -46,7 +35,7 @@ class SimulateTest(unittest.TestCase):
         portfolio = sjd.PortfolioB2CEM(
             self._contracts(),
             sjd.reg_cap_factors("commodity"),
-            sjd_setup.credit_parameters(sjd),
+            examples.credit_parameters(),
             True,
             margin,
         )
@@ -97,11 +86,11 @@ class SimulateTest(unittest.TestCase):
         detail = evolver.get_monte_carlo_detail()
 
         simulation = sjd.simulate(portfolio, self.environment, self.dates, paths=20, seed=11)
-        values = mcstats.exposure(simulation)
+        values = stats.exposure(simulation)
         np.testing.assert_allclose(simulation.spot.mean(axis=0), _column(detail, "Ave Path"))
         np.testing.assert_allclose(simulation.mtm.mean(axis=0), _column(detail, "Ave MtM"))
-        np.testing.assert_allclose(mcstats.expected_exposure(values), _column(detail, "EE"))
-        np.testing.assert_allclose(mcstats.negative_expected_exposure(values), _column(detail, "NEE"))
+        np.testing.assert_allclose(stats.expected_exposure(values), _column(detail, "EE"))
+        np.testing.assert_allclose(stats.negative_expected_exposure(values), _column(detail, "NEE"))
 
     def test_margin_is_returned_and_reduces_exposure(self):
         portfolio = self._margined()
@@ -113,11 +102,11 @@ class SimulateTest(unittest.TestCase):
 
         simulation = sjd.simulate(portfolio, self.environment, self.dates, paths=20, seed=13)
         self.assertEqual(simulation.margin.shape, simulation.mtm.shape)
-        values = mcstats.exposure(simulation)
+        values = stats.exposure(simulation)
         np.testing.assert_allclose(values, simulation.mtm - simulation.margin)
         np.testing.assert_allclose(simulation.margin.mean(axis=0), _column(detail, "Ave Margin"))
-        np.testing.assert_allclose(mcstats.expected_exposure(values), _column(detail, "EE"))
-        np.testing.assert_allclose(mcstats.holding_period_exposure(simulation), values)
+        np.testing.assert_allclose(stats.expected_exposure(values), _column(detail, "EE"))
+        np.testing.assert_allclose(stats.holding_period_exposure(simulation), values)
 
     def test_holding_period_matches_the_evolver(self):
         portfolio = self._margined()
@@ -144,13 +133,13 @@ class SimulateTest(unittest.TestCase):
             holding_period=10, holding_period_calendar=usdzar,
         )
         self.assertEqual(simulation.dates, evolver.simulation_dates)
-        self.assertEqual(mcstats.exposure_dates(simulation), self.dates)
+        self.assertEqual(stats.exposure_dates(simulation), self.dates)
         self.assertEqual(simulation.dates[simulation.margin_reset_steps[1]], reset)
-        values = mcstats.holding_period_exposure(simulation)
+        values = stats.holding_period_exposure(simulation)
         self.assertEqual(values.shape, (20, len(self.dates)))
-        np.testing.assert_allclose(mcstats.expected_exposure(values), ee_with_hp)
-        np.testing.assert_allclose(mcstats.negative_expected_exposure(values), nee_with_hp)
-        table = mcstats.summary(simulation, holding_period=True)
+        np.testing.assert_allclose(stats.expected_exposure(values), ee_with_hp)
+        np.testing.assert_allclose(stats.negative_expected_exposure(values), nee_with_hp)
+        table = stats.summary(simulation, holding_period=True)
         self.assertEqual(table["dates"], self.dates)
         np.testing.assert_allclose(table["ee"], ee_with_hp)
 
@@ -171,10 +160,10 @@ class SimulateTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             sjd.simulate(self._portfolio(), self.environment, self.dates[1:], paths=4)
 
-        deterministic = sjd_setup.sample_market(sjd)
+        deterministic = examples.sample_market()
         with self.assertRaisesRegex(ValueError, "stochastic"):
             sjd.simulate(
-                sjd.Portfolio(sjd_setup.sample_contracts(sjd, deterministic["forward"], deterministic)["contracts"]),
+                sjd.Portfolio(examples.sample_contracts(deterministic["forward"], deterministic)["contracts"]),
                 deterministic["environment"],
                 deterministic["simulation_dates"],
                 paths=4,
@@ -182,7 +171,7 @@ class SimulateTest(unittest.TestCase):
 
     def test_summary_has_one_row_per_date(self):
         simulation = sjd.simulate(self._margined(), self.environment, self.dates, paths=50, seed=1)
-        table = mcstats.summary(simulation)
+        table = stats.summary(simulation)
         self.assertEqual(table["dates"], self.dates)
         for key in ("spot", "mtm", "margin", "ee", "nee", "pfe", "negative_pfe", "ee_standard_error"):
             self.assertEqual(table[key].shape, (len(self.dates),), key)
@@ -199,41 +188,41 @@ class StatisticsTest(unittest.TestCase):
     ])
 
     def test_expected_exposures(self):
-        np.testing.assert_allclose(mcstats.expected_exposure(self.values), [0.0, 2.0])
-        np.testing.assert_allclose(mcstats.negative_expected_exposure(self.values), [0.0, -3.0])
+        np.testing.assert_allclose(stats.expected_exposure(self.values), [0.0, 2.0])
+        np.testing.assert_allclose(stats.negative_expected_exposure(self.values), [0.0, -3.0])
 
     def test_potential_future_exposures(self):
         np.testing.assert_allclose(
-            mcstats.potential_future_exposure(self.values, 0.5, method="lower"), [0.0, 0.0]
+            stats.potential_future_exposure(self.values, 0.5, method="lower"), [0.0, 0.0]
         )
         np.testing.assert_allclose(
-            mcstats.potential_future_exposure(self.values, 0.9, method="higher"), [0.0, 6.0]
+            stats.potential_future_exposure(self.values, 0.9, method="higher"), [0.0, 6.0]
         )
         np.testing.assert_allclose(
-            mcstats.negative_potential_future_exposure(self.values, 0.9, method="lower"), [0.0, -8.0]
+            stats.negative_potential_future_exposure(self.values, 0.9, method="lower"), [0.0, -8.0]
         )
-        self.assertEqual(mcstats.quantiles(self.values, [0.25, 0.75]).shape, (2, 2))
+        self.assertEqual(stats.quantiles(self.values, [0.25, 0.75]).shape, (2, 2))
         with self.assertRaises(ValueError):
-            mcstats.potential_future_exposure(self.values, 1.0)
+            stats.potential_future_exposure(self.values, 1.0)
 
     def test_value_at_risk_and_expected_shortfall(self):
-        self.assertEqual(mcstats.value_at_risk(self.values, 1, 0.75, method="lower"), 8.0)
-        self.assertEqual(mcstats.value_at_risk(self.values, 1, 0.5, method="lower"), 4.0)
-        self.assertEqual(mcstats.expected_shortfall(self.values, 1, 0.5, method="lower"), 6.0)
+        self.assertEqual(stats.value_at_risk(self.values, 1, 0.75, method="lower"), 8.0)
+        self.assertEqual(stats.value_at_risk(self.values, 1, 0.5, method="lower"), 4.0)
+        self.assertEqual(stats.expected_shortfall(self.values, 1, 0.5, method="lower"), 6.0)
         with self.assertRaises(ValueError):
-            mcstats.value_at_risk(self.values, 0)
+            stats.value_at_risk(self.values, 0)
 
     def test_antithetic_standard_error_uses_pair_means(self):
-        independent = mcstats.standard_error(self.values)
+        independent = stats.standard_error(self.values)
         self.assertAlmostEqual(independent[1], np.std([2.0, -4.0, 6.0, -8.0], ddof=1) / 2.0)
-        pairs = mcstats.standard_error(self.values, antithetic=True)
+        pairs = stats.standard_error(self.values, antithetic=True)
         self.assertAlmostEqual(pairs[1], np.std([4.0, -6.0], ddof=1) / np.sqrt(2.0))
         with self.assertRaises(ValueError):
-            mcstats.standard_error(self.values[:3], antithetic=True)
+            stats.standard_error(self.values[:3], antithetic=True)
 
     def test_exposure_without_margin_is_a_copy(self):
         simulation = SimpleNamespace(mtm=self.values, margin=None)
-        result = mcstats.exposure(simulation)
+        result = stats.exposure(simulation)
         result[0, 0] = 99.0
         self.assertEqual(self.values[0, 0], 0.0)
 

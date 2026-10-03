@@ -1,4 +1,4 @@
-﻿#include <sjd/contracts/Portfolio/CVA/cva.h>
+#include <sjd/contracts/Portfolio/CVA/cva.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -55,7 +55,7 @@ namespace sjd {
     =======================================================================================*/
     FlatPD::FlatPD(Date anchorDateInput, double pdInput, double lgdInput)
    {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("FlatPD"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("FlatPD"));
       setLGD(lgdInput);
       setPD(pdInput);
         setAnchorDate(anchorDateInput);
@@ -123,7 +123,7 @@ namespace sjd {
                                                                vector<double> cdpInput, 
                                                                vector<double> lgdInput)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("CumulativeDefaultProbability"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("CumulativeDefaultProbability"));
         setAnchorDate(anchorDateInput);
         observationDates = datesInput;
         vector<double> cdp = cdpInput;
@@ -143,8 +143,8 @@ namespace sjd {
         {
             time.push_back((observationDates[i] - anchorDate) / 365.0);
         }
-        defaultInterpolator = boost::shared_ptr<ArrayInterpolator>(new CubicSplineInterpolator(time, cdp, false));
-        lossInterpolator = boost::shared_ptr<ArrayInterpolator>(new CubicSplineInterpolator(time, lgd, false));
+        defaultInterpolator = std::shared_ptr<ArrayInterpolator>(new CubicSplineInterpolator(time, cdp, false));
+        lossInterpolator = std::shared_ptr<ArrayInterpolator>(new CubicSplineInterpolator(time, lgd, false));
     }
 
    bool CumulativeDefaultProbability::isOK()

@@ -1,4 +1,4 @@
-﻿#include <sjd/contracts/Portfolio/PortfolioEvolver.h>
+#include <sjd/contracts/Portfolio/PortfolioEvolver.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -6,12 +6,12 @@ using namespace boost;
 
 namespace sjd 
 {
-    PortfolioEvolver::PortfolioEvolver(boost::shared_ptr<Portfolio> portfolioInput, 
-                                       boost::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGeneratorInput,
+    PortfolioEvolver::PortfolioEvolver(std::shared_ptr<Portfolio> portfolioInput, 
+                                       std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGeneratorInput,
                                        set<Date> forwardDatesSet,
-                                       boost::shared_ptr<RegulatoryCapital> capital)
+                                       std::shared_ptr<RegulatoryCapital> capital)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("PortfolioEvolver"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("PortfolioEvolver"));
         portfolio = portfolioInput;
         portfolioIsMargined = portfolio->isMargined();
         capitalModel = capital;
@@ -21,14 +21,14 @@ namespace sjd
         setSimulationDates(forwardDatesSet);
     }
 
-    PortfolioEvolver::PortfolioEvolver(boost::shared_ptr<Portfolio> portfolioInput, 
-                                       boost::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGeneratorInput,
+    PortfolioEvolver::PortfolioEvolver(std::shared_ptr<Portfolio> portfolioInput, 
+                                       std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGeneratorInput,
                                        set<Date> forwardDatesSet,
-                                       boost::shared_ptr<Calendar> calendarForHoldingPeriodInput, 
+                                       std::shared_ptr<Calendar> calendarForHoldingPeriodInput, 
                                        size_t holdingPeriodInput,
-                                       boost::shared_ptr<RegulatoryCapital> capital)
+                                       std::shared_ptr<RegulatoryCapital> capital)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("PortfolioEvolver"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("PortfolioEvolver"));
         portfolio = portfolioInput;
         portfolioIsMargined = portfolio->isMargined();
         capitalModel = capital;
@@ -85,7 +85,7 @@ namespace sjd
             absorbChildReport(pathGenerator->validationReport(), {});
             return false;
         }
-        boost::shared_ptr<Path> testPath = pathGenerator->getConfidenceInterval(0.95);
+        std::shared_ptr<Path> testPath = pathGenerator->getConfidenceInterval(0.95);
         for (size_t i = 0; i < testPath->getNumberOfSteps(); ++i)
         {
             portfolio->validate(testPath->getRatesEnvironment(i));
@@ -140,7 +140,7 @@ namespace sjd
         N += N % 2;
         initialiseAccumulators(N);    
         size_t halfway = N / 2;
-        boost::shared_ptr<Path> path;
+        std::shared_ptr<Path> path;
         for (size_t i = 0; i < halfway; ++i) 
         {
             path = pathGenerator->getRandomPath();
@@ -177,7 +177,7 @@ namespace sjd
         {
             N += N % 2;
         }
-        vector<boost::shared_ptr<SingleInstrumentContract>> trades;
+        vector<std::shared_ptr<SingleInstrumentContract>> trades;
         if (byTrade)
         {
             trades = portfolio->getUnderlyingSingleInstrumentContracts();
@@ -212,8 +212,8 @@ namespace sjd
 
     void PortfolioEvolver::recordPath(SimulatedPaths& result,
                                       size_t row,
-                                      boost::shared_ptr<Path> path,
-                                      const vector<boost::shared_ptr<SingleInstrumentContract>>& trades)
+                                      std::shared_ptr<Path> path,
+                                      const vector<std::shared_ptr<SingleInstrumentContract>>& trades)
     {
         evolvePortfolioAlongPath(path);
         size_t offset = row * result.steps;
@@ -300,10 +300,10 @@ namespace sjd
 
     void PortfolioEvolver::getMonteCarloAnalysis(vector<string> &columnHeadings, 
                                                  vector<double> &summaryStats,
-                                                   boost::shared_ptr<DiscountRateSource> zeroCurve, 
-                                                 boost::shared_ptr<DiscountRateSource> spreadCurve,
-                                                 boost::shared_ptr<CVA> cvaObj,
-                                                 boost::shared_ptr<CVA> dvaObj)
+                                                   std::shared_ptr<DiscountRateSource> zeroCurve, 
+                                                 std::shared_ptr<DiscountRateSource> spreadCurve,
+                                                 std::shared_ptr<CVA> cvaObj,
+                                                 std::shared_ptr<CVA> dvaObj)
     {
         columnHeadings = vector<string>(0);
         summaryStats = vector<double>(0);
@@ -358,19 +358,19 @@ namespace sjd
                                        vector<string>& columnHeadings, 
                                        vector<vector<double>>& data)
     {
-        boost::shared_ptr<Path> path = pathGenerator->getConfidenceInterval(confidenceInterval);
+        std::shared_ptr<Path> path = pathGenerator->getConfidenceInterval(confidenceInterval);
         getPathDetail(path, simulationDates, columnHeadings, data);
     }
 
     void PortfolioEvolver::getCIAnalysis(double confidenceInterval,
                                          vector<string> &columnHeadings, 
                                          std::vector<double> &data,
-                                           boost::shared_ptr<DiscountRateSource> zc, 
-                                          boost::shared_ptr<DiscountRateSource> spreadCurve,
-                                         boost::shared_ptr<CVA> cva,
-                                         boost::shared_ptr<CVA> dva)
+                                           std::shared_ptr<DiscountRateSource> zc, 
+                                          std::shared_ptr<DiscountRateSource> spreadCurve,
+                                         std::shared_ptr<CVA> cva,
+                                         std::shared_ptr<CVA> dva)
     {
-        boost::shared_ptr<Path> path = pathGenerator->getConfidenceInterval(confidenceInterval);
+        std::shared_ptr<Path> path = pathGenerator->getConfidenceInterval(confidenceInterval);
         getPathAnalysis(path, columnHeadings, data, zc, spreadCurve, cva, dva);
     }
 
@@ -379,23 +379,23 @@ namespace sjd
                                              vector<string>& columnHeadings, 
                                              vector<vector<double>>& data)
     {
-        boost::shared_ptr<Path> path = pathGenerator->getPathForSpot(spotPath);
+        std::shared_ptr<Path> path = pathGenerator->getPathForSpot(spotPath);
         getPathDetail(path, simulationDates, columnHeadings, data);
     }
 
     void PortfolioEvolver::getSpotPathAnalysis(vector<double> spotPath,
                                                vector<string> &columnHeadings, 
                                                std::vector<double> &data,
-                                                 boost::shared_ptr<DiscountRateSource> zc, 
-                                                boost::shared_ptr<DiscountRateSource> spreadCurve,
-                                               boost::shared_ptr<CVA> cva,
-                                               boost::shared_ptr<CVA> dva)
+                                                 std::shared_ptr<DiscountRateSource> zc, 
+                                                std::shared_ptr<DiscountRateSource> spreadCurve,
+                                               std::shared_ptr<CVA> cva,
+                                               std::shared_ptr<CVA> dva)
     {
-        boost::shared_ptr<Path> path = pathGenerator->getPathForSpot(spotPath);
+        std::shared_ptr<Path> path = pathGenerator->getPathForSpot(spotPath);
         getPathAnalysis(path, columnHeadings, data, zc, spreadCurve, cva, dva);
     }
 
-    void PortfolioEvolver::getPathDetail(boost::shared_ptr<Path> path,
+    void PortfolioEvolver::getPathDetail(std::shared_ptr<Path> path,
                                          vector<Date>& datesToOutput,
                                          vector<string>& columnHeadings, 
                                          vector<vector<double>>& data)
@@ -460,13 +460,13 @@ namespace sjd
         return;
     }
    
-    void PortfolioEvolver::getPathAnalysis(boost::shared_ptr<Path> path,
+    void PortfolioEvolver::getPathAnalysis(std::shared_ptr<Path> path,
                                            vector<string> &columnHeadings, 
                                            std::vector<double> &summaryStats,
-                                            boost::shared_ptr<DiscountRateSource> zeroCurve, 
-                                            boost::shared_ptr<DiscountRateSource> spreadCurve,
-                                           boost::shared_ptr<CVA> cvaObj,
-                                           boost::shared_ptr<CVA> dvaObj)
+                                            std::shared_ptr<DiscountRateSource> zeroCurve, 
+                                            std::shared_ptr<DiscountRateSource> spreadCurve,
+                                           std::shared_ptr<CVA> cvaObj,
+                                           std::shared_ptr<CVA> dvaObj)
     {
         summaryStats = vector<double>(0);
         spotPath = vector<double>(simulationSteps, 0);
@@ -589,7 +589,7 @@ namespace sjd
         exposureSteps = exposureDatesIndex.size();
    }
 
-   vector<double> PortfolioEvolver::getSpotAlongAPath(boost::shared_ptr<Path> inputPath)
+   vector<double> PortfolioEvolver::getSpotAlongAPath(std::shared_ptr<Path> inputPath)
    {
        size_t steps = inputPath->getNumberOfSteps();
        vector<double> spot = vector<double>(steps);
@@ -601,7 +601,7 @@ namespace sjd
        return spot;
    }
 
-   vector<double> PortfolioEvolver::getMtMAlongAPath(boost::shared_ptr<Path> inputPath)
+   vector<double> PortfolioEvolver::getMtMAlongAPath(std::shared_ptr<Path> inputPath)
    {
        size_t steps = inputPath->getNumberOfSteps();
        vector<double> mtm = vector<double>(steps);
@@ -612,7 +612,7 @@ namespace sjd
        return mtm;
    }
 
-   void PortfolioEvolver::getRegulatoryCapitalAlongAPath(boost::shared_ptr<Path> inputPath,
+   void PortfolioEvolver::getRegulatoryCapitalAlongAPath(std::shared_ptr<Path> inputPath,
                                                          vector<double>& regCap, 
                                                          vector<double>& mtm, 
                                                          vector<double>& margin)
@@ -709,7 +709,7 @@ namespace sjd
         regCap = vector<double>(exposureSteps, 0);
     }
 
-   void PortfolioEvolver::evolvePortfolioAlongPath(boost::shared_ptr<Path> inputPath)
+   void PortfolioEvolver::evolvePortfolioAlongPath(std::shared_ptr<Path> inputPath)
     {
         spotPath = getSpotAlongAPath(inputPath);
         if (portfolioAttractsCapital)
@@ -851,8 +851,8 @@ namespace sjd
  
 
     double PortfolioEvolver::getXVAForExposurePath(vector<double> exposurePath, 
-                                                   boost::shared_ptr<CVA> cvaObj, 
-                                                   boost::shared_ptr<DiscountRateSource> drs) 
+                                                   std::shared_ptr<CVA> cvaObj, 
+                                                   std::shared_ptr<DiscountRateSource> drs) 
     {
         if (!cvaObj->isOK() || 
             !cvaObj->extendsTo(simulationDates.back()) || 
@@ -878,8 +878,8 @@ namespace sjd
 
     double PortfolioEvolver::getExpectedCostOfFundingPosition(vector<double> position, 
                                                                 vector<Date> dates, 
-                                                              boost::shared_ptr<DiscountRateSource> zeroCurve,
-                                                              boost::shared_ptr<DiscountRateSource> spreadCurve)
+                                                              std::shared_ptr<DiscountRateSource> zeroCurve,
+                                                              std::shared_ptr<DiscountRateSource> spreadCurve)
     {
         if ((position.size() != dates.size()) || 
             !zeroCurve->extendsTo(dates.back()) ||

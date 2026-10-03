@@ -1,4 +1,4 @@
-﻿#ifndef SJD_VOLATILITYRATESOURCE_INCLUDED
+#ifndef SJD_VOLATILITYRATESOURCE_INCLUDED
 #define SJD_VOLATILITYRATESOURCE_INCLUDED
 #pragma once
 
@@ -21,7 +21,7 @@ namespace sjd
 
         virtual bool isOK();
 
-        boost::shared_ptr<QuantLib::DayCounter> getDayCounter() const;
+        std::shared_ptr<QuantLib::DayCounter> getDayCounter() const;
 
         using RateSource::isInRange;
         virtual bool isInRange(QuantLib::Date date, double strike, double forward) const = 0;
@@ -47,7 +47,7 @@ namespace sjd
                                  std::vector<double> &sds) const;
     
     protected:
-        boost::shared_ptr<QuantLib::DayCounter> dayCounter;
+        std::shared_ptr<QuantLib::DayCounter> dayCounter;
     };
 
 }

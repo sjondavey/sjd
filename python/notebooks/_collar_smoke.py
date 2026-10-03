@@ -1,22 +1,18 @@
 import math
-import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import sjd_setup
+import sjd
+from sjd import examples
 
-sjd = sjd_setup.load_sjd()
-
-anchor = sjd_setup.ANCHOR
-holidays = sjd_setup.sample_calendar(sjd)
-settlements = [holidays.adjust(sjd_setup.add_months(anchor, i)) for i in range(1, 13)]
+anchor = examples.ANCHOR
+holidays = examples.sample_calendar()
+settlements = [holidays.adjust(examples.add_months(anchor, i)) for i in range(1, 13)]
 curve_dates = [anchor, *settlements]
-yf = sjd_setup.year_fraction
+yf = examples.year_fraction
 volume = 1_000_000.0
 put_moneyness = 0.97
 call_moneyness = 1.03
 
-frs, drs, vrs = sjd_setup.fx_curves(sjd, curve_dates)
+frs, drs, vrs = examples.fx_curves(curve_dates)
 environment = sjd.RatesEnvironment(anchor)
 environment.set_frs(frs)
 environment.set_drs(drs)

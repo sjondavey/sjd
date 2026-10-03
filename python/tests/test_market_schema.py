@@ -1,14 +1,10 @@
 """The SQLite pillar tables accept what the market specs store."""
 
 import sqlite3
-import sys
 import unittest
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from markets.schema import SCHEMA_VERSION, SchemaVersionError, initialize
-from markets.specs import DISCOUNT_CURVES, MARKETS
+from sjd.markets.schema import SCHEMA_VERSION, SchemaVersionError, initialize
+from sjd.markets.specs import DISCOUNT_CURVES, MARKETS
 
 ANCHOR = "2026-09-16"
 PILLAR = "2026-12-16"

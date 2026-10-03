@@ -1,4 +1,4 @@
-﻿#include <sjd/contracts/Portfolio/Insurance/PortfolioInsurance.h>
+#include <sjd/contracts/Portfolio/Insurance/PortfolioInsurance.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -7,10 +7,10 @@ using namespace boost;
 namespace sjd {
 
     void PortfolioInsurance::setParameters(Date policyStartDateInput, Date policyMaturityDateInput,
-                                           boost::shared_ptr<DiscountRateSource> standbyDRSInput, 
-                                           boost::shared_ptr<DiscountRateSource> utilisationDRSInput)
+                                           std::shared_ptr<DiscountRateSource> standbyDRSInput, 
+                                           std::shared_ptr<DiscountRateSource> utilisationDRSInput)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("PortfolioInsurance"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("PortfolioInsurance"));
 
       policyStartDate = policyStartDateInput;
         policyMaturityDate = policyMaturityDateInput;
@@ -18,12 +18,12 @@ namespace sjd {
         utilisationDRS = utilisationDRSInput;         
    }
 
-    boost::shared_ptr<DiscountRateSource> PortfolioInsurance::getStandbyDRS()
+    std::shared_ptr<DiscountRateSource> PortfolioInsurance::getStandbyDRS()
     {
         return standbyDRS;
     }
 
-    boost::shared_ptr<DiscountRateSource> PortfolioInsurance::getUtilisationDRS()
+    std::shared_ptr<DiscountRateSource> PortfolioInsurance::getUtilisationDRS()
     {
         return utilisationDRS;
     }
@@ -114,8 +114,8 @@ namespace sjd {
 
     =======================================================================================*/
     SimpleInsurance::SimpleInsurance(Date policyStartDate, Date policyMaturityDate, double sumInsuredInput, 
-                                     boost::shared_ptr<DiscountRateSource> standbyDRS, 
-                                     boost::shared_ptr<DiscountRateSource> utilisationDRS)
+                                     std::shared_ptr<DiscountRateSource> standbyDRS, 
+                                     std::shared_ptr<DiscountRateSource> utilisationDRS)
    {
       className = "SimpleInsurance";
         sumInsured = sumInsuredInput;
@@ -139,10 +139,10 @@ namespace sjd {
 
     SimpleInsuranceWithTermStructure::SimpleInsuranceWithTermStructure(Date policyStartDate, Date policyMaturityDate, 
                                     vector<Date> datesInput, vector<double> insuredAmountsInput,
-                                    boost::shared_ptr<DiscountRateSource> standbyDRS, 
-                                    boost::shared_ptr<DiscountRateSource> utilisationDRS) 
+                                    std::shared_ptr<DiscountRateSource> standbyDRS, 
+                                    std::shared_ptr<DiscountRateSource> utilisationDRS) 
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("SimpleInsuranceWithTermStructure"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("SimpleInsuranceWithTermStructure"));
 
         dates = datesInput;
         insuredAmounts = insuredAmountsInput;

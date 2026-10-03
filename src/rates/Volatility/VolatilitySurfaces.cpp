@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Volatility/VolatilitySurfaces.h>
+#include <sjd/rates/Volatility/VolatilitySurfaces.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -99,7 +99,7 @@ namespace sjd
             return;
         }
         anchorDate = anchorDateInput;
-        dayCounter = boost::shared_ptr<DayCounter>(new Actual365Fixed());
+        dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
         allowExtrapolation = extrapolateInput;
 
         strikeDimension = strikeDimensionInput;
@@ -154,7 +154,7 @@ namespace sjd
         interpolatorType = interpolatorTypeInput;        
         if (interpolatorType == BILINEAR) 
         {
-            interpolator = boost::shared_ptr<Interpolation2D>(new QuantLib::BilinearInterpolation(time.begin(), 
+            interpolator = std::shared_ptr<Interpolation2D>(new QuantLib::BilinearInterpolation(time.begin(), 
                                                                                                   time.end(), 
                                                                                                   strikeDimension.begin(), 
                                                                                                   strikeDimension.end(), 
@@ -162,7 +162,7 @@ namespace sjd
         }
         else if (interpolatorType == BICUBIC) 
         {
-            interpolator = boost::shared_ptr<Interpolation2D>(new QuantLib::BicubicSpline(time.begin(), 
+            interpolator = std::shared_ptr<Interpolation2D>(new QuantLib::BicubicSpline(time.begin(), 
                                                                                           time.end(), 
                                                                                           strikeDimension.begin(), 
                                                                                           strikeDimension.end(), 
@@ -170,7 +170,7 @@ namespace sjd
         }
         else 
         {            
-            interpolator = boost::shared_ptr<Interpolation2D>(new QuantLib::BicubicSpline(time.begin(), 
+            interpolator = std::shared_ptr<Interpolation2D>(new QuantLib::BicubicSpline(time.begin(), 
                                                                                           time.end(), 
                                                                                           strikeDimension.begin(), 
                                                                                           strikeDimension.end(), 

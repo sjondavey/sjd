@@ -1,4 +1,4 @@
-﻿#include <sjd/contracts/Cashflow.h>
+#include <sjd/contracts/Cashflow.h>
 
 
 using namespace std;
@@ -16,7 +16,7 @@ namespace sjd
                                           double amount, 
                                           BuySell bs)
     {
-      errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("FixedCashflow"));
+      errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("FixedCashflow"));
         setMaturityDate(cashFlowDate);
         setSettlementDate(cashFlowDate);
         setVolume(abs(amount));
@@ -50,7 +50,7 @@ namespace sjd
       }
     }
 
-    void FixedCashflow::validate(boost::shared_ptr<RatesEnvironment> re)
+    void FixedCashflow::validate(std::shared_ptr<RatesEnvironment> re)
     {
         SingleInstrumentContract::validate(re);
     }
@@ -72,7 +72,7 @@ namespace sjd
         premiumAmount = 0;
     }
 
-    double FixedCashflow::getValue(boost::shared_ptr<RatesEnvironment> re)
+    double FixedCashflow::getValue(std::shared_ptr<RatesEnvironment> re)
     {
         Date valueDate = re->getAnchorDate();
         if (valueDate > settlementDate)

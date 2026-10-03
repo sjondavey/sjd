@@ -1,4 +1,4 @@
-﻿#include "PortfolioTest.h"
+#include "PortfolioTest.h"
 
 using namespace std;
 using namespace QuantLib;
@@ -11,16 +11,16 @@ using namespace sjd;
 
 
 
-boost::shared_ptr<RegCapUnderlyingFactors> PortfolioTest::getDefaultRegCapUnderlyingFactors()
+std::shared_ptr<RegCapUnderlyingFactors> PortfolioTest::getDefaultRegCapUnderlyingFactors()
 {
-    return boost::shared_ptr<RegCapUnderlyingFactors>(new CommodityRegCapFactors);
+    return std::shared_ptr<RegCapUnderlyingFactors>(new CommodityRegCapFactors);
 }
 
-boost::shared_ptr<RegCapCreditParameters> PortfolioTest::getDefaultRegCreditParameters()
+std::shared_ptr<RegCapCreditParameters> PortfolioTest::getDefaultRegCreditParameters()
 {
     double counterpartyWeighting = 1.5;
     double capitalCharge = .1;
-    return boost::shared_ptr<RegCapCreditParameters>(new RegCapCreditParameters(counterpartyWeighting, capitalCharge));
+    return std::shared_ptr<RegCapCreditParameters>(new RegCapCreditParameters(counterpartyWeighting, capitalCharge));
 }
 
 
@@ -30,40 +30,40 @@ void PortfolioTest::testStructureCreation()
 
     Date anchorDate = Date(27, Jan, 2013);
     GenerateRates gr = GenerateRates();
-    boost::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
+    std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
 
     int yearsToSettlement = 2;
     double structureVolume = 10000;
     double premiumRecievable = 2000;
-    boost::shared_ptr<EuropeanForward> fwdSale1 = 
+    std::shared_ptr<EuropeanForward> fwdSale1 = 
         GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToSettlement, 112, structureVolume, SELL);
-    boost::shared_ptr<EuropeanForward> fwdSale2 = 
+    std::shared_ptr<EuropeanForward> fwdSale2 = 
         GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToSettlement, 112, structureVolume, SELL);
 
-    boost::shared_ptr<SingleInstrumentContract> cf1 = 
+    std::shared_ptr<SingleInstrumentContract> cf1 = 
         GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, premiumRecievable, BUY);
-    boost::shared_ptr<SingleInstrumentContract> cf2 = 
+    std::shared_ptr<SingleInstrumentContract> cf2 = 
         GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, premiumRecievable, BUY);
 
-    boost::shared_ptr<EuropeanOption> option1 = 
+    std::shared_ptr<EuropeanOption> option1 = 
         GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 115, structureVolume, BUY, CALL, 0);
-    boost::shared_ptr<EuropeanOption> option2 = 
+    std::shared_ptr<EuropeanOption> option2 = 
         GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 115, structureVolume, BUY, CALL, 0);
     
-    vector<boost::shared_ptr<SingleInstrumentContract>> siContracts;
+    vector<std::shared_ptr<SingleInstrumentContract>> siContracts;
     siContracts.push_back(fwdSale1);
     siContracts.push_back(cf1);
     siContracts.push_back(option1);
-    boost::shared_ptr<Portfolio> p1 = boost::shared_ptr<Portfolio>(new Portfolio(siContracts));
+    std::shared_ptr<Portfolio> p1 = std::shared_ptr<Portfolio>(new Portfolio(siContracts));
     p1->validate(re);
     BOOST_REQUIRE(p1->isOK());
     BOOST_REQUIRE(!p1->isMargined());
 
-    vector<boost::shared_ptr<Contract>> contracts;
+    vector<std::shared_ptr<Contract>> contracts;
     contracts.push_back(fwdSale2);
     contracts.push_back(cf2);
     contracts.push_back(option2);
-    boost::shared_ptr<Portfolio> p2 = boost::shared_ptr<Portfolio>(new Portfolio(contracts));
+    std::shared_ptr<Portfolio> p2 = std::shared_ptr<Portfolio>(new Portfolio(contracts));
     p2->validate(re);
     BOOST_REQUIRE(p2->isOK());
     BOOST_REQUIRE(!p2->isMargined());
@@ -76,17 +76,17 @@ void PortfolioTest::testStructureCreation()
            cptyThreshold = 10000.0, 
            minimumTransferAmount = 5000.0, 
            rounding = 100.0;
-    boost::shared_ptr<Margin> margin1 = boost::shared_ptr<Margin>(
+    std::shared_ptr<Margin> margin1 = std::shared_ptr<Margin>(
         new SimpleMargin(anchorDate, useMyThreshold, myThreshold, useCptyThreshold, cptyThreshold, minimumTransferAmount, rounding));
-    p1 = boost::shared_ptr<Portfolio>(new Portfolio(siContracts, margin1));
+    p1 = std::shared_ptr<Portfolio>(new Portfolio(siContracts, margin1));
     p1->validate(re);
     BOOST_REQUIRE(p1->isOK());
     BOOST_REQUIRE(p1->isMargined());
     BOOST_CHECK(abs(p1->getValue(re) - p2->getValue(re)) < EPSILON_FOR_DOUBLES);
 
-    boost::shared_ptr<Margin> margin2 = boost::shared_ptr<Margin>(
+    std::shared_ptr<Margin> margin2 = std::shared_ptr<Margin>(
         new SimpleMargin(anchorDate, useMyThreshold, myThreshold, useCptyThreshold, cptyThreshold, minimumTransferAmount, rounding));
-    p2 = boost::shared_ptr<Portfolio>(new Portfolio(contracts, margin2));
+    p2 = std::shared_ptr<Portfolio>(new Portfolio(contracts, margin2));
     p2->validate(re);
     BOOST_REQUIRE(p2->isOK());
     BOOST_REQUIRE(p2->isMargined());
@@ -114,7 +114,7 @@ void PortfolioTest::testPortfolioB2CEM()
 
     Date anchorDate = Date(27, Jan, 2013);
     GenerateRates gr = GenerateRates();
-    boost::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
+    std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
 
     int yearsToSettlement = 2;
     double structureVolume = 10000;
@@ -127,7 +127,7 @@ void PortfolioTest::testPortfolioB2CEM()
     double premium = 5.0;
     bool dp = true;
 
-    boost::shared_ptr<AsianOption> put = GenerateContracts::getDefaultAsianOption(anchorDate,  
+    std::shared_ptr<AsianOption> put = GenerateContracts::getDefaultAsianOption(anchorDate,  
                                                                                   yearsToSettlement, 
                                                                                   numberOfAveragingDates, 
                                                                                   strike, 
@@ -137,16 +137,16 @@ void PortfolioTest::testPortfolioB2CEM()
                                                                                   premium, 
                                                                                   dp);
 
-    vector<boost::shared_ptr<Contract>> contracts;
+    vector<std::shared_ptr<Contract>> contracts;
     contracts.push_back(put);
 
     string errorMessage;
 
-    boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors = PortfolioTest::getDefaultRegCapUnderlyingFactors();
-    boost::shared_ptr<RegCapCreditParameters> regCapCreditParameters = PortfolioTest::getDefaultRegCreditParameters();
+    std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors = PortfolioTest::getDefaultRegCapUnderlyingFactors();
+    std::shared_ptr<RegCapCreditParameters> regCapCreditParameters = PortfolioTest::getDefaultRegCreditParameters();
     bool optimise = true;
 
-    boost::shared_ptr<PortfolioB2CEM> unmarginedPortfolio = boost::shared_ptr<PortfolioB2CEM>(
+    std::shared_ptr<PortfolioB2CEM> unmarginedPortfolio = std::shared_ptr<PortfolioB2CEM>(
                                                     new PortfolioB2CEM(contracts, 
                                                                        regCapAssetFactors, 
                                                                        regCapCreditParameters, 
@@ -156,7 +156,7 @@ void PortfolioTest::testPortfolioB2CEM()
 
     bool useMyThreshold = true, useCptyThreshold = true;
     double myThreshold = 2000000.0, cptyThreshold = 1000000.0, minimumTransferAmount = 500000.0, rounding = 10000.0;
-    boost::shared_ptr<SimpleMargin> margin = boost::shared_ptr<SimpleMargin>(
+    std::shared_ptr<SimpleMargin> margin = std::shared_ptr<SimpleMargin>(
                                                 new SimpleMargin(anchorDate,
                                                                  useMyThreshold, 
                                                                  myThreshold, 
@@ -167,10 +167,10 @@ void PortfolioTest::testPortfolioB2CEM()
     margin->setMarginBalance(0);
     margin->updateBalanceForGivenMtM(unmarginedPortfolio->getValue(re));
 
-    boost::shared_ptr<Calendar> calendar = boost::shared_ptr<Calendar>(new WeekendsOnly());
+    std::shared_ptr<Calendar> calendar = std::shared_ptr<Calendar>(new WeekendsOnly());
     size_t holdingPeriodInBusinessDays = 10;
 
-    boost::shared_ptr<PortfolioB2CEM> marginedPortfolio = boost::shared_ptr<PortfolioB2CEM>(
+    std::shared_ptr<PortfolioB2CEM> marginedPortfolio = std::shared_ptr<PortfolioB2CEM>(
                                                     new PortfolioB2CEM(contracts, 
                                                                        regCapAssetFactors, 
                                                                        regCapCreditParameters, 
@@ -216,7 +216,7 @@ void PortfolioTest::testPortfolioB2CEM()
     BOOST_REQUIRE(unmarginedPortfolio->isOK());
     BOOST_REQUIRE(marginedPortfolio->isOK());
 
-    boost::shared_ptr<SingleFactorGBMPathGenerator> mcPathGenerator = boost::shared_ptr<SingleFactorGBMPathGenerator>(
+    std::shared_ptr<SingleFactorGBMPathGenerator> mcPathGenerator = std::shared_ptr<SingleFactorGBMPathGenerator>(
                                                                             new SingleFactorGBMPathGenerator(fc, vc));
 
     marginedPortfolio->setPathGenerator(mcPathGenerator);

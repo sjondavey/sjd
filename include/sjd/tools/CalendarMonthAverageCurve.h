@@ -1,9 +1,9 @@
-﻿#ifndef SJD_CALENDARMONTHAVERAGECURVE_INCLUDED
+#ifndef SJD_CALENDARMONTHAVERAGECURVE_INCLUDED
 #define SJD_CALENDARMONTHAVERAGECURVE_INCLUDED
 
 #include <sjd/maths/maths.h>
 #include <ql/time/date.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <boost/math/special_functions/round.hpp>
 
 #include <ql/time/daycounters/simpledaycounter.hpp>
@@ -67,10 +67,10 @@ namespace sjd
         std::vector<double> observationPoints;
         std::vector<double> observedRates;
         ArrayInterpolatorType type;
-        boost::shared_ptr<ArrayInterpolator> interpolator;
+        std::shared_ptr<ArrayInterpolator> interpolator;
         bool allowExtrapolation;
-        boost::shared_ptr<QuantLib::DayCounter> dayCounter;
-        boost::shared_ptr<QuantLib::DayCounter> a365DayCounter;
+        std::shared_ptr<QuantLib::DayCounter> dayCounter;
+        std::shared_ptr<QuantLib::DayCounter> a365DayCounter;
     };
 }
 

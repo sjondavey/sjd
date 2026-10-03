@@ -1,11 +1,11 @@
-﻿#ifndef SJD_VALIDATION_INCLUDED
+#ifndef SJD_VALIDATION_INCLUDED
 #define SJD_VALIDATION_INCLUDED
 #pragma once
 
 #include <string>
 #include <vector>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace sjd
 {
@@ -115,7 +115,7 @@ namespace sjd
         void absorbChildReport(const ValidationReport& child,
                                const std::vector<std::string>& extra);
 
-        boost::shared_ptr<IssueTracker> errorTracking;
+        std::shared_ptr<IssueTracker> errorTracking;
     };
 }
 

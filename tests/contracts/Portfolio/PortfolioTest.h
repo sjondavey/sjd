@@ -1,4 +1,4 @@
-﻿#ifndef portfolio_test
+#ifndef portfolio_test
 #define portfolio_test
 
 #include <iostream>
@@ -22,8 +22,8 @@ class PortfolioTest
 
 public:
     
-    static boost::shared_ptr<RegCapUnderlyingFactors> getDefaultRegCapUnderlyingFactors();
-    static boost::shared_ptr<RegCapCreditParameters> getDefaultRegCreditParameters();
+    static std::shared_ptr<RegCapUnderlyingFactors> getDefaultRegCapUnderlyingFactors();
+    static std::shared_ptr<RegCapCreditParameters> getDefaultRegCreditParameters();
 
     static void testStructureCreation();
 

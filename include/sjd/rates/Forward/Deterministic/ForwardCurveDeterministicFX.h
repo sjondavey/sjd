@@ -1,4 +1,4 @@
-﻿#ifndef SJD_FORWARDCURVEDETERMINISITCFX_INCLUDED
+#ifndef SJD_FORWARDCURVEDETERMINISITCFX_INCLUDED
 #define SJD_FORWARDCURVEDETERMINISITCFX_INCLUDED
 
 #include <sjd/rates/Forward/ForwardCurve.h>
@@ -27,26 +27,26 @@ namespace sjd
         ForwardCurveDeterministicFX(QuantLib::Date anchorDate, 
                        double spot,
                        QuantLib::Date spotDate,
-                       boost::shared_ptr<DiscountRateSource> domesticDRS,
-                       boost::shared_ptr<DiscountRateSource> foreignDRS);
+                       std::shared_ptr<DiscountRateSource> domesticDRS,
+                       std::shared_ptr<DiscountRateSource> foreignDRS);
 
         ForwardCurveDeterministicFX(QuantLib::Date anchorDate, 
                        double spotAtT0,
-                       boost::shared_ptr<DiscountRateSource> domesticDRS,
-                       boost::shared_ptr<DiscountRateSource> foreignDRS);
+                       std::shared_ptr<DiscountRateSource> domesticDRS,
+                       std::shared_ptr<DiscountRateSource> foreignDRS);
 
         virtual ~ForwardCurveDeterministicFX();
 
         void setParameters(QuantLib::Date anchorDate, 
                            double spotAtT0,
-                           boost::shared_ptr<DiscountRateSource> domesticDRS,
-                           boost::shared_ptr<DiscountRateSource> foreignDRS);
+                           std::shared_ptr<DiscountRateSource> domesticDRS,
+                           std::shared_ptr<DiscountRateSource> foreignDRS);
 
         virtual void setSpotAtT0(double spotAtT0);
         virtual double getSpotAtT0();
 
-        virtual void setRateSources(boost::shared_ptr<DiscountRateSource> domesticDRS,
-                                    boost::shared_ptr<DiscountRateSource> foreignDRS);
+        virtual void setRateSources(std::shared_ptr<DiscountRateSource> domesticDRS,
+                                    std::shared_ptr<DiscountRateSource> foreignDRS);
 
         virtual bool isOK();
 
@@ -54,8 +54,8 @@ namespace sjd
         using ForwardRateSource::getForward;
 
 
-        virtual boost::shared_ptr<ForwardRateSource> parallelBump(double spread);
-        virtual boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate);
+        virtual std::shared_ptr<ForwardRateSource> parallelBump(double spread);
+        virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate);
 
     protected:
         ForwardCurve quotes;

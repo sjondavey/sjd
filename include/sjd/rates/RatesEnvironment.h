@@ -1,4 +1,4 @@
-﻿#ifndef RATESENVIRONMENT_INCLUDED
+#ifndef RATESENVIRONMENT_INCLUDED
 #define RATESENVIRONMENT_INCLUDED
 
 #include <cstddef>
@@ -29,25 +29,25 @@ namespace sjd
         virtual bool isOK();
         virtual std::string validationRoot() const;
 
-        void setFRS(boost::shared_ptr<ForwardRateSource> frs);
+        void setFRS(std::shared_ptr<ForwardRateSource> frs);
         bool hasFRS();
-        boost::shared_ptr<ForwardRateSource> getFRS();
+        std::shared_ptr<ForwardRateSource> getFRS();
 
-        void setDRS(boost::shared_ptr<DiscountRateSource> drs);
+        void setDRS(std::shared_ptr<DiscountRateSource> drs);
         bool hasDRS();
-        boost::shared_ptr<DiscountRateSource> getDRS();
+        std::shared_ptr<DiscountRateSource> getDRS();
 
-        void setForeignDRS(boost::shared_ptr<DiscountRateSource> foreighDRS);
+        void setForeignDRS(std::shared_ptr<DiscountRateSource> foreighDRS);
         bool hasForeignDRS();
-        boost::shared_ptr<DiscountRateSource> getForeignDRS();
+        std::shared_ptr<DiscountRateSource> getForeignDRS();
 
-        void setVRS(boost::shared_ptr<VolatilityRateSource> vrs);
+        void setVRS(std::shared_ptr<VolatilityRateSource> vrs);
         bool hasVRS();
-        boost::shared_ptr<VolatilityRateSource> getVRS();
+        std::shared_ptr<VolatilityRateSource> getVRS();
 
-        void setFixingRS(boost::shared_ptr<FixingRateSource> fixingrs);
+        void setFixingRS(std::shared_ptr<FixingRateSource> fixingrs);
         bool hasFixingRS();
-        boost::shared_ptr<FixingRateSource> getFixingRS();
+        std::shared_ptr<FixingRateSource> getFixingRS();
 
         // Advances when a curve pointer on this environment is replaced.
         std::size_t marketRevision() const;
@@ -55,15 +55,15 @@ namespace sjd
     protected:
         void updateDataAfterSettingRate();
 
-        boost::shared_ptr<ForwardRateSource> frs;
+        std::shared_ptr<ForwardRateSource> frs;
         bool frsSet;
-        boost::shared_ptr<VolatilityRateSource> vrs;
+        std::shared_ptr<VolatilityRateSource> vrs;
         bool vrsSet;
-        boost::shared_ptr<DiscountRateSource> drs;
+        std::shared_ptr<DiscountRateSource> drs;
         bool drsSet;
-        boost::shared_ptr<DiscountRateSource> foreigndrs;
+        std::shared_ptr<DiscountRateSource> foreigndrs;
         bool foreignDrsSet;
-        boost::shared_ptr<FixingRateSource> fixingrs;
+        std::shared_ptr<FixingRateSource> fixingrs;
         bool fixingrsSet;
         std::size_t marketRevision_;
     };

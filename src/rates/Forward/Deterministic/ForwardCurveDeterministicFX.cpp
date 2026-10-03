@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Forward/Deterministic/ForwardCurveDeterministicFX.h>
+#include <sjd/rates/Forward/Deterministic/ForwardCurveDeterministicFX.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -10,10 +10,10 @@ namespace sjd
     ForwardCurveDeterministicFX::ForwardCurveDeterministicFX(Date anchorDate,
                                                              double spot,
                                                              Date spotDate,
-                                                             boost::shared_ptr<DiscountRateSource> domesticDRS,
-                                                             boost::shared_ptr<DiscountRateSource> foreignDRS)
+                                                             std::shared_ptr<DiscountRateSource> domesticDRS,
+                                                             std::shared_ptr<DiscountRateSource> foreignDRS)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveDeterministicFX"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveDeterministicFX"));
         double spotAtAnchor;
         if (!domesticDRS->extendsTo(spotDate) || (!foreignDRS->extendsTo(spotDate)))
         {
@@ -28,24 +28,24 @@ namespace sjd
 
     ForwardCurveDeterministicFX::ForwardCurveDeterministicFX(Date anchorDate,
                                                              double spotAtT0,
-                                                             boost::shared_ptr<DiscountRateSource> domesticDRS,
-                                                             boost::shared_ptr<DiscountRateSource> foreignDRS)
+                                                             std::shared_ptr<DiscountRateSource> domesticDRS,
+                                                             std::shared_ptr<DiscountRateSource> foreignDRS)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveDeterministicFX"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveDeterministicFX"));
         setParameters(anchorDate, spotAtT0, domesticDRS, foreignDRS);
     }
 
     void ForwardCurveDeterministicFX::setParameters(Date anchorDateInput,
                                                     double spotInput,
-                                                    boost::shared_ptr<DiscountRateSource> domesticDRSInput,
-                                                    boost::shared_ptr<DiscountRateSource> foreignDRSInput)
+                                                    std::shared_ptr<DiscountRateSource> domesticDRSInput,
+                                                    std::shared_ptr<DiscountRateSource> foreignDRSInput)
     {
         quotes.setInterestDifferential(anchorDateInput,
                                        spotInput,
                                        domesticDRSInput,
                                        foreignDRSInput,
                                        ForwardRoll::Deterministic,
-                                       boost::shared_ptr<VolatilityRateSource>());
+                                       std::shared_ptr<VolatilityRateSource>());
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
         finalDate = quotes.finalDate();
@@ -61,8 +61,8 @@ namespace sjd
         return quotes.spotAtT0();
     }
 
-    void ForwardCurveDeterministicFX::setRateSources(boost::shared_ptr<DiscountRateSource> domesticDRSInput,
-                                                     boost::shared_ptr<DiscountRateSource> foreignDRSInput)
+    void ForwardCurveDeterministicFX::setRateSources(std::shared_ptr<DiscountRateSource> domesticDRSInput,
+                                                     std::shared_ptr<DiscountRateSource> foreignDRSInput)
     {
         quotes.setRateSources(domesticDRSInput, foreignDRSInput);
         allowExtrapolation = quotes.allowsExtrapolation();
@@ -109,12 +109,12 @@ namespace sjd
         return quotes.getForward(toDate);
     }
 
-    boost::shared_ptr<ForwardRateSource> ForwardCurveDeterministicFX::parallelBump(double spread)
+    std::shared_ptr<ForwardRateSource> ForwardCurveDeterministicFX::parallelBump(double spread)
     {
         return quotes.parallelBump(spread);
     }
 
-    boost::shared_ptr<ForwardRateSource> ForwardCurveDeterministicFX::rollForward(Date toDate)
+    std::shared_ptr<ForwardRateSource> ForwardCurveDeterministicFX::rollForward(Date toDate)
     {
         return quotes.rollForward(toDate, isInRange(toDate));
     }

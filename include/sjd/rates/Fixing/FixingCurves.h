@@ -1,4 +1,4 @@
-﻿#ifndef SJD_FIXINGCURVE_INCLUDED
+#ifndef SJD_FIXINGCURVE_INCLUDED
 #define SJD_FIXINGCURVE_INCLUDED
 
 #include <boost/math/special_functions/round.hpp>
@@ -19,7 +19,7 @@ namespace sjd
 
         virtual std::string validationRoot() const { return "fixing_curve"; }
 
-        virtual boost::shared_ptr<RollingFixingRateSource> rollForward(QuantLib::Date toDate, 
+        virtual std::shared_ptr<RollingFixingRateSource> rollForward(QuantLib::Date toDate, 
                                                                        std::vector<QuantLib::Date> newRateSetDates,
                                                                        std::vector<double> newRateSets);
 
@@ -42,7 +42,7 @@ namespace sjd
         
         ~MonthlyFixingCurve();
 
-        virtual boost::shared_ptr<RollingFixingRateSource> rollForward(QuantLib::Date toDate, 
+        virtual std::shared_ptr<RollingFixingRateSource> rollForward(QuantLib::Date toDate, 
                                                                        std::vector<QuantLib::Date> newRateSetDates,
                                                                        std::vector<double> newRateSets);
 

@@ -1,12 +1,8 @@
 """Conventions for the four default markets. No rate objects are built."""
 
-import sys
 import unittest
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from markets.specs import (
+from sjd.markets.specs import (
     CATALOGUE_PATH,
     MARKETS,
     CalendarMonthDates,

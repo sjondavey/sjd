@@ -1,4 +1,4 @@
-﻿#ifndef SJD_FORWARDCURVESTOCHASTICFX_INCLUDED
+#ifndef SJD_FORWARDCURVESTOCHASTICFX_INCLUDED
 #define SJD_FORWARDCURVESTOCHASTICFX_INCLUDED
 
 #include <sjd/rates/Forward/ForwardCurve.h>
@@ -27,15 +27,15 @@ namespace sjd
         ForwardCurveStochasticFX(QuantLib::Date anchorDate, 
                                  double spot,
                                  QuantLib::Date spotDate,
-                                 boost::shared_ptr<DiscountRateSource> domesticDRS,
-                                 boost::shared_ptr<DiscountRateSource> foreignDRS,
-                                 boost::shared_ptr<VolatilityRateSource> vrs);
+                                 std::shared_ptr<DiscountRateSource> domesticDRS,
+                                 std::shared_ptr<DiscountRateSource> foreignDRS,
+                                 std::shared_ptr<VolatilityRateSource> vrs);
 
         ForwardCurveStochasticFX(QuantLib::Date anchorDate, 
                                  double spotAtT0,
-                                 boost::shared_ptr<DiscountRateSource> domesticDRS,
-                                 boost::shared_ptr<DiscountRateSource> foreignDRS,
-                                 boost::shared_ptr<VolatilityRateSource> vrs);
+                                 std::shared_ptr<DiscountRateSource> domesticDRS,
+                                 std::shared_ptr<DiscountRateSource> foreignDRS,
+                                 std::shared_ptr<VolatilityRateSource> vrs);
 
         virtual ~ForwardCurveStochasticFX();
 
@@ -43,29 +43,29 @@ namespace sjd
 
         void setParameters(QuantLib::Date anchorDate, 
                            double spot,
-                           boost::shared_ptr<DiscountRateSource> domesticDRS,
-                           boost::shared_ptr<DiscountRateSource> foreignDRS,
-                           boost::shared_ptr<VolatilityRateSource> vrs);
+                           std::shared_ptr<DiscountRateSource> domesticDRS,
+                           std::shared_ptr<DiscountRateSource> foreignDRS,
+                           std::shared_ptr<VolatilityRateSource> vrs);
 
         virtual void setSpotAtT0(double spotAtT0);
         virtual double getSpotAtT0();
 
-        virtual void setRateSources(boost::shared_ptr<DiscountRateSource> domesticDRS,
-                                    boost::shared_ptr<DiscountRateSource> foreignDRS);
+        virtual void setRateSources(std::shared_ptr<DiscountRateSource> domesticDRS,
+                                    std::shared_ptr<DiscountRateSource> foreignDRS);
 
 
         virtual double getForward(QuantLib::Date toDate) const;
         using ForwardRateSource::getForward;
 
-        virtual boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, double normalRV);
-        virtual boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, 
+        virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, double normalRV);
+        virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, 
                                                                  double normalRV,
                                                                  std::vector<QuantLib::Date> rateSetDates,
                                                                  std::vector<double> &rateSetsFromAnchorToDate);
 
         virtual void setForwardValuationDates(std::set<QuantLib::Date> dates);
-        virtual std::vector<boost::shared_ptr<ForwardRateSource> > rollForward();
-        virtual std::vector<boost::shared_ptr<ForwardRateSource> > rollForward(std::vector<QuantLib::Date> rateSetDates,
+        virtual std::vector<std::shared_ptr<ForwardRateSource> > rollForward();
+        virtual std::vector<std::shared_ptr<ForwardRateSource> > rollForward(std::vector<QuantLib::Date> rateSetDates,
                                                               std::vector<double> &rateSetsFromAnchorToFinalRollDate);
 
 

@@ -1,0 +1,20 @@
+# The compiled core (sjd/_core.pyd) is built by CMake, not by pip:
+#   cmake --build --preset debug       (copies _core.pyd into python/sjd)
+#   python -m pip install -e python    (once; notebooks then import sjd anywhere)
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sjd"
+version = "0.1.0"
+description = "Commodity derivative pricing and Monte Carlo statistics"
+requires-python = ">=3.10"
+dependencies = ["numpy", "tomli; python_version < '3.11'"]
+
+[tool.setuptools]
+packages = ["sjd", "sjd.markets"]
+
+[tool.setuptools.package-data]
+sjd = ["_core*.pyd", "_core*.so"]
+"sjd.markets" = ["catalogue.toml", "schema.sql", "sample.db"]

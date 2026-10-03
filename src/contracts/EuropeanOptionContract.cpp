@@ -1,4 +1,4 @@
-﻿#include <sjd/contracts/EuropeanOptionContract.h>
+#include <sjd/contracts/EuropeanOptionContract.h>
 
 
 using namespace std;
@@ -54,7 +54,7 @@ namespace sjd {
                                            double pAmount, 
                                            BuySell bs)
     {
-      errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("EuropeanOption"));
+      errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("EuropeanOption"));
         setMaturityDate(optionMaturity);
         setSettlementDate(optionSettlement);
         setStrike(X);
@@ -75,15 +75,15 @@ namespace sjd {
         SingleOptionContract::setType(pc);
         if (getType() == PUT) 
         {
-            option = boost::shared_ptr<Black76Option>(new Black76Put(0, 0, 0, 0));
+            option = std::shared_ptr<Black76Option>(new Black76Put(0, 0, 0, 0));
         }
         else 
         {
-            option = boost::shared_ptr<Black76Option>(new Black76Call(0, 0, 0, 0));
+            option = std::shared_ptr<Black76Option>(new Black76Call(0, 0, 0, 0));
         }
     }
 
-   double EuropeanOption::getOptionValue(boost::shared_ptr<RatesEnvironment> re)
+   double EuropeanOption::getOptionValue(std::shared_ptr<RatesEnvironment> re)
     {
         Date valueDate = re->getAnchorDate();
         if (valueDate > getSettlementDate())

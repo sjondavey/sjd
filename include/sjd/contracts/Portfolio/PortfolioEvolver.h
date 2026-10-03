@@ -1,4 +1,4 @@
-﻿#ifndef PORTFOLIOEVOLVER_INCLUDED
+#ifndef PORTFOLIOEVOLVER_INCLUDED
 #define PORTFOLIOEVOLVER_INCLUDED
 
 #include <list>
@@ -37,18 +37,18 @@ namespace sjd
     {
     public:
         // Use this for unmargined portfolios or portfolios that do not require Holding QuantLib::Period calculations
-        PortfolioEvolver(boost::shared_ptr<Portfolio> portfolio, 
-                         boost::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGenerator,
+        PortfolioEvolver(std::shared_ptr<Portfolio> portfolio, 
+                         std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGenerator,
                          std::set<QuantLib::Date> forwardDates,
-                         boost::shared_ptr<RegulatoryCapital> capital = boost::shared_ptr<RegulatoryCapital>());
+                         std::shared_ptr<RegulatoryCapital> capital = std::shared_ptr<RegulatoryCapital>());
 
         // Use this for portfolios that require Holding QuantLib::Period calculations
-        PortfolioEvolver(boost::shared_ptr<Portfolio> portfolio, 
-                         boost::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGenerator,
+        PortfolioEvolver(std::shared_ptr<Portfolio> portfolio, 
+                         std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGenerator,
                          std::set<QuantLib::Date> forwardDates,
-                         boost::shared_ptr<QuantLib::Calendar> calendarForHoldingPeriodCalcuation, 
+                         std::shared_ptr<QuantLib::Calendar> calendarForHoldingPeriodCalcuation, 
                          size_t holdingPeriodInBusinessDays,
-                         boost::shared_ptr<RegulatoryCapital> capital = boost::shared_ptr<RegulatoryCapital>());
+                         std::shared_ptr<RegulatoryCapital> capital = std::shared_ptr<RegulatoryCapital>());
 
         bool isOK();
         ValidationReport validateReport();
@@ -67,10 +67,10 @@ namespace sjd
                                  std::vector<std::vector<double>>& data);
         void getMonteCarloAnalysis(std::vector<std::string> &columnHeadings, 
                                    std::vector<double> &data,
-                                   boost::shared_ptr<DiscountRateSource> zeroCurve, 
-                                   boost::shared_ptr<DiscountRateSource> spreadCurve,
-                                   boost::shared_ptr<CVA> cva,
-                                   boost::shared_ptr<CVA> dva);
+                                   std::shared_ptr<DiscountRateSource> zeroCurve, 
+                                   std::shared_ptr<DiscountRateSource> spreadCurve,
+                                   std::shared_ptr<CVA> cva,
+                                   std::shared_ptr<CVA> dva);
 
 
         void getCIDetail(double confidenceInterval,
@@ -81,10 +81,10 @@ namespace sjd
         void getCIAnalysis(double confidenceInterval,
                            std::vector<std::string> &columnHeadings, 
                            std::vector<double> &data,
-                            boost::shared_ptr<DiscountRateSource> zeroCurve, 
-                            boost::shared_ptr<DiscountRateSource> spreadCurve,
-                           boost::shared_ptr<CVA> cva,
-                           boost::shared_ptr<CVA> dva);
+                            std::shared_ptr<DiscountRateSource> zeroCurve, 
+                            std::shared_ptr<DiscountRateSource> spreadCurve,
+                           std::shared_ptr<CVA> cva,
+                           std::shared_ptr<CVA> dva);
 
         void getSpotPathDetail(std::vector<double> spotPath,
                                std::vector<QuantLib::Date>& simulationDates,
@@ -94,40 +94,40 @@ namespace sjd
         void getSpotPathAnalysis(std::vector<double> spotPath,
                                  std::vector<std::string> &columnHeadings, 
                                  std::vector<double> &data,
-                                   boost::shared_ptr<DiscountRateSource> zeroCurve, 
-                                  boost::shared_ptr<DiscountRateSource> spreadCurve,
-                                 boost::shared_ptr<CVA> cva,
-                                 boost::shared_ptr<CVA> dva);
+                                   std::shared_ptr<DiscountRateSource> zeroCurve, 
+                                  std::shared_ptr<DiscountRateSource> spreadCurve,
+                                 std::shared_ptr<CVA> cva,
+                                 std::shared_ptr<CVA> dva);
 
 
 
     protected:
-        void getPathDetail(boost::shared_ptr<Path> path,
+        void getPathDetail(std::shared_ptr<Path> path,
                            std::vector<QuantLib::Date>& simulationDates,
                            std::vector<std::string>& columnHeadings, 
                            std::vector<std::vector<double>>& data);
-        void getPathAnalysis(boost::shared_ptr<Path> path,
+        void getPathAnalysis(std::shared_ptr<Path> path,
                              std::vector<std::string> &columnHeadings, 
                              std::vector<double> &data,
-                               boost::shared_ptr<DiscountRateSource> zeroCurve, 
-                              boost::shared_ptr<DiscountRateSource> spreadCurve,
-                             boost::shared_ptr<CVA> cva,
-                             boost::shared_ptr<CVA> dva);
+                               std::shared_ptr<DiscountRateSource> zeroCurve, 
+                              std::shared_ptr<DiscountRateSource> spreadCurve,
+                             std::shared_ptr<CVA> cva,
+                             std::shared_ptr<CVA> dva);
 
 
-        std::vector<double> getSpotAlongAPath(boost::shared_ptr<Path> path);
-        std::vector<double> getMtMAlongAPath(boost::shared_ptr<Path> path);
-        void getRegulatoryCapitalAlongAPath(boost::shared_ptr<Path> path, 
+        std::vector<double> getSpotAlongAPath(std::shared_ptr<Path> path);
+        std::vector<double> getMtMAlongAPath(std::shared_ptr<Path> path);
+        void getRegulatoryCapitalAlongAPath(std::shared_ptr<Path> path, 
                                             std::vector<double>& regCap, 
                                             std::vector<double>& mtm, 
                                             std::vector<double>& margin);
         std::vector<double> margingBalanceForMtM(const std::vector<double> mtm);
         
-        virtual void evolvePortfolioAlongPath(boost::shared_ptr<Path> path);
+        virtual void evolvePortfolioAlongPath(std::shared_ptr<Path> path);
         void recordPath(SimulatedPaths& result,
                         size_t row,
-                        boost::shared_ptr<Path> path,
-                        const std::vector<boost::shared_ptr<SingleInstrumentContract>>& trades);
+                        std::shared_ptr<Path> path,
+                        const std::vector<std::shared_ptr<SingleInstrumentContract>>& trades);
         virtual void collectStatsFromPath();
         virtual void accumulateStatistics(size_t i);
         virtual void calculateSummaryStats();
@@ -136,25 +136,25 @@ namespace sjd
         virtual void initialiseAccumulators(size_t paths);
 
         double getXVAForExposurePath(std::vector<double> exposurePath, 
-                                     boost::shared_ptr<CVA> cva, 
-                                     boost::shared_ptr<DiscountRateSource> drs); 
+                                     std::shared_ptr<CVA> cva, 
+                                     std::shared_ptr<DiscountRateSource> drs); 
 
         //dates MUST be sorted
         double getExpectedCostOfFundingPosition(std::vector<double> cashProfileToFund, 
                                                 std::vector<QuantLib::Date> dates, 
-                                                    boost::shared_ptr<DiscountRateSource> zeroCurve,
-                                                boost::shared_ptr<DiscountRateSource> spreadCurve);
+                                                    std::shared_ptr<DiscountRateSource> zeroCurve,
+                                                std::shared_ptr<DiscountRateSource> spreadCurve);
 
         std::string validationRoot() const override;
 
         bool portfolioIsMargined;
         bool portfolioAttractsCapital;
 
-        boost::shared_ptr<Portfolio> portfolio;
-        boost::shared_ptr<RegulatoryCapital> capitalModel;
+        std::shared_ptr<Portfolio> portfolio;
+        std::shared_ptr<RegulatoryCapital> capitalModel;
 
-        boost::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGenerator;
-        boost::shared_ptr<QuantLib::Calendar> calendarForHoldingPeriod;
+        std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGenerator;
+        std::shared_ptr<QuantLib::Calendar> calendarForHoldingPeriod;
         size_t holdingPeriod;
 
         std::vector<QuantLib::Date> simulationDates;

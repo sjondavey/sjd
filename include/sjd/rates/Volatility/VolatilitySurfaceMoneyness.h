@@ -1,4 +1,4 @@
-﻿
+
 #ifndef SJD_EUROPEANMONEYNESS_INCLUDED
 #define SJD_EUROPEANMONEYNESS_INCLUDED
 
@@ -43,8 +43,8 @@ namespace sjd
         virtual double getVolatility(QuantLib::Date toDate) const;
         virtual double getVolatility(QuantLib::Date toDate, double strike, double forward) const;
 
-        virtual boost::shared_ptr<VolatilityRateSource> parallelBump(double spread);
-        virtual boost::shared_ptr<VolatilityRateSource> rollForward(QuantLib::Date toDate);
+        virtual std::shared_ptr<VolatilityRateSource> parallelBump(double spread);
+        virtual std::shared_ptr<VolatilityRateSource> rollForward(QuantLib::Date toDate);
 
     };
 }

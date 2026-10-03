@@ -1,4 +1,4 @@
-﻿#ifndef CASHFLOWCONTRACT_INCLUDED
+#ifndef CASHFLOWCONTRACT_INCLUDED
 #define CASHFLOWCONTRACT_INCLUDED
 #pragma once
 
@@ -31,7 +31,7 @@ namespace sjd
         virtual ~FixedCashflow() {};
 
         virtual void validate();
-        virtual void validate(boost::shared_ptr<RatesEnvironment> re);
+        virtual void validate(std::shared_ptr<RatesEnvironment> re);
         
         // Cash flows have no premium so these will std::set and return 0;
         virtual void setPremiumAmount(double premium);
@@ -40,7 +40,7 @@ namespace sjd
         virtual void setMaturityDate(QuantLib::Date maturityDate);
         virtual void setSettlementDate(QuantLib::Date settlementDate);
 
-        virtual double getValue(boost::shared_ptr<RatesEnvironment> re);
+        virtual double getValue(std::shared_ptr<RatesEnvironment> re);
         virtual double getPayoff(double forSpot);
 
     };

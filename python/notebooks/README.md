@@ -1,14 +1,19 @@
 # Teaching notebooks
 
-Build the Python module first. It is copied to `python/sjd_runtime`:
+Build the compiled core, which is copied into the package as `python/sjd/_core.pyd`,
+and install the package in editable mode once:
 
 ```
 cmake --build --preset debug --target sjd_python
+python -m pip install -e python
 ```
 
-Shut the notebook kernel down before rebuilding so Windows can replace `sjd.pyd`.
-Open these notebooks from `python/notebooks` (or any working directory under the
-repo). Each one loads the module through `sjd_setup.py`.
+After that `import sjd` works from any directory, and a rebuild is picked up
+without reinstalling. Shut the notebook kernel down before rebuilding so Windows
+can replace `_core.pyd`.
+
+The sample market and book come from `sjd.examples` (`sample_market`,
+`sample_contracts`), so every notebook works on the same trades.
 
 The running example, from the forward strip onward, is a single FX-style
 commodity curve: anchor 16 September 2026, spot 17.50, domestic rate 7%,

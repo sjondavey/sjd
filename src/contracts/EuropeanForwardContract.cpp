@@ -1,4 +1,4 @@
-﻿#include <sjd/contracts/EuropeanForwardContract.h>
+#include <sjd/contracts/EuropeanForwardContract.h>
 
 
 using namespace std;
@@ -11,7 +11,7 @@ namespace sjd {
    ForwardContract
 
     =======================================================================================*/
-    double ForwardContract::getValue(boost::shared_ptr<RatesEnvironment> re)
+    double ForwardContract::getValue(std::shared_ptr<RatesEnvironment> re)
     {
         Date valueDate = re->getAnchorDate();
         if (valueDate > settlementDate)
@@ -38,7 +38,7 @@ namespace sjd {
 
     void EuropeanForward::constructorCommon(Date maturity, Date settlement, double X, double N, BuySell bs)
     {
-      errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("EuropeanForward"));
+      errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("EuropeanForward"));
         setMaturityDate(maturity);
         setSettlementDate(settlement);
         setStrike(X);

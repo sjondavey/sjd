@@ -1,4 +1,4 @@
-﻿#ifndef SJD_DISCOUNTCURVE_INCLUDED
+#ifndef SJD_DISCOUNTCURVE_INCLUDED
 #define SJD_DISCOUNTCURVE_INCLUDED
 
 #include <sjd/tools/DatedCurve.h>
@@ -37,14 +37,14 @@ namespace sjd
         std::vector<QuantLib::Date> getObservationDates() const;
         ArrayInterpolatorType getType();
 
-        virtual std::vector<std::pair<std::string, boost::shared_ptr<RateSource>>> getMarketRateStresses();
-        virtual boost::shared_ptr<DiscountRateSource> parallelBump(double spread,
-                                                                   boost::shared_ptr<InterestRateConvention> irc);
+        virtual std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> getMarketRateStresses();
+        virtual std::shared_ptr<DiscountRateSource> parallelBump(double spread,
+                                                                   std::shared_ptr<InterestRateConvention> irc);
 
-        virtual boost::shared_ptr<DiscountRateSource> rollForward(QuantLib::Date toDate);
+        virtual std::shared_ptr<DiscountRateSource> rollForward(QuantLib::Date toDate);
 
     protected:
-        boost::shared_ptr<DatedCurve> datedCurve;
+        std::shared_ptr<DatedCurve> datedCurve;
         ArrayInterpolatorType type;
     };
 }

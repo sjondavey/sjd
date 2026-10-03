@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Fixing/FixingCurves.h>
+#include <sjd/rates/Fixing/FixingCurves.h>
 
 
 using namespace std;
@@ -12,16 +12,16 @@ namespace sjd {
     =======================================================================================*/
     DailyFixingCurve::DailyFixingCurve(vector<Date> fixingDatesInput, vector<double> fixingRatesInput) 
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("DailyFixingCurve"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("DailyFixingCurve"));
         setDatesAndRates(fixingDatesInput, fixingRatesInput);
         captureOriginalState();
     }    
 
-    boost::shared_ptr<RollingFixingRateSource> DailyFixingCurve::rollForward(Date toDate, 
+    std::shared_ptr<RollingFixingRateSource> DailyFixingCurve::rollForward(Date toDate, 
                                                                              vector<Date> newRateSetDates,
                                                                              vector<double> newRateSets)
     {
-        boost::shared_ptr<RollingFixingRateSource> rolledFixingRS = boost::shared_ptr<RollingFixingRateSource>(
+        std::shared_ptr<RollingFixingRateSource> rolledFixingRS = std::shared_ptr<RollingFixingRateSource>(
             new DailyFixingCurve(fixingDates, fixingRates));
         rolledFixingRS->appendRateSets(newRateSetDates, newRateSets);
         return rolledFixingRS;
@@ -32,7 +32,7 @@ namespace sjd {
     =======================================================================================*/
     MonthlyFixingCurve::MonthlyFixingCurve(vector<Date> fixingDatesInput, vector<double> fixingRatesInput)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("MonthlyFixingCurve"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("MonthlyFixingCurve"));
 
         vector<Date> monthDates = vector<Date>(0);
         for (size_t i = 0; i < min(fixingDatesInput.size(), fixingRatesInput.size()); ++i) 
@@ -46,11 +46,11 @@ namespace sjd {
     MonthlyFixingCurve::~MonthlyFixingCurve()
     {}
 
-    boost::shared_ptr<RollingFixingRateSource> MonthlyFixingCurve::rollForward(Date toDate, 
+    std::shared_ptr<RollingFixingRateSource> MonthlyFixingCurve::rollForward(Date toDate, 
                                                                                vector<Date> newRateSetDates,
                                                                                vector<double> newRateSets)
     {
-        boost::shared_ptr<RollingFixingRateSource> rolledFixingRS = boost::shared_ptr<RollingFixingRateSource>(
+        std::shared_ptr<RollingFixingRateSource> rolledFixingRS = std::shared_ptr<RollingFixingRateSource>(
             new MonthlyFixingCurve(fixingDates, fixingRates));
         rolledFixingRS->appendRateSets(newRateSetDates, newRateSets);
         return rolledFixingRS;
@@ -149,7 +149,7 @@ namespace sjd {
     HistoricFedFundsCurve::HistoricFedFundsCurve(vector<Date> fixingDatesInput, vector<double> fixingRatesInput) :
       DailyFixingCurve(fixingDatesInput, fixingRatesInput)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("HistoricFedFundsCurve"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("HistoricFedFundsCurve"));
     }
     
     HistoricFedFundsCurve::~HistoricFedFundsCurve()

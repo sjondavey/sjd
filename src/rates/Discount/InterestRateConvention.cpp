@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Discount/InterestRateConvention.h>
+#include <sjd/rates/Discount/InterestRateConvention.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -11,7 +11,7 @@ namespace sjd
 
     =======================================================================================*/
 
-    InterestRateConvention::InterestRateConvention(boost::shared_ptr<DayCounter> dayCounterInput, 
+    InterestRateConvention::InterestRateConvention(std::shared_ptr<DayCounter> dayCounterInput, 
                                                    Compounding compoundingInput, 
                                                    Frequency frequencyInput)
     {
@@ -20,7 +20,7 @@ namespace sjd
         frequency = frequencyInput;
     }
         
-    boost::shared_ptr<DayCounter> InterestRateConvention::getDayCounter()
+    std::shared_ptr<DayCounter> InterestRateConvention::getDayCounter()
     {
         return dayCounter;
     }

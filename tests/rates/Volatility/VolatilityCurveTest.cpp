@@ -1,4 +1,4 @@
-﻿#include "VolatilityCurveTest.h"
+#include "VolatilityCurveTest.h"
 
 using namespace std;
 using namespace QuantLib;
@@ -24,7 +24,7 @@ void VolatilityCurveTest::testVolatilityCurveConstruction()
         volatility.push_back(0.2);
     }
     incorrectObservationDates.push_back(calendar.advance(anchorDate, i+1, Months));
-    boost::shared_ptr<DayCounter> dayCounter = boost::shared_ptr<DayCounter>(new Actual365Fixed());
+    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
     ArrayInterpolatorType type = LINEAR;
     bool allowExtrapolation = false;
     
@@ -72,10 +72,10 @@ void VolatilityCurveTest::testVolatilityCurveConsistencyBetweenVolAndSD()
 {
     BOOST_TEST_MESSAGE("Testing Volatiltiy Curve for consistency between getVol and getSD ...");
     GenerateRates re = GenerateRates();
-    boost::shared_ptr<Calendar> defaultCalendar = re.defaultCalendar;
+    std::shared_ptr<Calendar> defaultCalendar = re.defaultCalendar;
     Date anchorDate = re.defaultAnchorDate;
-    boost::shared_ptr<DayCounter> dayCounter = re.defaultDayCounter;
-    boost::shared_ptr<VolatilityCurve> vc = re.getDefaultVolatiltiyCurve(anchorDate);
+    std::shared_ptr<DayCounter> dayCounter = re.defaultDayCounter;
+    std::shared_ptr<VolatilityCurve> vc = re.getDefaultVolatiltiyCurve(anchorDate);
 
     Date fromDate = defaultCalendar->advance(anchorDate, 1, Months);
     double fromYF = dayCounter->yearFraction(anchorDate, fromDate);
@@ -93,10 +93,10 @@ void VolatilityCurveTest::testVolatilityCurveValues()
 {
     BOOST_TEST_MESSAGE("Testing Volatiltiy Curve values ...");
     GenerateRates re = GenerateRates();
-    boost::shared_ptr<Calendar> calendar = re.defaultCalendar;
+    std::shared_ptr<Calendar> calendar = re.defaultCalendar;
     Date anchorDate = re.defaultAnchorDate;
-    boost::shared_ptr<DayCounter> dayCounter = re.defaultDayCounter;
-    boost::shared_ptr<VolatilityCurve> vc = re.getDefaultVolatiltiyCurve(anchorDate);
+    std::shared_ptr<DayCounter> dayCounter = re.defaultDayCounter;
+    std::shared_ptr<VolatilityCurve> vc = re.getDefaultVolatiltiyCurve(anchorDate);
     
     Date date1 = Date(13,Mar,2012);
     Date date2 = Date(17,Nov,2012);
@@ -111,15 +111,15 @@ void VolatilityCurveTest::testVolatilityCurveRoll()
     BOOST_TEST_MESSAGE("Testing Volatiltiy Curve roll forward ...");
 
     GenerateRates re = GenerateRates();
-    boost::shared_ptr<Calendar> defaultCalendar = re.defaultCalendar;
+    std::shared_ptr<Calendar> defaultCalendar = re.defaultCalendar;
     Date anchorDate = re.defaultAnchorDate;
-    boost::shared_ptr<DayCounter> dayCounter = re.defaultDayCounter;
-    boost::shared_ptr<VolatilityCurve> vc = re.getDefaultVolatiltiyCurve(anchorDate);
+    std::shared_ptr<DayCounter> dayCounter = re.defaultDayCounter;
+    std::shared_ptr<VolatilityCurve> vc = re.getDefaultVolatiltiyCurve(anchorDate);
 
     Date rollDate = defaultCalendar->advance(anchorDate, 1, Years);
     Date checkDate = defaultCalendar->advance(anchorDate, 2, Years);
 
-    boost::shared_ptr<VolatilityRateSource> rolledCurve = vc->rollForward(rollDate);
+    std::shared_ptr<VolatilityRateSource> rolledCurve = vc->rollForward(rollDate);
 
     BOOST_REQUIRE(rolledCurve->isOK());
     

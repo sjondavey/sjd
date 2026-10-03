@@ -8,7 +8,7 @@ from datetime import date, timedelta
 
 from typing import Optional
 
-from markets.specs import (
+from .specs import (
     CATALOGUE,
     CalendarMonthDates,
     CalendarMonthMoneynessVol,
@@ -27,7 +27,7 @@ from markets.specs import (
     SurfaceInterpolation,
     require_roll,
 )
-from markets.store import (
+from .store import (
     discount_pillars,
     forward_pillars,
     spot,

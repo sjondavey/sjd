@@ -1,4 +1,4 @@
-﻿#include <sjd/tools/Curve.h>
+#include <sjd/tools/Curve.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -43,7 +43,7 @@ namespace sjd
         if (observationPoints.size() < 1 ||
             observedRates[0] < 0) 
         {
-            interpolator = boost::shared_ptr<ArrayInterpolator>(
+            interpolator = std::shared_ptr<ArrayInterpolator>(
                             new LinearArrayInterpolator(vector<double>(1,0), vector<double>(1,1), allowExtrapolation));
             return;
         }
@@ -51,11 +51,11 @@ namespace sjd
         switch (type) 
         {
             case CUBIC:
-                interpolator = boost::shared_ptr<ArrayInterpolator>(
+                interpolator = std::shared_ptr<ArrayInterpolator>(
                     new CubicSplineInterpolator(observationPoints, observedRates, allowExtrapolation));
                 break;
             default:
-                interpolator = boost::shared_ptr<ArrayInterpolator>(
+                interpolator = std::shared_ptr<ArrayInterpolator>(
                     new LinearArrayInterpolator(observationPoints, observedRates, allowExtrapolation));
         }        
     }

@@ -1,4 +1,4 @@
-﻿#include "ForwardCurveTest.h"
+#include "ForwardCurveTest.h"
 
 using namespace std;
 using namespace QuantLib;
@@ -19,7 +19,7 @@ void ForwardCurveTest::testForwardCurveConstruction()
     bool allowExtrapolation = false;
 
     // Case 1 NULL inputs
-    boost::shared_ptr<ForwardCurveDeterministic> sfc = boost::shared_ptr<ForwardCurveDeterministic>(
+    std::shared_ptr<ForwardCurveDeterministic> sfc = std::shared_ptr<ForwardCurveDeterministic>(
                     new ForwardCurveDeterministic(anchorDate, incorrectObservationDates, futures, sjd::LINEAR, allowExtrapolation));
    BOOST_CHECK(sfc->isOK() == false); 
 
@@ -35,7 +35,7 @@ void ForwardCurveTest::testForwardCurveConstruction()
     }
     incorrectObservationDates.push_back(anchorDate);
     futures.push_back(110);
-    sfc = boost::shared_ptr<ForwardCurveDeterministic>(
+    sfc = std::shared_ptr<ForwardCurveDeterministic>(
         new ForwardCurveDeterministic(anchorDate, incorrectObservationDates, futures, sjd::LINEAR, allowExtrapolation));
     BOOST_CHECK(sfc->isOK() == false); 
 
@@ -43,25 +43,25 @@ void ForwardCurveTest::testForwardCurveConstruction()
     futures.pop_back();
     incorrectObservationDates = observationDates;
     incorrectObservationDates.push_back(calendar.advance(anchorDate, i+1, Months));
-    sfc = boost::shared_ptr<ForwardCurveDeterministic>(
+    sfc = std::shared_ptr<ForwardCurveDeterministic>(
         new ForwardCurveDeterministic(anchorDate, incorrectObservationDates, futures, sjd::LINEAR, allowExtrapolation));
     BOOST_CHECK(sfc->isOK() == false); 
 
     // Case 4 Anchor date > final curve date
     incorrectObservationDates = observationDates;
     anchorDate = calendar.advance(anchorDate, i+1, Months);
-    sfc = boost::shared_ptr<ForwardCurveDeterministic>(
+    sfc = std::shared_ptr<ForwardCurveDeterministic>(
         new ForwardCurveDeterministic(anchorDate, incorrectObservationDates, futures, sjd::LINEAR, allowExtrapolation)); 
     BOOST_CHECK(sfc->isOK() == false); 
 
     //Case 5 We do not supply a point at the anchor date and we specify no extrapolation
     anchorDate = Date(27,Jan,2012);
-    sfc = boost::shared_ptr<ForwardCurveDeterministic>(
+    sfc = std::shared_ptr<ForwardCurveDeterministic>(
         new ForwardCurveDeterministic(anchorDate, observationDates, futures, sjd::LINEAR, allowExtrapolation));
     BOOST_CHECK(sfc->isOK() == true); 
     BOOST_CHECK(sfc->getForward(anchorDate) == 109.9); 
 
-    sfc = boost::shared_ptr<ForwardCurveDeterministic>(
+    sfc = std::shared_ptr<ForwardCurveDeterministic>(
         new ForwardCurveDeterministic(anchorDate, observationDates, futures, sjd::LINEAR, allowExtrapolation));
     BOOST_CHECK(sfc->isOK() == true); 
     Date d1 = calendar.advance(anchorDate, 5, Months);
@@ -73,7 +73,7 @@ void ForwardCurveTest::testForwardCurveConstruction()
     BOOST_CHECK(sfc->isInRange(anchorDate) == true);
 
     allowExtrapolation = !allowExtrapolation;
-    sfc = boost::shared_ptr<ForwardCurveDeterministic>(
+    sfc = std::shared_ptr<ForwardCurveDeterministic>(
         new ForwardCurveDeterministic(anchorDate, observationDates, futures, sjd::LINEAR, allowExtrapolation));
     BOOST_CHECK(sfc->isInRange(d1) == true);
     BOOST_CHECK(sfc->isInRange(d2) == true);
@@ -87,7 +87,7 @@ void ForwardCurveTest::testForwardCurveRollsAtForwardVolConstruction()
     GenerateRates gr = GenerateRates();
     Date anchorDate = gr.defaultAnchorDate;
 
-    boost::shared_ptr<VolatilityCurve> vrs = gr.getVolatilityCurve(gr.defaultDayCounter,
+    std::shared_ptr<VolatilityCurve> vrs = gr.getVolatilityCurve(gr.defaultDayCounter,
                                                                    gr.defaultCalendar,
                                                                    anchorDate, 
                                                                    1, 
@@ -107,7 +107,7 @@ void ForwardCurveTest::testForwardCurveRollsAtForwardVolConstruction()
     }
 
     // Case 1: VRS does not extend to the end of the FRS
-    boost::shared_ptr<ForwardCurveStochasticFwdVol> frs = boost::shared_ptr<ForwardCurveStochasticFwdVol>(new
+    std::shared_ptr<ForwardCurveStochasticFwdVol> frs = std::shared_ptr<ForwardCurveStochasticFwdVol>(new
                             ForwardCurveStochasticFwdVol(anchorDate, 
                                                           observationDates, 
                                                           forwards,                                       
@@ -123,7 +123,7 @@ void ForwardCurveTest::testForwardCurveRollsAtForwardVolConstruction()
                                 calendar.advance(anchorDate, 1, Months), 
                                 4, 
                                 0.2);
-    frs = boost::shared_ptr<ForwardCurveStochasticFwdVol>(new
+    frs = std::shared_ptr<ForwardCurveStochasticFwdVol>(new
                             ForwardCurveStochasticFwdVol(anchorDate, 
                                                           observationDates, 
                                                           forwards,                                       
@@ -138,7 +138,7 @@ void ForwardCurveTest::testForwardCurveRollsAtForwardVolConstruction()
                                 anchorDate, 
                                 4, 
                                 0.2);
-    frs = boost::shared_ptr<ForwardCurveStochasticFwdVol>(new
+    frs = std::shared_ptr<ForwardCurveStochasticFwdVol>(new
                             ForwardCurveStochasticFwdVol(anchorDate, 
                                                           observationDates, 
                                                           forwards,                                       
@@ -164,7 +164,7 @@ void ForwardCurveTest::testConsistencyBetweenGetMethods()
         observationDates.push_back(date);
         futures.push_back(110 - (double) i / 10.0);
     }
-    boost::shared_ptr<DayCounter> dcPtr = boost::shared_ptr<DayCounter>(new Actual365Fixed()); 
+    std::shared_ptr<DayCounter> dcPtr = std::shared_ptr<DayCounter>(new Actual365Fixed()); 
     bool allowExtrapolation = false;    
     ForwardCurveDeterministic *fcd = new ForwardCurveDeterministic(anchorDate, observationDates, futures, sjd::LINEAR, allowExtrapolation);
 
@@ -218,7 +218,7 @@ void ForwardCurveTest::testValues()
     vector<double> observationDatesSerialNumbers;
     vector<double> futures;
     //vector<double> time;
-    boost::shared_ptr<DayCounter> dcPtr = boost::shared_ptr<DayCounter>(new Actual365Fixed()); 
+    std::shared_ptr<DayCounter> dcPtr = std::shared_ptr<DayCounter>(new Actual365Fixed()); 
     size_t i;
     for (i = 1; i <= 12; ++i) 
     {
@@ -268,7 +268,7 @@ void ForwardCurveTest::testRoll()
     }
 
     // Case 1: VRS does not extend to the end of the FRS
-    boost::shared_ptr<ForwardCurveDeterministic> frs = boost::shared_ptr<ForwardCurveDeterministic>(new
+    std::shared_ptr<ForwardCurveDeterministic> frs = std::shared_ptr<ForwardCurveDeterministic>(new
                                 ForwardCurveDeterministic(anchorDate, 
                                                           observationDates, 
                                                           forwards,                                       
@@ -282,7 +282,7 @@ void ForwardCurveTest::testRoll()
     intermedateDates.push_back(calendar.advance(anchorDate, 10, Days));
     intermedateDates.push_back(calendar.advance(anchorDate, 20, Days));
     vector<double> rateSetForwards;
-    boost::shared_ptr<ForwardRateSource> rolledCurve = frs->rollForward(rollDate, intermedateDates, rateSetForwards);
+    std::shared_ptr<ForwardRateSource> rolledCurve = frs->rollForward(rollDate, intermedateDates, rateSetForwards);
     BOOST_REQUIRE(rolledCurve->isOK() == true); 
     BOOST_REQUIRE(rateSetForwards.size() == 2);     
     BOOST_CHECK(abs(frs->getForward(observationDates[5]) - rolledCurve->getForward(observationDates[5])) < EPSILON_FOR_DOUBLES); 
@@ -297,7 +297,7 @@ void ForwardCurveTest::testRoll()
 
     intermedateDates.push_back(calendar.advance(observationDates[0], 10, Days));
     intermedateDates.push_back(calendar.advance(observationDates[0], 20, Days));
-    vector<boost::shared_ptr<ForwardRateSource> > frss = frs->rollForward(intermedateDates, rateSetForwards);
+    vector<std::shared_ptr<ForwardRateSource> > frss = frs->rollForward(intermedateDates, rateSetForwards);
     BOOST_REQUIRE(frss.size() == 2);
     BOOST_REQUIRE(frss[0]->isOK());
     BOOST_REQUIRE(frss[1]->isOK());
@@ -318,7 +318,7 @@ void ForwardCurveTest::testRollStochastic()
     GenerateRates gr = GenerateRates();
     Date anchorDate = gr.defaultAnchorDate;
 
-    boost::shared_ptr<VolatilityCurve> vrs = gr.getVolatilityCurve(gr.defaultDayCounter,
+    std::shared_ptr<VolatilityCurve> vrs = gr.getVolatilityCurve(gr.defaultDayCounter,
                                                                    gr.defaultCalendar,
                                                                    anchorDate, 
                                                                    4, 
@@ -338,7 +338,7 @@ void ForwardCurveTest::testRollStochastic()
     }
 
     // Case 1: VRS does not extend to the end of the FRS
-    boost::shared_ptr<ForwardCurveStochasticFwdVol> frs = boost::shared_ptr<ForwardCurveStochasticFwdVol>(new
+    std::shared_ptr<ForwardCurveStochasticFwdVol> frs = std::shared_ptr<ForwardCurveStochasticFwdVol>(new
                             ForwardCurveStochasticFwdVol(anchorDate, 
                                                           observationDates, 
                                                           forwards,                                       
@@ -354,7 +354,7 @@ void ForwardCurveTest::testRollStochastic()
     BOOST_CHECK(frs->isOK() == true); 
     double normalRV = 0.1234;
     Date rollToDate = observationDates[0];
-    boost::shared_ptr<ForwardRateSource> rolledCurve = frs->rollForward(rollToDate, normalRV, intermedateDates, rateSetForwards);
+    std::shared_ptr<ForwardRateSource> rolledCurve = frs->rollForward(rollToDate, normalRV, intermedateDates, rateSetForwards);
     BOOST_CHECK(rolledCurve->isOK() == true); 
     BOOST_REQUIRE(rateSetForwards.size() == 2);     
 
@@ -386,7 +386,7 @@ void ForwardCurveTest::testRollStochastic()
     intermedateDates.push_back(calendar.advance(observationDates[0], 10, Days));
     intermedateDates.push_back(calendar.advance(observationDates[0], 20, Days));
 
-    vector<boost::shared_ptr<ForwardRateSource> > frss = frs->rollForward(intermedateDates, rateSetForwards);
+    vector<std::shared_ptr<ForwardRateSource> > frss = frs->rollForward(intermedateDates, rateSetForwards);
     BOOST_REQUIRE(frss.size() == 2);
     BOOST_REQUIRE(frss[0]->isOK());
     BOOST_REQUIRE(frss[1]->isOK());
@@ -414,7 +414,7 @@ void ForwardCurveTest::testSpotVolPathVariance()
 
     GenerateRates gr = GenerateRates();
     Date anchorDate = gr.defaultAnchorDate;
-    boost::shared_ptr<VolatilityCurve> vrs = gr.getVolatilityCurve(gr.defaultDayCounter,
+    std::shared_ptr<VolatilityCurve> vrs = gr.getVolatilityCurve(gr.defaultDayCounter,
                                                                    gr.defaultCalendar,
                                                                    anchorDate,
                                                                    4,
@@ -427,7 +427,7 @@ void ForwardCurveTest::testSpotVolPathVariance()
         observationDates.push_back(calendar.advance(anchorDate, static_cast<QuantLib::Integer>(i), Months));
         forwards.push_back(110 - (double) i / 10.0);
     }
-    boost::shared_ptr<ForwardCurveStochasticSpotVol> frs(
+    std::shared_ptr<ForwardCurveStochasticSpotVol> frs(
         new ForwardCurveStochasticSpotVol(anchorDate, observationDates, forwards, LINEAR, false, vrs));
     BOOST_REQUIRE_MESSAGE(frs->isOK(), frs->getErrorMessagesAsString());
 
@@ -437,7 +437,7 @@ void ForwardCurveTest::testSpotVolPathVariance()
     simulationDates.push_back(observationDates[11]);
     frs->setForwardValuationDates(set<Date>(simulationDates.begin(), simulationDates.end()));
     frs->setRandomVariables(vector<double>(simulationDates.size(), 0.0));
-    vector<boost::shared_ptr<ForwardRateSource>> frss = frs->rollForward();
+    vector<std::shared_ptr<ForwardRateSource>> frss = frs->rollForward();
     BOOST_REQUIRE_EQUAL(frss.size(), simulationDates.size());
 
     // With zero shocks each step only applies its convexity term, so the steps

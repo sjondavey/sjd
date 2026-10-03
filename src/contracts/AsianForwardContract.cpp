@@ -1,4 +1,4 @@
-﻿#include <sjd/contracts/AsianForwardContract.h>
+#include <sjd/contracts/AsianForwardContract.h>
 
 
 using namespace std;
@@ -18,8 +18,8 @@ namespace sjd {
                                         double volumeInput,
                                         BuySell buySellInput)
     {
-      ForwardContract::errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("AsianForward"));
-      AsianContract::errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("AsianForward"));
+      ForwardContract::errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("AsianForward"));
+      AsianContract::errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("AsianForward"));
         setAveragingDates(averagingDatesInput);
         setSettlementDate(settlementInput);
         setStrike(strikeInput);
@@ -91,7 +91,7 @@ namespace sjd {
         }
     }
 
-    void AsianForward::validate(boost::shared_ptr<RatesEnvironment> re)
+    void AsianForward::validate(std::shared_ptr<RatesEnvironment> re)
     {
         ForwardContract::validate(re);
         AsianContract::validate(re);
@@ -107,7 +107,7 @@ namespace sjd {
         setMaturityDate(orderedAveragingDates.back());
     }
 
-    double AsianForward::getValue(boost::shared_ptr<RatesEnvironment> re)
+    double AsianForward::getValue(std::shared_ptr<RatesEnvironment> re)
     {
         Date valueDate = re->getAnchorDate();
         if (valueDate > getSettlementDate())
@@ -158,7 +158,7 @@ namespace sjd {
     void AsianForward::getFixingAndForwardRates(Date valueDate, 
                                                 vector<double> &fixingRates, 
                                                 vector<double> &forwardRates,
-                                                boost::shared_ptr<RatesEnvironment> re)
+                                                std::shared_ptr<RatesEnvironment> re)
     {
         fixingRates.clear();
         forwardRates.clear();
@@ -177,7 +177,7 @@ namespace sjd {
         return;
     }
 
-    string AsianForward::toStringRates(boost::shared_ptr<RatesEnvironment> re)
+    string AsianForward::toStringRates(std::shared_ptr<RatesEnvironment> re)
     {
         stringstream descriptionStream;
         descriptionStream << SingleInstrumentContract::toStringRates(re);

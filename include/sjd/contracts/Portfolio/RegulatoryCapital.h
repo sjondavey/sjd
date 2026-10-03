@@ -21,9 +21,9 @@ namespace sjd
 
         virtual bool isOK();
         virtual void validate();
-        virtual void validate(boost::shared_ptr<RatesEnvironment> re);
+        virtual void validate(std::shared_ptr<RatesEnvironment> re);
 
-        virtual double getRegulatoryCapital(boost::shared_ptr<RatesEnvironment> re) = 0;
+        virtual double getRegulatoryCapital(std::shared_ptr<RatesEnvironment> re) = 0;
 
     protected:
         std::string validationRoot() const override;
@@ -38,37 +38,37 @@ namespace sjd
     class CurrentExposureMethod : public RegulatoryCapital
     {
     public:
-        CurrentExposureMethod(std::vector<boost::shared_ptr<Contract>> inputs,
-                              std::vector<boost::shared_ptr<SingleInstrumentContract>> extractedContracts,
-                              boost::shared_ptr<Margin> margin,
-                              boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
-                              boost::shared_ptr<RegCapCreditParameters> regCapCreditParameters,
+        CurrentExposureMethod(std::vector<std::shared_ptr<Contract>> inputs,
+                              std::vector<std::shared_ptr<SingleInstrumentContract>> extractedContracts,
+                              std::shared_ptr<Margin> margin,
+                              std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
+                              std::shared_ptr<RegCapCreditParameters> regCapCreditParameters,
                               bool optimise);
 
         CurrentExposureMethod(const CurrentExposureMethod& other);
 
         bool isOK() override;
         void validate() override;
-        void validate(boost::shared_ptr<RatesEnvironment> re) override;
-        double getRegulatoryCapital(boost::shared_ptr<RatesEnvironment> re) override;
+        void validate(std::shared_ptr<RatesEnvironment> re) override;
+        double getRegulatoryCapital(std::shared_ptr<RatesEnvironment> re) override;
 
         bool hasStructureConversionError() const;
         const std::string& structureConversionErrorMessage() const;
-        const std::vector<boost::shared_ptr<Structure>>& structures() const;
+        const std::vector<std::shared_ptr<Structure>>& structures() const;
 
-        static std::vector<boost::shared_ptr<Structure>> optimiseStructuresFromContracts(
-            std::vector<boost::shared_ptr<SingleInstrumentContract>> contracts,
-            boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
+        static std::vector<std::shared_ptr<Structure>> optimiseStructuresFromContracts(
+            std::vector<std::shared_ptr<SingleInstrumentContract>> contracts,
+            std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
             bool& successful,
             std::string& errorMessage);
 
     private:
-        double getNGR(boost::shared_ptr<RatesEnvironment> re, double& mtm);
+        double getNGR(std::shared_ptr<RatesEnvironment> re, double& mtm);
 
-        std::vector<boost::shared_ptr<Structure>> nettingStructures;
-        boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors;
-        boost::shared_ptr<RegCapCreditParameters> regCapCreditParameters;
-        boost::shared_ptr<Margin> margin;
+        std::vector<std::shared_ptr<Structure>> nettingStructures;
+        std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors;
+        std::shared_ptr<RegCapCreditParameters> regCapCreditParameters;
+        std::shared_ptr<Margin> margin;
         bool hasMargin;
         bool structureConversionError;
         std::string structureErrorMessage;
@@ -85,33 +85,33 @@ namespace sjd
     class PortfolioB2CEM : public Portfolio
     {
     public:
-        PortfolioB2CEM(std::vector<boost::shared_ptr<Contract>> input,
-                       boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
-                       boost::shared_ptr<RegCapCreditParameters> regCapCreditParameters,
+        PortfolioB2CEM(std::vector<std::shared_ptr<Contract>> input,
+                       std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
+                       std::shared_ptr<RegCapCreditParameters> regCapCreditParameters,
                        bool optimise = false);
 
-        PortfolioB2CEM(std::vector<boost::shared_ptr<Contract>> input,
-                       boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
-                       boost::shared_ptr<RegCapCreditParameters> regCapCreditParameters,
+        PortfolioB2CEM(std::vector<std::shared_ptr<Contract>> input,
+                       std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
+                       std::shared_ptr<RegCapCreditParameters> regCapCreditParameters,
                        bool optimise,
-                       boost::shared_ptr<Margin> margin);
+                       std::shared_ptr<Margin> margin);
 
         PortfolioB2CEM(PortfolioB2CEM& portfolio);
         std::unique_ptr<Contract> clone() override;
 
         void validate() override;
-        void validate(boost::shared_ptr<RatesEnvironment> re) override;
+        void validate(std::shared_ptr<RatesEnvironment> re) override;
 
-        boost::shared_ptr<RegulatoryCapital> regulatoryCapital() const;
-        double getRegulatoryCapital(boost::shared_ptr<RatesEnvironment> re);
+        std::shared_ptr<RegulatoryCapital> regulatoryCapital() const;
+        double getRegulatoryCapital(std::shared_ptr<RatesEnvironment> re);
 
     private:
-        void attachCapital(std::vector<boost::shared_ptr<Contract>> inputs,
-                           boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
-                           boost::shared_ptr<RegCapCreditParameters> regCapCreditParameters,
+        void attachCapital(std::vector<std::shared_ptr<Contract>> inputs,
+                           std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
+                           std::shared_ptr<RegCapCreditParameters> regCapCreditParameters,
                            bool optimise);
 
-        boost::shared_ptr<CurrentExposureMethod> capital;
+        std::shared_ptr<CurrentExposureMethod> capital;
     };
 
 }

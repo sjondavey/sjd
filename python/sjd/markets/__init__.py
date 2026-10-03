@@ -1,6 +1,6 @@
 """Market conventions for building generic rates and contracts."""
 
-from markets.rates import (
+from .rates import (
     business_days_after,
     calendar,
     month_settlement,
@@ -9,9 +9,9 @@ from markets.rates import (
     rates_environment,
     spot_date,
 )
-from markets.sample import SAMPLE_ANCHOR, load_sample
-from markets.schema import initialize
-from markets.specs import (
+from .sample import SAMPLE_ANCHOR, load_sample
+from .schema import initialize
+from .specs import (
     CATALOGUE,
     CalendarSpec,
     Catalogue,

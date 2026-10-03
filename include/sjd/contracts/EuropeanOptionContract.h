@@ -1,4 +1,4 @@
-﻿#ifndef OPTIONCONTRACT_INCLUDED
+#ifndef OPTIONCONTRACT_INCLUDED
 #define OPTIONCONTRACT_INCLUDED
 #pragma once
 
@@ -34,7 +34,7 @@ namespace sjd {
         std::unique_ptr<Contract> clone() override;
         virtual ~EuropeanOption() {};
 
-        virtual double getOptionValue(boost::shared_ptr<RatesEnvironment> re);
+        virtual double getOptionValue(std::shared_ptr<RatesEnvironment> re);
         virtual std::string validationRoot() const { return "european_option"; }
 
         virtual void setType(PutCall pc);
@@ -49,7 +49,7 @@ namespace sjd {
                                double premiumAmount, 
                                BuySell buySell);
 
-       boost::shared_ptr<Black76Option> option;
+       std::shared_ptr<Black76Option> option;
     };
 
 }

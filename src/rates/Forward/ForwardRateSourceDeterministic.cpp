@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Forward/ForwardRateSourceDeterministic.h>
+#include <sjd/rates/Forward/ForwardRateSourceDeterministic.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -32,17 +32,17 @@ namespace sjd
         return true;
     }
 
-    vector<pair<string, boost::shared_ptr<RateSource>>> ForwardRateSourceDeterministic::getMarketRateStresses()
+    vector<pair<string, std::shared_ptr<RateSource>>> ForwardRateSourceDeterministic::getMarketRateStresses()
     {
-        vector<pair<string, boost::shared_ptr<RateSource>>> marketStress;
+        vector<pair<string, std::shared_ptr<RateSource>>> marketStress;
         marketStress.push_back(make_pair("Fwd + 1unit", parallelBump(1.0)));
         return marketStress;
     }
 
 
-    vector<boost::shared_ptr<ForwardRateSource> > ForwardRateSourceDeterministic::rollForward()
+    vector<std::shared_ptr<ForwardRateSource> > ForwardRateSourceDeterministic::rollForward()
     {
-        vector<boost::shared_ptr<ForwardRateSource> > frss;
+        vector<std::shared_ptr<ForwardRateSource> > frss;
         for (size_t i = 0; i < orderedForwardDates.size(); ++i) 
         {
             frss.push_back(rollForward(orderedForwardDates[i]));
@@ -50,7 +50,7 @@ namespace sjd
         return frss;
     }
 
-    boost::shared_ptr<ForwardRateSource> ForwardRateSourceDeterministic::rollForward(Date toDate, 
+    std::shared_ptr<ForwardRateSource> ForwardRateSourceDeterministic::rollForward(Date toDate, 
                                                                                      vector<Date> rateSetDates,
                                                                                      vector<double> &rateSetsFromAnchorToDate)
     {
@@ -62,12 +62,12 @@ namespace sjd
         return rollForward(toDate);
     }
 
-    vector<boost::shared_ptr<ForwardRateSource> > ForwardRateSourceDeterministic::rollForward(
+    vector<std::shared_ptr<ForwardRateSource> > ForwardRateSourceDeterministic::rollForward(
                                                                     vector<Date> rateSetDates,                
                                                                     vector<double> &rateSetsFromAnchorToFinalRollDate)
     {
         rateSetsFromAnchorToFinalRollDate.clear();
-        vector<boost::shared_ptr<ForwardRateSource> > frss;
+        vector<std::shared_ptr<ForwardRateSource> > frss;
         vector<double> previousRateSets;
         vector<double> rateSets;
         for (size_t i = 0; i < orderedForwardDates.size(); ++i) 

@@ -13,24 +13,24 @@ using namespace QuantLib;
 
 namespace sjd
 {
-    boost::shared_ptr<ForwardRateSource> makeForwardCurve(Date anchorDate,
+    std::shared_ptr<ForwardRateSource> makeForwardCurve(Date anchorDate,
                                                           vector<Date> observationDates,
                                                           vector<double> forwards,
                                                           ArrayInterpolatorType interpolation,
                                                           bool allowExtrapolation,
                                                           ForwardAveraging averaging,
                                                           ForwardRoll roll,
-                                                          boost::shared_ptr<VolatilityRateSource> volatility)
+                                                          std::shared_ptr<VolatilityRateSource> volatility)
     {
         if (averaging == ForwardAveraging::CalendarMonth)
         {
             switch (roll)
             {
             case ForwardRoll::Deterministic:
-                return boost::shared_ptr<ForwardRateSource>(new ForwardCurveCMADeterministic(
+                return std::shared_ptr<ForwardRateSource>(new ForwardCurveCMADeterministic(
                     anchorDate, observationDates, forwards, interpolation, allowExtrapolation));
             case ForwardRoll::ForwardVolatility:
-                return boost::shared_ptr<ForwardRateSource>(new ForwardCurveCMAStochasticFwdVol(
+                return std::shared_ptr<ForwardRateSource>(new ForwardCurveCMAStochasticFwdVol(
                     anchorDate, observationDates, forwards, interpolation, allowExtrapolation, volatility));
             case ForwardRoll::SpotVolatility:
                 throw invalid_argument(
@@ -41,13 +41,13 @@ namespace sjd
         switch (roll)
         {
         case ForwardRoll::Deterministic:
-            return boost::shared_ptr<ForwardRateSource>(new ForwardCurveDeterministic(
+            return std::shared_ptr<ForwardRateSource>(new ForwardCurveDeterministic(
                 anchorDate, observationDates, forwards, interpolation, allowExtrapolation));
         case ForwardRoll::ForwardVolatility:
-            return boost::shared_ptr<ForwardRateSource>(new ForwardCurveStochasticFwdVol(
+            return std::shared_ptr<ForwardRateSource>(new ForwardCurveStochasticFwdVol(
                 anchorDate, observationDates, forwards, interpolation, allowExtrapolation, volatility));
         case ForwardRoll::SpotVolatility:
-            return boost::shared_ptr<ForwardRateSource>(new ForwardCurveStochasticSpotVol(
+            return std::shared_ptr<ForwardRateSource>(new ForwardCurveStochasticSpotVol(
                 anchorDate, observationDates, forwards, interpolation, allowExtrapolation, volatility));
         }
         throw invalid_argument("Unknown forward roll.");

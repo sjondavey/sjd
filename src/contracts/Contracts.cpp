@@ -1,4 +1,4 @@
-﻿#include <sjd/contracts/Contracts.h>
+#include <sjd/contracts/Contracts.h>
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
@@ -21,7 +21,7 @@ namespace sjd
         errorTracking->clear();
     }
 
-    void Contract::validate(boost::shared_ptr<RatesEnvironment> re)
+    void Contract::validate(std::shared_ptr<RatesEnvironment> re)
     {
         this->validate();
         if (!re->isOK())
@@ -41,7 +41,7 @@ namespace sjd
         return validationReport();
     }
 
-    ValidationReport Contract::validateReport(boost::shared_ptr<RatesEnvironment> re)
+    ValidationReport Contract::validateReport(std::shared_ptr<RatesEnvironment> re)
     {
         validate(re);
         return validationReport();
@@ -65,7 +65,7 @@ namespace sjd
         return description.str();
     }
 
-    string Contract::toString(boost::shared_ptr<RatesEnvironment> re)
+    string Contract::toString(std::shared_ptr<RatesEnvironment> re)
     {
         validate(re);
         stringstream description;
@@ -111,7 +111,7 @@ namespace sjd
         }
     }
 
-    void SingleInstrumentContract::validate(boost::shared_ptr<RatesEnvironment> re)
+    void SingleInstrumentContract::validate(std::shared_ptr<RatesEnvironment> re)
     {
         Contract::validate(re);
         if (!re->hasDRS()) 
@@ -257,7 +257,7 @@ namespace sjd
         return descriptionStream.str();
     }
 
-    string SingleInstrumentContract::toStringRates(boost::shared_ptr<RatesEnvironment> re)
+    string SingleInstrumentContract::toStringRates(std::shared_ptr<RatesEnvironment> re)
     {
         stringstream ratesDescriptionStream;
         ratesDescriptionStream << ",MtM," << fixed << setprecision(4) << getValue(re)
@@ -279,7 +279,7 @@ namespace sjd
         }
     }
 
-    void SingleDerivativeContract::validate(boost::shared_ptr<RatesEnvironment> re)
+    void SingleDerivativeContract::validate(std::shared_ptr<RatesEnvironment> re)
     {
         SingleInstrumentContract::validate(re);
         if (!re->hasFRS()) 
@@ -320,7 +320,7 @@ namespace sjd
         return descriptionStream.str();
     }
 
-    string SingleDerivativeContract::toStringRates(boost::shared_ptr<RatesEnvironment> re)
+    string SingleDerivativeContract::toStringRates(std::shared_ptr<RatesEnvironment> re)
     {
         stringstream descriptionStream;
         descriptionStream << SingleInstrumentContract::toStringRates(re);
@@ -347,7 +347,7 @@ namespace sjd
         }
     }
 
-    void SingleOptionContract::validate(boost::shared_ptr<RatesEnvironment> re)
+    void SingleOptionContract::validate(std::shared_ptr<RatesEnvironment> re)
     {      
         SingleDerivativeContract::validate(re);
         if (!re->hasVRS()) 
@@ -385,7 +385,7 @@ namespace sjd
         }
     }
 
-    double SingleOptionContract::getValue(boost::shared_ptr<RatesEnvironment> re)
+    double SingleOptionContract::getValue(std::shared_ptr<RatesEnvironment> re)
     {
         if (valueCalculated && (re == cachedRE) && (re->marketRevision() == cachedMarketRevision))
         {
@@ -429,7 +429,7 @@ namespace sjd
         return descriptionStream.str();
     }
 
-    string SingleOptionContract::toStringRates(boost::shared_ptr<RatesEnvironment> re)
+    string SingleOptionContract::toStringRates(std::shared_ptr<RatesEnvironment> re)
     {
         stringstream descriptionStream; 
         descriptionStream << SingleDerivativeContract::toStringRates(re);
@@ -474,7 +474,7 @@ namespace sjd
         }
     }
 
-    void AsianContract::validate(boost::shared_ptr<RatesEnvironment> re)
+    void AsianContract::validate(std::shared_ptr<RatesEnvironment> re)
     {
         AsianContract::validate();
         Date valueDate = (re->getAnchorDate());
@@ -585,7 +585,7 @@ namespace sjd
     void AsianContract::getFixingAndForwardRates(Date valueDate, 
                                               vector<double> &fixingRates, 
                                               vector<double> &forwardRates,
-                                              boost::shared_ptr<RatesEnvironment> re)
+                                              std::shared_ptr<RatesEnvironment> re)
     {
         vector<Date> fixingDates, forwardDates;
         getFixingAndForwardDates(valueDate, fixingDates, forwardDates);        
@@ -612,23 +612,23 @@ namespace sjd
     }
     void MultipleInstrumentContract::setInputVariables()
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("MultipleInstrumentContract"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("MultipleInstrumentContract"));
     }
 
-    MultipleInstrumentContract::MultipleInstrumentContract(vector<boost::shared_ptr<SingleInstrumentContract>> inputs)
+    MultipleInstrumentContract::MultipleInstrumentContract(vector<std::shared_ptr<SingleInstrumentContract>> inputs)
     {
         setInputVariables();
         contracts = inputs;
     };
 
-    MultipleInstrumentContract::MultipleInstrumentContract(vector<boost::shared_ptr<Contract>> inputs)
+    MultipleInstrumentContract::MultipleInstrumentContract(vector<std::shared_ptr<Contract>> inputs)
     {
         setInputVariables();
-        vector<boost::shared_ptr<SingleInstrumentContract>> inputsAsSingleInstruments = 
+        vector<std::shared_ptr<SingleInstrumentContract>> inputsAsSingleInstruments = 
             getSingleInstrumentContracts(inputs);
         if (!isOK()) 
         {
-            contracts = vector<boost::shared_ptr<SingleInstrumentContract>>(0);
+            contracts = vector<std::shared_ptr<SingleInstrumentContract>>(0);
             recordIssue("CONTRACT_EXTRACT_FAILED", "Cannot extract single instruments from input contracts", {});
         }
         else 
@@ -657,7 +657,7 @@ namespace sjd
         }
     }
 
-    void MultipleInstrumentContract::validate(boost::shared_ptr<RatesEnvironment> re)
+    void MultipleInstrumentContract::validate(std::shared_ptr<RatesEnvironment> re)
     {
         Contract::validate(re);
         if (contracts.size() == 0)
@@ -676,7 +676,7 @@ namespace sjd
         }
     }
 
-    double MultipleInstrumentContract::getValue(boost::shared_ptr<RatesEnvironment> re)
+    double MultipleInstrumentContract::getValue(std::shared_ptr<RatesEnvironment> re)
     {
         double value = 0;
         for (size_t i = 0; i < contracts.size(); ++i) 
@@ -686,7 +686,7 @@ namespace sjd
         return value;
     }
 
-    string MultipleInstrumentContract::toString(boost::shared_ptr<RatesEnvironment> re)
+    string MultipleInstrumentContract::toString(std::shared_ptr<RatesEnvironment> re)
     {
         validate(re);
         stringstream description;
@@ -715,7 +715,7 @@ namespace sjd
         return description;
     }
 
-    string MultipleInstrumentContract::toStringRates(boost::shared_ptr<RatesEnvironment> re)
+    string MultipleInstrumentContract::toStringRates(std::shared_ptr<RatesEnvironment> re)
     {
         string description;
         for (size_t i = 0; i < contracts.size(); ++i)
@@ -725,9 +725,9 @@ namespace sjd
         return description;
     }
 
-    vector<boost::shared_ptr<SingleInstrumentContract>> MultipleInstrumentContract::getUnderlyingSingleInstrumentContracts()
+    vector<std::shared_ptr<SingleInstrumentContract>> MultipleInstrumentContract::getUnderlyingSingleInstrumentContracts()
     {
-        vector<boost::shared_ptr<SingleInstrumentContract>> clonedContracts;
+        vector<std::shared_ptr<SingleInstrumentContract>> clonedContracts;
         for (size_t i = 0; i < contracts.size(); ++i) 
         {
             clonedContracts.push_back(cloneInstrument(contracts[i]));
@@ -735,20 +735,20 @@ namespace sjd
         return clonedContracts;
     }
 
-    vector<boost::shared_ptr<SingleInstrumentContract>> MultipleInstrumentContract::getSingleInstrumentContracts(
-                                                                            vector<boost::shared_ptr<Contract>> inputs)
+    vector<std::shared_ptr<SingleInstrumentContract>> MultipleInstrumentContract::getSingleInstrumentContracts(
+                                                                            vector<std::shared_ptr<Contract>> inputs)
     {
-        vector<boost::shared_ptr<SingleInstrumentContract>> inputsAsSingleInstruments;
+        vector<std::shared_ptr<SingleInstrumentContract>> inputsAsSingleInstruments;
         for (size_t i = 0; i < inputs.size(); ++i) 
         {
-            if (boost::dynamic_pointer_cast<SingleInstrumentContract>(inputs[i]) != 0) 
+            if (std::dynamic_pointer_cast<SingleInstrumentContract>(inputs[i]) != 0) 
             {
-                inputsAsSingleInstruments.push_back(boost::dynamic_pointer_cast<SingleInstrumentContract>(inputs[i]));
+                inputsAsSingleInstruments.push_back(std::dynamic_pointer_cast<SingleInstrumentContract>(inputs[i]));
             }
-            else if (boost::dynamic_pointer_cast<MultipleInstrumentContract>(inputs[i]) != 0) 
+            else if (std::dynamic_pointer_cast<MultipleInstrumentContract>(inputs[i]) != 0) 
             {
-                vector<boost::shared_ptr<SingleInstrumentContract>> underlyingContracts = 
-                    boost::dynamic_pointer_cast<MultipleInstrumentContract>(inputs[i])->
+                vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts = 
+                    std::dynamic_pointer_cast<MultipleInstrumentContract>(inputs[i])->
                     getUnderlyingSingleInstrumentContracts();
 
                 for (size_t j = 0; j < underlyingContracts.size(); ++j) 

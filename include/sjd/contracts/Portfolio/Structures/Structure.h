@@ -1,4 +1,4 @@
-﻿#ifndef STRUCTURE_INCLUDED
+#ifndef STRUCTURE_INCLUDED
 #define STRUCTURE_INCLUDED
 #pragma once
 
@@ -52,21 +52,21 @@ namespace sjd
     class Structure : public MultipleInstrumentContract
     {
     public:
-        Structure(boost::shared_ptr<SingleInstrumentContract> underlyingContract, 
-                  boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
+        Structure(std::shared_ptr<SingleInstrumentContract> underlyingContract, 
+                  std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
 
-        Structure(std::vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts, 
-                  boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
+        Structure(std::vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts, 
+                  std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
 
-        Structure(boost::shared_ptr<Contract> underlyingContract, 
-                  boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
+        Structure(std::shared_ptr<Contract> underlyingContract, 
+                  std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
 
         Structure(Structure &structure);
         std::unique_ptr<Contract> clone() override;
         virtual ~Structure() {};
 
         virtual void validate();
-        virtual void validate(boost::shared_ptr<RatesEnvironment> re);
+        virtual void validate(std::shared_ptr<RatesEnvironment> re);
 
         virtual QuantLib::Date getSettlementDate();
         virtual bool isExposureCapped() const;
@@ -76,91 +76,91 @@ namespace sjd
 
         // To get the structure's reg cap, multiply the value returned from this function my
         // The couterparty weight and the capital charge
-        virtual double getMtMPlusAddOn(boost::shared_ptr<RatesEnvironment> re, double netGrossRatio = 1);
+        virtual double getMtMPlusAddOn(std::shared_ptr<RatesEnvironment> re, double netGrossRatio = 1);
         // Often we already have the MtM so it's much more efficient just to use it than re-calcuate it
-        virtual double getMtMPlusAddOnForGivenMtM(boost::shared_ptr<RatesEnvironment> re, 
+        virtual double getMtMPlusAddOnForGivenMtM(std::shared_ptr<RatesEnvironment> re, 
                                                   double mtm, 
                                                   double netGrossRatio = 1);
         
         // The following functions are static becuase they will be used both in the class 
         // and also when manipulating a general collection of Single Instrument Contracts which may 
         // need to be manipulated before it qualifies as a Structure
-        static std::set<double> getAllStrikes(std::vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts);
-        static std::vector<boost::shared_ptr<SingleInstrumentContract>> getAllContractsWithStrike(
-                                            std::vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts,
+        static std::set<double> getAllStrikes(std::vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts);
+        static std::vector<std::shared_ptr<SingleInstrumentContract>> getAllContractsWithStrike(
+                                            std::vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts,
                                             double strike);
         // returns the signed gradient of the line passing though the three mtms corresponding to three input spot values. If these do
         // not fall on the same line then a NAN is returned
-        static double gradient(std::vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts, double x1, double x2);
+        static double gradient(std::vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts, double x1, double x2);
         // Piecewise linear is a fundamental assumption here so I need a specific test for it.
-        static bool isPiecewiseLinear(std::vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts);
+        static bool isPiecewiseLinear(std::vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts);
         // There is a issue to do with precision, especially when dealing with the gradients of the payoff
         // functions. The extent of the precision issues depends on the volume of the payoff function but calculating this
         // every time is painfull so this shortcut just finds the the maximum volume of each of the contracts as
         // a simple estimate of the volume of the collection.
-        static double getMaximumNominalVolume(std::vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts);
+        static double getMaximumNominalVolume(std::vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts);
         // Returns the largest absolute value gradient of the payoff of all the contracts at maturity, or the 
         // Volume of the underlying collection of contracts
-        static double getEffectiveVolume(std::vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts);
-        static bool isMaximumVolumeInUncappedWing(std::vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts);
+        static double getEffectiveVolume(std::vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts);
+        static bool isMaximumVolumeInUncappedWing(std::vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts);
 
-        static bool isUncappedOnTheLeft(std::vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts,
+        static bool isUncappedOnTheLeft(std::vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts,
                                         double &effectiveVolumeAtLowestStrike);
-        static bool isUncappedOnTheRight(std::vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts,
+        static bool isUncappedOnTheRight(std::vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts,
                                         double &effectiveVolumeAtHighestStrike);
-        static bool isCapped(std::vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts, 
+        static bool isCapped(std::vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts, 
                              double &cap, 
                              bool &hasPriceExpsoure);
 
         // Groups all contracts by strike and finds the first strike where the contracts have have uncapped
         // exposure to the left. Returns all contracts with this strike
-        static std::vector<boost::shared_ptr<SingleInstrumentContract> > getContractsWithUncappedExposureOnTheLeft(
-                                            std::vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts,
+        static std::vector<std::shared_ptr<SingleInstrumentContract> > getContractsWithUncappedExposureOnTheLeft(
+                                            std::vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts,
                                             double &commonStrike);
-        static std::vector<boost::shared_ptr<SingleInstrumentContract> > getContractsWithUncappedExposureOnTheRight(
-                                            std::vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts,
+        static std::vector<std::shared_ptr<SingleInstrumentContract> > getContractsWithUncappedExposureOnTheRight(
+                                            std::vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts,
                                             double &commonStrike);
 
 
-        static bool isContactADerivative(boost::shared_ptr<SingleInstrumentContract> underlyingContract);        
-        static bool isAnAsianDerivative(boost::shared_ptr<SingleDerivativeContract> underlyingContract);        
+        static bool isContactADerivative(std::shared_ptr<SingleInstrumentContract> underlyingContract);        
+        static bool isAnAsianDerivative(std::shared_ptr<SingleDerivativeContract> underlyingContract);        
         // true if the underlying settlement / maturty profiles are the same and the rates environement is compatable
-        static bool qualifyForRegulatoryCapitalOffset(boost::shared_ptr<SingleInstrumentContract> contract1,
-                                                      boost::shared_ptr<SingleInstrumentContract> contract2,
+        static bool qualifyForRegulatoryCapitalOffset(std::shared_ptr<SingleInstrumentContract> contract1,
+                                                      std::shared_ptr<SingleInstrumentContract> contract2,
                                                       std::string &reasonIfNot = std::string(""));
-        static bool moveContracts(std::vector<boost::shared_ptr<SingleInstrumentContract> > contractsToMove,
-                                  std::vector<boost::shared_ptr<SingleInstrumentContract> > &fromContracts,
-                                  std::vector<boost::shared_ptr<SingleInstrumentContract> > &toContracts);
+        static bool moveContracts(std::vector<std::shared_ptr<SingleInstrumentContract> > contractsToMove,
+                                  std::vector<std::shared_ptr<SingleInstrumentContract> > &fromContracts,
+                                  std::vector<std::shared_ptr<SingleInstrumentContract> > &toContracts);
 
         // Takes contacts which are *assumed* to qualify for full or partial reg cap offest and builds *optimal* structures
         // By grouping according to volume
-        static std::vector<boost::shared_ptr<Structure>> createStructures(std::vector<boost::shared_ptr<SingleInstrumentContract>> contracts,
-                                                                     boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
+        static std::vector<std::shared_ptr<Structure>> createStructures(std::vector<std::shared_ptr<SingleInstrumentContract>> contracts,
+                                                                     std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
                                                                      bool &successful);
 
         // Assumes the input cappedContracts and unCappedContracts are empty to start with, copies allContracts and
         // distributes the inputs so that *only* the wings will be moved to the unCappedContracts and then only in 
         // the *minimum* volume necessary to leave the remaing contracts uncapped.
-        static void decomposeIntoCappedAndUncapped(std::vector<boost::shared_ptr<SingleInstrumentContract>> &allContracts,
-                                                   std::vector<boost::shared_ptr<SingleInstrumentContract>> &cappedContracts,
-                                                   std::vector<boost::shared_ptr<SingleInstrumentContract>> &unCappedContracts,
+        static void decomposeIntoCappedAndUncapped(std::vector<std::shared_ptr<SingleInstrumentContract>> &allContracts,
+                                                   std::vector<std::shared_ptr<SingleInstrumentContract>> &cappedContracts,
+                                                   std::vector<std::shared_ptr<SingleInstrumentContract>> &unCappedContracts,
                                                    bool &successful);
 
         // Once we have capped and uncapped strucutres with the same maturity profile, this method moves any deferred 
         // premiums from one to the other to ensure the cappedContracts have a maximum MtM and the uncapped structures
         // have a minimum MtM
-        static void optimiseCashflow(std::vector<boost::shared_ptr<SingleInstrumentContract>> &cappedContracts,
-                                     std::vector<boost::shared_ptr<SingleInstrumentContract>> &unCappedContracts,
+        static void optimiseCashflow(std::vector<std::shared_ptr<SingleInstrumentContract>> &cappedContracts,
+                                     std::vector<std::shared_ptr<SingleInstrumentContract>> &unCappedContracts,
                                      bool &successful);
 
-        virtual std::string toString(boost::shared_ptr<RatesEnvironment> re);
+        virtual std::string toString(std::shared_ptr<RatesEnvironment> re);
 
 
     protected:
-        void commonConstructor(std::vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts, 
-                               boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
+        void commonConstructor(std::vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts, 
+                               std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
 
-        boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors;
+        std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors;
         std::vector<double> regCapFactorsFromForwardDates;
         bool cappedExposure, hasPriceExposure;
         double cap;

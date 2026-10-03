@@ -1,4 +1,4 @@
-﻿#include "OptionContractTest.h"
+#include "OptionContractTest.h"
 
 using namespace std;
 using namespace QuantLib;
@@ -11,9 +11,9 @@ using namespace boost::math;
 using namespace sjd;
 
 
-boost::shared_ptr<EuropeanOption> OptionContactTest::getDefaultEuropeanOption(Date anchorDate)
+std::shared_ptr<EuropeanOption> OptionContactTest::getDefaultEuropeanOption(Date anchorDate)
 {
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
     Date optionMaturity = nullCalendar->advance(anchorDate, 2, Years);
     Date optionSettlement = nullCalendar->advance(optionMaturity, 2, Days);
     double strike = 100;
@@ -21,7 +21,7 @@ boost::shared_ptr<EuropeanOption> OptionContactTest::getDefaultEuropeanOption(Da
     double defPremium = 3.4;
     double volume = 10000;
 
-    return boost::shared_ptr<EuropeanOption>(new  EuropeanOption(optionMaturity, optionSettlement, strike, type, volume, optionSettlement, defPremium, BUY));
+    return std::shared_ptr<EuropeanOption>(new  EuropeanOption(optionMaturity, optionSettlement, strike, type, volume, optionSettlement, defPremium, BUY));
 }
 
 
@@ -29,7 +29,7 @@ void OptionContactTest::testBuySell()
 {
     BOOST_TEST_MESSAGE("Testing OptionContract ...");
     Date anchorDate(1,Jan,2013);
-    boost::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
     BuySell bs = SELL;
     contract->setBuySell(bs);
     BuySell bs2 = contract->getBuySell();
@@ -41,8 +41,8 @@ void OptionContactTest::testStrike()
     Date anchorDate(1,Jan,2013);
     GenerateRates gr = GenerateRates();
 
-    boost::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
-    boost::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
+    std::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
     BOOST_CHECK(contract->isOK());
     double strike = -1;
     contract->setStrike(strike);
@@ -56,8 +56,8 @@ void OptionContactTest::testVolume()
     Date anchorDate(1,Jan,2013);
     GenerateRates gr = GenerateRates();
 
-    boost::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
-    boost::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
+    std::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
     BOOST_CHECK(contract->isOK());
     double volume = -1;
     contract->setVolume(volume);
@@ -70,10 +70,10 @@ void OptionContactTest::testMaturityDate()
     Date anchorDate(1,Jan,2013);
     GenerateRates gr = GenerateRates();
 
-    boost::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
-    boost::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
+    std::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
     BOOST_CHECK(contract->isOK());    
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
     Date optionMaturity = nullCalendar->advance(anchorDate, 3, Years);
     contract->setMaturityDate(optionMaturity);
     contract->validate();
@@ -86,8 +86,8 @@ void OptionContactTest::testPremiumAmount()
     Date anchorDate(1,Jan,2013);
     GenerateRates gr = GenerateRates();
 
-    boost::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
-    boost::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
+    std::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
     BOOST_CHECK(contract->isOK());    
 
     double ppAmount = -10;
@@ -101,14 +101,14 @@ void OptionContactTest::testType()
     Date anchorDate(1,Jan,2013);
     GenerateRates gr = GenerateRates();
 
-    boost::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
-    boost::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
+    std::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
     BOOST_CHECK(contract->getType() == PUT);  
     double valuePut = contract->getValue(re);
     contract->setType(CALL);
     BOOST_CHECK(contract->getType() == CALL);    
     double valueCall = contract->getValue(re);
-    boost::shared_ptr<EuropeanOption> freshCall = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<EuropeanOption> freshCall = getDefaultEuropeanOption(anchorDate);
     freshCall->setType(CALL);
     BOOST_CHECK(abs(valueCall - freshCall->getValue(re)) < EPSILON_FOR_DOUBLES);
     BOOST_CHECK(abs(valuePut - valueCall)>EPSILON_FOR_DOUBLES); 
@@ -119,11 +119,11 @@ void OptionContactTest::testPutCallParity()
     Date anchorDate(1,Jan,2013);
     GenerateRates gr = GenerateRates();
 
-    boost::shared_ptr<EuropeanOption> put = getDefaultEuropeanOption(anchorDate);
-    boost::shared_ptr<EuropeanOption> call = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<EuropeanOption> put = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<EuropeanOption> call = getDefaultEuropeanOption(anchorDate);
     call->setType(CALL);
     call->setBuySell(SELL);
-    boost::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
+    std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
 
     EuropeanForward forward(put->getMaturityDate(), put->getSettlementDate(), put->getStrike(), put->getVolume(), SELL);
     BOOST_CHECK(abs(put->getValue(re) + call->getValue(re) - forward.getValue(re))<1e-10);
@@ -134,8 +134,8 @@ void OptionContactTest::testValue()
     Date anchorDate(1,Jan,2013);
     GenerateRates gr = GenerateRates();
 
-    boost::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;;
-    boost::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;;
+    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
 
     Date tPlus2 = nullCalendar->advance(anchorDate, 2, Days);
     Date optionMaturity = nullCalendar->advance(anchorDate, 2, Years);
@@ -146,7 +146,7 @@ void OptionContactTest::testValue()
     manditoryDates.push_back(optionMaturity);
     manditoryDates.push_back(optionSettlement);
 
-    boost::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForEuropeanOption(anchorDate, manditoryDates);
+    std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForEuropeanOption(anchorDate, manditoryDates);
 
     double strike = 100;
     PutCall type = PUT;
@@ -186,13 +186,13 @@ void OptionContactTest::testValue()
 
 void OptionContactTest::testGetPayoffAfterMaturity()
 {
-    boost::shared_ptr<DayCounter> dayCounter = boost::shared_ptr<DayCounter>(new Actual365Fixed());
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
 
     Date anchorDate(1,Jan,2013);
 
-    boost::shared_ptr<EuropeanOption> option = getDefaultEuropeanOption(anchorDate);
-    boost::shared_ptr<EuropeanOption> option2 = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<EuropeanOption> option = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<EuropeanOption> option2 = getDefaultEuropeanOption(anchorDate);
     option2->setType(CALL);
 
     double v1 = option->getVolume();
@@ -212,11 +212,11 @@ void OptionContactTest::testEuropeanOptionWithMoneynessVol()
 {
     BOOST_TEST_MESSAGE("Testing European Option with moneyness vol ...");
 
-    boost::shared_ptr<RatesEnvironment> re;
+    std::shared_ptr<RatesEnvironment> re;
     GenerateRates gr = GenerateRates();
 
-    boost::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    boost::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
+    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
 
     Date anchorDate = gr.defaultAnchorDate;
     Date tPlus2 = nullCalendar->advance(anchorDate, 2, Days);
@@ -232,10 +232,10 @@ void OptionContactTest::testEuropeanOptionWithMoneynessVol()
     double naccRFR = gr.defaultNACCRate;
     double naccIRDiff = gr.defaultNACCIRDiff;    
 
-    boost::shared_ptr<DiscountCurve> dc = gr.getDefaultDiscountCurve(anchorDate);
-    boost::shared_ptr<ForwardCurveDeterministic> fc = gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, spot, naccIRDiff, manditoryDates);
-    boost::shared_ptr<VolatilitySurfaceMoneyness> vs = gr.getDefaultMoneynessSurface(anchorDate);
-    re = boost::shared_ptr<RatesEnvironment>(new RatesEnvironment(anchorDate));
+    std::shared_ptr<DiscountCurve> dc = gr.getDefaultDiscountCurve(anchorDate);
+    std::shared_ptr<ForwardCurveDeterministic> fc = gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, spot, naccIRDiff, manditoryDates);
+    std::shared_ptr<VolatilitySurfaceMoneyness> vs = gr.getDefaultMoneynessSurface(anchorDate);
+    re = std::shared_ptr<RatesEnvironment>(new RatesEnvironment(anchorDate));
     re->setDRS(dc);
     re->setFRS(fc);
     re->setVRS(vs);
@@ -265,7 +265,7 @@ void OptionContactTest::testEuropeanOptionWithMoneynessVol()
     
     // 3) After settlement
     Date dayAfterSettlement = nullCalendar->advance(optionSettlement, 1, Days);
-    re = boost::shared_ptr<RatesEnvironment>(new RatesEnvironment(dayAfterSettlement));
+    re = std::shared_ptr<RatesEnvironment>(new RatesEnvironment(dayAfterSettlement));
     manditoryDates.clear();
     dc = gr.getDiscountCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, naccRFR);
     fc = gr.getSimpleForwardCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, spot, naccIRDiff);

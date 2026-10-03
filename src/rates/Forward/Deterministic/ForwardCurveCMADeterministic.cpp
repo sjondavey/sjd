@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Forward/Deterministic/ForwardCurveCMADeterministic.h>
+#include <sjd/rates/Forward/Deterministic/ForwardCurveCMADeterministic.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -13,7 +13,7 @@ namespace sjd
                                                                ArrayInterpolatorType typeInput,
                                                                bool allowExtrapolationInput)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveCMADeterministic"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveCMADeterministic"));
         quotes.setInterpolated(anchorDateInput,
                                observationDatesInput,
                                forwardsInput,
@@ -21,7 +21,7 @@ namespace sjd
                                allowExtrapolationInput,
                                ForwardAveraging::CalendarMonth,
                                ForwardRoll::Deterministic,
-                               boost::shared_ptr<VolatilityRateSource>());
+                               std::shared_ptr<VolatilityRateSource>());
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
         finalDate = quotes.finalDate();
@@ -81,12 +81,12 @@ namespace sjd
         quotes.setForwards(updatedForwards);
     }
 
-    boost::shared_ptr<ForwardRateSource> ForwardCurveCMADeterministic::rollForward(Date toDate)
+    std::shared_ptr<ForwardRateSource> ForwardCurveCMADeterministic::rollForward(Date toDate)
     {
         return quotes.rollForward(toDate, isInRange(toDate));
     }
 
-    boost::shared_ptr<ForwardRateSource> ForwardCurveCMADeterministic::rollForward(
+    std::shared_ptr<ForwardRateSource> ForwardCurveCMADeterministic::rollForward(
         Date toDate,
         vector<Date> rateSetDates,
         vector<double>& rateSetsFromAnchorToDate)
@@ -94,17 +94,17 @@ namespace sjd
         return ForwardRateSourceDeterministic::rollForward(toDate, rateSetDates, rateSetsFromAnchorToDate);
     }
 
-    boost::shared_ptr<ForwardRateSource> ForwardCurveCMADeterministic::parallelBump(double spread)
+    std::shared_ptr<ForwardRateSource> ForwardCurveCMADeterministic::parallelBump(double spread)
     {
         return quotes.parallelBump(spread);
     }
 
-    vector<boost::shared_ptr<ForwardRateSource>> ForwardCurveCMADeterministic::rollForward()
+    vector<std::shared_ptr<ForwardRateSource>> ForwardCurveCMADeterministic::rollForward()
     {
         return ForwardRateSourceDeterministic::rollForward();
     }
 
-    vector<boost::shared_ptr<ForwardRateSource>> ForwardCurveCMADeterministic::rollForward(
+    vector<std::shared_ptr<ForwardRateSource>> ForwardCurveCMADeterministic::rollForward(
         vector<Date> rateSetDates,
         vector<double>& rateSetsFromAnchorToFinalRollDate)
     {

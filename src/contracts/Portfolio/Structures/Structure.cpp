@@ -1,4 +1,4 @@
-﻿#include <sjd/contracts/Portfolio/Structures/Structure.h>
+#include <sjd/contracts/Portfolio/Structures/Structure.h>
 #include <iomanip> 
 #include <algorithm>
 
@@ -13,33 +13,33 @@ namespace sjd
    Structure
 
     =======================================================================================*/
-    Structure::Structure(boost::shared_ptr<SingleInstrumentContract> underlyingContract, 
-                         boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors)
+    Structure::Structure(std::shared_ptr<SingleInstrumentContract> underlyingContract, 
+                         std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors)
     {
-        vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts;
+        vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts;
         underlyingContracts.push_back(underlyingContract);
         commonConstructor(underlyingContracts, regCapAssetFactors);
     }
 
-    Structure::Structure(vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts, 
-                         boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors)
+    Structure::Structure(vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts, 
+                         std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors)
     {
         commonConstructor(underlyingContracts, regCapAssetFactors);
     }
 
-    Structure::Structure(boost::shared_ptr<Contract> underlyingContract, 
-                         boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors)
+    Structure::Structure(std::shared_ptr<Contract> underlyingContract, 
+                         std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors)
     {
-        vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts;
+        vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts;
         bool couldNotConvert = false;
 
-        if (boost::dynamic_pointer_cast<SingleInstrumentContract>(underlyingContract) != 0) 
+        if (std::dynamic_pointer_cast<SingleInstrumentContract>(underlyingContract) != 0) 
         {
-            underlyingContracts.push_back(boost::dynamic_pointer_cast<SingleInstrumentContract>(underlyingContract));
+            underlyingContracts.push_back(std::dynamic_pointer_cast<SingleInstrumentContract>(underlyingContract));
         }
-        else if (boost::dynamic_pointer_cast<MultipleInstrumentContract>(underlyingContract) != 0) 
+        else if (std::dynamic_pointer_cast<MultipleInstrumentContract>(underlyingContract) != 0) 
         {
-            underlyingContracts = boost::dynamic_pointer_cast<MultipleInstrumentContract>(underlyingContract)->getUnderlyingSingleInstrumentContracts();
+            underlyingContracts = std::dynamic_pointer_cast<MultipleInstrumentContract>(underlyingContract)->getUnderlyingSingleInstrumentContracts();
         }
         else
         {
@@ -65,9 +65,9 @@ namespace sjd
         return std::unique_ptr<Contract>(new Structure(*this));
     }
 
-    void Structure::commonConstructor(vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts, boost::shared_ptr<RegCapUnderlyingFactors> inputFactors)
+    void Structure::commonConstructor(vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts, std::shared_ptr<RegCapUnderlyingFactors> inputFactors)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("Structure"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("Structure"));
         cappedExposure = false;
         cap = numeric_limits<double>::quiet_NaN(); 
         contracts = underlyingContracts;
@@ -95,10 +95,10 @@ namespace sjd
         if (contracts.size() > 1) 
         {
             string reasonIfNot;
-            boost::shared_ptr<SingleInstrumentContract> contract1 = contracts[0];
+            std::shared_ptr<SingleInstrumentContract> contract1 = contracts[0];
             for (size_t i = 1; i < contracts.size(); ++i) 
             {
-                boost::shared_ptr<SingleInstrumentContract> contract2 = contracts[i];
+                std::shared_ptr<SingleInstrumentContract> contract2 = contracts[i];
                 if (!qualifyForRegulatoryCapitalOffset(contract1, contract2, reasonIfNot)) 
                 {
                     recordIssue("STRUCTURE_REGCAP_OFFSET",
@@ -119,7 +119,7 @@ namespace sjd
         }
     }
 
-    void Structure::validate(boost::shared_ptr<RatesEnvironment> re)
+    void Structure::validate(std::shared_ptr<RatesEnvironment> re)
     {
         MultipleInstrumentContract::validate(re);
 
@@ -180,7 +180,7 @@ namespace sjd
         return payoff;
     }
 
-    double Structure::getMtMPlusAddOn(boost::shared_ptr<RatesEnvironment> re, double netGrossRatio)
+    double Structure::getMtMPlusAddOn(std::shared_ptr<RatesEnvironment> re, double netGrossRatio)
     {
         double mtm = getValue(re);
         if (errorTracking->getHasErrors())
@@ -191,7 +191,7 @@ namespace sjd
         return getMtMPlusAddOnForGivenMtM(re, mtm, netGrossRatio);
     }
 
-    double Structure::getMtMPlusAddOnForGivenMtM(boost::shared_ptr<RatesEnvironment> re, double mtm, double netGrossRatio)
+    double Structure::getMtMPlusAddOnForGivenMtM(std::shared_ptr<RatesEnvironment> re, double mtm, double netGrossRatio)
     {
         if (re->getAnchorDate() > getSettlementDate())
         {
@@ -212,12 +212,12 @@ namespace sjd
         {
             double spot = -1;
             // double volume = getEffectiveVolume(contracts);
-            vector<boost::shared_ptr<SingleInstrumentContract>>::iterator it = contracts.begin();
+            vector<std::shared_ptr<SingleInstrumentContract>>::iterator it = contracts.begin();
             while ((it != contracts.end()) && (spot < 0)) 
             {
                 if (isContactADerivative(*it)) 
                 {
-                    boost::shared_ptr<SingleDerivativeContract> derivative = boost::dynamic_pointer_cast<SingleDerivativeContract>(*it);
+                    std::shared_ptr<SingleDerivativeContract> derivative = std::dynamic_pointer_cast<SingleDerivativeContract>(*it);
                     spot = re->getFRS()->getForward(re->getAnchorDate());
                 }
                 ++it;
@@ -243,32 +243,32 @@ namespace sjd
     }
 
 
-    set<double> Structure::getAllStrikes(vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts)
+    set<double> Structure::getAllStrikes(vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts)
     {
         set<double> strikes;
         for (size_t i = 0; i < underlyingContracts.size(); ++i) 
         {
             if (isContactADerivative(underlyingContracts[i])) 
             {
-                boost::shared_ptr<SingleDerivativeContract> derivative = 
-                    boost::dynamic_pointer_cast<SingleDerivativeContract>(underlyingContracts[i]);
+                std::shared_ptr<SingleDerivativeContract> derivative = 
+                    std::dynamic_pointer_cast<SingleDerivativeContract>(underlyingContracts[i]);
                 strikes.insert(derivative->getStrike());
             }
         }
         return strikes;
     }
 
-    vector<boost::shared_ptr<SingleInstrumentContract>> Structure::getAllContractsWithStrike(
-                                        vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts,
+    vector<std::shared_ptr<SingleInstrumentContract>> Structure::getAllContractsWithStrike(
+                                        vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts,
                                         double strike)
     {
-        vector<boost::shared_ptr<SingleInstrumentContract>> contractsWithOneStrike;
+        vector<std::shared_ptr<SingleInstrumentContract>> contractsWithOneStrike;
         for (size_t i = 0; i < underlyingContracts.size(); ++i) 
         {
             if (isContactADerivative(underlyingContracts[i])) 
             {
-                boost::shared_ptr<SingleDerivativeContract> derivative = 
-                    boost::dynamic_pointer_cast<SingleDerivativeContract>(underlyingContracts[i]);
+                std::shared_ptr<SingleDerivativeContract> derivative = 
+                    std::dynamic_pointer_cast<SingleDerivativeContract>(underlyingContracts[i]);
                 if (abs(derivative->getStrike() - strike) < 1e-14) 
                 {
                     contractsWithOneStrike.push_back(underlyingContracts[i]);
@@ -278,7 +278,7 @@ namespace sjd
         return contractsWithOneStrike;
     }
 
-    double Structure::gradient(vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts, double x1, double x2)
+    double Structure::gradient(vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts, double x1, double x2)
     {
         double y1 = 0, y2 = 0;
         for (size_t i = 0; i < underlyingContracts.size(); ++i) 
@@ -289,7 +289,7 @@ namespace sjd
         return (y1 - y2) / (x1 - x2);
     }
 
-    bool Structure::isPiecewiseLinear(vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts)
+    bool Structure::isPiecewiseLinear(vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts)
     {
         double numericError = 1e-6;
 
@@ -345,21 +345,21 @@ namespace sjd
     }
 
     
-    double Structure::getMaximumNominalVolume(vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts)
+    double Structure::getMaximumNominalVolume(vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts)
     {
         double maxNominalVolume = 0;
         for (size_t i = 0; i < underlyingContracts.size(); ++i) 
         {
             if (isContactADerivative(underlyingContracts[i])) 
             {
-                boost::shared_ptr<SingleDerivativeContract> derivative = boost::dynamic_pointer_cast<SingleDerivativeContract>(underlyingContracts[i]);
+                std::shared_ptr<SingleDerivativeContract> derivative = std::dynamic_pointer_cast<SingleDerivativeContract>(underlyingContracts[i]);
                 maxNominalVolume = max(maxNominalVolume, derivative->getVolume());
             }
         }
         return maxNominalVolume;
     }
     
-    double Structure::getEffectiveVolume(vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts) 
+    double Structure::getEffectiveVolume(vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts) 
     {
         set<double> strikes = getAllStrikes(underlyingContracts);
         if (strikes.size() == 0)
@@ -395,7 +395,7 @@ namespace sjd
 
     }
 
-    bool Structure::isMaximumVolumeInUncappedWing(vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts)
+    bool Structure::isMaximumVolumeInUncappedWing(vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts)
     {
         double maxVolume = getEffectiveVolume(underlyingContracts);
         double effectiveVolumeAtLowestStrike, effectiveVolumeAthighestStrike;
@@ -416,7 +416,7 @@ namespace sjd
         return false;
     }
 
-    bool Structure::isUncappedOnTheLeft(vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts,
+    bool Structure::isUncappedOnTheLeft(vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts,
                                         double &effectiveVolumeAtLowestStrike)
     {
         set<double> strikes = getAllStrikes(underlyingContracts);
@@ -441,7 +441,7 @@ namespace sjd
       }
     }
 
-    bool Structure::isUncappedOnTheRight(vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts,
+    bool Structure::isUncappedOnTheRight(vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts,
                                             double &effectiveVolumeAtHighestStrike)
     {
         set<double> strikes = getAllStrikes(underlyingContracts);
@@ -467,18 +467,18 @@ namespace sjd
     }
 
 
-    vector<boost::shared_ptr<SingleInstrumentContract> > Structure::getContractsWithUncappedExposureOnTheLeft(
-                                        vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts,
+    vector<std::shared_ptr<SingleInstrumentContract> > Structure::getContractsWithUncappedExposureOnTheLeft(
+                                        vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts,
                                         double &commonStrike)
     {
         commonStrike = 0;
-        vector<boost::shared_ptr<SingleInstrumentContract> > uncappedContracts;
+        vector<std::shared_ptr<SingleInstrumentContract> > uncappedContracts;
         set<double> strikes = getAllStrikes(underlyingContracts);
         bool contractsFound = false;
         set<double>::iterator it = strikes.begin();
         while ((it != strikes.end()) && (contractsFound == false)) 
       {
-            vector<boost::shared_ptr<SingleInstrumentContract> > contractsWithCommonStrike = 
+            vector<std::shared_ptr<SingleInstrumentContract> > contractsWithCommonStrike = 
                 getAllContractsWithStrike(underlyingContracts, *it);
             double gradient;
             if (isUncappedOnTheLeft(contractsWithCommonStrike, gradient)) 
@@ -492,18 +492,18 @@ namespace sjd
         return uncappedContracts;
     }
 
-    vector<boost::shared_ptr<SingleInstrumentContract> > Structure::getContractsWithUncappedExposureOnTheRight(
-                                        vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts,
+    vector<std::shared_ptr<SingleInstrumentContract> > Structure::getContractsWithUncappedExposureOnTheRight(
+                                        vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts,
                                         double &commonStrike)
     {
         commonStrike = 0;
-        vector<boost::shared_ptr<SingleInstrumentContract> > uncappedContracts;
+        vector<std::shared_ptr<SingleInstrumentContract> > uncappedContracts;
         set<double> strikes = getAllStrikes(underlyingContracts);
         bool contractsFound = false;
         set<double>::reverse_iterator it = strikes.rbegin();
         while ((it != strikes.rend()) && (contractsFound == false)) 
       {
-            vector<boost::shared_ptr<SingleInstrumentContract> > contractsWithCommonStrike = 
+            vector<std::shared_ptr<SingleInstrumentContract> > contractsWithCommonStrike = 
                 getAllContractsWithStrike(underlyingContracts, *it);
             double gradient;
             if (isUncappedOnTheRight(contractsWithCommonStrike, gradient)) 
@@ -517,7 +517,7 @@ namespace sjd
         return uncappedContracts;
     }
 
-    bool Structure::isCapped(vector<boost::shared_ptr<SingleInstrumentContract> > underlyingContracts, double &cap, bool &hasPriceExposure)
+    bool Structure::isCapped(vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts, double &cap, bool &hasPriceExposure)
     {
         cap = numeric_limits<double>::quiet_NaN();
         hasPriceExposure = true;
@@ -615,8 +615,8 @@ namespace sjd
     }
 
 
-    bool Structure::qualifyForRegulatoryCapitalOffset(boost::shared_ptr<SingleInstrumentContract> contract1,
-                                                      boost::shared_ptr<SingleInstrumentContract> contract2,
+    bool Structure::qualifyForRegulatoryCapitalOffset(std::shared_ptr<SingleInstrumentContract> contract1,
+                                                      std::shared_ptr<SingleInstrumentContract> contract2,
                                                       string &reasonIfNot)
     {
         reasonIfNot = "";
@@ -639,8 +639,8 @@ namespace sjd
                 reasonIfNot = "Maturity dates not equal";
                 return false;
             }
-            boost::shared_ptr<SingleDerivativeContract> derivative1 = boost::dynamic_pointer_cast<SingleDerivativeContract>(contract1);
-            boost::shared_ptr<SingleDerivativeContract> derivative2 = boost::dynamic_pointer_cast<SingleDerivativeContract>(contract2);
+            std::shared_ptr<SingleDerivativeContract> derivative1 = std::dynamic_pointer_cast<SingleDerivativeContract>(contract1);
+            std::shared_ptr<SingleDerivativeContract> derivative2 = std::dynamic_pointer_cast<SingleDerivativeContract>(contract2);
 
             if (isAnAsianDerivative(derivative1)) 
             {
@@ -649,8 +649,8 @@ namespace sjd
                     reasonIfNot = "Only one of the derivatives is Asian";
                     return false;
                 }
-                boost::shared_ptr<AsianContract> ac1 = boost::dynamic_pointer_cast<AsianContract>(contract1);
-                boost::shared_ptr<AsianContract> ac2 = boost::dynamic_pointer_cast<AsianContract>(contract2);
+                std::shared_ptr<AsianContract> ac1 = std::dynamic_pointer_cast<AsianContract>(contract1);
+                std::shared_ptr<AsianContract> ac2 = std::dynamic_pointer_cast<AsianContract>(contract2);
 
                 vector<Date> ad1 = ac1->getAveragingDates();
                 vector<Date> ad2 = ac2->getAveragingDates();
@@ -680,14 +680,14 @@ namespace sjd
         }
     }
 
-    bool Structure::moveContracts(vector<boost::shared_ptr<SingleInstrumentContract> > contractsToMove,
-                                     vector<boost::shared_ptr<SingleInstrumentContract> > &fromContracts,
-                                     vector<boost::shared_ptr<SingleInstrumentContract> > &toContracts)
+    bool Structure::moveContracts(vector<std::shared_ptr<SingleInstrumentContract> > contractsToMove,
+                                     vector<std::shared_ptr<SingleInstrumentContract> > &fromContracts,
+                                     vector<std::shared_ptr<SingleInstrumentContract> > &toContracts)
     {
         bool allContractsMoved = true;
         for (size_t i = 0; i < contractsToMove.size(); ++i) 
         {
-            vector<boost::shared_ptr<SingleInstrumentContract> >::iterator indexInFromContracts;
+            vector<std::shared_ptr<SingleInstrumentContract> >::iterator indexInFromContracts;
             indexInFromContracts = find(fromContracts.begin(), fromContracts.end(), contractsToMove[i]);
             if (indexInFromContracts == fromContracts.end())
             {
@@ -702,24 +702,24 @@ namespace sjd
         return allContractsMoved;
     }
 
-    bool Structure::isContactADerivative(boost::shared_ptr<SingleInstrumentContract> underlyingContract)
+    bool Structure::isContactADerivative(std::shared_ptr<SingleInstrumentContract> underlyingContract)
     {
-        return (boost::dynamic_pointer_cast<SingleDerivativeContract>(underlyingContract) != 0);
+        return (std::dynamic_pointer_cast<SingleDerivativeContract>(underlyingContract) != 0);
     }
 
-    bool Structure::isAnAsianDerivative(boost::shared_ptr<SingleDerivativeContract> underlyingContract)
+    bool Structure::isAnAsianDerivative(std::shared_ptr<SingleDerivativeContract> underlyingContract)
     {
-        return (boost::dynamic_pointer_cast<AsianContract>(underlyingContract) != 0);
+        return (std::dynamic_pointer_cast<AsianContract>(underlyingContract) != 0);
     }
 
 
 
-    vector<boost::shared_ptr<Structure>> Structure::createStructures(vector<boost::shared_ptr<SingleInstrumentContract>> inputContracts,
-                                                                           boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
+    vector<std::shared_ptr<Structure>> Structure::createStructures(vector<std::shared_ptr<SingleInstrumentContract>> inputContracts,
+                                                                           std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
                                                                            bool &successful)
     {
         successful = false;
-        vector<boost::shared_ptr<Structure>> structures = vector<boost::shared_ptr<Structure>>(0);
+        vector<std::shared_ptr<Structure>> structures = vector<std::shared_ptr<Structure>>(0);
         if (inputContracts.size() == 0) 
         {
            return structures;
@@ -727,7 +727,7 @@ namespace sjd
 
         if (inputContracts.size() > 1) 
         {
-            boost::shared_ptr<SingleInstrumentContract> c1 = inputContracts[0];
+            std::shared_ptr<SingleInstrumentContract> c1 = inputContracts[0];
             for (size_t i = 1; i < inputContracts.size(); ++i) 
             {
                 if (!qualifyForRegulatoryCapitalOffset(c1, inputContracts[i])) 
@@ -742,7 +742,7 @@ namespace sjd
         if (isCapped(inputContracts, cap, hasExposure)) 
         {
             structures.clear();
-            boost::shared_ptr<Structure> s = boost::shared_ptr<Structure>(new Structure(inputContracts, regCapAssetFactors));
+            std::shared_ptr<Structure> s = std::shared_ptr<Structure>(new Structure(inputContracts, regCapAssetFactors));
             successful = !s->errorTracking->getHasErrors();
             structures.push_back(s);
             return structures;
@@ -750,14 +750,14 @@ namespace sjd
         else if (isMaximumVolumeInUncappedWing(inputContracts)) 
         {
             structures.clear();
-            boost::shared_ptr<Structure> s = boost::shared_ptr<Structure>(new Structure(inputContracts, regCapAssetFactors));
+            std::shared_ptr<Structure> s = std::shared_ptr<Structure>(new Structure(inputContracts, regCapAssetFactors));
             successful = !s->errorTracking->getHasErrors();
             structures.push_back(s);
             return structures;
         }
         else { // uncapped with max volume in the interior. remove convex part and create 2 strucutres
             // double maxVolume = getEffectiveVolume(inputContracts);
-            vector<boost::shared_ptr<SingleInstrumentContract>> cappedContracts, uncappedContracts;
+            vector<std::shared_ptr<SingleInstrumentContract>> cappedContracts, uncappedContracts;
             decomposeIntoCappedAndUncapped(inputContracts, cappedContracts, uncappedContracts, successful);
             if (!successful) 
             {
@@ -773,8 +773,8 @@ namespace sjd
                 return structures;
             }
 
-            boost::shared_ptr<Structure> cappedStructure = boost::shared_ptr<Structure>(new Structure(cappedContracts, regCapAssetFactors));            
-            boost::shared_ptr<Structure> uncappedStructure = boost::shared_ptr<Structure>(new Structure(uncappedContracts, regCapAssetFactors));
+            std::shared_ptr<Structure> cappedStructure = std::shared_ptr<Structure>(new Structure(cappedContracts, regCapAssetFactors));            
+            std::shared_ptr<Structure> uncappedStructure = std::shared_ptr<Structure>(new Structure(uncappedContracts, regCapAssetFactors));
             if (cappedStructure->errorTracking->getHasErrors() || uncappedStructure->errorTracking->getHasErrors()) 
             {
                 successful = false;
@@ -790,9 +790,9 @@ namespace sjd
     }
 
 
-    void Structure::decomposeIntoCappedAndUncapped(vector<boost::shared_ptr<SingleInstrumentContract>> &allContracts,
-                                                   vector<boost::shared_ptr<SingleInstrumentContract>> &cappedContracts,
-                                                   vector<boost::shared_ptr<SingleInstrumentContract>> &uncappedContracts,
+    void Structure::decomposeIntoCappedAndUncapped(vector<std::shared_ptr<SingleInstrumentContract>> &allContracts,
+                                                   vector<std::shared_ptr<SingleInstrumentContract>> &cappedContracts,
+                                                   vector<std::shared_ptr<SingleInstrumentContract>> &uncappedContracts,
                                                    bool &successful)
     {
         cappedContracts.clear();
@@ -809,7 +809,7 @@ namespace sjd
         {
             ++loopCounter;
             double commonStrike;
-            vector<boost::shared_ptr<SingleInstrumentContract> > uncappedContractsWithOneStrike = 
+            vector<std::shared_ptr<SingleInstrumentContract> > uncappedContractsWithOneStrike = 
                 getContractsWithUncappedExposureOnTheLeft(cappedContracts, commonStrike);
 
             double gradientOfUncappedContracts = gradient(uncappedContractsWithOneStrike, commonStrike * .95, commonStrike * .99);
@@ -822,7 +822,7 @@ namespace sjd
             {
                 // clone the contracts, scale down the volume and split between capped and uncapped
                 for (size_t i = 0; i < uncappedContractsWithOneStrike.size(); ++i) {
-                    boost::shared_ptr<SingleInstrumentContract> contractToMove = cloneInstrument(uncappedContractsWithOneStrike[i]);                        
+                    std::shared_ptr<SingleInstrumentContract> contractToMove = cloneInstrument(uncappedContractsWithOneStrike[i]);                        
                     double scaledVolume = contractToMove->getVolume() * effectiveVolumeAtStrike / gradientOfUncappedContracts;
                     contractToMove->setVolume(scaledVolume);
                     uncappedContracts.push_back(contractToMove);
@@ -842,7 +842,7 @@ namespace sjd
         {
             ++loopCounter;
             double commonStrike;
-            vector<boost::shared_ptr<SingleInstrumentContract> > uncappedContractsWithOneStrike = 
+            vector<std::shared_ptr<SingleInstrumentContract> > uncappedContractsWithOneStrike = 
                 getContractsWithUncappedExposureOnTheRight(cappedContracts, commonStrike);
 
             double gradientOfUncappedContracts = gradient(uncappedContractsWithOneStrike, commonStrike * 1.01, commonStrike * 1.05);
@@ -856,7 +856,7 @@ namespace sjd
                 // clone the contracts, scale down the volume and split between capped and uncapped
                 for (size_t i = 0; i < uncappedContractsWithOneStrike.size(); ++i) 
                 {
-                    boost::shared_ptr<SingleInstrumentContract> contractToMove = cloneInstrument(uncappedContractsWithOneStrike[i]);                        
+                    std::shared_ptr<SingleInstrumentContract> contractToMove = cloneInstrument(uncappedContractsWithOneStrike[i]);                        
                     double scaledVolume = contractToMove->getVolume() * effectiveVolumeAtStrike / gradientOfUncappedContracts;
                     contractToMove->setVolume(scaledVolume);
                     uncappedContracts.push_back(contractToMove);
@@ -873,8 +873,8 @@ namespace sjd
         return;
     }
 
-    void Structure::optimiseCashflow(vector<boost::shared_ptr<SingleInstrumentContract>> &cappedContracts,
-                                     vector<boost::shared_ptr<SingleInstrumentContract>> &unCappedContracts,
+    void Structure::optimiseCashflow(vector<std::shared_ptr<SingleInstrumentContract>> &cappedContracts,
+                                     vector<std::shared_ptr<SingleInstrumentContract>> &unCappedContracts,
                                      bool &successful)
      {
         if ((cappedContracts.size() ==0) && (unCappedContracts.size() == 0)) 
@@ -900,8 +900,8 @@ namespace sjd
                 double payable = cappedContracts[i]->getPremiumAmount() * cappedContracts[i]->getVolume();
                 cappedContracts[i]->setPremiumAmount(0);
                 Date premiumDate = cappedContracts[i]->getPremiumPaymentDate();
-                boost::shared_ptr<FixedCashflow> cashflowPayable = 
-                    boost::shared_ptr<FixedCashflow>(new FixedCashflow(premiumDate, payable, SELL));
+                std::shared_ptr<FixedCashflow> cashflowPayable = 
+                    std::shared_ptr<FixedCashflow>(new FixedCashflow(premiumDate, payable, SELL));
                 unCappedContracts.push_back(cashflowPayable);
             }
         }
@@ -912,15 +912,15 @@ namespace sjd
                 double receivable = unCappedContracts[i]->getPremiumAmount() * unCappedContracts[i]->getVolume();
                 unCappedContracts[i]->setPremiumAmount(0);
                 Date premiumDate = unCappedContracts[i]->getPremiumPaymentDate();
-                boost::shared_ptr<FixedCashflow> cashflowReceivable = 
-                    boost::shared_ptr<FixedCashflow>(new FixedCashflow(premiumDate, receivable, SELL));
+                std::shared_ptr<FixedCashflow> cashflowReceivable = 
+                    std::shared_ptr<FixedCashflow>(new FixedCashflow(premiumDate, receivable, SELL));
                 cappedContracts.push_back(cashflowReceivable);
             }           
         }
         successful = true;
     }
 
-    string Structure::toString(boost::shared_ptr<RatesEnvironment> re)
+    string Structure::toString(std::shared_ptr<RatesEnvironment> re)
     {
         validate(re);
         stringstream description;

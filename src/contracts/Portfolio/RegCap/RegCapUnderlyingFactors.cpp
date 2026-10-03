@@ -1,24 +1,24 @@
-﻿#include <sjd/contracts/Portfolio/RegCap/RegCapUnderlyingFactors.h>
+#include <sjd/contracts/Portfolio/RegCap/RegCapUnderlyingFactors.h>
 
 using namespace std;
 
 namespace sjd {
 
-    boost::shared_ptr<RegCapUnderlyingFactors> generateRegCapFactors(std::string factorDescription)
+    std::shared_ptr<RegCapUnderlyingFactors> generateRegCapFactors(std::string factorDescription)
     {
-        boost::shared_ptr<RegCapUnderlyingFactors> factors;
+        std::shared_ptr<RegCapUnderlyingFactors> factors;
         boost::to_lower(factorDescription);
 
         if (factorDescription.compare("ir")==0)
-            factors = boost::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::InterestRatesRegCapFactors());
+            factors = std::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::InterestRatesRegCapFactors());
         else if (factorDescription.compare("fx")==0)
-            factors = boost::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::FXRegCapFactors());
+            factors = std::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::FXRegCapFactors());
         else if (factorDescription.compare("equity")==0)
-            factors = boost::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::EquitiesRegCapFactors());
+            factors = std::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::EquitiesRegCapFactors());
         else if (factorDescription.compare("precious")==0)
-            factors = boost::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::PreciousMetalRegCapFactors());
+            factors = std::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::PreciousMetalRegCapFactors());
         else if (factorDescription.compare("commodity")==0)
-            factors = boost::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::CommodityRegCapFactors());
+            factors = std::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::CommodityRegCapFactors());
 
         return factors;
     };

@@ -1,4 +1,4 @@
-﻿#ifndef PORTFOLIOINSURANCE_INCLUDED
+#ifndef PORTFOLIOINSURANCE_INCLUDED
 #define PORTFOLIOINSURANCE_INCLUDED
 #pragma once
 
@@ -6,7 +6,7 @@
 #include <sjd/maths/maths.h>
 #include <ql/time/date.hpp>
 #include <sjd/rates/Discount/DiscountRateSource.h>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <sjd/tools/Validation.h>
 
 namespace sjd {
@@ -22,13 +22,13 @@ namespace sjd {
         
         void setParameters(QuantLib::Date policyStartDate, 
                            QuantLib::Date policyMaturityDate, 
-                           boost::shared_ptr<DiscountRateSource> standbyDRS, 
-                           boost::shared_ptr<DiscountRateSource> utilisationDRS);
+                           std::shared_ptr<DiscountRateSource> standbyDRS, 
+                           std::shared_ptr<DiscountRateSource> utilisationDRS);
 
         // The function that gets the sum insured should not return a negative value
         virtual double getSumInsured(QuantLib::Date date) = 0;
-        boost::shared_ptr<DiscountRateSource> getStandbyDRS();
-        boost::shared_ptr<DiscountRateSource> getUtilisationDRS();
+        std::shared_ptr<DiscountRateSource> getStandbyDRS();
+        std::shared_ptr<DiscountRateSource> getUtilisationDRS();
 
       // Assumes all vectors are of the same length. 
         virtual void getInsurancePayments(std::vector<QuantLib::Date> dates, std::vector<double> mtm, std::vector<double> &insurancePayments);
@@ -45,8 +45,8 @@ namespace sjd {
 
         QuantLib::Date policyStartDate;
         QuantLib::Date policyMaturityDate;
-        boost::shared_ptr<DiscountRateSource> standbyDRS;
-        boost::shared_ptr<DiscountRateSource> utilisationDRS;
+        std::shared_ptr<DiscountRateSource> standbyDRS;
+        std::shared_ptr<DiscountRateSource> utilisationDRS;
         std::string className;
     };
 
@@ -58,8 +58,8 @@ namespace sjd {
     {
     public:
         SimpleInsurance(QuantLib::Date policyStartDate, QuantLib::Date policyMaturityDate, double constantSumInsured, 
-                        boost::shared_ptr<DiscountRateSource> standbyDRS, 
-                        boost::shared_ptr<DiscountRateSource> utilisationDRS);
+                        std::shared_ptr<DiscountRateSource> standbyDRS, 
+                        std::shared_ptr<DiscountRateSource> utilisationDRS);
 
         virtual double getSumInsured(QuantLib::Date date);
 
@@ -78,8 +78,8 @@ namespace sjd {
     public:
         SimpleInsuranceWithTermStructure(QuantLib::Date policyStartDate, QuantLib::Date policyMaturityDate, 
                                         std::vector<QuantLib::Date> dates, std::vector<double> insuredAmounts,
-                                        boost::shared_ptr<DiscountRateSource> standbyDRS, 
-                                        boost::shared_ptr<DiscountRateSource> utilisationDRS);
+                                        std::shared_ptr<DiscountRateSource> standbyDRS, 
+                                        std::shared_ptr<DiscountRateSource> utilisationDRS);
 
         virtual double getSumInsured(QuantLib::Date date);
         virtual bool isOK();

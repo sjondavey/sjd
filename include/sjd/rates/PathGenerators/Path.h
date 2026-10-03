@@ -1,4 +1,4 @@
-﻿
+
 #ifndef PATH_INCLUDED
 #define PATH_INCLUDED
 
@@ -16,11 +16,11 @@ namespace sjd
     public:
         Path() {};
 
-        Path(std::vector<boost::shared_ptr<RatesEnvironment>> ratesPath);
+        Path(std::vector<std::shared_ptr<RatesEnvironment>> ratesPath);
 
         bool isOK();
 
-        boost::shared_ptr<RatesEnvironment> getRatesEnvironment(size_t i);  
+        std::shared_ptr<RatesEnvironment> getRatesEnvironment(size_t i);  
         std::vector<QuantLib::Date>  getPathDates() const;
         size_t getNumberOfSteps() const;
 
@@ -29,7 +29,7 @@ namespace sjd
     protected:
         std::string validationRoot() const override;
 
-        std::vector<boost::shared_ptr<RatesEnvironment>> ratesPath;
+        std::vector<std::shared_ptr<RatesEnvironment>> ratesPath;
         std::vector<QuantLib::Date> pathDates;
     };
 

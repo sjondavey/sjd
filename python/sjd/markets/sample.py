@@ -16,8 +16,8 @@ import sqlite3
 from datetime import date
 from typing import Optional
 
-from markets.schema import initialize
-from markets.specs import CATALOGUE, CalendarMonthMoneynessVol, Catalogue, DeltaVol, QuoteSpec
+from .schema import initialize
+from .specs import CATALOGUE, CalendarMonthMoneynessVol, Catalogue, DeltaVol, QuoteSpec
 
 SAMPLE_ANCHOR = date(2026, 9, 16)
 XAU_SPOT = 2400.0
@@ -144,7 +144,7 @@ def _sample(table, quote: QuoteSpec, what: str):
     except KeyError:
         raise KeyError(
             f"The sample has no {what} for {quote.market} {quote.currency}. "
-            "Add it to markets/sample.py."
+            "Add it to sjd/markets/sample.py."
         ) from None
 
 
@@ -179,7 +179,7 @@ def _insert_discounts(connection: sqlite3.Connection, anchor: str, catalogue: Ca
     for currency in catalogue.discount_curves:
         if currency not in CONTINUOUS_RATES:
             raise KeyError(
-                f"The sample has no {currency} discount rate. Add it to markets/sample.py."
+                f"The sample has no {currency} discount rate. Add it to sjd/markets/sample.py."
             )
         for day in POINT_DATES:
             factor = discount_factor(CONTINUOUS_RATES[currency], day)

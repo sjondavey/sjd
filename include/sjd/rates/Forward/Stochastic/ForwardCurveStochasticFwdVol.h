@@ -1,4 +1,4 @@
-﻿#ifndef SJD_FORWARDCURVEROLLSATFORWARDVOL_INCLUDED
+#ifndef SJD_FORWARDCURVEROLLSATFORWARDVOL_INCLUDED
 #define SJD_FORWARDCURVEROLLSATFORWARDVOL_INCLUDED
 
 #include <sjd/rates/Forward/ForwardCurve.h>
@@ -28,7 +28,7 @@ namespace sjd
                                       std::vector<double> forwards,                                       
                                       ArrayInterpolatorType type,
                                       bool allowExtrapolation,
-                                      boost::shared_ptr<VolatilityRateSource> vrs);
+                                      std::shared_ptr<VolatilityRateSource> vrs);
 
         virtual ~ForwardCurveStochasticFwdVol();
 
@@ -37,22 +37,22 @@ namespace sjd
                            std::vector<double> forwards,                            
                            ArrayInterpolatorType type,
                            bool allowExtrapolation,
-                           boost::shared_ptr<VolatilityRateSource> vrs);
+                           std::shared_ptr<VolatilityRateSource> vrs);
 
         virtual bool isOK();
 
         virtual double getForward(QuantLib::Date toDate) const;
         using ForwardRateSource::getForward;
 
-        virtual boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, double normalRV);
-        virtual boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, 
+        virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, double normalRV);
+        virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, 
                                                                  double normalRV,
                                                                  std::vector<QuantLib::Date> rateSetDates,
                                                                  std::vector<double> &rateSetsFromAnchorToDate);
 
         virtual void setForwardValuationDates(std::set<QuantLib::Date> dates);
-        virtual std::vector<boost::shared_ptr<ForwardRateSource> > rollForward();
-        virtual std::vector<boost::shared_ptr<ForwardRateSource> > rollForward(std::vector<QuantLib::Date> rateSetDates,
+        virtual std::vector<std::shared_ptr<ForwardRateSource> > rollForward();
+        virtual std::vector<std::shared_ptr<ForwardRateSource> > rollForward(std::vector<QuantLib::Date> rateSetDates,
                                                               std::vector<double> &rateSetsFromAnchorToFinalRollDate);
 
 

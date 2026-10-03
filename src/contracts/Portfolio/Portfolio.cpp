@@ -1,4 +1,4 @@
-﻿
+
 #include <sjd/contracts/Portfolio/Portfolio.h>
 
 
@@ -15,18 +15,18 @@ namespace sjd
     =======================================================================================*/
     void Portfolio::setInputVariables()
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("Portfolio"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("Portfolio"));
     }
 
-    Portfolio::Portfolio(vector<boost::shared_ptr<SingleInstrumentContract>> inputs)
+    Portfolio::Portfolio(vector<std::shared_ptr<SingleInstrumentContract>> inputs)
     {
         setInputVariables();
         contracts = inputs;
         hasMargin = false;
     }
 
-    Portfolio::Portfolio(vector<boost::shared_ptr<SingleInstrumentContract>> inputs,
-                         boost::shared_ptr<Margin> marginInputs)
+    Portfolio::Portfolio(vector<std::shared_ptr<SingleInstrumentContract>> inputs,
+                         std::shared_ptr<Margin> marginInputs)
     {
         setInputVariables();
         contracts = inputs;
@@ -34,15 +34,15 @@ namespace sjd
         margin = marginInputs;
     }
 
-    Portfolio::Portfolio(vector<boost::shared_ptr<Contract>> inputs)
+    Portfolio::Portfolio(vector<std::shared_ptr<Contract>> inputs)
     {
         setInputVariables();
-        vector<boost::shared_ptr<SingleInstrumentContract>> inputsAsSingleInstruments = 
+        vector<std::shared_ptr<SingleInstrumentContract>> inputsAsSingleInstruments = 
             getSingleInstrumentContracts(inputs);
 
         if (errorTracking->getHasErrors()) 
         {
-            contracts = vector<boost::shared_ptr<SingleInstrumentContract>>(0);
+            contracts = vector<std::shared_ptr<SingleInstrumentContract>>(0);
             recordIssue("CONTRACT_EXTRACT_FAILED",
                         "Cannot extract single instruments from input contracts",
                         {});
@@ -54,16 +54,16 @@ namespace sjd
         hasMargin = false;
     }
 
-    Portfolio::Portfolio(vector<boost::shared_ptr<Contract>> inputs,
-                         boost::shared_ptr<Margin> marginInput)
+    Portfolio::Portfolio(vector<std::shared_ptr<Contract>> inputs,
+                         std::shared_ptr<Margin> marginInput)
     {
         setInputVariables();
-        vector<boost::shared_ptr<SingleInstrumentContract>> inputsAsSingleInstruments = 
+        vector<std::shared_ptr<SingleInstrumentContract>> inputsAsSingleInstruments = 
             getSingleInstrumentContracts(inputs);
 
         if (errorTracking->getHasErrors()) 
         {
-            contracts = vector<boost::shared_ptr<SingleInstrumentContract>>(0);
+            contracts = vector<std::shared_ptr<SingleInstrumentContract>>(0);
             recordIssue("CONTRACT_EXTRACT_FAILED",
                         "Cannot extract single instruments from input contracts",
                         {});
@@ -102,7 +102,7 @@ namespace sjd
         MultipleInstrumentContract::validate();
     }
 
-    void Portfolio::validate(boost::shared_ptr<RatesEnvironment> re) 
+    void Portfolio::validate(std::shared_ptr<RatesEnvironment> re) 
     {
         return MultipleInstrumentContract::validate(re);
     }
@@ -112,7 +112,7 @@ namespace sjd
         return hasMargin;
     }
 
-    boost::shared_ptr<Margin> Portfolio::getMargin()
+    std::shared_ptr<Margin> Portfolio::getMargin()
     {
         return margin;
     }
@@ -134,7 +134,7 @@ namespace sjd
         return 0;
     }
 
-    double Portfolio::getMarginCall(boost::shared_ptr<RatesEnvironment> re) 
+    double Portfolio::getMarginCall(std::shared_ptr<RatesEnvironment> re) 
     {
         if (margin) 
         {
@@ -152,7 +152,7 @@ namespace sjd
         }
     }
 
-    vector<boost::shared_ptr<SingleInstrumentContract>> Portfolio::getUnderlyingSingleInstrumentContracts()
+    vector<std::shared_ptr<SingleInstrumentContract>> Portfolio::getUnderlyingSingleInstrumentContracts()
     {
         return contracts;
     } 

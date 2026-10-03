@@ -1,4 +1,4 @@
-﻿#ifndef SJD_FORWARDCURVEFX_INCLUDED
+#ifndef SJD_FORWARDCURVEFX_INCLUDED
 #define SJD_FORWARDCURVEFX_INCLUDED
 
 #include <sjd/rates/Forward/ForwardCurve.h>
@@ -26,26 +26,26 @@ namespace sjd
         ForwardCurveFX(QuantLib::Date anchorDate, 
                        double spot,
                        QuantLib::Date spotDate,
-                       boost::shared_ptr<DiscountRateSource> domesticDRS,
-                       boost::shared_ptr<DiscountRateSource> foreignDRS);
+                       std::shared_ptr<DiscountRateSource> domesticDRS,
+                       std::shared_ptr<DiscountRateSource> foreignDRS);
 
         ForwardCurveFX(QuantLib::Date anchorDate, 
                        double spotAtT0,
-                       boost::shared_ptr<DiscountRateSource> domesticDRS,
-                       boost::shared_ptr<DiscountRateSource> foreignDRS);
+                       std::shared_ptr<DiscountRateSource> domesticDRS,
+                       std::shared_ptr<DiscountRateSource> foreignDRS);
 
         virtual ~ForwardCurveFX();
 
         void setParameters(QuantLib::Date anchorDate, 
                            double spotAtT0,
-                           boost::shared_ptr<DiscountRateSource> domesticDRS,
-                           boost::shared_ptr<DiscountRateSource> foreignDRS);
+                           std::shared_ptr<DiscountRateSource> domesticDRS,
+                           std::shared_ptr<DiscountRateSource> foreignDRS);
 
         virtual void setSpotAtT0(double spotAtT0);
         virtual double getSpotAtT0();
 
-        virtual void setRateSources(boost::shared_ptr<DiscountRateSource> domesticDRS,
-                                    boost::shared_ptr<DiscountRateSource> foreignDRS);
+        virtual void setRateSources(std::shared_ptr<DiscountRateSource> domesticDRS,
+                                    std::shared_ptr<DiscountRateSource> foreignDRS);
 
         virtual bool isOK();
 

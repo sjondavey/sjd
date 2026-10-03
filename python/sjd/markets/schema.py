@@ -4,7 +4,7 @@ import sqlite3
 from pathlib import Path
 from typing import Optional
 
-from markets.specs import CATALOGUE, Catalogue
+from .specs import CATALOGUE, Catalogue
 
 
 SCHEMA_PATH = Path(__file__).with_name("schema.sql")

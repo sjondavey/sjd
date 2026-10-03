@@ -55,14 +55,14 @@ namespace sjd
                              bool allowExtrapolation,
                              ForwardAveraging averaging,
                              ForwardRoll roll,
-                             boost::shared_ptr<VolatilityRateSource> volatility);
+                             std::shared_ptr<VolatilityRateSource> volatility);
 
         void setInterestDifferential(QuantLib::Date anchorDate,
                                      double spotAtT0,
-                                     boost::shared_ptr<DiscountRateSource> domestic,
-                                     boost::shared_ptr<DiscountRateSource> foreign,
+                                     std::shared_ptr<DiscountRateSource> domestic,
+                                     std::shared_ptr<DiscountRateSource> foreign,
                                      ForwardRoll roll,
-                                     boost::shared_ptr<VolatilityRateSource> volatility);
+                                     std::shared_ptr<VolatilityRateSource> volatility);
 
         QuantLib::Date anchorDate() const;
         QuantLib::Date finalDate() const;
@@ -83,21 +83,21 @@ namespace sjd
 
         void setSpotAtT0(double spotAtT0);
         double spotAtT0() const;
-        void setRateSources(boost::shared_ptr<DiscountRateSource> domestic,
-                            boost::shared_ptr<DiscountRateSource> foreign);
-        boost::shared_ptr<DiscountRateSource> domesticRateSource() const;
-        boost::shared_ptr<DiscountRateSource> foreignRateSource() const;
-        boost::shared_ptr<VolatilityRateSource> volatility() const;
+        void setRateSources(std::shared_ptr<DiscountRateSource> domestic,
+                            std::shared_ptr<DiscountRateSource> foreign);
+        std::shared_ptr<DiscountRateSource> domesticRateSource() const;
+        std::shared_ptr<DiscountRateSource> foreignRateSource() const;
+        std::shared_ptr<VolatilityRateSource> volatility() const;
 
         bool calendarMonthInRange(QuantLib::Date date) const;
 
-        boost::shared_ptr<ForwardRateSource> parallelBump(double spread);
-        boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, bool inRange);
-        boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, double normalRV, bool inRange);
+        std::shared_ptr<ForwardRateSource> parallelBump(double spread);
+        std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, bool inRange);
+        std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, double normalRV, bool inRange);
 
         void preparePath(const std::vector<QuantLib::Date>& forwardSimulationDates,
                          const std::vector<QuantLib::Date>& monthStarts);
-        std::vector<boost::shared_ptr<ForwardRateSource>> rollPath(const std::vector<double>& normalRVs,
+        std::vector<std::shared_ptr<ForwardRateSource>> rollPath(const std::vector<double>& normalRVs,
                                                                    const std::vector<QuantLib::Date>& forwardSimulationDates);
         std::vector<double> impliedRandomNumbers(std::vector<double> spot,
                                                  std::vector<double>& normalRVs,
@@ -106,7 +106,7 @@ namespace sjd
 
     private:
         std::vector<QuantLib::Date> rolledDatesAheadOf(QuantLib::Date date) const;
-        boost::shared_ptr<ForwardRateSource> rolledInterpolated(QuantLib::Date toDate,
+        std::shared_ptr<ForwardRateSource> rolledInterpolated(QuantLib::Date toDate,
                                                                 const std::vector<QuantLib::Date>& dates,
                                                                 const std::vector<double>& forwards,
                                                                 ArrayInterpolatorType interpolation,
@@ -120,20 +120,20 @@ namespace sjd
         QuantLib::Date final;
         bool extrapolation;
 
-        boost::shared_ptr<DatedCurve> datedCurve;
-        boost::shared_ptr<CalendarMonthAverageCurve> monthCurve;
+        std::shared_ptr<DatedCurve> datedCurve;
+        std::shared_ptr<CalendarMonthAverageCurve> monthCurve;
 
         double spot;
-        boost::shared_ptr<DiscountRateSource> domestic;
-        boost::shared_ptr<DiscountRateSource> foreign;
-        boost::shared_ptr<VolatilityRateSource> vol;
+        std::shared_ptr<DiscountRateSource> domestic;
+        std::shared_ptr<DiscountRateSource> foreign;
+        std::shared_ptr<VolatilityRateSource> vol;
 
         std::vector<QuantLib::Date> originalObservationDates;
         std::vector<double> originalObservationRates;
         std::vector<size_t> forwardIndexes;
         std::vector<std::vector<double>> forwardDeviations;
         std::vector<double> spotDeviations;
-        std::vector<boost::shared_ptr<ForwardRateSource>> pathCurves;
+        std::vector<std::shared_ptr<ForwardRateSource>> pathCurves;
     };
 
 }

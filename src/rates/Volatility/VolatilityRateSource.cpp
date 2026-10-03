@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Volatility/VolatilityRateSource.h>
+#include <sjd/rates/Volatility/VolatilityRateSource.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -21,7 +21,7 @@ namespace sjd
         return !errorTracking->getHasErrors();
     }
 
-    boost::shared_ptr<QuantLib::DayCounter> VolatilityRateSource::getDayCounter() const 
+    std::shared_ptr<QuantLib::DayCounter> VolatilityRateSource::getDayCounter() const 
     {
         return dayCounter;
     }

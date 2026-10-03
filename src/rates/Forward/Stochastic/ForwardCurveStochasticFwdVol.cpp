@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Forward/Stochastic/ForwardCurveStochasticFwdVol.h>
+#include <sjd/rates/Forward/Stochastic/ForwardCurveStochasticFwdVol.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -12,9 +12,9 @@ namespace sjd
                                                                vector<double> forwardsInput,
                                                                ArrayInterpolatorType typeInput,
                                                                bool allowExtrapolationInput,
-                                                               boost::shared_ptr<VolatilityRateSource> vrs)
+                                                               std::shared_ptr<VolatilityRateSource> vrs)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveStochasticFwdVol"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveStochasticFwdVol"));
         setParameters(anchorDateInput, observationDatesInput, forwardsInput, typeInput, allowExtrapolationInput, vrs);
     }
 
@@ -23,7 +23,7 @@ namespace sjd
                                                      vector<double> forwardsInput,
                                                      ArrayInterpolatorType typeInput,
                                                      bool allowExtrapolationInput,
-                                                     boost::shared_ptr<VolatilityRateSource> vrs)
+                                                     std::shared_ptr<VolatilityRateSource> vrs)
     {
         quotes.setInterpolated(anchorDateInput,
                                observationDatesInput,
@@ -61,12 +61,12 @@ namespace sjd
         return quotes.getForward(toDate);
     }
 
-    boost::shared_ptr<ForwardRateSource> ForwardCurveStochasticFwdVol::rollForward(Date toDate, double normalRV)
+    std::shared_ptr<ForwardRateSource> ForwardCurveStochasticFwdVol::rollForward(Date toDate, double normalRV)
     {
         return quotes.rollForward(toDate, normalRV, isInRange(toDate));
     }
 
-    boost::shared_ptr<ForwardRateSource> ForwardCurveStochasticFwdVol::rollForward(Date toDate,
+    std::shared_ptr<ForwardRateSource> ForwardCurveStochasticFwdVol::rollForward(Date toDate,
                                                                                    double normalRV,
                                                                                    vector<Date> rateSetDates,
                                                                                    vector<double>& rateSetsFromAnchorToDate)
@@ -85,12 +85,12 @@ namespace sjd
         quotes.preparePath(forwardSimulationDates, vector<Date>());
     }
 
-    vector<boost::shared_ptr<ForwardRateSource>> ForwardCurveStochasticFwdVol::rollForward()
+    vector<std::shared_ptr<ForwardRateSource>> ForwardCurveStochasticFwdVol::rollForward()
     {
         return quotes.rollPath(normalRVs, forwardSimulationDates);
     }
 
-    vector<boost::shared_ptr<ForwardRateSource>> ForwardCurveStochasticFwdVol::rollForward(
+    vector<std::shared_ptr<ForwardRateSource>> ForwardCurveStochasticFwdVol::rollForward(
         vector<Date> rateSetDates,
         vector<double>& rateSetsFromAnchorToFinalRollDate)
     {

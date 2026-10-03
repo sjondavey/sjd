@@ -1,4 +1,4 @@
-﻿#ifndef SJD_FUTURESCURVE_INCLUDED
+#ifndef SJD_FUTURESCURVE_INCLUDED
 #define SJD_FUTURESCURVE_INCLUDED
 
 #include <sjd/rates/Forward/ForwardCurve.h>
@@ -23,7 +23,7 @@ namespace sjd
                                          std::vector<double> forwards, 
                                          ArrayInterpolatorType type,
                                          bool allowExtrapolation,
-                                         boost::shared_ptr<VolatilityRateSource> vrs);    
+                                         std::shared_ptr<VolatilityRateSource> vrs);    
 
         bool isOK();
 
@@ -39,14 +39,14 @@ namespace sjd
         void setForwards(std::vector<double> updatedForwards);
 
         virtual void setForwardValuationDates(std::set<QuantLib::Date> dates); 
-        virtual boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, double normalRV);
-        virtual boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, 
+        virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, double normalRV);
+        virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, 
                                                                  double normalRV,
                                                                  std::vector<QuantLib::Date> rateSetDates,
                                                                  std::vector<double> &rateSetsFromAnchorToDate);
 
-        virtual std::vector<boost::shared_ptr<ForwardRateSource> > rollForward();
-        virtual std::vector<boost::shared_ptr<ForwardRateSource> > rollForward(std::vector<QuantLib::Date> rateSetDates,
+        virtual std::vector<std::shared_ptr<ForwardRateSource> > rollForward();
+        virtual std::vector<std::shared_ptr<ForwardRateSource> > rollForward(std::vector<QuantLib::Date> rateSetDates,
                                                               std::vector<double> &rateSetsFromAnchorToFinalRollDate);
 
         virtual std::vector<double> getImpliedRandomNumbers(std::vector<double> spot);

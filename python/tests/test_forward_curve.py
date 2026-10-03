@@ -1,15 +1,8 @@
 """One ForwardCurve class covers every averaging and roll combination."""
 
 import math
-import os
-import sys
 import unittest
 from datetime import date
-from pathlib import Path
-
-REPO = Path(__file__).resolve().parents[2]
-MODULE_DIR = Path(os.environ.get("SJD_PYTHON_MODULE_DIR", REPO / "python" / "sjd_runtime"))
-sys.path.insert(0, str(MODULE_DIR))
 
 import sjd
 

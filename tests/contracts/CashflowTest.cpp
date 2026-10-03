@@ -1,4 +1,4 @@
-﻿#include "CashflowTest.h"
+#include "CashflowTest.h"
 
 using namespace std;
 using namespace QuantLib;
@@ -19,8 +19,8 @@ void CashflowTest::testBuySell()
     double volume = 1000;
     BuySell bs = BUY;
 
-    boost::shared_ptr<FixedCashflow> cf1 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
-    boost::shared_ptr<FixedCashflow> cf2 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
+    std::shared_ptr<FixedCashflow> cf1 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
+    std::shared_ptr<FixedCashflow> cf2 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
 
     BOOST_CHECK(cf1->getBuySell() == cf2->getBuySell());
     BOOST_CHECK(cf1->getBuySell() == BUY);
@@ -37,8 +37,8 @@ void CashflowTest::testVolume()
     int yearsToSettlement = 2;
     double volume = 1000;
     BuySell bs = BUY;
-    boost::shared_ptr<FixedCashflow> cf1 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
-    boost::shared_ptr<FixedCashflow> cf2 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
+    std::shared_ptr<FixedCashflow> cf1 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
+    std::shared_ptr<FixedCashflow> cf2 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
     
     BOOST_CHECK(cf1->isOK());
     BOOST_CHECK(cf2->isOK());
@@ -54,10 +54,10 @@ void CashflowTest::testMaturityDate()
     int yearsToSettlement = 2;
     double volume = 1000;
     BuySell bs = BUY;
-    boost::shared_ptr<FixedCashflow> cf1 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
-    boost::shared_ptr<FixedCashflow> cf2 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
+    std::shared_ptr<FixedCashflow> cf1 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
+    std::shared_ptr<FixedCashflow> cf2 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
 
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
     Date maturityDate = nullCalendar->advance(anchorDate, 3, Years);
 
     cf1->setMaturityDate(maturityDate);
@@ -74,10 +74,10 @@ void CashflowTest::testSettlementDate()
     double volume = 1000;
     BuySell bs = BUY;
     double premium = 900; 
-    boost::shared_ptr<FixedCashflow> cf1 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
-    boost::shared_ptr<FixedCashflow> cf2 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
+    std::shared_ptr<FixedCashflow> cf1 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
+    std::shared_ptr<FixedCashflow> cf2 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
 
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
     Date settlementDate = nullCalendar->advance(anchorDate, 1, Years);
     cf2->setSettlementDate(settlementDate);
     BOOST_CHECK(cf2->isOK());
@@ -90,8 +90,8 @@ void CashflowTest::testValue()
 {
     GenerateRates gr = GenerateRates();
 
-    boost::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    boost::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
+    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
 
     Date anchorDate(1,Jan,2013);
     Date tPlus2 = nullCalendar->advance(anchorDate, 2, Days);
@@ -103,8 +103,8 @@ void CashflowTest::testValue()
 
     double spot = 100, naccRFR = 0.065;
     
-    boost::shared_ptr<DiscountCurve> dc = gr.getDiscountCurve(dayCounter, nullCalendar, anchorDate, 10, naccRFR, manditoryDates);
-    boost::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForCashflow(anchorDate, manditoryDates);
+    std::shared_ptr<DiscountCurve> dc = gr.getDiscountCurve(dayCounter, nullCalendar, anchorDate, 10, naccRFR, manditoryDates);
+    std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForCashflow(anchorDate, manditoryDates);
 
     double volume = 50;
     double premiumAmount = 45;
@@ -136,15 +136,15 @@ void CashflowTest::testValue()
 
 void CashflowTest::testGetPayoffAfterMaturity()
 {
-    boost::shared_ptr<DayCounter> dayCounter = boost::shared_ptr<DayCounter>(new Actual365Fixed());
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
 
     Date anchorDate(1,Jan,2013);
     int yearsToSettlement = 2;
     double volume = 1000;
     BuySell bs = BUY;
-    boost::shared_ptr<FixedCashflow> cf1 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
-    boost::shared_ptr<FixedCashflow> cf2 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
+    std::shared_ptr<FixedCashflow> cf1 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
+    std::shared_ptr<FixedCashflow> cf2 = GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
 
     double v1 = cf1->getVolume();
     double v2 = cf2->getVolume();

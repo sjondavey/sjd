@@ -1,4 +1,4 @@
-﻿#ifndef SJD_FIXINGRATESOURCE_INCLUDED
+#ifndef SJD_FIXINGRATESOURCE_INCLUDED
 #define SJD_FIXINGRATESOURCE_INCLUDED
 #pragma once
 
@@ -6,7 +6,7 @@
 #include <ql/time/date.hpp>
 #include <sjd/tools/Validation.h>
 #include <sjd/maths/maths.h>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace sjd 
 {

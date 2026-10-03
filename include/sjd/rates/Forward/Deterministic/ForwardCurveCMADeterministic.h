@@ -1,4 +1,4 @@
-﻿#ifndef SJD_FORWARDCURVECMADETERMINISTIC_INCLUDED
+#ifndef SJD_FORWARDCURVECMADETERMINISTIC_INCLUDED
 #define SJD_FORWARDCURVECMADETERMINISTIC_INCLUDED
 
 #include <sjd/rates/Forward/ForwardCurve.h>
@@ -38,16 +38,16 @@ namespace sjd
         void setForwards(std::vector<double> updatedForwards);
 
 
-        virtual boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate);
-        virtual boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, 
+        virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate);
+        virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, 
                                                                  std::vector<QuantLib::Date> rateSetDates,
                                                                  std::vector<double> &rateSetsFromAnchorToDate);
-        virtual std::vector<boost::shared_ptr<ForwardRateSource> > rollForward();
-        virtual std::vector<boost::shared_ptr<ForwardRateSource> > rollForward(std::vector<QuantLib::Date> rateSetDates,
+        virtual std::vector<std::shared_ptr<ForwardRateSource> > rollForward();
+        virtual std::vector<std::shared_ptr<ForwardRateSource> > rollForward(std::vector<QuantLib::Date> rateSetDates,
                                                               std::vector<double> &rateSetsFromAnchorToFinalRollDate);
 
 
-        virtual boost::shared_ptr<ForwardRateSource> parallelBump(double spread);
+        virtual std::shared_ptr<ForwardRateSource> parallelBump(double spread);
 
     protected:
         ForwardCurve quotes;

@@ -1,4 +1,4 @@
--- Pillars for the markets in python/markets/catalogue.toml.
+-- Pillars for the markets in python/sjd/markets/catalogue.toml.
 --
 -- Conventions stay in the catalogue: interpolation, extrapolation, calendars,
 -- the GOFO conversion, and the ZAR metal cross. This database stores the

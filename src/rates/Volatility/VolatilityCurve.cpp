@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Volatility/VolatilityCurve.h>
+#include <sjd/rates/Volatility/VolatilityCurve.h>
 
 #include <boost/lexical_cast.hpp> // convert numbers to string
 
@@ -15,13 +15,13 @@ namespace sjd
     VolatilityCurve::VolatilityCurve(Date anchorDateInput, 
                                     vector<Date> observationDatesInput, 
                                     vector<double> volatilityInput, 
-                                    boost::shared_ptr<DayCounter> dayCounterInput,
+                                    std::shared_ptr<DayCounter> dayCounterInput,
                                     ArrayInterpolatorType typeInput,
                                     bool allowExtrapolationInput) 
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilityCurve"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilityCurve"));
 
-        datedCurve = boost::shared_ptr<DatedCurve>(new DatedCurve(anchorDateInput, 
+        datedCurve = std::shared_ptr<DatedCurve>(new DatedCurve(anchorDateInput, 
                                                                   observationDatesInput, 
                                                                   volatilityInput,
                                                                   typeInput,
@@ -129,7 +129,7 @@ namespace sjd
         return type;
     }
 
-    boost::shared_ptr<VolatilityRateSource> VolatilityCurve::parallelBump(double spread)
+    std::shared_ptr<VolatilityRateSource> VolatilityCurve::parallelBump(double spread)
     {
         vector<Date> rolledObservationDates;
         vector<double> rolledVols; 
@@ -139,7 +139,7 @@ namespace sjd
             rolledVols.push_back(getVolatility(getObservationDates()[i])+spread);
         }
 
-       return boost::shared_ptr<VolatilityCurve>(new VolatilityCurve(anchorDate, 
+       return std::shared_ptr<VolatilityCurve>(new VolatilityCurve(anchorDate, 
                                                                       rolledObservationDates, 
                                                                       rolledVols, 
                                                                       dayCounter,
@@ -147,7 +147,7 @@ namespace sjd
                                                                       allowExtrapolation));     
      }
 
-    boost::shared_ptr<VolatilityRateSource> VolatilityCurve::rollForward(Date toDate)
+    std::shared_ptr<VolatilityRateSource> VolatilityCurve::rollForward(Date toDate)
     {
         vector<Date> rolledObservationDates;
         vector<double> rolledVols; 
@@ -167,7 +167,7 @@ namespace sjd
                 }
             }
         }
-        return boost::shared_ptr<VolatilityCurve>(new VolatilityCurve(toDate, 
+        return std::shared_ptr<VolatilityCurve>(new VolatilityCurve(toDate, 
                                                                       rolledObservationDates, 
                                                                       rolledVols, 
                                                                       dayCounter,

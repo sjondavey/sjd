@@ -1,4 +1,4 @@
-﻿#include "PortfolioInsuranceTest.h"
+#include "PortfolioInsuranceTest.h"
 #include <support/GenerateRatesEnvironments.h>
 
 
@@ -22,22 +22,22 @@ void PortfolioInsuranceTest::testSimpleInsurance() {
     Date policyMaturityDate = Date(27, Jan, 2020);
    double sumInsured = 50000.0;
     
-    boost::shared_ptr<DayCounter> dayCounter = boost::shared_ptr<DayCounter>(new Actual365Fixed());
-    boost::shared_ptr<Calendar> calendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
+    std::shared_ptr<Calendar> calendar = std::shared_ptr<Calendar>(new NullCalendar());
     Date anchorDate = Date(27, Jan, 2013);
     size_t years = 10;
     double baseRate = 0.03;
     vector<Date> manditoryDates = vector<Date>();
-    boost::shared_ptr<DiscountCurve> baseCurve = gr.getDiscountCurve(dayCounter, calendar,
+    std::shared_ptr<DiscountCurve> baseCurve = gr.getDiscountCurve(dayCounter, calendar,
                                                             anchorDate, years, baseRate, manditoryDates);
     double standbyRate = baseRate + 0.01;
     double utilisationRate = baseRate + 0.06;
-    boost::shared_ptr<DiscountCurve> standbyCurve = gr.getDiscountCurve(dayCounter, calendar,
+    std::shared_ptr<DiscountCurve> standbyCurve = gr.getDiscountCurve(dayCounter, calendar,
                                                             anchorDate, years, standbyRate, manditoryDates);
-    boost::shared_ptr<DiscountCurve> utilisationCurve = gr.getDiscountCurve(dayCounter, calendar,
+    std::shared_ptr<DiscountCurve> utilisationCurve = gr.getDiscountCurve(dayCounter, calendar,
                                                             anchorDate, years, utilisationRate, manditoryDates);
 
-    boost::shared_ptr<SimpleInsurance> si = boost::shared_ptr<SimpleInsurance>(
+    std::shared_ptr<SimpleInsurance> si = std::shared_ptr<SimpleInsurance>(
         new SimpleInsurance(policyStartDate, policyMaturityDate, sumInsured, standbyCurve, utilisationCurve));
     BOOST_REQUIRE(si->isOK());
 
@@ -95,20 +95,20 @@ void PortfolioInsuranceTest::testSimpleInsuranceWithTermStructure() {
     GenerateRates gr = GenerateRates();
     Date policyStartDate = Date(27,Jan,2010);
     
-    boost::shared_ptr<DayCounter> dayCounter = boost::shared_ptr<DayCounter>(new Actual365Fixed());
-    boost::shared_ptr<Calendar> calendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
+    std::shared_ptr<Calendar> calendar = std::shared_ptr<Calendar>(new NullCalendar());
     size_t years = 10;
     Date policyMaturityDate = calendar->advance(policyStartDate, years-1, Years);
     Date anchorDate = Date(27, Jan, 2013);
     double baseRate = 0.03;
     vector<Date> manditoryDates = vector<Date>();
-    boost::shared_ptr<DiscountCurve> baseCurve = gr.getDiscountCurve(dayCounter, calendar,
+    std::shared_ptr<DiscountCurve> baseCurve = gr.getDiscountCurve(dayCounter, calendar,
                                                             anchorDate, years, baseRate, manditoryDates);
     double standbyRate = baseRate + 0.01;
     double utilisationRate = baseRate + 0.06;
-    boost::shared_ptr<DiscountCurve> standbyCurve = gr.getDiscountCurve(dayCounter, calendar,
+    std::shared_ptr<DiscountCurve> standbyCurve = gr.getDiscountCurve(dayCounter, calendar,
                                                             anchorDate, years, standbyRate, manditoryDates);
-    boost::shared_ptr<DiscountCurve> utilisationCurve = gr.getDiscountCurve(dayCounter, calendar,
+    std::shared_ptr<DiscountCurve> utilisationCurve = gr.getDiscountCurve(dayCounter, calendar,
                                                             anchorDate, years, utilisationRate, manditoryDates);
 
    vector<Date> insuranceDates;
@@ -119,7 +119,7 @@ void PortfolioInsuranceTest::testSimpleInsuranceWithTermStructure() {
       insuredAmounts.push_back(100000 - i * 10000);
    }
 
-    boost::shared_ptr<SimpleInsuranceWithTermStructure> siWT = boost::shared_ptr<SimpleInsuranceWithTermStructure>(
+    std::shared_ptr<SimpleInsuranceWithTermStructure> siWT = std::shared_ptr<SimpleInsuranceWithTermStructure>(
         new SimpleInsuranceWithTermStructure(policyStartDate, policyMaturityDate, insuranceDates, insuredAmounts, standbyCurve, utilisationCurve));
     BOOST_REQUIRE(siWT->isOK());
 

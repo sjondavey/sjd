@@ -1,43 +1,21 @@
-"""Shared setup for the sjd teaching notebooks.
+"""The sample market and book used by the notebooks and tests.
 
-Notebooks live in this directory. Jupyter puts that directory on ``sys.path``,
-so ``import sjd_setup`` works from a notebook kernel. ``load_sjd`` then adds
-``python/sjd_runtime`` and imports the extension module.
+This is a teaching market on one FX-style curve (spot 17.50, flat rates and
+volatility). It is separate from the catalogue markets in ``sjd.markets``,
+which are built from stored pillars.
 """
 
 import math
-import sys
 from calendar import monthrange
 from datetime import date
-from pathlib import Path
+
+import sjd
 
 ANCHOR = date(2026, 9, 16)
 SPOT = 17.50
 DOMESTIC_RATE = 0.07
 FOREIGN_RATE = 0.04
 FLAT_VOLATILITY = 0.12
-
-
-def repo_root():
-    """Return the sjd repository root that contains CMakeLists.txt."""
-    candidate = Path(__file__).resolve().parents[2]
-    if (candidate / "CMakeLists.txt").is_file() and (candidate / "python").is_dir():
-        return candidate
-    cwd = Path.cwd().resolve()
-    for folder in [cwd, *cwd.parents]:
-        if (folder / "CMakeLists.txt").is_file() and (folder / "python").is_dir():
-            return folder
-    raise RuntimeError("Could not find the sjd repo root from " + str(cwd))
-
-
-def load_sjd():
-    """Import the staged ``sjd`` extension from ``python/sjd_runtime``."""
-    runtime = str(repo_root() / "python" / "sjd_runtime")
-    if runtime not in sys.path:
-        sys.path.insert(0, runtime)
-    import sjd
-
-    return sjd
 
 
 def year_fraction(day, anchor=ANCHOR):
@@ -69,7 +47,7 @@ def fx_curve_values(
     return forwards, discount_factors, volatilities
 
 
-def fx_curves(sjd, curve_dates, allow_extrapolation=False, **kwargs):
+def fx_curves(curve_dates, allow_extrapolation=False, **kwargs):
     """Build deterministic forward, discount, and volatility curves."""
     anchor = kwargs.get("anchor", ANCHOR)
     forwards, discount_factors, volatilities = fx_curve_values(curve_dates, **kwargs)
@@ -92,7 +70,7 @@ def add_months(day, months):
     return date(year, month, min(day.day, monthrange(year, month)[1]))
 
 
-def sample_calendar(sjd):
+def sample_calendar():
     """USDZAR holidays: closed when either the United States or South Africa is.
 
     ``calendar.adjust(day)`` rolls to the next business day and
@@ -114,7 +92,7 @@ def business_days_in_month(calendar, year, month):
     ]
 
 
-def sample_market(sjd, stochastic=False):
+def sample_market(stochastic=False):
     """The commodity book market used by the portfolio notebooks.
 
     One collar month, one forward settlement, and one Asian averaging month
@@ -126,7 +104,7 @@ def sample_market(sjd, stochastic=False):
     Asian can be valued on the path while every averaging day is still a forward.
     """
     anchor = ANCHOR
-    holidays = sample_calendar(sjd)
+    holidays = sample_calendar()
     collar_settlement = holidays.adjust(add_months(anchor, 3))
     collar_maturity = holidays.advance(collar_settlement, -2)
     forward_settlement = holidays.adjust(add_months(anchor, 6))
@@ -190,7 +168,7 @@ def sample_market(sjd, stochastic=False):
     }
 
 
-def sample_contracts(sjd, forward_curve, market):
+def sample_contracts(forward_curve, market):
     """Collar, outright forward, and Asian forward on ``sample_market`` dates.
 
     The forward and the Asian are struck below the curve so the book has
@@ -254,6 +232,6 @@ def sample_contracts(sjd, forward_curve, market):
     }
 
 
-def credit_parameters(sjd, counterparty_weighting=1.0, capital_charge=0.08):
+def credit_parameters(counterparty_weighting=1.0, capital_charge=0.08):
     """Basel-style scalers: exposure times weight times capital charge."""
     return sjd.RegCapCreditParameters(counterparty_weighting, capital_charge)

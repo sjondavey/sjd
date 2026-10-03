@@ -1,9 +1,9 @@
-﻿#ifndef SJD_CURVE_INCLUDED
+#ifndef SJD_CURVE_INCLUDED
 #define SJD_CURVE_INCLUDED
 
 #include <sjd/maths/maths.h>
 #include <ql/time/date.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace sjd 
 {
@@ -54,7 +54,7 @@ namespace sjd
         std::vector<double> observationPoints;
         std::vector<double> observedRates;
         ArrayInterpolatorType type;
-        boost::shared_ptr<ArrayInterpolator> interpolator;
+        std::shared_ptr<ArrayInterpolator> interpolator;
         bool allowExtrapolation;
     };
 

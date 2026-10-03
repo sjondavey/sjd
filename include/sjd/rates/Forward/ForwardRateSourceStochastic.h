@@ -1,10 +1,10 @@
-﻿#ifndef SJD_STOCHASTICFORWARDRATESOURCE_INCLUDED
+#ifndef SJD_STOCHASTICFORWARDRATESOURCE_INCLUDED
 #define SJD_STOCHASTICFORWARDRATESOURCE_INCLUDED
 
 #include <sjd/rates/Forward/ForwardRateSource.h>
 #include <sjd/rates/Volatility/VolatilityRateSource.h>
 
-#include <boost/enable_shared_from_this.hpp>
+#include <memory>
 
 namespace sjd 
 {
@@ -22,13 +22,13 @@ namespace sjd
 
         virtual bool isOK();
 
-        void setVolitalityRateSource(boost::shared_ptr<VolatilityRateSource> vrs);
+        void setVolitalityRateSource(std::shared_ptr<VolatilityRateSource> vrs);
 
 
-        virtual boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, double normalRV) = 0;
+        virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, double normalRV) = 0;
         // rateSetDates are the sorted dates between the anchorDate and the "toDate" for
         // which we may require rate sets
-        virtual boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, 
+        virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, 
                                                                  double normalRV,
                                                                  std::vector<QuantLib::Date> rateSetDates,
                                                                  std::vector<double> &rateSetsFromAnchorToDate);
@@ -36,8 +36,8 @@ namespace sjd
 
         virtual void setForwardValuationDates(std::set<QuantLib::Date> dates); 
         virtual void setRandomVariables(std::vector<double> normalRVs); 
-        virtual std::vector<boost::shared_ptr<ForwardRateSource> > rollForward() = 0;
-        virtual std::vector<boost::shared_ptr<ForwardRateSource> > rollForward(std::vector<QuantLib::Date> rateSetDates,
+        virtual std::vector<std::shared_ptr<ForwardRateSource> > rollForward() = 0;
+        virtual std::vector<std::shared_ptr<ForwardRateSource> > rollForward(std::vector<QuantLib::Date> rateSetDates,
                                                               std::vector<double> &rateSetsFromAnchorToFinalRollDate) = 0;
 
         // default implementation for independant moves
@@ -47,7 +47,7 @@ namespace sjd
 
         std::vector<double> normalRVs;
         std::vector<QuantLib::Date> forwardSimulationDates;
-        boost::shared_ptr<VolatilityRateSource> vrs;
+        std::shared_ptr<VolatilityRateSource> vrs;
 
     };
 

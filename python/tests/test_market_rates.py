@@ -1,21 +1,12 @@
 """Rate functions turn the dummy pillars into a RatesEnvironment."""
 
 import math
-import os
 import sqlite3
-import sys
 import unittest
 from datetime import date
-from pathlib import Path
-
-REPO = Path(__file__).resolve().parents[2]
-MODULE_DIR = Path(os.environ.get("SJD_PYTHON_MODULE_DIR", REPO / "python" / "sjd_runtime"))
-sys.path.insert(0, str(MODULE_DIR))
-sys.path.insert(0, str(REPO / "python"))
 
 import sjd
-
-from markets.rates import (
+from sjd.markets.rates import (
     business_days_after,
     calendar,
     month_settlement,
@@ -24,7 +15,7 @@ from markets.rates import (
     rates_environment,
     spot_date,
 )
-from markets.sample import (
+from sjd.markets.sample import (
     SAMPLE_ANCHOR,
     USD_CONTINUOUS_RATE,
     USDZAR_FORWARD,
@@ -34,8 +25,8 @@ from markets.sample import (
     discount_factor,
     load_sample,
 )
-from markets.schema import initialize
-from markets.specs import (
+from sjd.markets.schema import initialize
+from sjd.markets.specs import (
     MARKETS,
     CalendarSpec,
     ForwardAveraging,
@@ -44,7 +35,7 @@ from markets.specs import (
     parse_catalogue,
     quote_spec,
 )
-from markets.store import discount_pillars
+from sjd.markets.store import discount_pillars
 
 VALUE = date(2026, 12, 16)
 GOFO_DEC = 0.008

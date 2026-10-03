@@ -1,4 +1,4 @@
-﻿#include "GenerateRatesEnvironments.h"
+#include "GenerateRatesEnvironments.h"
 
 #include <boost/assign/std/vector.hpp>
 
@@ -14,9 +14,9 @@ using namespace sjd;
 
 GenerateRates::GenerateRates()
 {
-    defaultDayCounter = boost::shared_ptr<DayCounter>(new Actual365Fixed());
+    defaultDayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
 
-    defaultCalendar = boost::shared_ptr<Calendar>(new SouthAfrica());
+    defaultCalendar = std::shared_ptr<Calendar>(new SouthAfrica());
 
     defaultAnchorDate = Date(27,Jan,2012);
 
@@ -58,8 +58,8 @@ GenerateRates::GenerateRates()
 
 }
 
-boost::shared_ptr<DiscountCurve> GenerateRates::getDiscountCurve(boost::shared_ptr<DayCounter> dayCounter,
-                                                                       boost::shared_ptr<Calendar> calendar,
+std::shared_ptr<DiscountCurve> GenerateRates::getDiscountCurve(std::shared_ptr<DayCounter> dayCounter,
+                                                                       std::shared_ptr<Calendar> calendar,
                                                                        Date anchorDate, 
                                                                        size_t years, 
                                                                        double flatNACCRate, 
@@ -73,12 +73,12 @@ boost::shared_ptr<DiscountCurve> GenerateRates::getDiscountCurve(boost::shared_p
         double yf = dayCounter->yearFraction(anchorDate, dates[i]);
         discountFactors.push_back(exp(-flatNACCRate * yf));
     }
-    boost::shared_ptr<DiscountCurve> dc = boost::shared_ptr<DiscountCurve>(
+    std::shared_ptr<DiscountCurve> dc = std::shared_ptr<DiscountCurve>(
                     new DiscountCurve(anchorDate, dates, discountFactors, LINEAR, false));
     return dc;
 }
 
-boost::shared_ptr<DiscountCurve> GenerateRates::getDefaultDiscountCurve(Date anchorDate)
+std::shared_ptr<DiscountCurve> GenerateRates::getDefaultDiscountCurve(Date anchorDate)
 {
     return getDiscountCurve(defaultDayCounter, 
                               defaultCalendar, 
@@ -88,8 +88,8 @@ boost::shared_ptr<DiscountCurve> GenerateRates::getDefaultDiscountCurve(Date anc
                               defaultCurveDates);
 }
 
-boost::shared_ptr<VolatilityCurve> GenerateRates::getVolatilityCurve(boost::shared_ptr<DayCounter> dayCounter,
-                                                                     boost::shared_ptr<Calendar> calendar,
+std::shared_ptr<VolatilityCurve> GenerateRates::getVolatilityCurve(std::shared_ptr<DayCounter> dayCounter,
+                                                                     std::shared_ptr<Calendar> calendar,
                                                                      Date anchorDate, 
                                                                      size_t years, 
                                                                      double flatNACCVolaitlity, 
@@ -102,12 +102,12 @@ boost::shared_ptr<VolatilityCurve> GenerateRates::getVolatilityCurve(boost::shar
         //double yf = dayCounter->yearFraction(anchorDate, dates[i]);
         vol.push_back(flatNACCVolaitlity);
     }
-    boost::shared_ptr<VolatilityCurve> vc = boost::shared_ptr<VolatilityCurve>(
+    std::shared_ptr<VolatilityCurve> vc = std::shared_ptr<VolatilityCurve>(
                         new VolatilityCurve(anchorDate, dates, vol, dayCounter, LINEAR));
     return vc;
 }
 
-boost::shared_ptr<VolatilityCurve> GenerateRates::getDefaultVolatiltiyCurve(Date anchorDate)
+std::shared_ptr<VolatilityCurve> GenerateRates::getDefaultVolatiltiyCurve(Date anchorDate)
 {
     return getVolatilityCurve(defaultDayCounter, 
                         defaultCalendar, 
@@ -120,11 +120,11 @@ boost::shared_ptr<VolatilityCurve> GenerateRates::getDefaultVolatiltiyCurve(Date
 
 
 
-boost::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForCashflow(Date anchorDate,                                                   
+std::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForCashflow(Date anchorDate,                                                   
                                                                                   vector<Date> manditoryDates)
 {
-    boost::shared_ptr<RatesEnvironment> re = boost::shared_ptr<RatesEnvironment>(new RatesEnvironment(anchorDate));
-    boost::shared_ptr<DiscountCurve> dc = 
+    std::shared_ptr<RatesEnvironment> re = std::shared_ptr<RatesEnvironment>(new RatesEnvironment(anchorDate));
+    std::shared_ptr<DiscountCurve> dc = 
         GenerateRates::getDiscountCurve(defaultDayCounter, 
                                         defaultCalendar, 
                                         anchorDate, 
@@ -135,20 +135,20 @@ boost::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForCashflo
     return re;
 }
 
-boost::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForEuropeanForward(Date anchorDate,
+std::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForEuropeanForward(Date anchorDate,
                                                          double spot, 
                                                          double naccRFR, 
                                                          double naccIRDiff,
                                                          vector<Date> manditoryDates)
 {
-    boost::shared_ptr<RatesEnvironment> re = boost::shared_ptr<RatesEnvironment>(new RatesEnvironment(anchorDate));
-    boost::shared_ptr<DiscountCurve> dc = GenerateRates::getDiscountCurve(defaultDayCounter, 
+    std::shared_ptr<RatesEnvironment> re = std::shared_ptr<RatesEnvironment>(new RatesEnvironment(anchorDate));
+    std::shared_ptr<DiscountCurve> dc = GenerateRates::getDiscountCurve(defaultDayCounter, 
                                                                           defaultCalendar, 
                                                                           anchorDate, 
                                                                           defaultYears, 
                                                                           naccRFR, 
                                                                           manditoryDates);
-    boost::shared_ptr<ForwardCurveDeterministic> fc = GenerateRates::getSimpleForwardCurve(defaultDayCounter, 
+    std::shared_ptr<ForwardCurveDeterministic> fc = GenerateRates::getSimpleForwardCurve(defaultDayCounter, 
                                                                                         defaultCalendar, 
                                                                                         anchorDate, 
                                                                                         defaultYears, 
@@ -160,11 +160,11 @@ boost::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForEuropea
     return re;
 }
 
-boost::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForEuropeanForward(Date anchorDate,
+std::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForEuropeanForward(Date anchorDate,
                                                           vector<Date> manditoryDates)
 {
-    boost::shared_ptr<RatesEnvironment> re = getRatesEnvironmentForCashflow(anchorDate, manditoryDates);
-    boost::shared_ptr<ForwardCurveDeterministic> fc = 
+    std::shared_ptr<RatesEnvironment> re = getRatesEnvironmentForCashflow(anchorDate, manditoryDates);
+    std::shared_ptr<ForwardCurveDeterministic> fc = 
         GenerateRates::getSimpleForwardCurve(defaultDayCounter, 
                                              defaultCalendar, 
                                              anchorDate, 
@@ -177,12 +177,12 @@ boost::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForEuropea
 }
 
 
-boost::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForAsianForward(Date anchorDate,
+std::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForAsianForward(Date anchorDate,
                                                        vector<Date> manditoryDates)
 {
-    boost::shared_ptr<RatesEnvironment> re = getRatesEnvironmentForCashflow(anchorDate, manditoryDates);
+    std::shared_ptr<RatesEnvironment> re = getRatesEnvironmentForCashflow(anchorDate, manditoryDates);
 
-    boost::shared_ptr<ForwardCurveCMAStochasticFwdVol> fc = 
+    std::shared_ptr<ForwardCurveCMAStochasticFwdVol> fc = 
         getCalendarMonthAverageCurve(defaultDayCounter,
                                      defaultCalendar,
                                      anchorDate, 
@@ -194,17 +194,17 @@ boost::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForAsianFo
 
     vector<Date> historicFixingDates;
     historicFixingDates.push_back(defaultCalendar->advance(anchorDate, -1, Months));
-    boost::shared_ptr<DailyFixingCurve> fixingCurve = GenerateRates::buildFixingCurve(90.0, historicFixingDates);
+    std::shared_ptr<DailyFixingCurve> fixingCurve = GenerateRates::buildFixingCurve(90.0, historicFixingDates);
     re->setFixingRS(fixingCurve);
     return re;
 }
 
-boost::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForEuropeanOption(Date anchorDate,
+std::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForEuropeanOption(Date anchorDate,
                                                          vector<Date> manditoryDates)
 {
-    boost::shared_ptr<RatesEnvironment> re = getRatesEnvironmentForEuropeanForward(anchorDate, manditoryDates);
+    std::shared_ptr<RatesEnvironment> re = getRatesEnvironmentForEuropeanForward(anchorDate, manditoryDates);
 
-    boost::shared_ptr<VolatilityCurve> vc = 
+    std::shared_ptr<VolatilityCurve> vc = 
         GenerateRates::getVolatilityCurve(defaultDayCounter, 
                                           defaultCalendar, 
                                           anchorDate, 
@@ -215,20 +215,20 @@ boost::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForEuropea
     return re;
 }
 
-boost::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForAsianOption(Date anchorDate,
+std::shared_ptr<RatesEnvironment> GenerateRates::getRatesEnvironmentForAsianOption(Date anchorDate,
                                                       vector<Date> manditoryDates)
 {
-    boost::shared_ptr<RatesEnvironment> re = getRatesEnvironmentForAsianForward(anchorDate, manditoryDates);
+    std::shared_ptr<RatesEnvironment> re = getRatesEnvironmentForAsianForward(anchorDate, manditoryDates);
 
-    boost::shared_ptr<VolatilityRateSource> vs = getDefaultCalendarMonthAverageMoneynessSurface(anchorDate);
+    std::shared_ptr<VolatilityRateSource> vs = getDefaultCalendarMonthAverageMoneynessSurface(anchorDate);
     re->setVRS(vs);
     return re;
 }
 
 
 
-boost::shared_ptr<ForwardCurveDeterministic> GenerateRates::getSimpleForwardCurve(boost::shared_ptr<DayCounter> dayCounter,
-                                                                               boost::shared_ptr<Calendar> calendar,
+std::shared_ptr<ForwardCurveDeterministic> GenerateRates::getSimpleForwardCurve(std::shared_ptr<DayCounter> dayCounter,
+                                                                               std::shared_ptr<Calendar> calendar,
                                                                                Date anchorDate, 
                                                                                size_t years, 
                                                                                double spot, 
@@ -242,14 +242,14 @@ boost::shared_ptr<ForwardCurveDeterministic> GenerateRates::getSimpleForwardCurv
         double yf = dayCounter->yearFraction(anchorDate, dates[i]);
         forwards.push_back(spot * exp(flatNACCRateDifferential * yf));
     }
-    boost::shared_ptr<ForwardCurveDeterministic> fc = boost::shared_ptr<ForwardCurveDeterministic>(
+    std::shared_ptr<ForwardCurveDeterministic> fc = std::shared_ptr<ForwardCurveDeterministic>(
                       new ForwardCurveDeterministic(anchorDate, dates, forwards));
     return fc;
 
 }
 
-boost::shared_ptr<ForwardCurveCMAStochasticFwdVol> GenerateRates::getCalendarMonthAverageCurve(boost::shared_ptr<DayCounter> dayCounter,
-                                                                 boost::shared_ptr<Calendar> calendar,
+std::shared_ptr<ForwardCurveCMAStochasticFwdVol> GenerateRates::getCalendarMonthAverageCurve(std::shared_ptr<DayCounter> dayCounter,
+                                                                 std::shared_ptr<Calendar> calendar,
                                                                  Date anchorDate, 
                                                                  size_t years, 
                                                                  double spot, 
@@ -263,19 +263,19 @@ boost::shared_ptr<ForwardCurveCMAStochasticFwdVol> GenerateRates::getCalendarMon
         double yf = dayCounter->yearFraction(anchorDate, dates[i]);
         forwards.push_back(spot * exp(flatNACCRateDifferential * yf));
     }
-    boost::shared_ptr<VolatilitySurfaceMoneynessCMA> vc = getDefaultCalendarMonthAverageMoneynessSurface(anchorDate);
-    boost::shared_ptr<ForwardCurveCMAStochasticFwdVol> fc =  boost::shared_ptr<ForwardCurveCMAStochasticFwdVol>(
+    std::shared_ptr<VolatilitySurfaceMoneynessCMA> vc = getDefaultCalendarMonthAverageMoneynessSurface(anchorDate);
+    std::shared_ptr<ForwardCurveCMAStochasticFwdVol> fc =  std::shared_ptr<ForwardCurveCMAStochasticFwdVol>(
                             new ForwardCurveCMAStochasticFwdVol(anchorDate, dates, forwards, LINEAR, true, vc));
     return fc;
 
 }
 
-boost::shared_ptr<VolatilitySurfaceMoneyness> GenerateRates::getDefaultMoneynessSurface(Date anchorDate)
+std::shared_ptr<VolatilitySurfaceMoneyness> GenerateRates::getDefaultMoneynessSurface(Date anchorDate)
 {
     SurfaceInterpolatorType interpolatorType = BICUBIC;
     bool extrapolate = true;
 
-    return boost::shared_ptr<VolatilitySurfaceMoneyness>(new VolatilitySurfaceMoneyness(defaultAnchorDate,
+    return std::shared_ptr<VolatilitySurfaceMoneyness>(new VolatilitySurfaceMoneyness(defaultAnchorDate,
                                                      defaultSurfaceDates, 
                                                      defaultMoneyness, 
                                                      defaultVolatilitySurface, 
@@ -283,7 +283,7 @@ boost::shared_ptr<VolatilitySurfaceMoneyness> GenerateRates::getDefaultMoneyness
                                                      extrapolate));
 }
 
-boost::shared_ptr<VolatilitySurfaceMoneynessCMA> GenerateRates::getDefaultCalendarMonthAverageMoneynessSurface(Date anchorDate)
+std::shared_ptr<VolatilitySurfaceMoneynessCMA> GenerateRates::getDefaultCalendarMonthAverageMoneynessSurface(Date anchorDate)
 {
     vector<Date> observationDates;
     vector<double> moneyness;
@@ -309,9 +309,9 @@ boost::shared_ptr<VolatilitySurfaceMoneynessCMA> GenerateRates::getDefaultCalend
     vector<vector<double>> volatility;
     volatility += v1, v2, v3, v4, v5;
 
-    boost::shared_ptr<DayCounter> dayCounter = boost::shared_ptr<DayCounter>(new Actual365Fixed());
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());    
-   boost::shared_ptr<ForwardRateSource> frs = GenerateRates::getSimpleForwardCurve(dayCounter, 
+    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());    
+   std::shared_ptr<ForwardRateSource> frs = GenerateRates::getSimpleForwardCurve(dayCounter, 
                                                         nullCalendar, 
                                                         anchorDate, 
                                                         10, 
@@ -319,7 +319,7 @@ boost::shared_ptr<VolatilitySurfaceMoneynessCMA> GenerateRates::getDefaultCalend
                                                         .01, 
                                                         vector<Date>(0));
 
-   return boost::shared_ptr<VolatilitySurfaceMoneynessCMA>(
+   return std::shared_ptr<VolatilitySurfaceMoneynessCMA>(
                      new VolatilitySurfaceMoneynessCMA(anchorDate,
                                          observationDates, 
                                          moneyness, 
@@ -328,7 +328,7 @@ boost::shared_ptr<VolatilitySurfaceMoneynessCMA> GenerateRates::getDefaultCalend
                                          extrapolate));
 }
 
-boost::shared_ptr<DailyFixingCurve> GenerateRates::buildFixingCurve(boost::shared_ptr<ForwardCurveDeterministic> forwardCurve,
+std::shared_ptr<DailyFixingCurve> GenerateRates::buildFixingCurve(std::shared_ptr<ForwardCurveDeterministic> forwardCurve,
                                                                     vector<Date> fixingDates)
 {
     vector<double> fixingRates;
@@ -337,13 +337,13 @@ boost::shared_ptr<DailyFixingCurve> GenerateRates::buildFixingCurve(boost::share
         fixingRates.push_back(forwardCurve->getForward(fixingDates[i]));
     }
 
-    boost::shared_ptr<DailyFixingCurve> fixingCurve = boost::shared_ptr<DailyFixingCurve>(new 
+    std::shared_ptr<DailyFixingCurve> fixingCurve = std::shared_ptr<DailyFixingCurve>(new 
                                              DailyFixingCurve(fixingDates, fixingRates));
     return fixingCurve;
 }
 
 
-boost::shared_ptr<DailyFixingCurve> GenerateRates::buildFixingCurve(double fixedRate, vector<Date> fixingDates)
+std::shared_ptr<DailyFixingCurve> GenerateRates::buildFixingCurve(double fixedRate, vector<Date> fixingDates)
 {
     vector<double> fixingRates;
     for (size_t i = 0; i < fixingDates.size(); ++i) 
@@ -351,14 +351,14 @@ boost::shared_ptr<DailyFixingCurve> GenerateRates::buildFixingCurve(double fixed
         fixingRates.push_back(fixedRate);
     }
 
-    boost::shared_ptr<DailyFixingCurve> fixingCurve = boost::shared_ptr<DailyFixingCurve>(new 
+    std::shared_ptr<DailyFixingCurve> fixingCurve = std::shared_ptr<DailyFixingCurve>(new 
                                           DailyFixingCurve(fixingDates, fixingRates));
     return fixingCurve;
 
 }
 
 
-vector<Date> GenerateRates::getDatesVector(boost::shared_ptr<Calendar> calendar, 
+vector<Date> GenerateRates::getDatesVector(std::shared_ptr<Calendar> calendar, 
                                     Date anchorDate, 
                                     size_t years, 
                                     vector<Date> manditoryDates)

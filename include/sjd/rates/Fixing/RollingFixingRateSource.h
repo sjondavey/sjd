@@ -1,4 +1,4 @@
-﻿#ifndef SJD_ROLLINGFIXINGRATESOURCE_INCLUDED
+#ifndef SJD_ROLLINGFIXINGRATESOURCE_INCLUDED
 #define SJD_ROLLINGFIXINGRATESOURCE_INCLUDED
 #pragma once
 
@@ -21,7 +21,7 @@ namespace sjd
         virtual ~RollingFixingRateSource() {};
 
 
-        virtual boost::shared_ptr<RollingFixingRateSource> rollForward(QuantLib::Date toDate, 
+        virtual std::shared_ptr<RollingFixingRateSource> rollForward(QuantLib::Date toDate, 
                                                                        std::vector<QuantLib::Date> newRateSetDates,
                                                                        std::vector<double> newRateSets) = 0;
 

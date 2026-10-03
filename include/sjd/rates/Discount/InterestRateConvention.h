@@ -1,10 +1,10 @@
-﻿#ifndef SJD_INTERESTRATECONVENTION_INCLUDED
+#ifndef SJD_INTERESTRATECONVENTION_INCLUDED
 #define SJD_INTERESTRATECONVENTION_INCLUDED
 
 #include <ql/time/daycounter.hpp>
 #include <ql/compounding.hpp>
 #include <ql/time/frequency.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace sjd 
 {
@@ -18,11 +18,11 @@ namespace sjd
     class InterestRateConvention
     {
     public:
-        InterestRateConvention(boost::shared_ptr<QuantLib::DayCounter> dayCounter, 
+        InterestRateConvention(std::shared_ptr<QuantLib::DayCounter> dayCounter, 
                                QuantLib::Compounding compounding, 
                                QuantLib::Frequency frequency);
         
-        boost::shared_ptr<QuantLib::DayCounter> getDayCounter();
+        std::shared_ptr<QuantLib::DayCounter> getDayCounter();
         QuantLib::Compounding getCompounding();
         QuantLib::Frequency getFrequency();
 
@@ -31,7 +31,7 @@ namespace sjd
         double rateToDF(double rate, QuantLib::Date fromDate, QuantLib::Date toDate);
 
     protected:
-        boost::shared_ptr<QuantLib::DayCounter> dayCounter;
+        std::shared_ptr<QuantLib::DayCounter> dayCounter;
         QuantLib::Compounding compounding;
         QuantLib::Frequency frequency;
     };

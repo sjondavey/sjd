@@ -1,4 +1,4 @@
-﻿#ifndef SJD_USESINTERESTRATEDIFFERENTIAL_INCLUDED
+#ifndef SJD_USESINTERESTRATEDIFFERENTIAL_INCLUDED
 #define SJD_USESINTERESTRATEDIFFERENTIAL_INCLUDED
 
 #include <sjd/rates/Discount/DiscountRateSource.h>
@@ -17,7 +17,7 @@ namespace sjd
     {
     public:
         // MUST have at least on virtual (as opposed to pure virtual) function to be 
-        // polymorphic i.e. so that boost::dynamic_pointer_cast from a ForwardRateSource
+        // polymorphic i.e. so that std::dynamic_pointer_cast from a ForwardRateSource
         // to UsesInterestRateDifferential returns true if the frs implements this
         // interface
         virtual ~UsesInterestRateDifferential() {};
@@ -25,8 +25,8 @@ namespace sjd
         virtual void setSpotAtT0(double spotAtT0) = 0;
         virtual double getSpotAtT0() = 0;
 
-        virtual void setRateSources(boost::shared_ptr<DiscountRateSource> domesticDRS,
-                                    boost::shared_ptr<DiscountRateSource> foreignDRS) = 0;
+        virtual void setRateSources(std::shared_ptr<DiscountRateSource> domesticDRS,
+                                    std::shared_ptr<DiscountRateSource> foreignDRS) = 0;
     };
 
 }

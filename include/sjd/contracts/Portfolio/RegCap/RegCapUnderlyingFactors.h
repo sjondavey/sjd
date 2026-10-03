@@ -1,8 +1,8 @@
-﻿#ifndef REGCAPUNDERLYINGFACTORS_INCLUDED
+#ifndef REGCAPUNDERLYINGFACTORS_INCLUDED
 #define REGCAPUNDERLYINGFACTORS_INCLUDED
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <boost/algorithm/string.hpp>
 /*======================================================================================
 Factors for add-ons: From Annex 4: Treatment of Counterparty Credit Risk
@@ -88,7 +88,7 @@ namespace sjd
     };
 
 
-    boost::shared_ptr<RegCapUnderlyingFactors> generateRegCapFactors(std::string factorDescription);
+    std::shared_ptr<RegCapUnderlyingFactors> generateRegCapFactors(std::string factorDescription);
 }
 
 #endif

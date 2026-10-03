@@ -42,7 +42,7 @@ if(SJD_BUILD_PYTHON)
     add_library(sjd_python MODULE python/sjd_module.cpp)
     set_target_properties(sjd_python PROPERTIES
         PREFIX ""
-        OUTPUT_NAME sjd
+        OUTPUT_NAME _core
         SUFFIX ".pyd"
         ARCHIVE_OUTPUT_NAME sjd_python
     )
@@ -59,66 +59,39 @@ if(SJD_BUILD_PYTHON)
         target_link_options(sjd_python PRIVATE $<$<CONFIG:Debug>:/NODEFAULTLIB:python310_d.lib>)
     endif()
 
-    # One staging folder for Debug and Release so notebooks never import from build/.
-    set(SJD_PYTHON_STAGING_DIR "${CMAKE_SOURCE_DIR}/python/sjd_runtime")
+    # The compiled core lives inside the source package, so the editable install
+    # (pip install -e python) and the tests import the same file for Debug and Release.
+    set(SJD_PYTHON_PACKAGE_DIR "${CMAKE_SOURCE_DIR}/python/sjd")
     add_custom_command(TARGET sjd_python POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E make_directory "${SJD_PYTHON_STAGING_DIR}"
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different
             "$<TARGET_FILE:sjd_python>"
-            "${SJD_PYTHON_STAGING_DIR}/$<TARGET_FILE_NAME:sjd_python>"
-        COMMENT "Staging sjd Python module to python/sjd_runtime"
+            "${SJD_PYTHON_PACKAGE_DIR}/$<TARGET_FILE_NAME:sjd_python>"
+        COMMENT "Staging sjd._core into python/sjd"
         VERBATIM
     )
 
-    add_test(
-        NAME sjdPythonValidation
-        COMMAND "${CMAKE_COMMAND}" -E env
-                "SJD_PYTHON_MODULE_DIR=${SJD_PYTHON_STAGING_DIR}"
-                "SJD_NO_DEBUG_DIALOGS=1"
-                "${Python3_EXECUTABLE}"
-                "${CMAKE_CURRENT_SOURCE_DIR}/python/tests/test_validation.py"
+    set(_sjd_python_tests
+        sjdPythonValidation test_validation
+        sjdForwardCurve     test_forward_curve
+        sjdMarketSpecs      test_market_specs
+        sjdMarketSchema     test_market_schema
+        sjdMarketSample     test_market_sample
+        sjdMarketRates      test_market_rates
+        sjdSimulate         test_simulate
     )
-    add_test(
-        NAME sjdForwardCurve
-        COMMAND "${CMAKE_COMMAND}" -E env
-                "SJD_PYTHON_MODULE_DIR=${SJD_PYTHON_STAGING_DIR}"
-                "SJD_NO_DEBUG_DIALOGS=1"
-                "${Python3_EXECUTABLE}"
-                "${CMAKE_CURRENT_SOURCE_DIR}/python/tests/test_forward_curve.py"
-    )
-    add_test(
-        NAME sjdMarketSpecs
-        COMMAND "${Python3_EXECUTABLE}"
-                "${CMAKE_CURRENT_SOURCE_DIR}/python/tests/test_market_specs.py"
-    )
-    add_test(
-        NAME sjdMarketSchema
-        COMMAND "${Python3_EXECUTABLE}"
-                "${CMAKE_CURRENT_SOURCE_DIR}/python/tests/test_market_schema.py"
-    )
-    add_test(
-        NAME sjdMarketSample
-        COMMAND "${Python3_EXECUTABLE}"
-                "${CMAKE_CURRENT_SOURCE_DIR}/python/tests/test_market_sample.py"
-    )
-    add_test(
-        NAME sjdMarketRates
-        COMMAND "${CMAKE_COMMAND}" -E env
-                "SJD_PYTHON_MODULE_DIR=${SJD_PYTHON_STAGING_DIR}"
-                "SJD_NO_DEBUG_DIALOGS=1"
-                "${Python3_EXECUTABLE}"
-                "${CMAKE_CURRENT_SOURCE_DIR}/python/tests/test_market_rates.py"
-    )
-    add_test(
-        NAME sjdSimulate
-        COMMAND "${CMAKE_COMMAND}" -E env
-                "SJD_PYTHON_MODULE_DIR=${SJD_PYTHON_STAGING_DIR}"
-                "SJD_NO_DEBUG_DIALOGS=1"
-                "${Python3_EXECUTABLE}"
-                "${CMAKE_CURRENT_SOURCE_DIR}/python/tests/test_simulate.py"
-    )
+    while(_sjd_python_tests)
+        list(POP_FRONT _sjd_python_tests _sjd_test_name _sjd_test_script)
+        add_test(
+            NAME ${_sjd_test_name}
+            COMMAND "${CMAKE_COMMAND}" -E env
+                    "PYTHONPATH=${CMAKE_SOURCE_DIR}/python"
+                    "SJD_NO_DEBUG_DIALOGS=1"
+                    "${Python3_EXECUTABLE}"
+                    "${CMAKE_SOURCE_DIR}/python/tests/${_sjd_test_script}.py"
+        )
+    endwhile()
 
     message(STATUS "Python bindings: ${Python3_EXECUTABLE}")
     message(STATUS "pybind11 include: ${_sjd_pybind11_include}")
-    message(STATUS "Python module staging: ${SJD_PYTHON_STAGING_DIR}")
+    message(STATUS "Python package: ${SJD_PYTHON_PACKAGE_DIR}")
 endif()

@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Volatility/VolatilitySurfaceMoneynessCMA.h>
+#include <sjd/rates/Volatility/VolatilitySurfaceMoneynessCMA.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -18,7 +18,7 @@ namespace sjd
                                                                 SurfaceInterpolatorType interpolatorTypeInput,
                                                                 bool extrapolate) 
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(
             new sjd::IssueTracker("VolatilitySurfaceMoneynessCMA"));
 
         if (volatilityData.size() == 0) 
@@ -44,7 +44,7 @@ namespace sjd
                                                                  SurfaceInterpolatorType interpolatorTypeInput,
                                                                  bool extrapolate) 
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(
             new sjd::IssueTracker("VolatilitySurfaceMoneynessCMA"));
 
          setInputs(anchorDateInput, 
@@ -75,8 +75,8 @@ namespace sjd
 
         allowExtrapolation = extrapolateInput;
         anchorDate = anchorDateInput;
-        dayCounter = boost::shared_ptr<DayCounter>(new Actual365Fixed());
-        simpleDayCounter = boost::shared_ptr<DayCounter>(new SimpleDayCounter());
+        dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
+        simpleDayCounter = std::shared_ptr<DayCounter>(new SimpleDayCounter());
 
         strikeDimension = moneynessInput;
         observationDates = observationDatesInput;
@@ -235,7 +235,7 @@ namespace sjd
    }
 
 
-    boost::shared_ptr<VolatilityRateSource> VolatilitySurfaceMoneynessCMA::parallelBump(double spread)
+    std::shared_ptr<VolatilityRateSource> VolatilitySurfaceMoneynessCMA::parallelBump(double spread)
     {
         vector<Date> newDates;
         QuantLib::Matrix volatilitySubset;
@@ -244,7 +244,7 @@ namespace sjd
         Matrix spreadMatrix = Matrix(volatilitySubset.rows(), volatilitySubset.columns(), spread);
         Matrix bumpedVolMatrix = volatilitySubset + spreadMatrix;
 
-        return boost::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneynessCMA(anchorDate, 
+        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneynessCMA(anchorDate, 
                                                                                   newDates, 
                                                                                   strikeDimension,
                                                                                   bumpedVolMatrix,
@@ -252,7 +252,7 @@ namespace sjd
                                                                                   allowExtrapolation));
     }
 
-    boost::shared_ptr<VolatilityRateSource> VolatilitySurfaceMoneynessCMA::rollForward(Date toDate)
+    std::shared_ptr<VolatilityRateSource> VolatilitySurfaceMoneynessCMA::rollForward(Date toDate)
     {
         vector<Date> newDates;
         QuantLib::Matrix volatilitySubset;
@@ -265,7 +265,7 @@ namespace sjd
         //    updatedType = BILINEAR;
         //}
 
-        return boost::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneynessCMA(toDate, 
+        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneynessCMA(toDate, 
                                                                                   newDates, 
                                                                                   strikeDimension,
                                                                                   volatilitySubset,

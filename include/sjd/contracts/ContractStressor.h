@@ -1,4 +1,4 @@
-﻿#ifndef CONTRACTSTRESSOR_INCLUDED
+#ifndef CONTRACTSTRESSOR_INCLUDED
 #define CONTRACTSTRESSOR_INCLUDED
 
 #include <list>
@@ -16,19 +16,19 @@ namespace sjd
     {
     public:
         // Use this for unmargined portfolios or portfolios that do not require Holding QuantLib::Period calculations
-        ContractStressor(boost::shared_ptr<Contract> contract, 
-                         boost::shared_ptr<RatesEnvironment> rates);
+        ContractStressor(std::shared_ptr<Contract> contract, 
+                         std::shared_ptr<RatesEnvironment> rates);
 
         bool isOK();
 
         std::vector<std::pair<std::string, double> > getStressedValues();
 
     protected:
-        std::vector<std::pair<std::string, boost::shared_ptr<RatesEnvironment>> > getAllRatesEnvironments();
+        std::vector<std::pair<std::string, std::shared_ptr<RatesEnvironment>> > getAllRatesEnvironments();
         std::string validationRoot() const override;
 
-        boost::shared_ptr<Contract> contract;
-        boost::shared_ptr<RatesEnvironment> baseRates;
+        std::shared_ptr<Contract> contract;
+        std::shared_ptr<RatesEnvironment> baseRates;
     };
 }
 

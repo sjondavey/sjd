@@ -2,14 +2,10 @@
 
 import math
 import sqlite3
-import sys
 import unittest
 from datetime import date
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from markets.sample import (
+from sjd.markets.sample import (
     ATM_VOLATILITY,
     BRENT_FORWARD,
     GOFO,

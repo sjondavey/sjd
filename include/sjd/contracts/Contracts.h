@@ -1,4 +1,4 @@
-﻿#ifndef CONTRACTS_INCLUDED
+#ifndef CONTRACTS_INCLUDED
 #define CONTRACTS_INCLUDED
 
 #pragma once
@@ -42,27 +42,27 @@ namespace sjd
         // Call validate before checking for errors
         virtual bool isOK();
         ValidationReport validateReport();
-        ValidationReport validateReport(boost::shared_ptr<RatesEnvironment> re);
+        ValidationReport validateReport(std::shared_ptr<RatesEnvironment> re);
         std::string validationRoot() const override;
 
         virtual void validate();
-        virtual void validate(boost::shared_ptr<RatesEnvironment> re);
-        virtual double getValue(boost::shared_ptr<RatesEnvironment> re) = 0;        
+        virtual void validate(std::shared_ptr<RatesEnvironment> re);
+        virtual double getValue(std::shared_ptr<RatesEnvironment> re) = 0;        
 
         virtual std::string toString();
-        virtual std::string toString(boost::shared_ptr<RatesEnvironment> re);
+        virtual std::string toString(std::shared_ptr<RatesEnvironment> re);
 
         // These to be completed on the assumption that validate has been run and there 
         // are no errors
         virtual std::string toStringContract() = 0;
-        virtual std::string toStringRates(boost::shared_ptr<RatesEnvironment> re) = 0;
+        virtual std::string toStringRates(std::shared_ptr<RatesEnvironment> re) = 0;
 
     protected:
         // When we get into a MC simulaiton, especially with Regulatory capital, we will
         // often call the same getValue(re) multiple times; The following variables allow
         // a slow class to cache the contract value for a given rates environement
         bool valueCalculated;
-        boost::shared_ptr<RatesEnvironment> cachedRE;
+        std::shared_ptr<RatesEnvironment> cachedRE;
         std::size_t cachedMarketRevision;
         double cachedContractValue;
     };
@@ -81,7 +81,7 @@ namespace sjd
         std::unique_ptr<Contract> clone() override = 0;
 
         virtual void validate();
-        virtual void validate(boost::shared_ptr<RatesEnvironment> re);
+        virtual void validate(std::shared_ptr<RatesEnvironment> re);
         
         bool getHasPremium() const;
         virtual void setPremiumPaymentDate(QuantLib::Date premiumPaymentDate);
@@ -102,12 +102,12 @@ namespace sjd
         double getVolume() const;
         virtual void setVolume(double volume);
 
-        // Used to decide if a particular structure�s MtM is capped. This theoretical method 
+        // Used to decide if a particular structure?s MtM is capped. This theoretical method 
         // should be implemented to be independent of a rates environment 
         virtual double getPayoff(double forSpot) = 0;
 
         virtual std::string toStringContract();
-        virtual std::string toStringRates(boost::shared_ptr<RatesEnvironment> re);
+        virtual std::string toStringRates(std::shared_ptr<RatesEnvironment> re);
     protected:
 
         double volume;
@@ -136,13 +136,13 @@ namespace sjd
         virtual ~SingleDerivativeContract() {};
 
         virtual void validate();
-        virtual void validate(boost::shared_ptr<RatesEnvironment> re);
+        virtual void validate(std::shared_ptr<RatesEnvironment> re);
 
         virtual void setStrike(double strike);
         double getStrike() const;
 
         virtual std::string toStringContract();
-        virtual std::string toStringRates(boost::shared_ptr<RatesEnvironment> re);
+        virtual std::string toStringRates(std::shared_ptr<RatesEnvironment> re);
     protected:
         double strike;
     };
@@ -160,18 +160,18 @@ namespace sjd
         virtual ~SingleOptionContract() {};
 
         virtual void validate();
-        virtual void validate(boost::shared_ptr<RatesEnvironment> re);
+        virtual void validate(std::shared_ptr<RatesEnvironment> re);
 
         virtual double getPayoff(double forSpot);
-        virtual double getOptionValue(boost::shared_ptr<RatesEnvironment> re) = 0;
+        virtual double getOptionValue(std::shared_ptr<RatesEnvironment> re) = 0;
         
-        virtual double getValue(boost::shared_ptr<RatesEnvironment> re);
+        virtual double getValue(std::shared_ptr<RatesEnvironment> re);
         
         virtual void setType(PutCall pc);
         PutCall getType() const;
 
         virtual std::string toStringContract();
-        virtual std::string toStringRates(boost::shared_ptr<RatesEnvironment> re);
+        virtual std::string toStringRates(std::shared_ptr<RatesEnvironment> re);
     protected:
         PutCall type;
 
@@ -190,7 +190,7 @@ namespace sjd
         virtual ~AsianContract() {};
 
         virtual void validate();
-        virtual void validate(boost::shared_ptr<RatesEnvironment> re);
+        virtual void validate(std::shared_ptr<RatesEnvironment> re);
 
         std::vector<std::string> getAsianContractErrorMessages();
         ValidationReport asianValidationReport() const;
@@ -209,7 +209,7 @@ namespace sjd
         virtual void getFixingAndForwardRates(QuantLib::Date valuationDate, 
                                               std::vector<double> &fixingRates, 
                                               std::vector<double> &forwardRates,
-                                              boost::shared_ptr<RatesEnvironment> re);
+                                              std::shared_ptr<RatesEnvironment> re);
 
 
     protected:
@@ -219,7 +219,7 @@ namespace sjd
         void absorbAsianReport(const ValidationReport& child,
                                const std::vector<std::string>& prefix);
 
-        boost::shared_ptr<sjd::IssueTracker> errorTracking;
+        std::shared_ptr<sjd::IssueTracker> errorTracking;
         std::vector<QuantLib::Date> orderedAveragingDates;
 
     };
@@ -236,38 +236,38 @@ namespace sjd
     {
     public:
         MultipleInstrumentContract() {};
-        MultipleInstrumentContract(std::vector<boost::shared_ptr<SingleInstrumentContract>> input);
-        MultipleInstrumentContract(std::vector<boost::shared_ptr<Contract>> input);
+        MultipleInstrumentContract(std::vector<std::shared_ptr<SingleInstrumentContract>> input);
+        MultipleInstrumentContract(std::vector<std::shared_ptr<Contract>> input);
         MultipleInstrumentContract(MultipleInstrumentContract &multipleInstrumentContract);
         // Keeps a reference the the same underlying contracts
         std::unique_ptr<Contract> clone() override;
         virtual ~MultipleInstrumentContract() {};
         
         virtual void validate();
-        virtual void validate(boost::shared_ptr<RatesEnvironment> re);
+        virtual void validate(std::shared_ptr<RatesEnvironment> re);
 
-        virtual double getValue(boost::shared_ptr<RatesEnvironment> re);
+        virtual double getValue(std::shared_ptr<RatesEnvironment> re);
         
 
-        virtual std::string toString(boost::shared_ptr<RatesEnvironment> re);
+        virtual std::string toString(std::shared_ptr<RatesEnvironment> re);
         virtual std::string toStringContract();
-        virtual std::string toStringRates(boost::shared_ptr<RatesEnvironment> re);
+        virtual std::string toStringRates(std::shared_ptr<RatesEnvironment> re);
 
-        virtual std::vector<boost::shared_ptr<SingleInstrumentContract>> getUnderlyingSingleInstrumentContracts();
+        virtual std::vector<std::shared_ptr<SingleInstrumentContract>> getUnderlyingSingleInstrumentContracts();
 
     protected:
         virtual void setInputVariables();
-        virtual std::vector<boost::shared_ptr<SingleInstrumentContract>> getSingleInstrumentContracts(std::vector<boost::shared_ptr<Contract>> input);
+        virtual std::vector<std::shared_ptr<SingleInstrumentContract>> getSingleInstrumentContracts(std::vector<std::shared_ptr<Contract>> input);
 
 
-        std::        vector<boost::shared_ptr<SingleInstrumentContract>> contracts;
+        std::        vector<std::shared_ptr<SingleInstrumentContract>> contracts;
     };
 
-    inline boost::shared_ptr<SingleInstrumentContract> cloneInstrument(
-        const boost::shared_ptr<SingleInstrumentContract>& contract)
+    inline std::shared_ptr<SingleInstrumentContract> cloneInstrument(
+        const std::shared_ptr<SingleInstrumentContract>& contract)
     {
         std::unique_ptr<Contract> cloned = contract->clone();
-        return boost::shared_ptr<SingleInstrumentContract>(
+        return std::shared_ptr<SingleInstrumentContract>(
             static_cast<SingleInstrumentContract*>(cloned.release()));
     }
 

@@ -1,4 +1,4 @@
-﻿#ifndef EUROPEANFORWARDCONTRACT_INCLUDED
+#ifndef EUROPEANFORWARDCONTRACT_INCLUDED
 #define EUROPEANFORWARDCONTRACT_INCLUDED
 #pragma once
 
@@ -23,7 +23,7 @@ namespace sjd
         virtual ~ForwardContract() {};
 
         // Implemented for European Forwards
-        virtual double getValue(boost::shared_ptr<RatesEnvironment> re);
+        virtual double getValue(std::shared_ptr<RatesEnvironment> re);
         virtual double getPayoff(double forSpot);
     };
 

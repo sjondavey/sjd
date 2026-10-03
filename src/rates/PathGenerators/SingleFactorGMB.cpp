@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/PathGenerators/SingleFactorGMB.h>
+#include <sjd/rates/PathGenerators/SingleFactorGMB.h>
 
 
 using namespace std;
@@ -51,13 +51,13 @@ namespace sjd
         return anchorDate;
     }
 
-    void EconomicScenarioGenerator::setBaseRates(const boost::shared_ptr<RatesEnvironment> reInput)
+    void EconomicScenarioGenerator::setBaseRates(const std::shared_ptr<RatesEnvironment> reInput)
     {
         re = reInput;
         anchorDate = re->getAnchorDate();
     }
 
-    boost::shared_ptr<RatesEnvironment> EconomicScenarioGenerator::getBaseRates()
+    std::shared_ptr<RatesEnvironment> EconomicScenarioGenerator::getBaseRates()
     {
         return re;
     }
@@ -72,34 +72,34 @@ namespace sjd
     /*======================================================================================
     SingleFactorEconomicScenarioGenerator
     =======================================================================================*/
-    SingleFactorEconomicScenarioGenerator::SingleFactorEconomicScenarioGenerator(const boost::shared_ptr<RatesEnvironment> re)
+    SingleFactorEconomicScenarioGenerator::SingleFactorEconomicScenarioGenerator(const std::shared_ptr<RatesEnvironment> re)
                                                 : rng((boost::uint32_t) time(0)), nd(0,1), normalVariable(rng, nd)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("SingleFactorEconomicScenarioGenerator"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("SingleFactorEconomicScenarioGenerator"));
         setBaseRates(re);
     }
 
-    void SingleFactorEconomicScenarioGenerator::setBaseRates(const boost::shared_ptr<RatesEnvironment> re)
+    void SingleFactorEconomicScenarioGenerator::setBaseRates(const std::shared_ptr<RatesEnvironment> re)
     {
         EconomicScenarioGenerator::setBaseRates(re);
         frsDependsOnInterestRateDifferential = false;
         if (re->hasDRS())
         {
-            drs = boost::dynamic_pointer_cast<sjd::DeterministicDiscountRateSource>(re->getDRS()); 
+            drs = std::dynamic_pointer_cast<sjd::DeterministicDiscountRateSource>(re->getDRS()); 
         }
         if (re->hasForeignDRS())
         {
-            foreigndrs = boost::dynamic_pointer_cast<sjd::DeterministicDiscountRateSource>(re->getForeignDRS()); 
+            foreigndrs = std::dynamic_pointer_cast<sjd::DeterministicDiscountRateSource>(re->getForeignDRS()); 
         }
         if (re->hasVRS())
         {
-            vrs = boost::dynamic_pointer_cast<sjd::DeterministicVolatilityRateSource>(re->getVRS()); 
+            vrs = std::dynamic_pointer_cast<sjd::DeterministicVolatilityRateSource>(re->getVRS()); 
         }
         if (re->hasFRS())
         {
-            frs = boost::dynamic_pointer_cast<sjd::ForwardRateSourceStochastic>(re->getFRS()); 
-            boost::shared_ptr<sjd::UsesInterestRateDifferential> tmpFRS = 
-                boost::dynamic_pointer_cast<sjd::UsesInterestRateDifferential>(frs); 
+            frs = std::dynamic_pointer_cast<sjd::ForwardRateSourceStochastic>(re->getFRS()); 
+            std::shared_ptr<sjd::UsesInterestRateDifferential> tmpFRS = 
+                std::dynamic_pointer_cast<sjd::UsesInterestRateDifferential>(frs); 
             if (tmpFRS != 0)
             {
                 frsDependsOnInterestRateDifferential = true;
@@ -107,7 +107,7 @@ namespace sjd
         }
         if (re->hasFixingRS())
         {
-            fixingrs = boost::dynamic_pointer_cast<sjd::RollingFixingRateSource>(re->getFixingRS()); 
+            fixingrs = std::dynamic_pointer_cast<sjd::RollingFixingRateSource>(re->getFixingRS()); 
         }
     }
 
@@ -181,10 +181,10 @@ namespace sjd
 
             fixingrss.clear();
             
-            vector<boost::shared_ptr<RatesEnvironment>> ratesPath;
+            vector<std::shared_ptr<RatesEnvironment>> ratesPath;
             for (size_t i = 0; i < numDates; ++i)
             {
-                boost::shared_ptr<RatesEnvironment> tmpRE = boost::shared_ptr<RatesEnvironment>(
+                std::shared_ptr<RatesEnvironment> tmpRE = std::shared_ptr<RatesEnvironment>(
                     new RatesEnvironment(simulationDates[i]));
                 tmpRE->setDRS(drss[i]);
                 if (foreigndrs != 0)
@@ -201,14 +201,14 @@ namespace sjd
                 {
                     allFixingDates = fixingrs->getFixingDatesFor(simulationDates);
                     allFixingRates = vector<double>(allFixingDates.size(), 0);
-                    boost::shared_ptr<RollingFixingRateSource> rolledfixingrs = 
+                    std::shared_ptr<RollingFixingRateSource> rolledfixingrs = 
                         fixingrs->rollForward(simulationDates[i], allFixingDates, allFixingRates);
                     fixingrss.push_back(rolledfixingrs);
                     tmpRE->setFixingRS(rolledfixingrs);
                 }
                 ratesPath.push_back(tmpRE);
             }
-            path = boost::shared_ptr<Path>(new Path(ratesPath));
+            path = std::shared_ptr<Path>(new Path(ratesPath));
             return true;
         }
         return false;
@@ -221,7 +221,7 @@ namespace sjd
         normalVariable.distribution().reset();
     }
 
-    boost::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getConfidenceInterval(double confidenceInterval)
+    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getConfidenceInterval(double confidenceInterval)
     {
         boost::math::normal dist(0.0, 1.0);
         double epsi = quantile(dist, confidenceInterval);
@@ -260,7 +260,7 @@ namespace sjd
         return path;
     }
 
-    boost::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getRandomPath()
+    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getRandomPath()
     {
         for (size_t i = 0; i < numDates; ++i) 
         {
@@ -269,7 +269,7 @@ namespace sjd
         return getPathForRandomNumber(randomNumbers);
     }
 
-    boost::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getAntitheticPath()
+    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getAntitheticPath()
     {
         for (size_t i = 0; i < numDates; ++i) 
         {
@@ -278,7 +278,7 @@ namespace sjd
         return getPathForRandomNumber(randomNumbers);
     }
 
-    boost::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getPathForRandomNumber(vector<double> randomNumbers)
+    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getPathForRandomNumber(vector<double> randomNumbers)
     {
         frs->setRandomVariables(randomNumbers);
         if (fixingrs == 0)
@@ -301,7 +301,7 @@ namespace sjd
         return path;
     }
 
-    boost::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getPathForSpot(vector<double> spot)
+    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getPathForSpot(vector<double> spot)
     {
         vector<double> impliedRV = frs->getImpliedRandomNumbers(spot);
         return getPathForRandomNumber(impliedRV);
@@ -310,8 +310,8 @@ namespace sjd
 
     void SingleFactorEconomicScenarioGenerator::updateFXForwardWithRolledDiscountRateSources(size_t stepNumber)
     {
-        boost::shared_ptr<sjd::UsesInterestRateDifferential> tmpFRS = 
-            boost::dynamic_pointer_cast<sjd::UsesInterestRateDifferential>(frss[stepNumber]); 
+        std::shared_ptr<sjd::UsesInterestRateDifferential> tmpFRS = 
+            std::dynamic_pointer_cast<sjd::UsesInterestRateDifferential>(frss[stepNumber]); 
         if (tmpFRS != 0)
         {
             tmpFRS->setRateSources(drss[stepNumber], foreigndrss[stepNumber]);

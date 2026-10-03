@@ -1,4 +1,4 @@
-﻿#ifndef asianoptioncontract_test
+#ifndef asianoptioncontract_test
 #define asianoptioncontract_test
 
 #include <iostream>
@@ -22,8 +22,8 @@ class AsianOptionContactTest
 {
   public:
 
-    static boost::shared_ptr<AsianOption> getDefaultAsianOption(QuantLib::Date anchorDate);
-    static boost::shared_ptr<AsianOption> getAsianOptionWithMoneynessVol(QuantLib::Date anchorDate);
+    static std::shared_ptr<AsianOption> getDefaultAsianOption(QuantLib::Date anchorDate);
+    static std::shared_ptr<AsianOption> getAsianOptionWithMoneynessVol(QuantLib::Date anchorDate);
 
 
     static void testMaturityDate();

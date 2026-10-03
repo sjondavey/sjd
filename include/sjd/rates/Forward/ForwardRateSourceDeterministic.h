@@ -23,16 +23,16 @@ namespace sjd
     public:
         virtual bool isOK();
 
-        virtual std::vector<std::pair<std::string, boost::shared_ptr<RateSource>>> getMarketRateStresses();
-        virtual boost::shared_ptr<ForwardRateSource> parallelBump(double spread) = 0;
+        virtual std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> getMarketRateStresses();
+        virtual std::shared_ptr<ForwardRateSource> parallelBump(double spread) = 0;
 
         // Roll forward to one date
-        virtual boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate) = 0;
+        virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate) = 0;
         // For rates environments that have fixing rate sources we need the ability to 
         // populate the fixing rates while rolling forward. This is achieved by passing an 
         // input std::vector of sorted, increasing rate std::set dates between the anchor date and 
         // the “rolledTo” date and getting back the “simulated” rate sets
-        virtual boost::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, 
+        virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, 
                                                                  std::vector<QuantLib::Date> rateSetDates,
                                                                  std::vector<double> &rateSetsFromAnchorToDate);
         // Roll forward to multiple dates. This is a two-step process (std::set dates then roll) 
@@ -42,11 +42,11 @@ namespace sjd
         // all the dates are in an appropriate range by calling the isOK() method after 
         // setting these dates.
         virtual void setForwardValuationDates(std::set<QuantLib::Date> dates); 
-        virtual std::vector<boost::shared_ptr<ForwardRateSource> > rollForward();
+        virtual std::vector<std::shared_ptr<ForwardRateSource> > rollForward();
         // When rolling forward to multiple dates using this method, the input rate std::set dates 
         // should be all the rate std::set dates between the anchor date and the *final* date to 
         // which the curve will be rolled, i.e. the final “orderedForwardDates”
-        virtual std::vector<boost::shared_ptr<ForwardRateSource> > rollForward(std::vector<QuantLib::Date> rateSetDates,
+        virtual std::vector<std::shared_ptr<ForwardRateSource> > rollForward(std::vector<QuantLib::Date> rateSetDates,
                                                                           std::vector<double> &rateSetsFromAnchorToFinalRollDate);
     protected:
         std::vector<QuantLib::Date> orderedForwardDates;

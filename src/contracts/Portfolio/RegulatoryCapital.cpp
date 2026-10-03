@@ -27,19 +27,19 @@ namespace sjd
     {
     }
 
-    void RegulatoryCapital::validate(boost::shared_ptr<RatesEnvironment> /*re*/)
+    void RegulatoryCapital::validate(std::shared_ptr<RatesEnvironment> /*re*/)
     {
     }
 
     CurrentExposureMethod::CurrentExposureMethod(
-        vector<boost::shared_ptr<Contract>> inputs,
-        vector<boost::shared_ptr<SingleInstrumentContract>> extractedContracts,
-        boost::shared_ptr<Margin> marginInput,
-        boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactorsInput,
-        boost::shared_ptr<RegCapCreditParameters> regCapCreditParametersInput,
+        vector<std::shared_ptr<Contract>> inputs,
+        vector<std::shared_ptr<SingleInstrumentContract>> extractedContracts,
+        std::shared_ptr<Margin> marginInput,
+        std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactorsInput,
+        std::shared_ptr<RegCapCreditParameters> regCapCreditParametersInput,
         bool optimise)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("CurrentExposureMethod"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("CurrentExposureMethod"));
         regCapAssetFactors = regCapAssetFactorsInput;
         regCapCreditParameters = regCapCreditParametersInput;
         hasMargin = static_cast<bool>(marginInput);
@@ -52,7 +52,7 @@ namespace sjd
         }
         if (!regCapCreditParameters)
         {
-            regCapCreditParameters = boost::shared_ptr<RegCapCreditParameters>(new RegCapCreditParameters(0, 0));
+            regCapCreditParameters = std::shared_ptr<RegCapCreditParameters>(new RegCapCreditParameters(0, 0));
         }
 
         if (optimise)
@@ -72,8 +72,8 @@ namespace sjd
         {
             for (size_t i = 0; i < inputs.size(); ++i)
             {
-                boost::shared_ptr<Structure> nettingSet =
-                    boost::shared_ptr<Structure>(new Structure(inputs[i], regCapAssetFactors));
+                std::shared_ptr<Structure> nettingSet =
+                    std::shared_ptr<Structure>(new Structure(inputs[i], regCapAssetFactors));
                 if (!nettingSet->isOK())
                 {
                     errorTracking->absorb(nettingSet->validationReport(),
@@ -96,7 +96,7 @@ namespace sjd
 
     CurrentExposureMethod::CurrentExposureMethod(const CurrentExposureMethod& other)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("CurrentExposureMethod"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("CurrentExposureMethod"));
         hasMargin = other.hasMargin;
         margin = other.margin;
         regCapAssetFactors = other.regCapAssetFactors;
@@ -107,7 +107,7 @@ namespace sjd
         {
             std::unique_ptr<Contract> cloned = other.nettingStructures[i]->clone();
             nettingStructures.push_back(
-                boost::shared_ptr<Structure>(static_cast<Structure*>(cloned.release())));
+                std::shared_ptr<Structure>(static_cast<Structure*>(cloned.release())));
         }
     }
 
@@ -136,7 +136,7 @@ namespace sjd
         }
     }
 
-    void CurrentExposureMethod::validate(boost::shared_ptr<RatesEnvironment> re)
+    void CurrentExposureMethod::validate(std::shared_ptr<RatesEnvironment> re)
     {
         if (structureConversionError)
         {
@@ -167,14 +167,14 @@ namespace sjd
         return structureErrorMessage;
     }
 
-    const vector<boost::shared_ptr<Structure>>& CurrentExposureMethod::structures() const
+    const vector<std::shared_ptr<Structure>>& CurrentExposureMethod::structures() const
     {
         return nettingStructures;
     }
 
-    vector<boost::shared_ptr<Structure>> CurrentExposureMethod::optimiseStructuresFromContracts(
-        vector<boost::shared_ptr<SingleInstrumentContract>> contractsInput,
-        boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
+    vector<std::shared_ptr<Structure>> CurrentExposureMethod::optimiseStructuresFromContracts(
+        vector<std::shared_ptr<SingleInstrumentContract>> contractsInput,
+        std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
         bool& sucessfullportfolio,
         string& errorMessage)
     {
@@ -184,23 +184,23 @@ namespace sjd
         {
             sucessfullportfolio = false;
             errorMessage = "No contracts to convert into structures";
-            return vector<boost::shared_ptr<Structure>>(0);
+            return vector<std::shared_ptr<Structure>>(0);
         }
 
-        list<boost::shared_ptr<SingleInstrumentContract>> tmpContracts;
+        list<std::shared_ptr<SingleInstrumentContract>> tmpContracts;
         for (size_t i = 0; i < contractsInput.size(); ++i)
         {
             tmpContracts.push_back(cloneInstrument(contractsInput[i]));
         }
 
-        vector<boost::shared_ptr<SingleInstrumentContract>> potentialContractsForOneStructure;
-        vector<boost::shared_ptr<Structure>> allStructures;
+        vector<std::shared_ptr<SingleInstrumentContract>> potentialContractsForOneStructure;
+        vector<std::shared_ptr<Structure>> allStructures;
         while (tmpContracts.size() > 0)
         {
             potentialContractsForOneStructure.clear();
             potentialContractsForOneStructure.push_back(tmpContracts.front());
             tmpContracts.erase(tmpContracts.begin());
-            list<boost::shared_ptr<SingleInstrumentContract>>::iterator it = tmpContracts.begin();
+            list<std::shared_ptr<SingleInstrumentContract>>::iterator it = tmpContracts.begin();
             while (it != tmpContracts.end())
             {
                 if (Structure::qualifyForRegulatoryCapitalOffset(*it, potentialContractsForOneStructure.front()))
@@ -215,7 +215,7 @@ namespace sjd
             }
 
             bool successful = false;
-            vector<boost::shared_ptr<Structure>> structuresForOneSettlement =
+            vector<std::shared_ptr<Structure>> structuresForOneSettlement =
                 Structure::createStructures(potentialContractsForOneStructure, regCapAssetFactors, successful);
             if (!successful)
             {
@@ -234,7 +234,7 @@ namespace sjd
         return allStructures;
     }
 
-    double CurrentExposureMethod::getNGR(boost::shared_ptr<RatesEnvironment> re, double& mtm)
+    double CurrentExposureMethod::getNGR(std::shared_ptr<RatesEnvironment> re, double& mtm)
     {
         if (errorTracking->getHasErrors())
         {
@@ -267,7 +267,7 @@ namespace sjd
         return ngr;
     }
 
-    double CurrentExposureMethod::getRegulatoryCapital(boost::shared_ptr<RatesEnvironment> re)
+    double CurrentExposureMethod::getRegulatoryCapital(std::shared_ptr<RatesEnvironment> re)
     {
         double mtm = 0;
         double ngr = getNGR(re, mtm);
@@ -290,20 +290,20 @@ namespace sjd
         return regCap;
     }
 
-    PortfolioB2CEM::PortfolioB2CEM(vector<boost::shared_ptr<Contract>> inputs,
-                                   boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactorsInput,
-                                   boost::shared_ptr<RegCapCreditParameters> regCapCreditParametersInput,
+    PortfolioB2CEM::PortfolioB2CEM(vector<std::shared_ptr<Contract>> inputs,
+                                   std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactorsInput,
+                                   std::shared_ptr<RegCapCreditParameters> regCapCreditParametersInput,
                                    bool optimise)
         : Portfolio(inputs)
     {
         attachCapital(inputs, regCapAssetFactorsInput, regCapCreditParametersInput, optimise);
     }
 
-    PortfolioB2CEM::PortfolioB2CEM(vector<boost::shared_ptr<Contract>> inputs,
-                                   boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactorsInput,
-                                   boost::shared_ptr<RegCapCreditParameters> regCapCreditParametersInput,
+    PortfolioB2CEM::PortfolioB2CEM(vector<std::shared_ptr<Contract>> inputs,
+                                   std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactorsInput,
+                                   std::shared_ptr<RegCapCreditParameters> regCapCreditParametersInput,
                                    bool optimise,
-                                   boost::shared_ptr<Margin> marginInput)
+                                   std::shared_ptr<Margin> marginInput)
         : Portfolio(inputs, marginInput)
     {
         attachCapital(inputs, regCapAssetFactorsInput, regCapCreditParametersInput, optimise);
@@ -312,7 +312,7 @@ namespace sjd
     PortfolioB2CEM::PortfolioB2CEM(PortfolioB2CEM& portfolio)
     {
         setInputVariables();
-        vector<boost::shared_ptr<SingleInstrumentContract>> tmpContracts =
+        vector<std::shared_ptr<SingleInstrumentContract>> tmpContracts =
             portfolio.getUnderlyingSingleInstrumentContracts();
         for (size_t i = 0; i < tmpContracts.size(); ++i)
         {
@@ -322,7 +322,7 @@ namespace sjd
         hasMargin = portfolio.hasMargin;
         if (portfolio.capital)
         {
-            capital = boost::shared_ptr<CurrentExposureMethod>(new CurrentExposureMethod(*portfolio.capital));
+            capital = std::shared_ptr<CurrentExposureMethod>(new CurrentExposureMethod(*portfolio.capital));
         }
     }
 
@@ -331,26 +331,26 @@ namespace sjd
         return std::unique_ptr<Contract>(new PortfolioB2CEM(*this));
     }
 
-    void PortfolioB2CEM::attachCapital(vector<boost::shared_ptr<Contract>> inputs,
-                                       boost::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactorsInput,
-                                       boost::shared_ptr<RegCapCreditParameters> regCapCreditParametersInput,
+    void PortfolioB2CEM::attachCapital(vector<std::shared_ptr<Contract>> inputs,
+                                       std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactorsInput,
+                                       std::shared_ptr<RegCapCreditParameters> regCapCreditParametersInput,
                                        bool optimise)
     {
         if (errorTracking->getHasErrors())
         {
             return;
         }
-        capital = boost::shared_ptr<CurrentExposureMethod>(new CurrentExposureMethod(
+        capital = std::shared_ptr<CurrentExposureMethod>(new CurrentExposureMethod(
             inputs,
             contracts,
-            hasMargin ? margin : boost::shared_ptr<Margin>(),
+            hasMargin ? margin : std::shared_ptr<Margin>(),
             regCapAssetFactorsInput,
             regCapCreditParametersInput,
             optimise));
         if (!capital->isOK())
         {
             absorbChildReport(capital->validationReport(), {"regulatory_capital"});
-            contracts = vector<boost::shared_ptr<SingleInstrumentContract>>(0);
+            contracts = vector<std::shared_ptr<SingleInstrumentContract>>(0);
         }
     }
 
@@ -365,7 +365,7 @@ namespace sjd
         }
         if (capital)
         {
-            const vector<boost::shared_ptr<Structure>>& nettingStructures = capital->structures();
+            const vector<std::shared_ptr<Structure>>& nettingStructures = capital->structures();
             for (size_t i = 0; i < nettingStructures.size(); ++i)
             {
                 nettingStructures[i]->validate();
@@ -379,7 +379,7 @@ namespace sjd
         Portfolio::validate();
     }
 
-    void PortfolioB2CEM::validate(boost::shared_ptr<RatesEnvironment> re)
+    void PortfolioB2CEM::validate(std::shared_ptr<RatesEnvironment> re)
     {
         if (capital && capital->hasStructureConversionError())
         {
@@ -390,7 +390,7 @@ namespace sjd
         }
         if (capital)
         {
-            const vector<boost::shared_ptr<Structure>>& nettingStructures = capital->structures();
+            const vector<std::shared_ptr<Structure>>& nettingStructures = capital->structures();
             for (size_t i = 0; i < nettingStructures.size(); ++i)
             {
                 nettingStructures[i]->validate(re);
@@ -405,12 +405,12 @@ namespace sjd
         Portfolio::validate(re);
     }
 
-    boost::shared_ptr<RegulatoryCapital> PortfolioB2CEM::regulatoryCapital() const
+    std::shared_ptr<RegulatoryCapital> PortfolioB2CEM::regulatoryCapital() const
     {
         return capital;
     }
 
-    double PortfolioB2CEM::getRegulatoryCapital(boost::shared_ptr<RatesEnvironment> re)
+    double PortfolioB2CEM::getRegulatoryCapital(std::shared_ptr<RatesEnvironment> re)
     {
         if (!capital)
         {

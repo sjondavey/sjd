@@ -1,4 +1,4 @@
-﻿#include <sjd/contracts/Portfolio/Margin/Margin.h>
+#include <sjd/contracts/Portfolio/Margin/Margin.h>
 
 
 using namespace std;
@@ -122,7 +122,7 @@ namespace sjd {
                                double minimumTransferAmount,
                                double rounding)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("SimpleMargin"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("SimpleMargin"));
 
         Margin::setMarginParameters(anchorDate,
                                     useMyThreshold, 

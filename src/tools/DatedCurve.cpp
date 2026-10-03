@@ -1,4 +1,4 @@
-﻿#include <sjd/tools/DatedCurve.h>
+#include <sjd/tools/DatedCurve.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -42,7 +42,7 @@ namespace sjd
         if (observationDates.size() < 1) 
         {
             finalDate = anchorDate;
-            interpolator = boost::shared_ptr<ArrayInterpolator>(
+            interpolator = std::shared_ptr<ArrayInterpolator>(
                             new LinearArrayInterpolator(vector<double>(1,0), vector<double>(1,1), allowExtrapolation));
             return;
         }
@@ -56,11 +56,11 @@ namespace sjd
         switch (type) 
         {
             case CUBIC:
-                interpolator = boost::shared_ptr<ArrayInterpolator>(
+                interpolator = std::shared_ptr<ArrayInterpolator>(
                     new CubicSplineInterpolator(observationPoints, observedRates, allowExtrapolation));
                 break;
             default:
-                interpolator = boost::shared_ptr<ArrayInterpolator>(
+                interpolator = std::shared_ptr<ArrayInterpolator>(
                     new LinearArrayInterpolator(observationPoints, observedRates, allowExtrapolation));
         }        
     }

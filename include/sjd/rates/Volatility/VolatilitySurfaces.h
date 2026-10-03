@@ -1,4 +1,4 @@
-﻿#ifndef SJD_VOLATILITYSURFACES_INCLUDED
+#ifndef SJD_VOLATILITYSURFACES_INCLUDED
 #define SJD_VOLATILITYSURFACES_INCLUDED
 
 #include <sjd/maths/maths.h>
@@ -70,7 +70,7 @@ namespace sjd
         std::vector<QuantLib::Date> observationDates;
         std::vector<double> time, strikeDimension;
         QuantLib::Matrix volatility;
-        boost::shared_ptr<QuantLib::Interpolation2D> interpolator;
+        std::shared_ptr<QuantLib::Interpolation2D> interpolator;
         SurfaceInterpolatorType interpolatorType;
     };
 }

@@ -1,11 +1,11 @@
-﻿#ifndef SJD_RATESOURCE_INCLUDED
+#ifndef SJD_RATESOURCE_INCLUDED
 #define SJD_RATESOURCE_INCLUDED
 #pragma once
 
 #include <vector>
 #include <set>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <sjd/tools/Validation.h>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
@@ -39,7 +39,7 @@ namespace sjd
         virtual bool isInRange(QuantLib::Date date) const;
         // Use extendsTo(..) when you want to exclude anchor date logic, most often 
         // to understand if you can call the getValue(..) method from on a contract and get a 
-        // number in return which is the case even if the rate source�s anchor date is 
+        // number in return which is the case even if the rate source?s anchor date is 
         // greater than the contract settlement date (the return value would be zero)
         virtual bool extendsTo(QuantLib::Date date) const;
         

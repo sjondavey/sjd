@@ -1,4 +1,4 @@
-﻿#ifndef SJD_DETERMINISTICDISCOUNTRATESOURCE_INCLUDED
+#ifndef SJD_DETERMINISTICDISCOUNTRATESOURCE_INCLUDED
 #define SJD_DETERMINISTICDISCOUNTRATESOURCE_INCLUDED
 
 #include <sjd/rates/Discount/DiscountRateSource.h>
@@ -23,12 +23,12 @@ namespace sjd
     public:
         virtual bool isOK();
 
-        virtual std::vector<std::pair<std::string, boost::shared_ptr<RateSource>>> getMarketRateStresses();
-        virtual boost::shared_ptr<DiscountRateSource> parallelBump(double spread,
-                                                                   boost::shared_ptr<InterestRateConvention> irc) = 0;
+        virtual std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> getMarketRateStresses();
+        virtual std::shared_ptr<DiscountRateSource> parallelBump(double spread,
+                                                                   std::shared_ptr<InterestRateConvention> irc) = 0;
 
         // Roll forward to one date
-        virtual boost::shared_ptr<DiscountRateSource> rollForward(QuantLib::Date toDate) = 0;
+        virtual std::shared_ptr<DiscountRateSource> rollForward(QuantLib::Date toDate) = 0;
         // Roll forward to multiple dates. This is a two-step process (std::set dates then roll) 
         // provide an interface that is consistent with stochastic rates where the use case 
         // is Monte-Carlo simulation (std::set dates once, roll many times). The "std::set" structure 
@@ -36,7 +36,7 @@ namespace sjd
         // all the dates are in an appropriate range by calling the isOK() method after 
         // setting these dates.
         virtual void setForwardValuationDates(std::set<QuantLib::Date> dates); 
-        virtual std::vector<boost::shared_ptr<DiscountRateSource> > rollForward();
+        virtual std::vector<std::shared_ptr<DiscountRateSource> > rollForward();
 
     protected:
         std::vector<QuantLib::Date> orderedForwardDates;

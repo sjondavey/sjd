@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Forward/Stochastic/ForwardCurveCMAStochasticFwdVol.h>
+#include <sjd/rates/Forward/Stochastic/ForwardCurveCMAStochasticFwdVol.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -12,9 +12,9 @@ namespace sjd
                                                                      vector<double> forwardsInput,
                                                                      ArrayInterpolatorType typeInput,
                                                                      bool allowExtrapolationInput,
-                                                                     boost::shared_ptr<VolatilityRateSource> vrs)
+                                                                     std::shared_ptr<VolatilityRateSource> vrs)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveCMAStochasticFwdVol"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveCMAStochasticFwdVol"));
         quotes.setInterpolated(anchorDateInput,
                                observationDatesInput,
                                forwardsInput,
@@ -85,12 +85,12 @@ namespace sjd
         return quotes.getForward(month, year);
     }
 
-    boost::shared_ptr<ForwardRateSource> ForwardCurveCMAStochasticFwdVol::rollForward(Date toDateInput, double normalRV)
+    std::shared_ptr<ForwardRateSource> ForwardCurveCMAStochasticFwdVol::rollForward(Date toDateInput, double normalRV)
     {
         return quotes.rollForward(toDateInput, normalRV, isInRange(toDateInput));
     }
 
-    boost::shared_ptr<ForwardRateSource> ForwardCurveCMAStochasticFwdVol::rollForward(
+    std::shared_ptr<ForwardRateSource> ForwardCurveCMAStochasticFwdVol::rollForward(
         Date toDate,
         double normalRV,
         vector<Date> rateSetDates,
@@ -115,12 +115,12 @@ namespace sjd
         quotes.preparePath(forwardSimulationDates, startOfSimulationMonths);
     }
 
-    vector<boost::shared_ptr<ForwardRateSource>> ForwardCurveCMAStochasticFwdVol::rollForward()
+    vector<std::shared_ptr<ForwardRateSource>> ForwardCurveCMAStochasticFwdVol::rollForward()
     {
         return quotes.rollPath(normalRVs, forwardSimulationDates);
     }
 
-    vector<boost::shared_ptr<ForwardRateSource>> ForwardCurveCMAStochasticFwdVol::rollForward(
+    vector<std::shared_ptr<ForwardRateSource>> ForwardCurveCMAStochasticFwdVol::rollForward(
         vector<Date> rateSetDates,
         vector<double>& rateSetsFromAnchorToFinalRollDate)
     {

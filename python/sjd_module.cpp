@@ -1,4 +1,4 @@
-﻿#include <pybind11/pybind11.h>
+#include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
@@ -11,7 +11,7 @@
 #include <cstdlib>
 #endif
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
@@ -42,8 +42,6 @@ using namespace QuantLib;
 using namespace boost;
 
 namespace py = pybind11;
-
-PYBIND11_DECLARE_HOLDER_TYPE(T, boost::shared_ptr<T>);
 
 namespace {
 
@@ -108,14 +106,14 @@ py::object from_ql_date(const QuantLib::Date& date)
         date.dayOfMonth());
 }
 
-boost::shared_ptr<QuantLib::DayCounter> actual365()
+std::shared_ptr<QuantLib::DayCounter> actual365()
 {
-    return boost::shared_ptr<QuantLib::DayCounter>(new QuantLib::Actual365Fixed());
+    return std::shared_ptr<QuantLib::DayCounter>(new QuantLib::Actual365Fixed());
 }
 
-std::vector<boost::shared_ptr<sjd::SingleInstrumentContract>> contracts_from(const py::list& contracts)
+std::vector<std::shared_ptr<sjd::SingleInstrumentContract>> contracts_from(const py::list& contracts)
 {
-    std::vector<boost::shared_ptr<sjd::SingleInstrumentContract>> inputs;
+    std::vector<std::shared_ptr<sjd::SingleInstrumentContract>> inputs;
     for (const py::handle& item : contracts)
     {
         if (!py::isinstance<sjd::SingleInstrumentContract>(item))
@@ -124,7 +122,7 @@ std::vector<boost::shared_ptr<sjd::SingleInstrumentContract>> contracts_from(con
                 "Portfolio contracts must be single instruments, such as EuropeanOption "
                 "or AsianForward, not " + std::string(py::str(py::type::of(item).attr("__name__"))));
         }
-        inputs.push_back(item.cast<boost::shared_ptr<sjd::SingleInstrumentContract>>());
+        inputs.push_back(item.cast<std::shared_ptr<sjd::SingleInstrumentContract>>());
     }
     return inputs;
 }
@@ -139,10 +137,10 @@ std::set<QuantLib::Date> simulation_dates_from(const py::iterable& values)
     return dates;
 }
 
-std::vector<boost::shared_ptr<sjd::Contract>> contract_inputs_from(const py::list& contracts)
+std::vector<std::shared_ptr<sjd::Contract>> contract_inputs_from(const py::list& contracts)
 {
-    std::vector<boost::shared_ptr<sjd::Contract>> inputs;
-    for (const boost::shared_ptr<sjd::SingleInstrumentContract>& contract : contracts_from(contracts))
+    std::vector<std::shared_ptr<sjd::Contract>> inputs;
+    for (const std::shared_ptr<sjd::SingleInstrumentContract>& contract : contracts_from(contracts))
     {
         inputs.push_back(contract);
     }
@@ -181,23 +179,23 @@ py::list py_dates(const std::vector<QuantLib::Date>& dates)
     return result;
 }
 
-boost::shared_ptr<sjd::PortfolioEvolver> make_evolver(
-    boost::shared_ptr<sjd::Portfolio> portfolio,
-    boost::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator> generator,
+std::shared_ptr<sjd::PortfolioEvolver> make_evolver(
+    std::shared_ptr<sjd::Portfolio> portfolio,
+    std::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator> generator,
     const py::iterable& simulation_dates,
-    boost::shared_ptr<sjd::RegulatoryCapital> capital,
+    std::shared_ptr<sjd::RegulatoryCapital> capital,
     size_t holding_period,
     const py::object& holding_period_calendar)
 {
     const std::set<QuantLib::Date> dates = simulation_dates_from(simulation_dates);
     if (holding_period == 0)
-        return boost::shared_ptr<sjd::PortfolioEvolver>(
+        return std::shared_ptr<sjd::PortfolioEvolver>(
             new sjd::PortfolioEvolver(portfolio, generator, dates, capital));
     if (holding_period_calendar.is_none())
         throw py::value_error("holding_period needs a holding_period_calendar");
-    boost::shared_ptr<QuantLib::Calendar> calendar(
+    std::shared_ptr<QuantLib::Calendar> calendar(
         new QuantLib::Calendar(holding_period_calendar.cast<const NamedCalendar&>().calendar));
-    return boost::shared_ptr<sjd::PortfolioEvolver>(
+    return std::shared_ptr<sjd::PortfolioEvolver>(
         new sjd::PortfolioEvolver(portfolio, generator, dates, calendar, holding_period, capital));
 }
 
@@ -258,10 +256,10 @@ Simulation simulation_from(const sjd::SimulatedPaths& simulated)
 
 } // namespace
 
-PYBIND11_MODULE(sjd, m)
+PYBIND11_MODULE(_core, m)
 {
     report_debug_checks_to_stderr();
-    m.doc() = "sjd derivative pricing";
+    m.doc() = "sjd derivative pricing (compiled core; import sjd rather than sjd._core)";
 
     py::enum_<sjd::BuySell>(m, "BuySell")
         .value("BUY", sjd::BUY)
@@ -419,7 +417,7 @@ PYBIND11_MODULE(sjd, m)
 
     // Base for every volatility curve and surface, so any of them can be passed
     // where a volatility source is expected.
-    py::class_<sjd::VolatilityRateSource, boost::shared_ptr<sjd::VolatilityRateSource>>(
+    py::class_<sjd::VolatilityRateSource, std::shared_ptr<sjd::VolatilityRateSource>>(
         m, "VolatilityRateSource")
         .def("is_ok", &sjd::VolatilityRateSource::isOK)
         .def("error_messages", &sjd::VolatilityRateSource::getErrorMessagesAsString)
@@ -427,7 +425,7 @@ PYBIND11_MODULE(sjd, m)
             return from_ql_date(source.getAnchorDate());
         });
 
-    py::class_<sjd::ForwardRateSource, boost::shared_ptr<sjd::ForwardRateSource>>(m, "ForwardCurve")
+    py::class_<sjd::ForwardRateSource, std::shared_ptr<sjd::ForwardRateSource>>(m, "ForwardCurve")
         .def(py::init([](const py::object& anchor,
                          const py::iterable& observation_dates,
                          const std::vector<double>& forwards,
@@ -435,7 +433,7 @@ PYBIND11_MODULE(sjd, m)
                          sjd::ForwardAveraging averaging,
                          sjd::ForwardRoll roll,
                          sjd::ArrayInterpolatorType interpolation,
-                         boost::shared_ptr<sjd::VolatilityRateSource> volatility) {
+                         std::shared_ptr<sjd::VolatilityRateSource> volatility) {
                  try
                  {
                      return sjd::makeForwardCurve(to_ql_date(anchor),
@@ -480,12 +478,12 @@ PYBIND11_MODULE(sjd, m)
             return curve.getForward(to_ql_date(to));
         });
 
-    py::class_<sjd::DiscountCurve, boost::shared_ptr<sjd::DiscountCurve>>(m, "DiscountCurve")
+    py::class_<sjd::DiscountCurve, std::shared_ptr<sjd::DiscountCurve>>(m, "DiscountCurve")
         .def(py::init([](const py::object& anchor,
                          const py::iterable& observation_dates,
                          const std::vector<double>& discount_factors,
                          bool allow_extrapolation) {
-                 return boost::shared_ptr<sjd::DiscountCurve>(
+                 return std::shared_ptr<sjd::DiscountCurve>(
                      new sjd::DiscountCurve(
                          to_ql_date(anchor),
                          to_ql_dates(observation_dates),
@@ -503,13 +501,13 @@ PYBIND11_MODULE(sjd, m)
             return curve.getDiscountFactor(to_ql_date(to));
         });
 
-    py::class_<sjd::VolatilityCurve, sjd::VolatilityRateSource, boost::shared_ptr<sjd::VolatilityCurve>>(
+    py::class_<sjd::VolatilityCurve, sjd::VolatilityRateSource, std::shared_ptr<sjd::VolatilityCurve>>(
         m, "VolatilityCurve")
         .def(py::init([](const py::object& anchor,
                          const py::iterable& observation_dates,
                          const std::vector<double>& volatilities,
                          bool allow_extrapolation) {
-                 return boost::shared_ptr<sjd::VolatilityCurve>(
+                 return std::shared_ptr<sjd::VolatilityCurve>(
                      new sjd::VolatilityCurve(
                          to_ql_date(anchor),
                          to_ql_dates(observation_dates),
@@ -530,13 +528,13 @@ PYBIND11_MODULE(sjd, m)
             return curve.getVolatility(to_ql_date(to));
         });
 
-    py::class_<sjd::VolatilityCurveCMA, sjd::VolatilityRateSource, boost::shared_ptr<sjd::VolatilityCurveCMA>>(
+    py::class_<sjd::VolatilityCurveCMA, sjd::VolatilityRateSource, std::shared_ptr<sjd::VolatilityCurveCMA>>(
         m, "VolatilityCurveCMA")
         .def(py::init([](const py::object& anchor,
                          const py::iterable& observation_dates,
                          const std::vector<double>& volatilities,
                          bool allow_extrapolation) {
-                 return boost::shared_ptr<sjd::VolatilityCurveCMA>(
+                 return std::shared_ptr<sjd::VolatilityCurveCMA>(
                      new sjd::VolatilityCurveCMA(
                          to_ql_date(anchor),
                          to_ql_dates(observation_dates),
@@ -561,11 +559,11 @@ PYBIND11_MODULE(sjd, m)
             return curve.getStandardDeviation(to_ql_date(to));
         });
 
-    py::class_<sjd::DailyFixingCurve, boost::shared_ptr<sjd::DailyFixingCurve>>(
+    py::class_<sjd::DailyFixingCurve, std::shared_ptr<sjd::DailyFixingCurve>>(
         m, "DailyFixingCurve")
         .def(py::init([](const py::iterable& fixing_dates,
                          const std::vector<double>& fixing_rates) {
-                 return boost::shared_ptr<sjd::DailyFixingCurve>(
+                 return std::shared_ptr<sjd::DailyFixingCurve>(
                      new sjd::DailyFixingCurve(
                          to_ql_dates(fixing_dates),
                          fixing_rates));
@@ -583,7 +581,7 @@ PYBIND11_MODULE(sjd, m)
         .value("BILINEAR", BILINEAR)
         .value("BICUBIC", BICUBIC);
 
-    py::class_<sjd::VolatilitySurfaceDelta, sjd::VolatilityRateSource, boost::shared_ptr<sjd::VolatilitySurfaceDelta>>(
+    py::class_<sjd::VolatilitySurfaceDelta, sjd::VolatilityRateSource, std::shared_ptr<sjd::VolatilitySurfaceDelta>>(
         m, "VolatilitySurfaceDelta")
         .def(py::init([](const py::object& anchor,
                          const py::iterable& observation_dates,
@@ -591,7 +589,7 @@ PYBIND11_MODULE(sjd, m)
                          const std::vector<std::vector<double>>& volatility,
                          SurfaceInterpolatorType interpolator,
                          bool extrapolate) {
-                 return boost::shared_ptr<sjd::VolatilitySurfaceDelta>(
+                 return std::shared_ptr<sjd::VolatilitySurfaceDelta>(
                      new sjd::VolatilitySurfaceDelta(
                          to_ql_date(anchor),
                          to_ql_dates(observation_dates),
@@ -619,7 +617,7 @@ PYBIND11_MODULE(sjd, m)
 
     py::class_<sjd::VolatilitySurfaceMoneynessCMA,
                sjd::VolatilityRateSource,
-               boost::shared_ptr<sjd::VolatilitySurfaceMoneynessCMA>>(
+               std::shared_ptr<sjd::VolatilitySurfaceMoneynessCMA>>(
         m, "VolatilitySurfaceMoneynessCMA")
         .def(py::init([](const py::object& anchor,
                          const py::iterable& observation_dates,
@@ -627,7 +625,7 @@ PYBIND11_MODULE(sjd, m)
                          const std::vector<std::vector<double>>& volatility,
                          SurfaceInterpolatorType interpolator,
                          bool extrapolate) {
-                 return boost::shared_ptr<sjd::VolatilitySurfaceMoneynessCMA>(
+                 return std::shared_ptr<sjd::VolatilitySurfaceMoneynessCMA>(
                      new sjd::VolatilitySurfaceMoneynessCMA(
                          to_ql_date(anchor),
                          to_ql_dates(observation_dates),
@@ -653,9 +651,9 @@ PYBIND11_MODULE(sjd, m)
             return surface.getVolatility(to_ql_date(to), strike, forward);
         });
 
-    py::class_<sjd::RatesEnvironment, boost::shared_ptr<sjd::RatesEnvironment>>(m, "RatesEnvironment")
+    py::class_<sjd::RatesEnvironment, std::shared_ptr<sjd::RatesEnvironment>>(m, "RatesEnvironment")
         .def(py::init([](const py::object& anchor) {
-                 return boost::shared_ptr<sjd::RatesEnvironment>(
+                 return std::shared_ptr<sjd::RatesEnvironment>(
                      new sjd::RatesEnvironment(to_ql_date(anchor)));
              }),
              py::arg("anchor_date"))
@@ -667,46 +665,46 @@ PYBIND11_MODULE(sjd, m)
             return from_ql_date(re.getAnchorDate());
         })
         .def("set_frs", [](sjd::RatesEnvironment& re,
-                           boost::shared_ptr<sjd::ForwardRateSource> curve) {
+                           std::shared_ptr<sjd::ForwardRateSource> curve) {
             re.setFRS(curve);
         })
         .def("set_drs", [](sjd::RatesEnvironment& re,
-                           boost::shared_ptr<sjd::DiscountCurve> curve) {
+                           std::shared_ptr<sjd::DiscountCurve> curve) {
             re.setDRS(curve);
         })
         .def("set_vrs", [](sjd::RatesEnvironment& re,
-                           boost::shared_ptr<sjd::VolatilityRateSource> volatility) {
+                           std::shared_ptr<sjd::VolatilityRateSource> volatility) {
             re.setVRS(volatility);
         })
         .def("set_fixing_rs", [](sjd::RatesEnvironment& re,
-                                 boost::shared_ptr<sjd::DailyFixingCurve> curve) {
+                                 std::shared_ptr<sjd::DailyFixingCurve> curve) {
             re.setFixingRS(curve);
         });
 
-    py::class_<sjd::Contract, boost::shared_ptr<sjd::Contract>>(
+    py::class_<sjd::Contract, std::shared_ptr<sjd::Contract>>(
         m, "Contract", "Base of every contract and portfolio. Not constructed directly.")
         .def("is_ok", &sjd::Contract::isOK)
         .def("error_messages", &sjd::Contract::getErrorMessagesAsString)
         .def("validation_report", &sjd::Contract::validationReport)
         .def("validate_report", [](sjd::Contract& contract,
-                                   boost::shared_ptr<sjd::RatesEnvironment> re) {
+                                   std::shared_ptr<sjd::RatesEnvironment> re) {
             return re ? contract.validateReport(re) : contract.validateReport();
         }, py::arg("rates_environment") = py::none(),
            "Validate, against the environment when one is given, and return the report.")
         .def("validate", [](sjd::Contract& contract,
-                            boost::shared_ptr<sjd::RatesEnvironment> re) {
+                            std::shared_ptr<sjd::RatesEnvironment> re) {
             if (re)
                 contract.validate(re);
             else
                 contract.validate();
         }, py::arg("rates_environment") = py::none())
         .def("get_value", [](sjd::Contract& contract,
-                             boost::shared_ptr<sjd::RatesEnvironment> re) {
+                             std::shared_ptr<sjd::RatesEnvironment> re) {
             return contract.getValue(re);
         }, py::arg("rates_environment"));
 
     py::class_<sjd::SingleInstrumentContract, sjd::Contract,
-               boost::shared_ptr<sjd::SingleInstrumentContract>>(
+               std::shared_ptr<sjd::SingleInstrumentContract>>(
         m, "SingleInstrumentContract",
         "One instrument. Any subclass can go into a Portfolio.")
         .def("get_payoff", &sjd::SingleInstrumentContract::getPayoff, py::arg("spot"))
@@ -720,7 +718,7 @@ PYBIND11_MODULE(sjd, m)
         .def_property_readonly("buy_sell", &sjd::SingleInstrumentContract::getBuySell);
 
     py::class_<sjd::EuropeanOption, sjd::SingleInstrumentContract,
-               boost::shared_ptr<sjd::EuropeanOption>>(m, "EuropeanOption")
+               std::shared_ptr<sjd::EuropeanOption>>(m, "EuropeanOption")
         .def(py::init([](const py::object& maturity,
                          const py::object& settlement,
                          double strike,
@@ -729,7 +727,7 @@ PYBIND11_MODULE(sjd, m)
                          const py::object& premium_payment_date,
                          double premium_amount,
                          sjd::BuySell buy_sell) {
-                 return boost::shared_ptr<sjd::EuropeanOption>(
+                 return std::shared_ptr<sjd::EuropeanOption>(
                      new sjd::EuropeanOption(
                          to_ql_date(maturity),
                          to_ql_date(settlement),
@@ -749,18 +747,18 @@ PYBIND11_MODULE(sjd, m)
              py::arg("premium_amount"),
              py::arg("buy_sell"))
         .def("get_option_value", [](sjd::EuropeanOption& option,
-                                    boost::shared_ptr<sjd::RatesEnvironment> re) {
+                                    std::shared_ptr<sjd::RatesEnvironment> re) {
             return option.getOptionValue(re);
         }, py::arg("rates_environment"), "The option alone, without the premium cashflow.");
 
     py::class_<sjd::EuropeanForward, sjd::SingleInstrumentContract,
-               boost::shared_ptr<sjd::EuropeanForward>>(m, "EuropeanForward")
+               std::shared_ptr<sjd::EuropeanForward>>(m, "EuropeanForward")
         .def(py::init([](const py::object& maturity,
                          const py::object& settlement,
                          double strike,
                          double volume,
                          sjd::BuySell buy_sell) {
-                 return boost::shared_ptr<sjd::EuropeanForward>(
+                 return std::shared_ptr<sjd::EuropeanForward>(
                      new sjd::EuropeanForward(
                          to_ql_date(maturity),
                          to_ql_date(settlement),
@@ -778,7 +776,7 @@ PYBIND11_MODULE(sjd, m)
                          double strike,
                          double volume,
                          sjd::BuySell buy_sell) {
-                 return boost::shared_ptr<sjd::EuropeanForward>(
+                 return std::shared_ptr<sjd::EuropeanForward>(
                      new sjd::EuropeanForward(
                          to_ql_date(settlement),
                          strike,
@@ -792,14 +790,14 @@ PYBIND11_MODULE(sjd, m)
              "Physically settled forward whose maturity equals settlement.");
 
     py::class_<sjd::AsianForward, sjd::SingleInstrumentContract,
-               boost::shared_ptr<sjd::AsianForward>>(m, "AsianForward", py::multiple_inheritance())
+               std::shared_ptr<sjd::AsianForward>>(m, "AsianForward", py::multiple_inheritance())
         .def(py::init([](const py::iterable& averaging_dates,
                          const py::object& settlement,
                          double strike,
                          double volume,
                          sjd::BuySell buy_sell) {
                  const std::vector<QuantLib::Date> dates = to_ql_dates(averaging_dates);
-                 return boost::shared_ptr<sjd::AsianForward>(
+                 return std::shared_ptr<sjd::AsianForward>(
                      new sjd::AsianForward(
                          std::set<QuantLib::Date>(dates.begin(), dates.end()),
                          to_ql_date(settlement),
@@ -818,7 +816,7 @@ PYBIND11_MODULE(sjd, m)
         });
 
     py::class_<sjd::AsianOption, sjd::SingleInstrumentContract,
-               boost::shared_ptr<sjd::AsianOption>>(m, "AsianOption", py::multiple_inheritance())
+               std::shared_ptr<sjd::AsianOption>>(m, "AsianOption", py::multiple_inheritance())
         .def(py::init([](const py::iterable& averaging_dates,
                          const py::object& settlement,
                          double strike,
@@ -828,7 +826,7 @@ PYBIND11_MODULE(sjd, m)
                          double premium_amount,
                          sjd::BuySell buy_sell) {
                  const std::vector<QuantLib::Date> dates = to_ql_dates(averaging_dates);
-                 return boost::shared_ptr<sjd::AsianOption>(
+                 return std::shared_ptr<sjd::AsianOption>(
                      new sjd::AsianOption(
                          std::set<QuantLib::Date>(dates.begin(), dates.end()),
                          to_ql_date(settlement),
@@ -851,15 +849,15 @@ PYBIND11_MODULE(sjd, m)
             return py_dates(option.getAveragingDates());
         })
         .def("get_option_value", [](sjd::AsianOption& option,
-                                    boost::shared_ptr<sjd::RatesEnvironment> re) {
+                                    std::shared_ptr<sjd::RatesEnvironment> re) {
             return option.getOptionValue(re);
         }, py::arg("rates_environment"), "The option alone, without the premium cashflow.");
 
-    py::class_<sjd::RegCapUnderlyingFactors, boost::shared_ptr<sjd::RegCapUnderlyingFactors>>(
+    py::class_<sjd::RegCapUnderlyingFactors, std::shared_ptr<sjd::RegCapUnderlyingFactors>>(
         m, "RegCapUnderlyingFactors");
 
     m.def("reg_cap_factors", [](const std::string& description) {
-        boost::shared_ptr<sjd::RegCapUnderlyingFactors> factors = sjd::generateRegCapFactors(description);
+        std::shared_ptr<sjd::RegCapUnderlyingFactors> factors = sjd::generateRegCapFactors(description);
         if (!factors)
         {
             throw py::value_error(
@@ -868,7 +866,7 @@ PYBIND11_MODULE(sjd, m)
         return factors;
     }, py::arg("description"));
 
-    py::class_<sjd::RegCapCreditParameters, boost::shared_ptr<sjd::RegCapCreditParameters>>(
+    py::class_<sjd::RegCapCreditParameters, std::shared_ptr<sjd::RegCapCreditParameters>>(
         m, "RegCapCreditParameters")
         .def(py::init<double, double>(),
              py::arg("counterparty_weighting"),
@@ -876,21 +874,21 @@ PYBIND11_MODULE(sjd, m)
         .def("counterparty_weighting", &sjd::RegCapCreditParameters::getCounterpartyWeighting)
         .def("capital_charge", &sjd::RegCapCreditParameters::getCapitalCharge);
 
-    py::class_<sjd::RegulatoryCapital, boost::shared_ptr<sjd::RegulatoryCapital>>(
+    py::class_<sjd::RegulatoryCapital, std::shared_ptr<sjd::RegulatoryCapital>>(
         m, "RegulatoryCapital")
         .def("is_ok", &sjd::RegulatoryCapital::isOK)
         .def("validation_report", &sjd::RegulatoryCapital::validationReport)
         .def("get_regulatory_capital", [](sjd::RegulatoryCapital& capital,
-                                          boost::shared_ptr<sjd::RatesEnvironment> environment) {
+                                          std::shared_ptr<sjd::RatesEnvironment> environment) {
             return capital.getRegulatoryCapital(environment);
         }, py::arg("rates_environment"));
 
-    py::class_<sjd::Margin, boost::shared_ptr<sjd::Margin>>(m, "Margin")
+    py::class_<sjd::Margin, std::shared_ptr<sjd::Margin>>(m, "Margin")
         .def("is_ok", &sjd::Margin::isOK)
         .def("get_margin_balance", &sjd::Margin::getMarginBalance)
         .def("set_margin_balance", &sjd::Margin::setMarginBalance, py::arg("balance"));
 
-    py::class_<sjd::SimpleMargin, sjd::Margin, boost::shared_ptr<sjd::SimpleMargin>>(m, "SimpleMargin")
+    py::class_<sjd::SimpleMargin, sjd::Margin, std::shared_ptr<sjd::SimpleMargin>>(m, "SimpleMargin")
         .def(py::init([](const py::object& anchor,
                          bool use_my_threshold,
                          double my_threshold,
@@ -898,7 +896,7 @@ PYBIND11_MODULE(sjd, m)
                          double cpty_threshold,
                          double minimum_transfer_amount,
                          double rounding) {
-                 return boost::shared_ptr<sjd::SimpleMargin>(
+                 return std::shared_ptr<sjd::SimpleMargin>(
                      new sjd::SimpleMargin(
                          to_ql_date(anchor),
                          use_my_threshold,
@@ -918,13 +916,13 @@ PYBIND11_MODULE(sjd, m)
              "Variation-margin CSA. Initial margin is not part of this model.")
         .def("get_margin_call", &sjd::SimpleMargin::getMarginCall, py::arg("mtm"));
 
-    py::class_<sjd::Portfolio, sjd::Contract, boost::shared_ptr<sjd::Portfolio>>(m, "Portfolio")
+    py::class_<sjd::Portfolio, sjd::Contract, std::shared_ptr<sjd::Portfolio>>(m, "Portfolio")
         .def(py::init([](const py::list& contracts) {
-                 return boost::shared_ptr<sjd::Portfolio>(new sjd::Portfolio(contracts_from(contracts)));
+                 return std::shared_ptr<sjd::Portfolio>(new sjd::Portfolio(contracts_from(contracts)));
              }),
              py::arg("contracts"))
-        .def(py::init([](const py::list& contracts, boost::shared_ptr<sjd::Margin> margin) {
-                 return boost::shared_ptr<sjd::Portfolio>(
+        .def(py::init([](const py::list& contracts, std::shared_ptr<sjd::Margin> margin) {
+                 return std::shared_ptr<sjd::Portfolio>(
                      new sjd::Portfolio(contracts_from(contracts), margin));
              }),
              py::arg("contracts"),
@@ -936,17 +934,17 @@ PYBIND11_MODULE(sjd, m)
         .def("get_margin_balance", &sjd::Portfolio::getMarginBalance)
         .def("set_margin_balance", &sjd::Portfolio::setMarginBalance, py::arg("balance"))
         .def("get_margin_call", [](sjd::Portfolio& portfolio,
-                                   boost::shared_ptr<sjd::RatesEnvironment> re) {
+                                   std::shared_ptr<sjd::RatesEnvironment> re) {
             return portfolio.getMarginCall(re);
         }, py::arg("rates_environment"));
 
-    py::class_<sjd::PortfolioB2CEM, sjd::Portfolio, boost::shared_ptr<sjd::PortfolioB2CEM>>(
+    py::class_<sjd::PortfolioB2CEM, sjd::Portfolio, std::shared_ptr<sjd::PortfolioB2CEM>>(
         m, "PortfolioB2CEM")
         .def(py::init([](const py::list& contracts,
-                         boost::shared_ptr<sjd::RegCapUnderlyingFactors> factors,
-                         boost::shared_ptr<sjd::RegCapCreditParameters> credit,
+                         std::shared_ptr<sjd::RegCapUnderlyingFactors> factors,
+                         std::shared_ptr<sjd::RegCapCreditParameters> credit,
                          bool optimise) {
-                 return boost::shared_ptr<sjd::PortfolioB2CEM>(
+                 return std::shared_ptr<sjd::PortfolioB2CEM>(
                      new sjd::PortfolioB2CEM(
                          contract_inputs_from(contracts), factors, credit, optimise));
              }),
@@ -955,11 +953,11 @@ PYBIND11_MODULE(sjd, m)
              py::arg("credit"),
              py::arg("optimise") = false)
         .def(py::init([](const py::list& contracts,
-                         boost::shared_ptr<sjd::RegCapUnderlyingFactors> factors,
-                         boost::shared_ptr<sjd::RegCapCreditParameters> credit,
+                         std::shared_ptr<sjd::RegCapUnderlyingFactors> factors,
+                         std::shared_ptr<sjd::RegCapCreditParameters> credit,
                          bool optimise,
-                         boost::shared_ptr<sjd::Margin> margin) {
-                 return boost::shared_ptr<sjd::PortfolioB2CEM>(
+                         std::shared_ptr<sjd::Margin> margin) {
+                 return std::shared_ptr<sjd::PortfolioB2CEM>(
                      new sjd::PortfolioB2CEM(
                          contract_inputs_from(contracts), factors, credit, optimise, margin));
              }),
@@ -972,20 +970,20 @@ PYBIND11_MODULE(sjd, m)
         .def("error_messages", &sjd::PortfolioB2CEM::getErrorMessagesAsString)
         .def("validation_report", &sjd::PortfolioB2CEM::validationReport)
         .def("validate_report", [](sjd::PortfolioB2CEM& portfolio,
-                                   boost::shared_ptr<sjd::RatesEnvironment> environment) {
+                                   std::shared_ptr<sjd::RatesEnvironment> environment) {
             return portfolio.validateReport(environment);
         })
         .def("regulatory_capital", &sjd::PortfolioB2CEM::regulatoryCapital)
         .def("get_regulatory_capital", [](sjd::PortfolioB2CEM& portfolio,
-                                          boost::shared_ptr<sjd::RatesEnvironment> environment) {
+                                          std::shared_ptr<sjd::RatesEnvironment> environment) {
             return portfolio.getRegulatoryCapital(environment);
         }, py::arg("rates_environment"));
 
     py::class_<sjd::SingleFactorEconomicScenarioGenerator,
-               boost::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator>>(
+               std::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator>>(
         m, "SingleFactorEconomicScenarioGenerator")
-        .def(py::init([](boost::shared_ptr<sjd::RatesEnvironment> environment) {
-                 return boost::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator>(
+        .def(py::init([](std::shared_ptr<sjd::RatesEnvironment> environment) {
+                 return std::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator>(
                      new sjd::SingleFactorEconomicScenarioGenerator(environment));
              }),
              py::arg("rates_environment"))
@@ -995,12 +993,12 @@ PYBIND11_MODULE(sjd, m)
              py::arg("seed"),
              "Reseed the generator. The next run_monte_carlo draws the same paths for the same seed.");
 
-    py::class_<sjd::PortfolioEvolver, boost::shared_ptr<sjd::PortfolioEvolver>>(m, "PortfolioEvolver")
+    py::class_<sjd::PortfolioEvolver, std::shared_ptr<sjd::PortfolioEvolver>>(m, "PortfolioEvolver")
         .def(py::init(&make_evolver),
              py::arg("portfolio"),
              py::arg("path_generator"),
              py::arg("simulation_dates"),
-             py::arg("capital") = static_cast<boost::shared_ptr<sjd::RegulatoryCapital>>(nullptr),
+             py::arg("capital") = static_cast<std::shared_ptr<sjd::RegulatoryCapital>>(nullptr),
              py::kw_only(),
              py::arg("holding_period") = 0,
              py::arg("holding_period_calendar") = py::none(),
@@ -1063,8 +1061,8 @@ PYBIND11_MODULE(sjd, m)
         });
 
     m.def("simulate",
-          [](boost::shared_ptr<sjd::Portfolio> portfolio,
-             boost::shared_ptr<sjd::RatesEnvironment> environment,
+          [](std::shared_ptr<sjd::Portfolio> portfolio,
+             std::shared_ptr<sjd::RatesEnvironment> environment,
              const py::iterable& simulation_dates,
              unsigned long paths,
              const py::object& seed,
@@ -1072,11 +1070,11 @@ PYBIND11_MODULE(sjd, m)
              bool by_trade,
              size_t holding_period,
              const py::object& holding_period_calendar) {
-              boost::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator> generator(
+              std::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator> generator(
                   new sjd::SingleFactorEconomicScenarioGenerator(environment));
               if (!seed.is_none())
                   generator->setRandomSeed(seed.cast<long>());
-              boost::shared_ptr<sjd::PortfolioEvolver> evolver = make_evolver(
+              std::shared_ptr<sjd::PortfolioEvolver> evolver = make_evolver(
                   portfolio, generator, simulation_dates, nullptr, holding_period, holding_period_calendar);
               sjd::SimulatedPaths simulated;
               {

@@ -1,4 +1,4 @@
-﻿#ifndef structure_test
+#ifndef structure_test
 #define structure_test
 
 #include <iostream>
@@ -28,7 +28,7 @@ class StructureTest
 {
     
   public:
-    static boost::shared_ptr<RegCapUnderlyingFactors> getDefaultRegCapUnderlyingFactors();
+    static std::shared_ptr<RegCapUnderlyingFactors> getDefaultRegCapUnderlyingFactors();
 
     static void testGradient();
     static void testIsUncappedOnTheLeft();

@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Volatility/VolatilityCurveCMA.h>
+#include <sjd/rates/Volatility/VolatilityCurveCMA.h>
 
 #include <boost/lexical_cast.hpp> // convert numbers to string
 
@@ -15,13 +15,13 @@ namespace sjd
     VolatilityCurveCMA::VolatilityCurveCMA(Date anchorDateInput, 
                                     vector<Date> observationDatesInput, 
                                     vector<double> volatilityInput, 
-                                    boost::shared_ptr<DayCounter> dayCounterInput,
+                                    std::shared_ptr<DayCounter> dayCounterInput,
                                     ArrayInterpolatorType typeInput,
                                     bool allowExtrapolationInput) 
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilityCurveCMA"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilityCurveCMA"));
 
-        curve = boost::shared_ptr<CalendarMonthAverageCurve>(new CalendarMonthAverageCurve(anchorDateInput, 
+        curve = std::shared_ptr<CalendarMonthAverageCurve>(new CalendarMonthAverageCurve(anchorDateInput, 
                                                                   observationDatesInput, 
                                                                   volatilityInput,
                                                                   typeInput,
@@ -145,7 +145,7 @@ namespace sjd
         return type;
     }
 
-    boost::shared_ptr<VolatilityRateSource> VolatilityCurveCMA::parallelBump(double spread)
+    std::shared_ptr<VolatilityRateSource> VolatilityCurveCMA::parallelBump(double spread)
     {
         vector<Date> rolledObservationDates;
         vector<double> rolledVols; 
@@ -155,7 +155,7 @@ namespace sjd
             rolledVols.push_back(getVolatility(getObservationDates()[i])+spread);
         }
 
-       return boost::shared_ptr<VolatilityCurveCMA>(new VolatilityCurveCMA(anchorDate, 
+       return std::shared_ptr<VolatilityCurveCMA>(new VolatilityCurveCMA(anchorDate, 
                                                                       rolledObservationDates, 
                                                                       rolledVols, 
                                                                       dayCounter,
@@ -163,7 +163,7 @@ namespace sjd
                                                                       allowExtrapolation));     
      }
 
-    boost::shared_ptr<VolatilityRateSource> VolatilityCurveCMA::rollForward(Date toDate)
+    std::shared_ptr<VolatilityRateSource> VolatilityCurveCMA::rollForward(Date toDate)
     {
         vector<Date> rolledObservationDates;
         vector<double> rolledVols; 
@@ -183,7 +183,7 @@ namespace sjd
                 }
             }
         }
-        return boost::shared_ptr<VolatilityCurveCMA>(new VolatilityCurveCMA(toDate, 
+        return std::shared_ptr<VolatilityCurveCMA>(new VolatilityCurveCMA(toDate, 
                                                                       rolledObservationDates, 
                                                                       rolledVols, 
                                                                       dayCounter,

@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Forward/Stochastic/ForwardCurveStochasticFX.h>
+#include <sjd/rates/Forward/Stochastic/ForwardCurveStochasticFX.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -11,8 +11,8 @@ namespace sjd
     {
         double spotOnAnchor(double spot,
                             Date spotDate,
-                            const boost::shared_ptr<DiscountRateSource>& domesticDRS,
-                            const boost::shared_ptr<DiscountRateSource>& foreignDRS)
+                            const std::shared_ptr<DiscountRateSource>& domesticDRS,
+                            const std::shared_ptr<DiscountRateSource>& foreignDRS)
         {
             if (!domesticDRS->extendsTo(spotDate) || !foreignDRS->extendsTo(spotDate))
             {
@@ -25,29 +25,29 @@ namespace sjd
     ForwardCurveStochasticFX::ForwardCurveStochasticFX(Date anchorDate,
                                                        double spot,
                                                        Date spotDate,
-                                                       boost::shared_ptr<DiscountRateSource> domesticDRS,
-                                                       boost::shared_ptr<DiscountRateSource> foreignDRS,
-                                                       boost::shared_ptr<VolatilityRateSource> vrs)
+                                                       std::shared_ptr<DiscountRateSource> domesticDRS,
+                                                       std::shared_ptr<DiscountRateSource> foreignDRS,
+                                                       std::shared_ptr<VolatilityRateSource> vrs)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveStochasticFX"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveStochasticFX"));
         setParameters(anchorDate, spotOnAnchor(spot, spotDate, domesticDRS, foreignDRS), domesticDRS, foreignDRS, vrs);
     }
 
     ForwardCurveStochasticFX::ForwardCurveStochasticFX(Date anchorDate,
                                                        double spotAtT0,
-                                                       boost::shared_ptr<DiscountRateSource> domesticDRS,
-                                                       boost::shared_ptr<DiscountRateSource> foreignDRS,
-                                                       boost::shared_ptr<VolatilityRateSource> vrs)
+                                                       std::shared_ptr<DiscountRateSource> domesticDRS,
+                                                       std::shared_ptr<DiscountRateSource> foreignDRS,
+                                                       std::shared_ptr<VolatilityRateSource> vrs)
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveStochasticFX"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveStochasticFX"));
         setParameters(anchorDate, spotAtT0, domesticDRS, foreignDRS, vrs);
     }
 
     void ForwardCurveStochasticFX::setParameters(Date anchorDateInput,
                                                  double spotInput,
-                                                 boost::shared_ptr<DiscountRateSource> domesticDRSInput,
-                                                 boost::shared_ptr<DiscountRateSource> foreignDRSInput,
-                                                 boost::shared_ptr<VolatilityRateSource> vrs)
+                                                 std::shared_ptr<DiscountRateSource> domesticDRSInput,
+                                                 std::shared_ptr<DiscountRateSource> foreignDRSInput,
+                                                 std::shared_ptr<VolatilityRateSource> vrs)
     {
         quotes.setInterestDifferential(anchorDateInput,
                                        spotInput,
@@ -71,8 +71,8 @@ namespace sjd
         return quotes.spotAtT0();
     }
 
-    void ForwardCurveStochasticFX::setRateSources(boost::shared_ptr<DiscountRateSource> domesticDRSInput,
-                                                  boost::shared_ptr<DiscountRateSource> foreignDRSInput)
+    void ForwardCurveStochasticFX::setRateSources(std::shared_ptr<DiscountRateSource> domesticDRSInput,
+                                                  std::shared_ptr<DiscountRateSource> foreignDRSInput)
     {
         quotes.setRateSources(domesticDRSInput, foreignDRSInput);
         allowExtrapolation = quotes.allowsExtrapolation();
@@ -126,12 +126,12 @@ namespace sjd
         return quotes.getForward(toDate);
     }
 
-    boost::shared_ptr<ForwardRateSource> ForwardCurveStochasticFX::rollForward(Date toDate, double normalRV)
+    std::shared_ptr<ForwardRateSource> ForwardCurveStochasticFX::rollForward(Date toDate, double normalRV)
     {
         return quotes.rollForward(toDate, normalRV, isInRange(toDate));
     }
 
-    boost::shared_ptr<ForwardRateSource> ForwardCurveStochasticFX::rollForward(Date toDate,
+    std::shared_ptr<ForwardRateSource> ForwardCurveStochasticFX::rollForward(Date toDate,
                                                                                double normalRV,
                                                                                vector<Date> rateSetDates,
                                                                                vector<double>& rateSetsFromAnchorToDate)
@@ -150,12 +150,12 @@ namespace sjd
         quotes.preparePath(forwardSimulationDates, vector<Date>());
     }
 
-    vector<boost::shared_ptr<ForwardRateSource>> ForwardCurveStochasticFX::rollForward()
+    vector<std::shared_ptr<ForwardRateSource>> ForwardCurveStochasticFX::rollForward()
     {
         return quotes.rollPath(normalRVs, forwardSimulationDates);
     }
 
-    vector<boost::shared_ptr<ForwardRateSource>> ForwardCurveStochasticFX::rollForward(
+    vector<std::shared_ptr<ForwardRateSource>> ForwardCurveStochasticFX::rollForward(
         vector<Date> rateSetDates,
         vector<double>& rateSetsFromAnchorToFinalRollDate)
     {

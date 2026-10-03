@@ -1,4 +1,4 @@
-﻿
+
 #ifndef SJD_DELTA_INCLUDED
 #define SJD_DELTA_INCLUDED
 
@@ -21,7 +21,7 @@ namespace sjd
         BlackPutImpliedStrike(double delta, double forward, double standardDeviation) :     
             delta(delta/100), forward(forward), standardDeviation(standardDeviation) 
         {
-            put = boost::shared_ptr<Black76Option>(new Black76Put(forward, forward, standardDeviation, 1.0));
+            put = std::shared_ptr<Black76Option>(new Black76Put(forward, forward, standardDeviation, 1.0));
         };
         
         double operator()(double strikeEstimate) const 
@@ -33,7 +33,7 @@ namespace sjd
     
     private:
         double delta, forward, standardDeviation;
-        boost::shared_ptr<Black76Option> put;
+        std::shared_ptr<Black76Option> put;
     };
 
 
@@ -76,8 +76,8 @@ namespace sjd
         double calculateDeltaFromStrike(QuantLib::Date date, double strike, double forward) const;
         double calculateStrikeFromDelta(QuantLib::Date date, double delta, double forward) const;
       
-        virtual boost::shared_ptr<VolatilityRateSource> parallelBump(double spread);
-        virtual boost::shared_ptr<VolatilityRateSource> rollForward(QuantLib::Date toDate);
+        virtual std::shared_ptr<VolatilityRateSource> parallelBump(double spread);
+        virtual std::shared_ptr<VolatilityRateSource> rollForward(QuantLib::Date toDate);
     };
    
 
@@ -110,7 +110,7 @@ namespace sjd
         bool isOKVariable, extrapolate;
         std::vector<double> times, delta;
         QuantLib::Matrix volatilityMatrix;
-        boost::shared_ptr<QuantLib::Interpolation2D> interpolator;
+        std::shared_ptr<QuantLib::Interpolation2D> interpolator;
         std::string errorMessage, interpolationType, className;
     };
 }

@@ -1,4 +1,4 @@
-﻿#ifndef europeanforwardcontract_test
+#ifndef europeanforwardcontract_test
 #define europeanforwardcontract_test
 
 #include <iostream>
@@ -27,8 +27,8 @@ class ForwardContactTest
 
     // Returns a EuropeanForward which matures 2 years after the anchor date
     // using a null calendar
-    static boost::shared_ptr<EuropeanForward> getDefaultEuropeanForward(QuantLib::Date anchorDate);
-    static boost::shared_ptr<AsianForward> getDefaultAsianForward(QuantLib::Date anchorDate);
+    static std::shared_ptr<EuropeanForward> getDefaultEuropeanForward(QuantLib::Date anchorDate);
+    static std::shared_ptr<AsianForward> getDefaultAsianForward(QuantLib::Date anchorDate);
 
     static void testBuySell();
     static void testStrike();

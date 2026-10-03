@@ -1,4 +1,4 @@
-﻿#include "ForwardContractTest.h"
+#include "ForwardContractTest.h"
 
 using namespace std;
 using namespace QuantLib;
@@ -11,20 +11,20 @@ using namespace boost::math;
 using namespace sjd;
 
 
-boost::shared_ptr<EuropeanForward> ForwardContactTest::getDefaultEuropeanForward(Date anchorDate)
+std::shared_ptr<EuropeanForward> ForwardContactTest::getDefaultEuropeanForward(Date anchorDate)
 {
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
     Date rateSetDate = nullCalendar->advance(anchorDate, 2, Years);
     Date settlement = nullCalendar->advance(rateSetDate, 2, Days);
 
     double strike = 100.0;
     double volume = 150;
-    return boost::shared_ptr<EuropeanForward>(new  EuropeanForward(rateSetDate, settlement, strike, volume, BUY));
+    return std::shared_ptr<EuropeanForward>(new  EuropeanForward(rateSetDate, settlement, strike, volume, BUY));
 }
 
-boost::shared_ptr<AsianForward> ForwardContactTest::getDefaultAsianForward(Date anchorDate)
+std::shared_ptr<AsianForward> ForwardContactTest::getDefaultAsianForward(Date anchorDate)
 {
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
     Date rateSetDate = nullCalendar->advance(anchorDate, 2, Years);
     set<Date> averagingDates;
     Date d = Date(1, rateSetDate.month(), rateSetDate.year());
@@ -39,7 +39,7 @@ boost::shared_ptr<AsianForward> ForwardContactTest::getDefaultAsianForward(Date 
     double strike = 100;
     double volume = 50;
 
-    return boost::shared_ptr<AsianForward>(new AsianForward(averagingDates, settlement, strike, volume, BUY));
+    return std::shared_ptr<AsianForward>(new AsianForward(averagingDates, settlement, strike, volume, BUY));
 }
 
 
@@ -48,7 +48,7 @@ void ForwardContactTest::testBuySell()
     BOOST_TEST_MESSAGE("Testing ForwardContract ...");
    
    Date anchorDate(1,Jan,2013);
-    boost::shared_ptr<EuropeanForward> fc = getDefaultEuropeanForward(anchorDate);
+    std::shared_ptr<EuropeanForward> fc = getDefaultEuropeanForward(anchorDate);
     BuySell bs = SELL;
     fc->setBuySell(bs);
     BuySell bs2 = fc->getBuySell();
@@ -58,9 +58,9 @@ void ForwardContactTest::testBuySell()
 void ForwardContactTest::testStrike()
 {
     Date anchorDate(1,Jan,2013);
-    boost::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
-    boost::shared_ptr<DiscountCurve> dc; 
-    boost::shared_ptr<ForwardCurveDeterministic> fc;
+    std::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
+    std::shared_ptr<DiscountCurve> dc; 
+    std::shared_ptr<ForwardCurveDeterministic> fc;
     contract->validate();
     BOOST_CHECK(contract->isOK());
     double strike = -1;
@@ -73,9 +73,9 @@ void ForwardContactTest::testStrike()
 void ForwardContactTest::testVolume()
 {
     Date anchorDate(1,Jan,2013);
-    boost::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
-    boost::shared_ptr<DiscountCurve> dc; 
-    boost::shared_ptr<ForwardCurveDeterministic> fc;
+    std::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
+    std::shared_ptr<DiscountCurve> dc; 
+    std::shared_ptr<ForwardCurveDeterministic> fc;
     contract->validate();
     BOOST_CHECK(contract->isOK());
     double volume = -1;
@@ -88,12 +88,12 @@ void ForwardContactTest::testVolume()
 void ForwardContactTest::testMaturityDate()
 {
     Date anchorDate(1,Jan,2013);
-    boost::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
-    boost::shared_ptr<DiscountCurve> dc; 
-    boost::shared_ptr<ForwardCurveDeterministic> fc;
+    std::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
+    std::shared_ptr<DiscountCurve> dc; 
+    std::shared_ptr<ForwardCurveDeterministic> fc;
     contract->validate();
     BOOST_CHECK(contract->isOK());
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
     Date maturityDate = nullCalendar->advance(anchorDate, 3, Years);
     contract->setMaturityDate(maturityDate);
     contract->validate();
@@ -104,12 +104,12 @@ void ForwardContactTest::testMaturityDate()
 void ForwardContactTest::testSettlementDate()
 {
     Date anchorDate(1,Jan,2013);
-    boost::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
-    boost::shared_ptr<DiscountCurve> dc; 
-    boost::shared_ptr<ForwardCurveDeterministic> fc;
+    std::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
+    std::shared_ptr<DiscountCurve> dc; 
+    std::shared_ptr<ForwardCurveDeterministic> fc;
     contract->validate();
     BOOST_CHECK(contract->isOK());
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
     Date settlementDate = nullCalendar->advance(anchorDate, 1, Years);
     contract->setSettlementDate(settlementDate);
     contract->validate();
@@ -120,7 +120,7 @@ void ForwardContactTest::testSettlementDate()
 void ForwardContactTest::testValidationReport()
 {
     Date anchorDate(1, Jan, 2013);
-    boost::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
+    std::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
 
     // A snapshot does not validate or mutate the contract.
     contract->setStrike(-1.0);
@@ -146,7 +146,7 @@ void ForwardContactTest::testValidationReport()
     BOOST_CHECK(correctedReport.getIssues().empty());
     BOOST_CHECK(contract->getErrorMessages().empty());
 
-    boost::shared_ptr<RatesEnvironment> emptyEnvironment(
+    std::shared_ptr<RatesEnvironment> emptyEnvironment(
         new RatesEnvironment(anchorDate));
     ValidationReport marketReport = contract->validateReport(emptyEnvironment);
     BOOST_REQUIRE(!marketReport.isOK());
@@ -162,11 +162,11 @@ void ForwardContactTest::testValidationReport()
 void ForwardContactTest::testValue() 
 {
 
-    boost::shared_ptr<RatesEnvironment> re;
+    std::shared_ptr<RatesEnvironment> re;
     GenerateRates gr = GenerateRates();
 
-    boost::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    boost::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
+    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
 
     Date anchorDate(1,Jan,2013);
     Date tPlus2 = nullCalendar->advance(anchorDate, 2, Days);
@@ -181,9 +181,9 @@ void ForwardContactTest::testValue()
 
     double spot = 100, naccRFR = 0.065, naccIRDiff = 0.045, vol = 0.2;
     
-    boost::shared_ptr<DiscountCurve> dc = gr.getDiscountCurve(dayCounter, nullCalendar, anchorDate, 10, naccRFR, manditoryDates);
-    boost::shared_ptr<ForwardCurveDeterministic> fc = gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, spot, naccIRDiff, manditoryDates);
-    re = boost::shared_ptr<RatesEnvironment>(new RatesEnvironment(anchorDate));
+    std::shared_ptr<DiscountCurve> dc = gr.getDiscountCurve(dayCounter, nullCalendar, anchorDate, 10, naccRFR, manditoryDates);
+    std::shared_ptr<ForwardCurveDeterministic> fc = gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, spot, naccIRDiff, manditoryDates);
+    re = std::shared_ptr<RatesEnvironment>(new RatesEnvironment(anchorDate));
     re->setDRS(dc);
     re->setFRS(fc);
 
@@ -214,7 +214,7 @@ void ForwardContactTest::testValue()
     manditoryDates.clear();
     dc = gr.getDiscountCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, naccRFR);
     fc = gr.getSimpleForwardCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, spot, naccIRDiff);
-    re = boost::shared_ptr<RatesEnvironment>(new RatesEnvironment(dayAfterSettlement));
+    re = std::shared_ptr<RatesEnvironment>(new RatesEnvironment(dayAfterSettlement));
     re->setDRS(dc);
     re->setFRS(fc);
 
@@ -223,12 +223,12 @@ void ForwardContactTest::testValue()
 
 void ForwardContactTest::testGetPayoffAfterMaturity()
 {
-    boost::shared_ptr<DayCounter> dayCounter = boost::shared_ptr<DayCounter>(new Actual365Fixed());
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
 
     Date anchorDate(1,Jan,2013);
 
-    boost::shared_ptr<EuropeanForward> fwd = getDefaultEuropeanForward(anchorDate);
+    std::shared_ptr<EuropeanForward> fwd = getDefaultEuropeanForward(anchorDate);
 
     double v1 = fwd->getVolume();
     double p1 = fwd->getPremiumAmount();
@@ -243,13 +243,13 @@ void ForwardContactTest::testGetPayoffAfterMaturity()
 void ForwardContactTest::testAsianAveragingDates()
 {
     Date anchorDate(1,Jan,2013);
-    boost::shared_ptr<AsianForward> contract = getDefaultAsianForward(anchorDate);
-    boost::shared_ptr<DiscountCurve> dc; 
-    boost::shared_ptr<ForwardCurveDeterministic> fc;
-    boost::shared_ptr<DailyFixingCurve> fixingCurve, fixingCurve2;
+    std::shared_ptr<AsianForward> contract = getDefaultAsianForward(anchorDate);
+    std::shared_ptr<DiscountCurve> dc; 
+    std::shared_ptr<ForwardCurveDeterministic> fc;
+    std::shared_ptr<DailyFixingCurve> fixingCurve, fixingCurve2;
     BOOST_CHECK(contract->isOK());
 
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
     Date rateSetDate = nullCalendar->advance(anchorDate, 3, Years); // after settlement
     set<Date> averagingDates;
     Date d = Date(1, rateSetDate.month(), rateSetDate.year());
@@ -268,10 +268,10 @@ void ForwardContactTest::testAsianAveragingDates()
 void ForwardContactTest::testFixingAndForwardDates()
 {
     Date anchorDate(1,Jan,2013);
-    boost::shared_ptr<AsianForward> contract = getDefaultAsianForward(anchorDate);
-    boost::shared_ptr<DiscountCurve> dc; 
-    boost::shared_ptr<ForwardCurveDeterministic> fc;
-    boost::shared_ptr<DailyFixingCurve> fixingCurve, fixingCurve2;
+    std::shared_ptr<AsianForward> contract = getDefaultAsianForward(anchorDate);
+    std::shared_ptr<DiscountCurve> dc; 
+    std::shared_ptr<ForwardCurveDeterministic> fc;
+    std::shared_ptr<DailyFixingCurve> fixingCurve, fixingCurve2;
     BOOST_CHECK(contract->isOK());
 
     vector<Date> fixingDates, forwardDates, averagingDates;
@@ -289,11 +289,11 @@ void ForwardContactTest::testFixingAndForwardDates()
 void ForwardContactTest::testAsianForward() 
 {
 
-    boost::shared_ptr<RatesEnvironment> re;
+    std::shared_ptr<RatesEnvironment> re;
     GenerateRates gr = GenerateRates();
 
-    boost::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
 
     Date anchorDate(1,Jan,2013);
     Date tPlus2 = nullCalendar->advance(anchorDate, 2, Days);
@@ -316,10 +316,10 @@ void ForwardContactTest::testAsianForward()
 
     double spot = 100, naccRFR = 0.065, naccIRDiff = 0.045, vol = 0.2;
     
-    boost::shared_ptr<DiscountCurve> dc = gr.getDiscountCurve(dayCounter, nullCalendar, anchorDate, 10, naccRFR, manditoryDates);
-    boost::shared_ptr<ForwardCurveDeterministic> fc = gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, spot, naccIRDiff, manditoryDates);
-    boost::shared_ptr<DailyFixingCurve> fixingCurve = gr.buildFixingCurve(90.0, averagingDatesAsVector);
-    re = boost::shared_ptr<RatesEnvironment>(new RatesEnvironment(anchorDate));
+    std::shared_ptr<DiscountCurve> dc = gr.getDiscountCurve(dayCounter, nullCalendar, anchorDate, 10, naccRFR, manditoryDates);
+    std::shared_ptr<ForwardCurveDeterministic> fc = gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, spot, naccIRDiff, manditoryDates);
+    std::shared_ptr<DailyFixingCurve> fixingCurve = gr.buildFixingCurve(90.0, averagingDatesAsVector);
+    re = std::shared_ptr<RatesEnvironment>(new RatesEnvironment(anchorDate));
     re->setDRS(dc);
     re->setFRS(fc);
     re->setFixingRS(fixingCurve);
@@ -359,7 +359,7 @@ void ForwardContactTest::testAsianForward()
     manditoryDates.clear();
     dc = gr.getDiscountCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, naccRFR);
     fc = gr.getSimpleForwardCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, spot, naccIRDiff);
-    re = boost::shared_ptr<RatesEnvironment>(new RatesEnvironment(dayAfterSettlement));
+    re = std::shared_ptr<RatesEnvironment>(new RatesEnvironment(dayAfterSettlement));
     re->setDRS(dc);
     re->setFRS(fc);
     BOOST_CHECK(abs(contract2.getValue(re)) < EPSILON_FOR_DOUBLES);
@@ -367,12 +367,12 @@ void ForwardContactTest::testAsianForward()
 
 void ForwardContactTest::testAsianGetPayoffAfterMaturity()
 {
-    boost::shared_ptr<DayCounter> dayCounter = boost::shared_ptr<DayCounter>(new Actual365Fixed());
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
 
     Date anchorDate(1,Jan,2013);
 
-    boost::shared_ptr<AsianForward> fwd = getDefaultAsianForward(anchorDate);
+    std::shared_ptr<AsianForward> fwd = getDefaultAsianForward(anchorDate);
 
     double v1 = fwd->getVolume();
     double p1 = fwd->getPremiumAmount();

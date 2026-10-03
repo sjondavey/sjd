@@ -1,4 +1,4 @@
-﻿#ifndef PORTFOLIO_INCLUDED
+#ifndef PORTFOLIO_INCLUDED
 #define PORTFOLIO_INCLUDED
 // #pragma once
 
@@ -19,35 +19,35 @@ namespace sjd
     {
     public:
         Portfolio() {};
-        Portfolio(std::vector<boost::shared_ptr<SingleInstrumentContract>> input);
-        Portfolio(std::vector<boost::shared_ptr<SingleInstrumentContract>> input, 
-                  boost::shared_ptr<Margin> margin);
-        Portfolio(std::vector<boost::shared_ptr<Contract>> input);
-        Portfolio(std::vector<boost::shared_ptr<Contract>> input,
-                  boost::shared_ptr<Margin> margin);
+        Portfolio(std::vector<std::shared_ptr<SingleInstrumentContract>> input);
+        Portfolio(std::vector<std::shared_ptr<SingleInstrumentContract>> input, 
+                  std::shared_ptr<Margin> margin);
+        Portfolio(std::vector<std::shared_ptr<Contract>> input);
+        Portfolio(std::vector<std::shared_ptr<Contract>> input,
+                  std::shared_ptr<Margin> margin);
         Portfolio(Portfolio &Portfolio);
         // Keeps a reference the the same underlying contracts
         std::unique_ptr<Contract> clone() override;
         virtual ~Portfolio() {};
 
         virtual void validate();
-        virtual void validate(boost::shared_ptr<RatesEnvironment> re);
+        virtual void validate(std::shared_ptr<RatesEnvironment> re);
         virtual std::string validationRoot() const { return "portfolio"; }
 
         bool isMargined();
-        boost::shared_ptr<Margin> getMargin();
+        std::shared_ptr<Margin> getMargin();
         void setMarginBalance(double balance);
         double getMarginBalance();
-        double getMarginCall(boost::shared_ptr<RatesEnvironment> re);
+        double getMarginCall(std::shared_ptr<RatesEnvironment> re);
         void updateMarginBalanceWithCall(double marginCall);
                                          
-        std::vector<boost::shared_ptr<SingleInstrumentContract>> getUnderlyingSingleInstrumentContracts();
+        std::vector<std::shared_ptr<SingleInstrumentContract>> getUnderlyingSingleInstrumentContracts();
 
     protected:
         virtual void setInputVariables();
         
         bool hasMargin;
-        boost::shared_ptr<Margin> margin;
+        std::shared_ptr<Margin> margin;
    };
 
 }

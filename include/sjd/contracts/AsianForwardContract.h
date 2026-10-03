@@ -1,4 +1,4 @@
-﻿#ifndef ASIANFORWARDCONTRACT_INCLUDED
+#ifndef ASIANFORWARDCONTRACT_INCLUDED
 #define ASIANFORWARDCONTRACT_INCLUDED
 #pragma once
 
@@ -36,19 +36,19 @@ namespace sjd
         virtual ~AsianForward() {};
 
         virtual void validate();
-        virtual void validate(boost::shared_ptr<RatesEnvironment> re);
+        virtual void validate(std::shared_ptr<RatesEnvironment> re);
         virtual std::string validationRoot() const { return "asian_forward"; }
 
         virtual void setAveragingDates(std::set<QuantLib::Date> averagingDates); 
 
-        virtual double getValue(boost::shared_ptr<RatesEnvironment> re);
+        virtual double getValue(std::shared_ptr<RatesEnvironment> re);
         // Overwrite to ensure fwdFwdFactors are Multiplicative to the *average* of the Averaging Rates
         virtual void getFixingAndForwardRates(QuantLib::Date valuationDate, 
                                               std::vector<double> &fixingRates, 
                                               std::vector<double> &forwardRates,
-                                              boost::shared_ptr<RatesEnvironment> re);
+                                              std::shared_ptr<RatesEnvironment> re);
 
-        virtual std::string toStringRates(boost::shared_ptr<RatesEnvironment> re);
+        virtual std::string toStringRates(std::shared_ptr<RatesEnvironment> re);
 
     protected:
         void constructorCommon(std::set<QuantLib::Date> averagingDates, 

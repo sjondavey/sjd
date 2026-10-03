@@ -1,4 +1,4 @@
-﻿#ifndef SJD_IHAVEMARKETRATESTRESSES_INCLUDED
+#ifndef SJD_IHAVEMARKETRATESTRESSES_INCLUDED
 #define SJD_IHAVEMARKETRATESTRESSES_INCLUDED
 #pragma once
 
@@ -19,7 +19,7 @@ namespace sjd
     public:
         virtual ~IHaveMarketRateStresses() {};
 
-        virtual std::vector<std::pair<std::string, boost::shared_ptr<RateSource>>> getMarketRateStresses() = 0;
+        virtual std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> getMarketRateStresses() = 0;
     };
 }
 

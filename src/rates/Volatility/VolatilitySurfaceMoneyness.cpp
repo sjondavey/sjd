@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Volatility/VolatilitySurfaceMoneyness.h>
+#include <sjd/rates/Volatility/VolatilitySurfaceMoneyness.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -18,7 +18,7 @@ namespace sjd
                                        SurfaceInterpolatorType interpolatorTypeInput,
                                        bool extrapolateInput) 
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceMoneyness"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceMoneyness"));
 
         setInputs(anchorDateInput, 
                   observationDatesInput, 
@@ -35,7 +35,7 @@ namespace sjd
                                        SurfaceInterpolatorType interpolatorTypeInput,
                                        bool extrapolateInput) 
     {
-        errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceMoneyness"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceMoneyness"));
 
         setInputs(anchorDateInput, 
                   observationDatesInput, 
@@ -83,7 +83,7 @@ namespace sjd
         return surfaceVolatility(yf, moneyness);
     }
 
-    boost::shared_ptr<VolatilityRateSource> VolatilitySurfaceMoneyness::parallelBump(double spread)
+    std::shared_ptr<VolatilityRateSource> VolatilitySurfaceMoneyness::parallelBump(double spread)
     {
         vector<Date> newDates;
         QuantLib::Matrix volatilitySubset;
@@ -92,7 +92,7 @@ namespace sjd
         Matrix spreadMatrix = Matrix(volatilitySubset.rows(), volatilitySubset.columns(), spread);
         Matrix bumpedVolMatrix = volatilitySubset + spreadMatrix;
 
-        return boost::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneyness(anchorDate, 
+        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneyness(anchorDate, 
                                                                              newDates, 
                                                                              strikeDimension,
                                                                              bumpedVolMatrix,
@@ -100,14 +100,14 @@ namespace sjd
                                                                              allowExtrapolation));
     }
 
-    boost::shared_ptr<VolatilityRateSource> VolatilitySurfaceMoneyness::rollForward(Date toDate)
+    std::shared_ptr<VolatilityRateSource> VolatilitySurfaceMoneyness::rollForward(Date toDate)
     {
         vector<Date> newDates;
         QuantLib::Matrix volatilitySubset;
 
         getRolledVariables(toDate, newDates, volatilitySubset);
 
-        return boost::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneyness(toDate, 
+        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneyness(toDate, 
                                                                    newDates, 
                                                                    strikeDimension,
                                                                    volatilitySubset,

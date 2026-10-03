@@ -1,4 +1,4 @@
-﻿
+
 #include <sjd/contracts/AsianOptionContract.h>
 
 
@@ -21,8 +21,8 @@ namespace sjd {
                                         double pAmount, 
                                         BuySell bs)
     {
-      SingleOptionContract::errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("AsianOption"));
-      AsianContract::errorTracking = boost::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("AsianOption"));
+      SingleOptionContract::errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("AsianOption"));
+      AsianContract::errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("AsianOption"));
         setAveragingDates(averagingDatesInput);
         setSettlementDate(optionSettlement);
         setPremiumPaymentDate(pDate);
@@ -104,12 +104,12 @@ namespace sjd {
         SingleOptionContract::setType(pc);
         if (pc == PUT) 
         {
-            option = boost::shared_ptr<AverageRateOption>(
+            option = std::shared_ptr<AverageRateOption>(
                 new AverageRatePut(vector<double>(1,0), vector<double>(1,0), 0, vector<double>(1,0), 0));
         }
         else 
         {
-            option = boost::shared_ptr<AverageRateOption>(
+            option = std::shared_ptr<AverageRateOption>(
                 new AverageRateCall(vector<double>(1,0), vector<double>(1,0), 0, vector<double>(1,0), 0));
         }
     }
@@ -138,7 +138,7 @@ namespace sjd {
         }
     }
 
-    void AsianOption::validate(boost::shared_ptr<RatesEnvironment> re)
+    void AsianOption::validate(std::shared_ptr<RatesEnvironment> re)
     {
         SingleOptionContract::validate(re);
         AsianContract::validate(re);
@@ -160,7 +160,7 @@ namespace sjd {
         }
     }
 
-    double AsianOption::getOptionValue(boost::shared_ptr<RatesEnvironment> re)
+    double AsianOption::getOptionValue(std::shared_ptr<RatesEnvironment> re)
     {
         Date onDate = re->getAnchorDate();
         if (onDate > getSettlementDate())
@@ -207,7 +207,7 @@ namespace sjd {
                                vector<double> &forwards,
                                vector<double> &sd, 
                                vector<double> &vol,
-                               boost::shared_ptr<RatesEnvironment> re)
+                               std::shared_ptr<RatesEnvironment> re)
     {
         vector<Date> fixingDates, forwardDates;
         AsianContract::getFixingAndForwardDates(valueDate, fixingDates, forwardDates);
@@ -230,7 +230,7 @@ namespace sjd {
         //}               
    }
 
-   string AsianOption::toStringRates(boost::shared_ptr<RatesEnvironment> re)
+   string AsianOption::toStringRates(std::shared_ptr<RatesEnvironment> re)
     {
         stringstream ratesDescriptionStream;
         ratesDescriptionStream << SingleInstrumentContract::toStringRates(re);

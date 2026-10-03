@@ -1,4 +1,4 @@
-﻿#ifndef sjdforwardcurvefx_test
+#ifndef sjdforwardcurvefx_test
 #define sjdforwardcurvefx_test
 
 #include <iostream>
@@ -18,9 +18,9 @@ class ForwardCurveFXTest
   public:
 
     static void getDefaultDatesAndDF(QuantLib::Date anchorDate, 
-                                     boost::shared_ptr<DiscountCurve> &domesticDRS, 
-                                     boost::shared_ptr<DiscountCurve> &foreignDRS,
-                                     boost::shared_ptr<VolatilityCurve> &vrs);
+                                     std::shared_ptr<DiscountCurve> &domesticDRS, 
+                                     std::shared_ptr<DiscountCurve> &foreignDRS,
+                                     std::shared_ptr<VolatilityCurve> &vrs);
 
     static void testForwardCurveConstruction();
     static void testDeterministicCurve();

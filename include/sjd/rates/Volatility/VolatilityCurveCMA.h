@@ -1,4 +1,4 @@
-﻿#ifndef SJD_VOLATILITYCURVECMA_INCLUDED
+#ifndef SJD_VOLATILITYCURVECMA_INCLUDED
 #define SJD_VOLATILITYCURVECMA_INCLUDED
 #pragma once
 
@@ -23,7 +23,7 @@ namespace sjd
         VolatilityCurveCMA(QuantLib::Date anchorDate, 
                         std::vector<QuantLib::Date> observationDates, 
                         std::vector<double> volatility, 
-                        boost::shared_ptr<QuantLib::DayCounter> dayCounter,
+                        std::shared_ptr<QuantLib::DayCounter> dayCounter,
                         ArrayInterpolatorType type = LINEAR,
                         bool allowExtrapolation = false);    
         
@@ -49,11 +49,11 @@ namespace sjd
         std::vector<QuantLib::Date> getObservationDates() const;
         ArrayInterpolatorType getType();
 
-        virtual boost::shared_ptr<VolatilityRateSource> parallelBump(double spread);
-        virtual boost::shared_ptr<VolatilityRateSource> rollForward(QuantLib::Date toDate);
+        virtual std::shared_ptr<VolatilityRateSource> parallelBump(double spread);
+        virtual std::shared_ptr<VolatilityRateSource> rollForward(QuantLib::Date toDate);
 
     private:
-        boost::shared_ptr<CalendarMonthAverageCurve> curve;
+        std::shared_ptr<CalendarMonthAverageCurve> curve;
         ArrayInterpolatorType type;
     };
 }

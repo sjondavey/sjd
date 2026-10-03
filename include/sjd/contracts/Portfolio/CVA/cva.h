@@ -1,4 +1,4 @@
-﻿#ifndef CVA_INCLUDED
+#ifndef CVA_INCLUDED
 #define CVA_INCLUDED
 //#pragma once
 
@@ -7,7 +7,7 @@
 #include <string>
 #include <ql/time/date.hpp>
 #include <sjd/maths/maths.h>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 /*======================================================================================
 Overview
@@ -94,8 +94,8 @@ namespace sjd {
         std::vector<QuantLib::Date> observationDates;        
         std::vector<double> cumulativeDefaultProbability;
         std::vector<double> lossGivenDefault;
-        boost::shared_ptr<ArrayInterpolator> defaultInterpolator;
-        boost::shared_ptr<ArrayInterpolator> lossInterpolator;
+        std::shared_ptr<ArrayInterpolator> defaultInterpolator;
+        std::shared_ptr<ArrayInterpolator> lossInterpolator;
    };
 }
 

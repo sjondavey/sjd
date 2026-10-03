@@ -1,4 +1,4 @@
-﻿#include "AsianOptionTest.h"
+#include "AsianOptionTest.h"
 
 using namespace std;
 using namespace QuantLib;
@@ -11,9 +11,9 @@ using namespace boost::math;
 using namespace sjd;
 
 
-boost::shared_ptr<AsianOption> AsianOptionContactTest::getDefaultAsianOption(Date anchorDate)
+std::shared_ptr<AsianOption> AsianOptionContactTest::getDefaultAsianOption(Date anchorDate)
 {
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
     Date optionMaturity = nullCalendar->advance(anchorDate, 2, Years);
     set<Date> averagingDates;
     Date d = Date(1, optionMaturity.month(), optionMaturity.year());
@@ -30,12 +30,12 @@ boost::shared_ptr<AsianOption> AsianOptionContactTest::getDefaultAsianOption(Dat
     double defPremium = 3.4;
     double volume = 10000;
 
-    return boost::shared_ptr<AsianOption>(new  AsianOption(averagingDates, settlement, strike, type, volume, settlement, defPremium, BUY));
+    return std::shared_ptr<AsianOption>(new  AsianOption(averagingDates, settlement, strike, type, volume, settlement, defPremium, BUY));
 }
 
-boost::shared_ptr<AsianOption> AsianOptionContactTest::getAsianOptionWithMoneynessVol(Date anchorDate)
+std::shared_ptr<AsianOption> AsianOptionContactTest::getAsianOptionWithMoneynessVol(Date anchorDate)
 {
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
     Date optionMaturity = nullCalendar->advance(anchorDate, 2, Years);
     set<Date> averagingDates;
     Date d = Date(1, optionMaturity.month(), optionMaturity.year());
@@ -52,7 +52,7 @@ boost::shared_ptr<AsianOption> AsianOptionContactTest::getAsianOptionWithMoneyne
     double defPremium = 3.4;
     double volume = 10000;
 
-    return boost::shared_ptr<AsianOption>(
+    return std::shared_ptr<AsianOption>(
         new  AsianOption(averagingDates, settlement, strike, type, volume, settlement, defPremium, BUY));
 }
 
@@ -62,7 +62,7 @@ void AsianOptionContactTest::testMaturityDate()
 {
     BOOST_TEST_MESSAGE("Testing AsianOption ...");
     Date anchorDate(1,Jan,2013);
-    boost::shared_ptr<AsianOption> contract = getDefaultAsianOption(anchorDate);
+    std::shared_ptr<AsianOption> contract = getDefaultAsianOption(anchorDate);
     Date d = contract->getMaturityDate();
     Date d2 = d + 1;
     // inconsistent maturity date
@@ -74,10 +74,10 @@ void AsianOptionContactTest::testMaturityDate()
 void AsianOptionContactTest::testAveragingDates()
 {
     Date anchorDate(1,Jan,2013);
-    boost::shared_ptr<AsianOption> contract = getDefaultAsianOption(anchorDate);
+    std::shared_ptr<AsianOption> contract = getDefaultAsianOption(anchorDate);
     BOOST_CHECK(contract->isOK());
 
-    boost::shared_ptr<Calendar> nullCalendar = boost::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
     Date rateSetDate = nullCalendar->advance(anchorDate, 3, Years); // after settlement
     set<Date> averagingDates;
     Date d = Date(1, rateSetDate.month(), rateSetDate.year());
@@ -98,7 +98,7 @@ void AsianOptionContactTest::testAveragingDates()
 void AsianOptionContactTest::testType()
 {
     Date anchorDate(1,Jan,2013);
-    boost::shared_ptr<AsianOption> contract = getDefaultAsianOption(anchorDate);
+    std::shared_ptr<AsianOption> contract = getDefaultAsianOption(anchorDate);
     BOOST_CHECK(contract->isOK());
 
     contract->setType(PUT);
@@ -112,19 +112,19 @@ void AsianOptionContactTest::testType()
 void AsianOptionContactTest::testPutCallParity()
 {
     Date anchorDate(1,Jan,2013);
-    boost::shared_ptr<AsianOption> put = getDefaultAsianOption(anchorDate);
-    boost::shared_ptr<AsianOption> call = getDefaultAsianOption(anchorDate);
+    std::shared_ptr<AsianOption> put = getDefaultAsianOption(anchorDate);
+    std::shared_ptr<AsianOption> call = getDefaultAsianOption(anchorDate);
     put->setType(PUT);
     put->setBuySell(BUY);
     call->setType(CALL);
     call->setBuySell(SELL);
     
     GenerateRates gr = GenerateRates();
-    boost::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
+    std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
 
     vector<Date> averagingDates = put->getAveragingDates();
     set<Date> averagingDatesAsSet = set<Date>(averagingDates.begin(), averagingDates.end());
-    boost::shared_ptr<AsianForward> forward = boost::shared_ptr<AsianForward>(
+    std::shared_ptr<AsianForward> forward = std::shared_ptr<AsianForward>(
         new AsianForward(averagingDatesAsSet, put->getSettlementDate(), put->getStrike(), put->getVolume(), SELL));
 
     BOOST_CHECK(abs(put->getValue(re) + call->getValue(re) - forward->getValue(re))<1e-10);
@@ -135,13 +135,13 @@ void AsianOptionContactTest::testValue()
 {
     Date anchorDate(1,Jan,2013);
     GenerateRates gr = GenerateRates();
-    boost::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
+    std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
 
-    boost::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    boost::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
+    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
 
 
-    boost::shared_ptr<AsianOption> call = getDefaultAsianOption(anchorDate);
+    std::shared_ptr<AsianOption> call = getDefaultAsianOption(anchorDate);
     call->setType(CALL);
 
     // 1) Before maturity
@@ -159,8 +159,8 @@ void AsianOptionContactTest::testValue()
         fixedRates.push_back(re->getFixingRS()->getRateSetOn(fixingDates[i]));
     }
     double df = re->getDRS()->getDiscountFactor(call->getSettlementDate());
-    boost::shared_ptr<AverageRateCall> callFormula = 
-        boost::shared_ptr<AverageRateCall>(new AverageRateCall(forwardRates, fixedRates, strike, sd, df));
+    std::shared_ptr<AverageRateCall> callFormula = 
+        std::shared_ptr<AverageRateCall>(new AverageRateCall(forwardRates, fixedRates, strike, sd, df));
     double optionFormulaValue = (callFormula->getPremium() - call->getPremiumAmount() * df) * call->getVolume();
 
     BOOST_CHECK(abs(call->getValue(re) - optionFormulaValue) < 1e-10);
@@ -184,7 +184,7 @@ void AsianOptionContactTest::testValue()
         fixedRates.push_back(re->getFixingRS()->getRateSetOn(fixingDates[i]));
     }
     df = re->getDRS()->getDiscountFactor(call->getSettlementDate());
-    callFormula = boost::shared_ptr<AverageRateCall>(new AverageRateCall(forwardRates, fixedRates, strike, sd, df));
+    callFormula = std::shared_ptr<AverageRateCall>(new AverageRateCall(forwardRates, fixedRates, strike, sd, df));
     optionFormulaValue = (callFormula->getPremium() - call->getPremiumAmount() * df) * call->getVolume();
     BOOST_CHECK(abs(call->getValue(re) - optionFormulaValue) < 1e-10);
    
@@ -199,14 +199,14 @@ void AsianOptionContactTest::testGetPayoffAfterMaturity()
 {
     Date anchorDate(1,Jan,2013);    
     GenerateRates gr = GenerateRates();
-    boost::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
+    std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
 
-    boost::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    boost::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
+    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
 
-    boost::shared_ptr<AsianOption> option = getAsianOptionWithMoneynessVol(anchorDate);
+    std::shared_ptr<AsianOption> option = getAsianOptionWithMoneynessVol(anchorDate);
     option->setType(PUT);
-    boost::shared_ptr<AsianOption> option2 = getAsianOptionWithMoneynessVol(anchorDate);
+    std::shared_ptr<AsianOption> option2 = getAsianOptionWithMoneynessVol(anchorDate);
     option2->setType(CALL);
 
     double v1 = option->getVolume();
@@ -228,13 +228,13 @@ void AsianOptionContactTest::testEuropeanOptionWithMoneynessVol()
 
     Date anchorDate(1,Jan,2013);
     GenerateRates gr = GenerateRates();
-    boost::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
+    std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
 
-    boost::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    boost::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
+    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
 
-    boost::shared_ptr<AsianOption> call = getAsianOptionWithMoneynessVol(anchorDate);
-    boost::shared_ptr<AsianOption> callATM = getDefaultAsianOption(anchorDate);
+    std::shared_ptr<AsianOption> call = getAsianOptionWithMoneynessVol(anchorDate);
+    std::shared_ptr<AsianOption> callATM = getDefaultAsianOption(anchorDate);
 
     call->setType(CALL);
     callATM->setType(CALL);
@@ -256,7 +256,7 @@ void AsianOptionContactTest::testEuropeanOptionWithMoneynessVol()
     }
     double strike = call->getStrike();
     double df = re->getDRS()->getDiscountFactor(call->getSettlementDate());
-    boost::shared_ptr<AverageRateCall> callFormula = boost::shared_ptr<AverageRateCall>(new AverageRateCall(forwardRates, fixedRates, strike, sd, df));
+    std::shared_ptr<AverageRateCall> callFormula = std::shared_ptr<AverageRateCall>(new AverageRateCall(forwardRates, fixedRates, strike, sd, df));
     double optionFormulaValue = (callFormula->getPremium() - call->getPremiumAmount() * df) * call->getVolume();
     BOOST_CHECK(abs(call->getValue(re) - optionFormulaValue) < 1e-10);
 
@@ -281,7 +281,7 @@ void AsianOptionContactTest::testEuropeanOptionWithMoneynessVol()
         fixedRates.push_back(re->getFixingRS()->getRateSetOn(fixingDates[i]));
     }
     df = re->getDRS()->getDiscountFactor(call->getSettlementDate());
-    callFormula = boost::shared_ptr<AverageRateCall>(new AverageRateCall(forwardRates, fixedRates, strike, sd, df));
+    callFormula = std::shared_ptr<AverageRateCall>(new AverageRateCall(forwardRates, fixedRates, strike, sd, df));
     optionFormulaValue = (callFormula->getPremium() - call->getPremiumAmount() * df) * call->getVolume();
     BOOST_CHECK(abs(call->getValue(re) - optionFormulaValue) < 1e-10);
     

@@ -1,8 +1,8 @@
-﻿#ifndef MARGIN_INCLUDED
+#ifndef MARGIN_INCLUDED
 #define MARGIN_INCLUDED
 //#pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <sjd/tools/Validation.h>
 #include <sjd/maths/maths.h>
 #include <string>
@@ -85,8 +85,8 @@ namespace sjd {
     According to the 2013 ISDA Standard Credit Support Annex (Transfer - English Law) document, 
     there can be different rounding rules for the Delivery and Return amounts, which are 
     defined as follows:
-    - �VM Delivery Amount�: max(0, MtM � VM Credit Support Balance)
-    - �VM Return Amount�: max(0, VM Credit Support Balance  - MtM)
+    - ?VM Delivery Amount?: max(0, MtM ? VM Credit Support Balance)
+    - ?VM Return Amount?: max(0, VM Credit Support Balance  - MtM)
     
     Typically the Delivery Amount is rounded *up* and the Return Amount is rounded *down* to 
     the nearest multiple of the rounding amount. 

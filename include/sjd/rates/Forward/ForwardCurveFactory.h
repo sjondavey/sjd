@@ -17,14 +17,14 @@ namespace sjd
      * Calendar-month averaging has no spot-volatility roll. That combination throws
      * std::invalid_argument.
      */
-    boost::shared_ptr<ForwardRateSource> makeForwardCurve(QuantLib::Date anchorDate,
+    std::shared_ptr<ForwardRateSource> makeForwardCurve(QuantLib::Date anchorDate,
                                                           std::vector<QuantLib::Date> observationDates,
                                                           std::vector<double> forwards,
                                                           ArrayInterpolatorType interpolation,
                                                           bool allowExtrapolation,
                                                           ForwardAveraging averaging,
                                                           ForwardRoll roll,
-                                                          boost::shared_ptr<VolatilityRateSource> volatility);
+                                                          std::shared_ptr<VolatilityRateSource> volatility);
 }
 
 #endif

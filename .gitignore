@@ -8,7 +8,9 @@ CMakeUserPresets.json
 .ipynb_checkpoints/
 __pycache__/
 *.pyc
-python/sjd_runtime/
+python/sjd/_core*.pyd
+python/sjd/_core*.so
+*.egg-info/
 #Ignore files build by Visual Studio
 *.VC.opendb
 *.VC.db
