@@ -118,6 +118,7 @@ namespace sjd
 
     void CurrentExposureMethod::validate()
     {
+        resetErrorMessages();
         if (structureConversionError)
         {
             errorTracking->record("PORTFOLIO_STRUCTURE_CONVERSION",
@@ -138,6 +139,7 @@ namespace sjd
 
     void CurrentExposureMethod::validate(std::shared_ptr<RatesEnvironment> re)
     {
+        resetErrorMessages();
         if (structureConversionError)
         {
             errorTracking->record("PORTFOLIO_STRUCTURE_CONVERSION",
@@ -172,6 +174,29 @@ namespace sjd
         return nettingStructures;
     }
 
+    vector<NettingSet> CurrentExposureMethod::nettingSets(string& error) const
+    {
+        error.clear();
+        if (hasErrors() || structureConversionError)
+        {
+            error = structureConversionError ? structureErrorMessage : getErrorMessagesAsString();
+            return vector<NettingSet>();
+        }
+        vector<NettingSet> described;
+        for (size_t s = 0; s < nettingStructures.size(); ++s)
+        {
+            std::shared_ptr<Structure> structure = nettingStructures[s];
+            NettingSet describedSet;
+            describedSet.settlement = structure->getSettlementDate();
+            describedSet.volume = structure->getVolume();
+            describedSet.hasPriceExposure = structure->getHasPriceExposure();
+            describedSet.capped = structure->isExposureCapped();
+            describedSet.cap = structure->getCap();
+            described.push_back(describedSet);
+        }
+        return described;
+    }
+
     vector<std::shared_ptr<Structure>> CurrentExposureMethod::optimiseStructuresFromContracts(
         vector<std::shared_ptr<SingleInstrumentContract>> contractsInput,
         std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
@@ -187,6 +212,7 @@ namespace sjd
             return vector<std::shared_ptr<Structure>>(0);
         }
 
+        // createStructures changes volume and premium, so it works on copies.
         list<std::shared_ptr<SingleInstrumentContract>> tmpContracts;
         for (size_t i = 0; i < contractsInput.size(); ++i)
         {
@@ -236,9 +262,10 @@ namespace sjd
 
     double CurrentExposureMethod::getNGR(std::shared_ptr<RatesEnvironment> re, double& mtm)
     {
-        if (errorTracking->getHasErrors())
+        if (hasErrors())
         {
-            numeric_limits<double>::quiet_NaN();
+            mtm = numeric_limits<double>::quiet_NaN();
+            return numeric_limits<double>::quiet_NaN();
         }
         if (!regCapAssetFactors)
         {
@@ -269,6 +296,11 @@ namespace sjd
 
     double CurrentExposureMethod::getRegulatoryCapital(std::shared_ptr<RatesEnvironment> re)
     {
+        // max(0.0, NaN) is 0.0, so an invalid book must return before the floor below.
+        if (hasErrors())
+        {
+            return numeric_limits<double>::quiet_NaN();
+        }
         double mtm = 0;
         double ngr = getNGR(re, mtm);
 
@@ -356,6 +388,8 @@ namespace sjd
 
     void PortfolioB2CEM::validate()
     {
+        // Portfolio::validate clears the tracker, so it must run before the structure checks.
+        Portfolio::validate();
         if (capital && capital->hasStructureConversionError())
         {
             recordIssue("PORTFOLIO_STRUCTURE_CONVERSION",
@@ -376,11 +410,11 @@ namespace sjd
                 }
             }
         }
-        Portfolio::validate();
     }
 
     void PortfolioB2CEM::validate(std::shared_ptr<RatesEnvironment> re)
     {
+        Portfolio::validate(re);
         if (capital && capital->hasStructureConversionError())
         {
             recordIssue("PORTFOLIO_STRUCTURE_CONVERSION",
@@ -402,7 +436,6 @@ namespace sjd
                 }
             }
         }
-        Portfolio::validate(re);
     }
 
     std::shared_ptr<RegulatoryCapital> PortfolioB2CEM::regulatoryCapital() const
@@ -417,6 +450,31 @@ namespace sjd
             return 0;
         }
         return capital->getRegulatoryCapital(re);
+    }
+
+    vector<std::shared_ptr<Contract>> PortfolioB2CEM::regulatoryStructures() const
+    {
+        vector<std::shared_ptr<Contract>> sets;
+        if (!capital)
+        {
+            return sets;
+        }
+        const vector<std::shared_ptr<Structure>>& nettingStructures = capital->structures();
+        for (size_t i = 0; i < nettingStructures.size(); ++i)
+        {
+            sets.push_back(nettingStructures[i]);
+        }
+        return sets;
+    }
+
+    vector<NettingSet> PortfolioB2CEM::nettingSets(string& error)
+    {
+        if (!capital)
+        {
+            error = "Portfolio has no regulatory capital model";
+            return vector<NettingSet>();
+        }
+        return capital->nettingSets(error);
     }
 
 }

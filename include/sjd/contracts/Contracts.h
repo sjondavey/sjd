@@ -179,7 +179,8 @@ namespace sjd
 
     /**
      * Averaging dates for an Asian forward or Asian option. Mixed in beside the
-     * instrument ladder, and it keeps its own issue list.
+     * instrument ladder. Averaging checks are written onto that instrument's
+     * issue list, so an Asian forward or an Asian option has one tracker.
      *
      * On a valuation date, averaging dates on or before that date are fixings.
      * Averaging dates after it are forwards.
@@ -191,9 +192,6 @@ namespace sjd
 
         virtual void validate();
         virtual void validate(std::shared_ptr<RatesEnvironment> re);
-
-        std::vector<std::string> getAsianContractErrorMessages();
-        ValidationReport asianValidationReport() const;
 
         virtual void setAveragingDates(std::set<QuantLib::Date> averagingDates); 
         std::vector<QuantLib::Date> getAveragingDates() const; 
@@ -213,13 +211,13 @@ namespace sjd
 
 
     protected:
-        void recordAsianIssue(const std::string& code,
-                              const std::string& message,
-                              const std::vector<std::string>& path);
-        void absorbAsianReport(const ValidationReport& child,
-                               const std::vector<std::string>& prefix);
+        // The instrument writes these onto its own tracker, prefixed once.
+        virtual void recordAsianIssue(const std::string& code,
+                                      const std::string& message,
+                                      const std::vector<std::string>& path) = 0;
+        virtual void absorbAsianReport(const ValidationReport& child,
+                                       const std::vector<std::string>& prefix) = 0;
 
-        std::shared_ptr<sjd::IssueTracker> errorTracking;
         std::vector<QuantLib::Date> orderedAveragingDates;
 
     };
@@ -231,6 +229,7 @@ namespace sjd
      *
      * clone() copies the group but keeps the same instrument pointers. A caller
      * that needs an independent book must clone the instruments first.
+     * getUnderlyingSingleInstrumentContracts() returns those same live objects.
      */
     class MultipleInstrumentContract : public Contract 
     {
@@ -253,6 +252,8 @@ namespace sjd
         virtual std::string toStringContract();
         virtual std::string toStringRates(std::shared_ptr<RatesEnvironment> re);
 
+        // The instruments this group holds. Callers that change volume or premium
+        // must clone first. Building a regulatory-capital structure does that.
         virtual std::vector<std::shared_ptr<SingleInstrumentContract>> getUnderlyingSingleInstrumentContracts();
 
     protected:

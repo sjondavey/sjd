@@ -15,8 +15,12 @@ namespace sjd
     VolatilityCurve
 
     Use this for European Volatilities observable on specific dates.
-    NOTE 1) Interpolation happens in the Standard Deviation Space and not the Volatility 
-            Space
+    NOTE 1) The curve stores total standard deviation, volatility times the square
+            root of the year fraction from the anchor, and interpolates that.
+            getVolatility divides the interpolated standard deviation by the
+            square root of the year fraction. On the anchor date the volatility
+            is the volatility supplied for that date, or the first input
+            volatility when the anchor is not itself an observation date.
          2) There are no calendar objects here, all dates are assumed to be good dates
             by the time they hit this object
     =======================================================================================*/
@@ -58,6 +62,8 @@ namespace sjd
     private:
         std::shared_ptr<DatedCurve> datedCurve;
         ArrayInterpolatorType type;
+        double anchorVolatility;
+        std::vector<double> inputVolatilities;
     };
 }
 

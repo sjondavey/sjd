@@ -33,13 +33,21 @@ namespace sjd
         vector<std::shared_ptr<SingleInstrumentContract> > underlyingContracts;
         bool couldNotConvert = false;
 
+        // A structure owns its instruments. The source contract is left unchanged
+        // when volume is later split or a premium is moved onto a cashflow.
         if (std::dynamic_pointer_cast<SingleInstrumentContract>(underlyingContract) != 0) 
         {
-            underlyingContracts.push_back(std::dynamic_pointer_cast<SingleInstrumentContract>(underlyingContract));
+            underlyingContracts.push_back(cloneInstrument(
+                std::dynamic_pointer_cast<SingleInstrumentContract>(underlyingContract)));
         }
         else if (std::dynamic_pointer_cast<MultipleInstrumentContract>(underlyingContract) != 0) 
         {
-            underlyingContracts = std::dynamic_pointer_cast<MultipleInstrumentContract>(underlyingContract)->getUnderlyingSingleInstrumentContracts();
+            vector<std::shared_ptr<SingleInstrumentContract>> liveContracts =
+                std::dynamic_pointer_cast<MultipleInstrumentContract>(underlyingContract)->getUnderlyingSingleInstrumentContracts();
+            for (size_t i = 0; i < liveContracts.size(); ++i)
+            {
+                underlyingContracts.push_back(cloneInstrument(liveContracts[i]));
+            }
         }
         else
         {
@@ -168,6 +176,11 @@ namespace sjd
     double Structure::getCap() const 
     {
         return cap;
+    }
+
+    double Structure::getVolume() const
+    {
+        return volume;
     }
 
     double Structure::getPayoff(double forSpot)

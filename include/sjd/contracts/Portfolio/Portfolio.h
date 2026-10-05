@@ -40,8 +40,9 @@ namespace sjd
         double getMarginBalance();
         double getMarginCall(std::shared_ptr<RatesEnvironment> re);
         void updateMarginBalanceWithCall(double marginCall);
-                                         
-        std::vector<std::shared_ptr<SingleInstrumentContract>> getUnderlyingSingleInstrumentContracts();
+
+        // Empty unless this portfolio owns regulatory-capital netting sets.
+        virtual std::vector<std::shared_ptr<Contract>> regulatoryStructures() const { return {}; }
 
     protected:
         virtual void setInputVariables();

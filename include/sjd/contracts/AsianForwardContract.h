@@ -55,6 +55,11 @@ namespace sjd
                                QuantLib::Date settlement, 
                                double strike, double volume,
                                BuySell buySell);
+        void recordAsianIssue(const std::string& code,
+                              const std::string& message,
+                              const std::vector<std::string>& path) override;
+        void absorbAsianReport(const ValidationReport& child,
+                               const std::vector<std::string>& prefix) override;
     };
     
 }

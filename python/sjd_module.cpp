@@ -28,6 +28,7 @@
 #include <sjd/contracts/AsianOptionContract.h>
 #include <sjd/contracts/EuropeanForwardContract.h>
 #include <sjd/contracts/EuropeanOptionContract.h>
+#include <sjd/contracts/Portfolio/CVA/cva.h>
 #include <sjd/contracts/Portfolio/Margin/Margin.h>
 #include <sjd/contracts/Portfolio/Portfolio.h>
 #include <sjd/contracts/Portfolio/PortfolioEvolver.h>
@@ -147,23 +148,6 @@ std::vector<std::shared_ptr<sjd::Contract>> contract_inputs_from(const py::list&
     return inputs;
 }
 
-py::dict detail_table(const std::vector<QuantLib::Date>& dates,
-                      const std::vector<std::string>& headings,
-                      const std::vector<std::vector<double>>& rows)
-{
-    py::list py_dates;
-    for (const QuantLib::Date& date : dates)
-        py_dates.append(from_ql_date(date));
-    py::list py_rows;
-    for (const std::vector<double>& row : rows)
-        py_rows.append(py::cast(row));
-    py::dict table;
-    table["dates"] = py_dates;
-    table["headings"] = headings;
-    table["rows"] = py_rows;
-    return table;
-}
-
 struct NamedCalendar
 {
     std::string name;
@@ -183,20 +167,19 @@ std::shared_ptr<sjd::PortfolioEvolver> make_evolver(
     std::shared_ptr<sjd::Portfolio> portfolio,
     std::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator> generator,
     const py::iterable& simulation_dates,
-    std::shared_ptr<sjd::RegulatoryCapital> capital,
     size_t holding_period,
     const py::object& holding_period_calendar)
 {
     const std::set<QuantLib::Date> dates = simulation_dates_from(simulation_dates);
     if (holding_period == 0)
         return std::shared_ptr<sjd::PortfolioEvolver>(
-            new sjd::PortfolioEvolver(portfolio, generator, dates, capital));
+            new sjd::PortfolioEvolver(portfolio, generator, dates));
     if (holding_period_calendar.is_none())
         throw py::value_error("holding_period needs a holding_period_calendar");
     std::shared_ptr<QuantLib::Calendar> calendar(
         new QuantLib::Calendar(holding_period_calendar.cast<const NamedCalendar&>().calendar));
     return std::shared_ptr<sjd::PortfolioEvolver>(
-        new sjd::PortfolioEvolver(portfolio, generator, dates, calendar, holding_period, capital));
+        new sjd::PortfolioEvolver(portfolio, generator, dates, calendar, holding_period));
 }
 
 struct Simulation
@@ -208,9 +191,11 @@ struct Simulation
     py::array_t<double> mtm;
     py::object margin;
     py::object by_trade;
+    py::object by_structure;
     size_t paths = 0;
     size_t steps = 0;
     size_t trades = 0;
+    size_t structures = 0;
     bool antithetic = false;
 };
 
@@ -247,11 +232,23 @@ Simulation simulation_from(const sjd::SimulatedPaths& simulated)
         ? py::none()
         : py::object(to_array(simulated.byTrade,
                               {paths, steps, static_cast<py::ssize_t>(simulated.trades)}));
+    result.by_structure = simulated.byStructure.empty()
+        ? py::none()
+        : py::object(to_array(simulated.byStructure,
+                              {paths, steps, static_cast<py::ssize_t>(simulated.structures)}));
     result.paths = simulated.paths;
     result.steps = simulated.steps;
     result.trades = simulated.trades;
+    result.structures = simulated.structures;
     result.antithetic = simulated.antithetic;
     return result;
+}
+
+void require_structures(bool by_structure, const sjd::SimulatedPaths& simulated)
+{
+    if (by_structure && simulated.structures == 0)
+        throw py::value_error(
+            "by_structure needs a portfolio with regulatory-capital netting sets");
 }
 
 } // namespace
@@ -854,7 +851,9 @@ PYBIND11_MODULE(_core, m)
         }, py::arg("rates_environment"), "The option alone, without the premium cashflow.");
 
     py::class_<sjd::RegCapUnderlyingFactors, std::shared_ptr<sjd::RegCapUnderlyingFactors>>(
-        m, "RegCapUnderlyingFactors");
+        m, "RegCapUnderlyingFactors")
+        .def("get_factor", &sjd::RegCapUnderlyingFactors::getFactor, py::arg("time"),
+             "Add-on factor for a time to settlement in years.");
 
     m.def("reg_cap_factors", [](const std::string& description) {
         std::shared_ptr<sjd::RegCapUnderlyingFactors> factors = sjd::generateRegCapFactors(description);
@@ -873,6 +872,55 @@ PYBIND11_MODULE(_core, m)
              py::arg("capital_charge"))
         .def("counterparty_weighting", &sjd::RegCapCreditParameters::getCounterpartyWeighting)
         .def("capital_charge", &sjd::RegCapCreditParameters::getCapitalCharge);
+
+    py::class_<sjd::CVA, std::shared_ptr<sjd::CVA>>(m, "CreditCurve",
+        "Default probability and loss given default. sjd.stats uses these curves for CVA and DVA.")
+        .def("validation_report", &sjd::CVA::validationReport)
+        .def("get_pd", [](sjd::CVA& curve, const py::object& day) {
+            return curve.getPD(to_ql_date(day));
+        }, py::arg("date"), "Cumulative probability of default from the anchor to this date.")
+        .def("get_pd", [](sjd::CVA& curve, const py::object& start, const py::object& end) {
+            return curve.getPD(to_ql_date(start), to_ql_date(end));
+        }, py::arg("start"), py::arg("end"),
+           "Probability of default between the two dates. Zero when the interval is empty.")
+        .def("get_lgd", [](sjd::CVA& curve, const py::object& day) {
+            return curve.getLGD(to_ql_date(day));
+        }, py::arg("date"))
+        .def("extends_to", [](sjd::CVA& curve, const py::object& day) {
+            return curve.extendsTo(to_ql_date(day));
+        }, py::arg("date"));
+
+    py::class_<sjd::FlatPD, sjd::CVA, std::shared_ptr<sjd::FlatPD>>(m, "FlatDefaultProbability",
+        "Constant annual conditional default probability. Cumulative PD is 1 - exp(-h t), "
+        "with t measured in years of 365 days.")
+        .def(py::init([](const py::object& anchor, double probability, double loss_given_default) {
+                 return std::shared_ptr<sjd::FlatPD>(
+                     new sjd::FlatPD(to_ql_date(anchor), probability, loss_given_default));
+             }),
+             py::arg("anchor"),
+             py::arg("annual_probability"),
+             py::arg("loss_given_default"))
+        .def("is_ok", &sjd::FlatPD::isOK)
+        .def("set_pd", &sjd::FlatPD::setPD, py::arg("annual_probability"))
+        .def("set_lgd", &sjd::FlatPD::setLGD, py::arg("loss_given_default"));
+
+    py::class_<sjd::CumulativeDefaultProbability, sjd::CVA,
+               std::shared_ptr<sjd::CumulativeDefaultProbability>>(
+        m, "CumulativeDefaultProbability",
+        "Cumulative default probability and loss given default, interpolated on year fractions.")
+        .def(py::init([](const py::object& anchor,
+                         const py::iterable& dates,
+                         const std::vector<double>& cumulative_pd,
+                         const std::vector<double>& loss_given_default) {
+                 return std::shared_ptr<sjd::CumulativeDefaultProbability>(
+                     new sjd::CumulativeDefaultProbability(
+                         to_ql_date(anchor), to_ql_dates(dates), cumulative_pd, loss_given_default));
+             }),
+             py::arg("anchor"),
+             py::arg("dates"),
+             py::arg("cumulative_pd"),
+             py::arg("loss_given_default"))
+        .def("is_ok", &sjd::CumulativeDefaultProbability::isOK);
 
     py::class_<sjd::RegulatoryCapital, std::shared_ptr<sjd::RegulatoryCapital>>(
         m, "RegulatoryCapital")
@@ -977,7 +1025,25 @@ PYBIND11_MODULE(_core, m)
         .def("get_regulatory_capital", [](sjd::PortfolioB2CEM& portfolio,
                                           std::shared_ptr<sjd::RatesEnvironment> environment) {
             return portfolio.getRegulatoryCapital(environment);
-        }, py::arg("rates_environment"));
+        }, py::arg("rates_environment"))
+        .def("netting_sets", [](sjd::PortfolioB2CEM& portfolio) {
+            std::string error;
+            std::vector<sjd::NettingSet> sets = portfolio.nettingSets(error);
+            if (!error.empty())
+                throw py::value_error(error);
+            py::list described;
+            for (const sjd::NettingSet& netting : sets)
+            {
+                py::dict entry;
+                entry["settlement"] = from_ql_date(netting.settlement);
+                entry["volume"] = netting.volume;
+                entry["has_price_exposure"] = netting.hasPriceExposure;
+                entry["capped"] = netting.capped;
+                entry["cap"] = netting.cap;
+                described.append(entry);
+            }
+            return described;
+        }, "Static netting sets. Mark-to-market along a path is simulation.by_structure.");
 
     py::class_<sjd::SingleFactorEconomicScenarioGenerator,
                std::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator>>(
@@ -991,20 +1057,18 @@ PYBIND11_MODULE(_core, m)
         .def("validation_report", &sjd::SingleFactorEconomicScenarioGenerator::validationReport)
         .def("set_random_seed", &sjd::SingleFactorEconomicScenarioGenerator::setRandomSeed,
              py::arg("seed"),
-             "Reseed the generator. The next run_monte_carlo draws the same paths for the same seed.");
+             "Reseed the generator. The next simulated paths repeat for the same seed.");
 
     py::class_<sjd::PortfolioEvolver, std::shared_ptr<sjd::PortfolioEvolver>>(m, "PortfolioEvolver")
         .def(py::init(&make_evolver),
              py::arg("portfolio"),
              py::arg("path_generator"),
              py::arg("simulation_dates"),
-             py::arg("capital") = static_cast<std::shared_ptr<sjd::RegulatoryCapital>>(nullptr),
              py::kw_only(),
              py::arg("holding_period") = 0,
              py::arg("holding_period_calendar") = py::none(),
              "With a holding period, a margined portfolio also simulates the date "
-             "holding_period business days before each simulation date. The \"with HP\" "
-             "columns subtract the margin from that earlier date.")
+             "holding_period business days before each simulation date.")
         .def_property_readonly("simulation_dates", [](sjd::PortfolioEvolver& evolver) {
             return py_dates(evolver.getSimulationDates());
         }, "The requested dates plus any margin reset dates.")
@@ -1015,26 +1079,22 @@ PYBIND11_MODULE(_core, m)
         .def("error_messages", &sjd::PortfolioEvolver::getErrorMessagesAsString)
         .def("validation_report", &sjd::PortfolioEvolver::validationReport)
         .def("validate_report", &sjd::PortfolioEvolver::validateReport)
-        .def("run_monte_carlo", &sjd::PortfolioEvolver::runMonteCarlo, py::arg("number_of_paths"))
-        .def("get_spot_path_detail", [](sjd::PortfolioEvolver& evolver,
-                                        const std::vector<double>& spot_path) {
-            std::vector<QuantLib::Date> dates;
-            std::vector<std::string> headings;
-            std::vector<std::vector<double>> rows;
-            evolver.getSpotPathDetail(spot_path, dates, headings, rows);
-            return detail_table(dates, headings, rows);
-        }, py::arg("spot_path"))
-        .def("get_monte_carlo_detail", [](sjd::PortfolioEvolver& evolver) {
-            std::vector<QuantLib::Date> dates;
-            std::vector<std::string> headings;
-            std::vector<std::vector<double>> rows;
-            evolver.getMonteCarloDetail(dates, headings, rows);
-            return detail_table(dates, headings, rows);
-        });
+        .def("value_spot_path", [](sjd::PortfolioEvolver& evolver,
+                                   const std::vector<double>& spots,
+                                   bool by_trade,
+                                   bool by_structure) {
+            sjd::SimulatedPaths simulated = evolver.valueSpotPath(spots, by_trade, by_structure);
+            if (simulated.paths == 0)
+                throw py::value_error("Cannot value spot path: " + evolver.getErrorMessagesAsString());
+            require_structures(by_structure, simulated);
+            return simulation_from(simulated);
+        }, py::arg("spots"), py::arg("by_trade") = false, py::arg("by_structure") = false,
+           "Mark the book to this forward path. One spot per simulation date. "
+           "by_structure values each regulatory-capital netting set.");
 
     py::class_<Simulation>(m, "Simulation",
-                           "Simulated paths. Arrays are numpy, indexed [path, step] "
-                           "and by_trade [path, step, trade].")
+                           "Simulated paths. Arrays are numpy, indexed [path, step], "
+                           "by_trade [path, step, trade] and by_structure [path, step, set].")
         .def_readonly("dates", &Simulation::dates,
                       "Every simulated date, including margin reset dates.")
         .def_readonly("exposure_steps", &Simulation::exposure_steps,
@@ -1049,15 +1109,19 @@ PYBIND11_MODULE(_core, m)
                       "Margin balance, or None when the portfolio is not margined.")
         .def_readonly("by_trade", &Simulation::by_trade,
                       "Value of each underlying contract, or None unless by_trade was requested.")
+        .def_readonly("by_structure", &Simulation::by_structure,
+                      "Value of each regulatory-capital netting set, or None unless by_structure was requested.")
         .def_readonly("paths", &Simulation::paths)
         .def_readonly("steps", &Simulation::steps)
         .def_readonly("trades", &Simulation::trades)
+        .def_readonly("structures", &Simulation::structures)
         .def_readonly("antithetic", &Simulation::antithetic,
                       "Path i and path i + paths // 2 use opposite normals.")
         .def("__repr__", [](const Simulation& simulation) {
             return "<Simulation paths=" + std::to_string(simulation.paths) +
                    " steps=" + std::to_string(simulation.steps) +
-                   " trades=" + std::to_string(simulation.trades) + ">";
+                   " trades=" + std::to_string(simulation.trades) +
+                   " structures=" + std::to_string(simulation.structures) + ">";
         });
 
     m.def("simulate",
@@ -1068,6 +1132,7 @@ PYBIND11_MODULE(_core, m)
              const py::object& seed,
              bool antithetic,
              bool by_trade,
+             bool by_structure,
              size_t holding_period,
              const py::object& holding_period_calendar) {
               std::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator> generator(
@@ -1075,14 +1140,15 @@ PYBIND11_MODULE(_core, m)
               if (!seed.is_none())
                   generator->setRandomSeed(seed.cast<long>());
               std::shared_ptr<sjd::PortfolioEvolver> evolver = make_evolver(
-                  portfolio, generator, simulation_dates, nullptr, holding_period, holding_period_calendar);
+                  portfolio, generator, simulation_dates, holding_period, holding_period_calendar);
               sjd::SimulatedPaths simulated;
               {
                   py::gil_scoped_release release;
-                  simulated = evolver->simulatePaths(paths, antithetic, by_trade);
+                  simulated = evolver->simulatePaths(paths, antithetic, by_trade, by_structure);
               }
               if (simulated.paths == 0)
                   throw py::value_error("Cannot simulate: " + evolver->getErrorMessagesAsString());
+              require_structures(by_structure, simulated);
               return simulation_from(simulated);
           },
           py::arg("portfolio"),
@@ -1093,6 +1159,7 @@ PYBIND11_MODULE(_core, m)
           py::arg("seed") = py::none(),
           py::arg("antithetic") = true,
           py::arg("by_trade") = false,
+          py::arg("by_structure") = false,
           py::arg("holding_period") = 0,
           py::arg("holding_period_calendar") = py::none(),
           "Simulate the portfolio along single-factor paths and return every value.\n\n"

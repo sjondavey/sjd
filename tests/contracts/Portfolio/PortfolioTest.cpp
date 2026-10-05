@@ -236,12 +236,56 @@ void PortfolioTest::testPortfolioB2CEM()
 }
 
 
+void PortfolioTest::testInvalidRegulatoryCapitalIsNaN()
+{
+    BOOST_TEST_MESSAGE("Testing B2 CEM on a netting set that cannot be offset ...");
+
+    Date anchorDate = Date(27, Jan, 2013);
+    GenerateRates gr = GenerateRates();
+    std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
+
+    // Different settlement dates disqualify the pair from regulatory capital offset.
+    vector<std::shared_ptr<SingleInstrumentContract>> legs;
+    legs.push_back(GenerateContracts::getDefaultEuropeanForward(anchorDate, 2, 112, 10000, BUY));
+    legs.push_back(GenerateContracts::getDefaultEuropeanOption(anchorDate, 3, 115, 10000, SELL, CALL, 0));
+    vector<std::shared_ptr<Contract>> nettingSets;
+    nettingSets.push_back(std::shared_ptr<Contract>(new Portfolio(legs)));
+
+    bool optimise = false;
+    CurrentExposureMethod capital(nettingSets,
+                                  legs,
+                                  std::shared_ptr<Margin>(),
+                                  getDefaultRegCapUnderlyingFactors(),
+                                  getDefaultRegCreditParameters(),
+                                  optimise);
+    BOOST_REQUIRE(capital.isOK());
+    capital.validate();
+    BOOST_REQUIRE(capital.hasErrors());
+    const size_t issues = capital.validationReport().getIssues().size();
+    capital.validate();
+    BOOST_CHECK_EQUAL(capital.validationReport().getIssues().size(), issues);
+    capital.validate(re);
+    const size_t issuesWithRates = capital.validationReport().getIssues().size();
+    BOOST_REQUIRE(issuesWithRates > 0);
+    capital.validate(re);
+    BOOST_CHECK_EQUAL(capital.validationReport().getIssues().size(), issuesWithRates);
+    BOOST_CHECK(std::isnan(capital.getRegulatoryCapital(re)));
+
+    PortfolioB2CEM book(nettingSets, getDefaultRegCapUnderlyingFactors(), getDefaultRegCreditParameters(), optimise);
+    book.validate();
+    BOOST_CHECK(!book.isOK());
+    book.validate(re);
+    BOOST_CHECK(!book.isOK());
+}
+
+
 test_suite* PortfolioTest::suite() 
 {
     
     test_suite* suite = BOOST_TEST_SUITE("Portfolios");
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testStructureCreation));
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testPortfolioB2CEM));
+    suite->add(BOOST_TEST_CASE(&PortfolioTest::testInvalidRegulatoryCapitalIsNaN));
 
     return suite;
     

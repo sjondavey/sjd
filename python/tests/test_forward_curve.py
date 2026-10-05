@@ -4,6 +4,8 @@ import math
 import unittest
 from datetime import date
 
+import numpy as np
+
 import sjd
 
 ANCHOR = date(2026, 9, 16)
@@ -109,10 +111,9 @@ class ForwardCurveTest(unittest.TestCase):
     def test_monte_carlo_runs_on_a_delta_surface(self):
         for roll in (sjd.ForwardRoll.FORWARD_VOLATILITY, sjd.ForwardRoll.SPOT_VOLATILITY):
             with self.subTest(roll=roll):
-                rows, anchor_value = self._seeded_option_run(roll)
-                for row in rows:
-                    self.assertTrue(all(math.isfinite(value) for value in row), row)
-                self.assertAlmostEqual(rows[0][1], anchor_value, places=6)
+                paths, anchor_value = self._seeded_option_run(roll)
+                self.assertTrue(np.isfinite(paths).all())
+                self.assertAlmostEqual(paths[0, 0], anchor_value, places=6)
 
     def _seeded_option_run(self, roll):
         surface = delta_surface()
@@ -142,15 +143,11 @@ class ForwardCurveTest(unittest.TestCase):
         ready = portfolio.validate_report(environment)
         self.assertTrue(ready.ok, [issue.message for issue in ready.issues])
 
-        generator = sjd.SingleFactorEconomicScenarioGenerator(environment)
-        evolver = sjd.PortfolioEvolver(portfolio, generator, [ANCHOR, PILLARS[1], PILLARS[2]])
-        report = evolver.validate_report()
-        self.assertTrue(report.ok, [issue.message for issue in report.issues])
-        generator.set_random_seed(5)
-        evolver.run_monte_carlo(50)
-        detail = evolver.get_monte_carlo_detail()
-        self.assertEqual(list(detail["headings"])[:2], ["Ave Path", "Ave MtM"])
-        return detail["rows"], portfolio.get_value(environment)
+        simulation = sjd.simulate(
+            portfolio, environment, [ANCHOR, PILLARS[1], PILLARS[2]], paths=50, seed=5
+        )
+        self.assertEqual(simulation.steps, 3)
+        return simulation.mtm, portfolio.get_value(environment)
 
 
 if __name__ == "__main__":

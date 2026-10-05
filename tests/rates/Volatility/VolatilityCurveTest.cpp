@@ -81,12 +81,13 @@ void VolatilityCurveTest::testVolatilityCurveConsistencyBetweenVolAndSD()
     double fromYF = dayCounter->yearFraction(anchorDate, fromDate);
     double fromSD = vc->getStandardDeviation(fromDate);
     double fromVol = vc->getVolatility(fromDate);
-    BOOST_CHECK((fromSD * fromSD / fromYF - fromVol) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK(abs(fromVol - fromSD / sqrt(fromYF)) < EPSILON_FOR_DOUBLES);
 
     Date toDate = defaultCalendar->advance(anchorDate, 9, Months);
     double toYF = dayCounter->yearFraction(anchorDate, toDate);
     double toSD = vc->getStandardDeviation(toDate);
     double toVol = vc->getVolatility(toDate);
+    BOOST_CHECK(abs(toVol - toSD / sqrt(toYF)) < EPSILON_FOR_DOUBLES);
 }
 
 void VolatilityCurveTest::testVolatilityCurveValues()
@@ -98,12 +99,19 @@ void VolatilityCurveTest::testVolatilityCurveValues()
     std::shared_ptr<DayCounter> dayCounter = re.defaultDayCounter;
     std::shared_ptr<VolatilityCurve> vc = re.getDefaultVolatiltiyCurve(anchorDate);
     
+    Date pillar = calendar->advance(anchorDate, 1, Years);
+    BOOST_CHECK(abs(vc->getVolatility(pillar) - re.defaultVolatiltiy) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK(abs(vc->getVolatility(anchorDate) - re.defaultVolatiltiy) < EPSILON_FOR_DOUBLES);
+
+    // 13 Mar 2012 sits between the anchor and the first yearly pillar. Standard
+    // deviation is interpolated from zero at the anchor, so the volatility there
+    // is below the flat input volatility.
     Date date1 = Date(13,Mar,2012);
-    Date date2 = Date(17,Nov,2012);
-    double vol = vc->getVolatility(date1);
     double time1 = dayCounter->yearFraction(anchorDate, date1);
-    double time2 = dayCounter->yearFraction(anchorDate, date2);
-    BOOST_CHECK(abs(vol - re.defaultVolatiltiy) < EPSILON_FOR_DOUBLES);
+    double sd = vc->getStandardDeviation(date1);
+    double vol = vc->getVolatility(date1);
+    BOOST_CHECK(abs(vol - sd / sqrt(time1)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK(vol < re.defaultVolatiltiy);
 }
 
 void VolatilityCurveTest::testVolatilityCurveRoll()

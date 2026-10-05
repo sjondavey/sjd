@@ -21,8 +21,7 @@ namespace sjd {
                                         double pAmount, 
                                         BuySell bs)
     {
-      SingleOptionContract::errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("AsianOption"));
-      AsianContract::errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("AsianOption"));
+        SingleOptionContract::errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("AsianOption"));
         setAveragingDates(averagingDatesInput);
         setSettlementDate(optionSettlement);
         setPremiumPaymentDate(pDate);
@@ -114,14 +113,23 @@ namespace sjd {
         }
     }
 
+    void AsianOption::recordAsianIssue(const std::string& code,
+                                       const std::string& message,
+                                       const std::vector<std::string>& path)
+    {
+        recordIssue(code, message, path);
+    }
+
+    void AsianOption::absorbAsianReport(const ValidationReport& child,
+                                        const std::vector<std::string>& prefix)
+    {
+        absorbChildReport(child, prefix);
+    }
+
     void AsianOption::validate()
     {
         SingleOptionContract::validate();
         AsianContract::validate();
-        if (AsianContract::errorTracking->getHasErrors()) 
-        {
-            absorbChildReport(asianValidationReport(), {});
-        }
         if (!orderedAveragingDates.empty() &&
             orderedAveragingDates.back() != getMaturityDate())
         {
@@ -142,10 +150,6 @@ namespace sjd {
     {
         SingleOptionContract::validate(re);
         AsianContract::validate(re);
-        if (AsianContract::errorTracking->getHasErrors()) 
-        {
-            absorbChildReport(asianValidationReport(), {});
-        }
         if (re->hasFRS() && !(re->getFRS())->extendsTo(getMaturityDate())) 
         {
             recordIssue("MARKET_FORWARD_RATE_SOURCE_RANGE",

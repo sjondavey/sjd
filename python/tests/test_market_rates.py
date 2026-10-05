@@ -5,6 +5,8 @@ import sqlite3
 import unittest
 from datetime import date
 
+import numpy as np
+
 import sjd
 from sjd.markets.rates import (
     business_days_after,
@@ -150,12 +152,17 @@ class MarketRatesTest(unittest.TestCase):
                         evolver = self._evolver(environment, settlement)
                         report = evolver.validate_report()
                         self.assertTrue(report.ok, [issue.message for issue in report.issues])
-                        evolver.run_monte_carlo(20)
-                        rows = evolver.get_monte_carlo_detail()["rows"]
-                        self.assertEqual(len(rows), len(SIMULATION_DATES))
-                        for row in rows:
-                            self.assertTrue(all(math.isfinite(value) for value in row), row)
-                        self.assertAlmostEqual(rows[0][1], expected, places=6)
+                        forward = sjd.EuropeanForward(settlement, 0.0, 1.0, sjd.BuySell.BUY)
+                        simulation = sjd.simulate(
+                            sjd.Portfolio([forward]),
+                            environment,
+                            SIMULATION_DATES,
+                            paths=20,
+                            seed=3,
+                        )
+                        self.assertEqual(simulation.steps, len(SIMULATION_DATES))
+                        self.assertTrue(np.isfinite(simulation.mtm).all())
+                        self.assertAlmostEqual(simulation.mtm[0, 0], expected, places=6)
 
     def test_calendar_month_market_has_no_spot_volatility_roll(self):
         with self.assertRaises(ValueError):

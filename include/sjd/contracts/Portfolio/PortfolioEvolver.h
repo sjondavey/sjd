@@ -1,23 +1,22 @@
 #ifndef PORTFOLIOEVOLVER_INCLUDED
 #define PORTFOLIOEVOLVER_INCLUDED
 
-#include <list>
 #include <algorithm>
+#include <set>
 
 #include <sjd/contracts/Portfolio/Portfolio.h>
-#include <sjd/contracts/Portfolio/RegulatoryCapital.h>
-#include <sjd/contracts/Portfolio/CVA/cva.h>
 #include <sjd/rates/PathGenerators/SingleFactorGMB.h>
-#include <sjd/rates/Discount/DiscountRateSource.h>
 
 namespace sjd 
 {
-    // Every simulated value, for statistics computed outside the evolver. The arrays are
-    // flat and row-major: spot, mtm and margin are [path][step], byTrade is
-    // [path][step][trade]. margin is empty unless the portfolio is margined, and byTrade
-    // is empty unless it was requested. A failed simulation has paths == 0.
-    // With a holding period, dates also hold the margin reset dates. Exposure date k is
-    // step exposureSteps[k], and its margin is read at step marginResetSteps[k].
+    // Every simulated value. Statistics are computed outside the evolver.
+    // The arrays are flat and row-major: spot, mtm and margin are [path][step],
+    // byTrade is [path][step][trade] and byStructure is [path][step][set].
+    // margin is empty unless the portfolio is margined. byTrade and
+    // byStructure are empty unless they were requested. A failed
+    // simulation has paths == 0. With a holding period, dates also hold the
+    // margin reset dates. Exposure date k is step exposureSteps[k], and its
+    // margin is read at step marginResetSteps[k].
     struct SimulatedPaths
     {
         std::vector<QuantLib::Date> dates;
@@ -26,29 +25,29 @@ namespace sjd
         size_t paths = 0;
         size_t steps = 0;
         size_t trades = 0;
+        size_t structures = 0;
         bool antithetic = false;
         std::vector<double> spot;
         std::vector<double> mtm;
         std::vector<double> margin;
         std::vector<double> byTrade;
+        std::vector<double> byStructure;
     };
 
     class PortfolioEvolver : public Validatable
     {
     public:
-        // Use this for unmargined portfolios or portfolios that do not require Holding QuantLib::Period calculations
+        // Use this for unmargined portfolios or portfolios that do not require holding-period calculations
         PortfolioEvolver(std::shared_ptr<Portfolio> portfolio, 
                          std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGenerator,
-                         std::set<QuantLib::Date> forwardDates,
-                         std::shared_ptr<RegulatoryCapital> capital = std::shared_ptr<RegulatoryCapital>());
+                         std::set<QuantLib::Date> forwardDates);
 
-        // Use this for portfolios that require Holding QuantLib::Period calculations
+        // Use this for portfolios that require holding-period calculations
         PortfolioEvolver(std::shared_ptr<Portfolio> portfolio, 
                          std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGenerator,
                          std::set<QuantLib::Date> forwardDates,
                          std::shared_ptr<QuantLib::Calendar> calendarForHoldingPeriodCalcuation, 
-                         size_t holdingPeriodInBusinessDays,
-                         std::shared_ptr<RegulatoryCapital> capital = std::shared_ptr<RegulatoryCapital>());
+                         size_t holdingPeriodInBusinessDays);
 
         bool isOK();
         ValidationReport validateReport();
@@ -56,102 +55,33 @@ namespace sjd
         std::vector<QuantLib::Date> getSimulationDates();
         std::vector<QuantLib::Date> getExposureDates();
 
-        void runMonteCarlo(unsigned long numberOfPaths);
-
         // With antithetic paths, path i and path i + paths/2 use opposite normals, and an
-        // odd request is rounded up. The draws are in the same order as runMonteCarlo, so
-        // the same seed gives the same paths.
-        SimulatedPaths simulatePaths(unsigned long numberOfPaths, bool antithetic, bool byTrade);
-        void getMonteCarloDetail(std::vector<QuantLib::Date>& simulationDates,
-                                 std::vector<std::string>& columnHeadings, 
-                                 std::vector<std::vector<double>>& data);
-        void getMonteCarloAnalysis(std::vector<std::string> &columnHeadings, 
-                                   std::vector<double> &data,
-                                   std::shared_ptr<DiscountRateSource> zeroCurve, 
-                                   std::shared_ptr<DiscountRateSource> spreadCurve,
-                                   std::shared_ptr<CVA> cva,
-                                   std::shared_ptr<CVA> dva);
+        // odd request is rounded up.
+        SimulatedPaths simulatePaths(unsigned long numberOfPaths, bool antithetic, bool byTrade, bool byStructure = false);
 
-
-        void getCIDetail(double confidenceInterval,
-                         std::vector<QuantLib::Date>& simulationDates,
-                         std::vector<std::string>& columnHeadings, 
-                         std::vector<std::vector<double>>& data);
-
-        void getCIAnalysis(double confidenceInterval,
-                           std::vector<std::string> &columnHeadings, 
-                           std::vector<double> &data,
-                            std::shared_ptr<DiscountRateSource> zeroCurve, 
-                            std::shared_ptr<DiscountRateSource> spreadCurve,
-                           std::shared_ptr<CVA> cva,
-                           std::shared_ptr<CVA> dva);
-
-        void getSpotPathDetail(std::vector<double> spotPath,
-                               std::vector<QuantLib::Date>& simulationDates,
-                               std::vector<std::string>& columnHeadings, 
-                               std::vector<std::vector<double>>& data);
-
-        void getSpotPathAnalysis(std::vector<double> spotPath,
-                                 std::vector<std::string> &columnHeadings, 
-                                 std::vector<double> &data,
-                                   std::shared_ptr<DiscountRateSource> zeroCurve, 
-                                  std::shared_ptr<DiscountRateSource> spreadCurve,
-                                 std::shared_ptr<CVA> cva,
-                                 std::shared_ptr<CVA> dva);
-
-
+        // One path marked to these forwards. spots has one value per simulation date.
+        SimulatedPaths valueSpotPath(const std::vector<double>& spots, bool byTrade, bool byStructure = false);
 
     protected:
-        void getPathDetail(std::shared_ptr<Path> path,
-                           std::vector<QuantLib::Date>& simulationDates,
-                           std::vector<std::string>& columnHeadings, 
-                           std::vector<std::vector<double>>& data);
-        void getPathAnalysis(std::shared_ptr<Path> path,
-                             std::vector<std::string> &columnHeadings, 
-                             std::vector<double> &data,
-                               std::shared_ptr<DiscountRateSource> zeroCurve, 
-                              std::shared_ptr<DiscountRateSource> spreadCurve,
-                             std::shared_ptr<CVA> cva,
-                             std::shared_ptr<CVA> dva);
-
-
         std::vector<double> getSpotAlongAPath(std::shared_ptr<Path> path);
         std::vector<double> getMtMAlongAPath(std::shared_ptr<Path> path);
-        void getRegulatoryCapitalAlongAPath(std::shared_ptr<Path> path, 
-                                            std::vector<double>& regCap, 
-                                            std::vector<double>& mtm, 
-                                            std::vector<double>& margin);
-        std::vector<double> margingBalanceForMtM(const std::vector<double> mtm);
-        
         virtual void evolvePortfolioAlongPath(std::shared_ptr<Path> path);
         void recordPath(SimulatedPaths& result,
                         size_t row,
                         std::shared_ptr<Path> path,
-                        const std::vector<std::shared_ptr<SingleInstrumentContract>>& trades);
-        virtual void collectStatsFromPath();
-        virtual void accumulateStatistics(size_t i);
-        virtual void calculateSummaryStats();
+                        const std::vector<std::shared_ptr<SingleInstrumentContract>>& trades,
+                        const std::vector<std::shared_ptr<Contract>>& structures);
 
-        void setSimulationDates(std::set<QuantLib::Date> dates); 
-        virtual void initialiseAccumulators(size_t paths);
-
-        double getXVAForExposurePath(std::vector<double> exposurePath, 
-                                     std::shared_ptr<CVA> cva, 
-                                     std::shared_ptr<DiscountRateSource> drs); 
-
-        //dates MUST be sorted
-        double getExpectedCostOfFundingPosition(std::vector<double> cashProfileToFund, 
-                                                std::vector<QuantLib::Date> dates, 
-                                                    std::shared_ptr<DiscountRateSource> zeroCurve,
-                                                std::shared_ptr<DiscountRateSource> spreadCurve);
+        void setSimulationDates(std::set<QuantLib::Date> dates);
+        SimulatedPaths prepareResult(size_t paths, bool antithetic, bool byTrade, bool byStructure,
+                                     std::vector<std::shared_ptr<SingleInstrumentContract>>& trades,
+                                     std::vector<std::shared_ptr<Contract>>& structures);
 
         std::string validationRoot() const override;
 
         bool portfolioIsMargined;
-        bool portfolioAttractsCapital;
 
         std::shared_ptr<Portfolio> portfolio;
-        std::shared_ptr<RegulatoryCapital> capitalModel;
 
         std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGenerator;
         std::shared_ptr<QuantLib::Calendar> calendarForHoldingPeriod;
@@ -163,40 +93,9 @@ namespace sjd
         size_t simulationSteps;
         size_t exposureSteps;
 
-
-      // Tmp variables used when evaluating the portfolio data on a path. 
-        std::vector<double> spotPath, 
-                       mtmOnPath, 
-                       marginOnPath, 
-                       exposurePathNoOffset, 
-                       negativeExposurePathNoOffset,
-                       exposurePathWithOffset, 
-                       negativeExposurePathWithOffset,
-                       regCap;
-      
-        std::vector<std::vector<double> > pathAccumulator,
-                                aveMtMAccumulator, 
-                                marginAccumulator,
-                                eeNoHoldingPeriodAccumulator, 
-                                neeNoHoldingPeriodAccumulator,
-                                eeWithHoldingPeriodAccumulator, 
-                                neeWithHoldingPeriodAccumulator,
-                                regCapAccumulator;      
-
-      // Summary stats for MC output
-        std::vector<double> averageSimulatedPath,
-                       averageMtM, 
-                       expectedMargin,
-                       eeNoHoldingPeriod, 
-                       neeNoHoldingPeriod,  
-                       eeWithHoldingPeriod, 
-                       neeWithHoldingPeriod,
-                       eePFENoHoldingPeriod,
-                       neePFENoHoldingPeriod, 
-                       eePFEWithHoldingPeriod,
-                       neePFEWithHoldingPeriod;
-
-        //std::vector<double> riskWeightedAssets; 
+        std::vector<double> spotPath;
+        std::vector<double> mtmOnPath;
+        std::vector<double> marginOnPath;
     };
 
 }

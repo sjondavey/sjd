@@ -10,11 +10,6 @@ import sjd
 from sjd import examples, stats
 
 
-def _column(detail, heading):
-    index = list(detail["headings"]).index(heading)
-    return np.array([row[index] for row in detail["rows"]])
-
-
 class SimulateTest(unittest.TestCase):
     def setUp(self):
         self.market = examples.sample_market(stochastic=True)
@@ -53,6 +48,7 @@ class SimulateTest(unittest.TestCase):
         self.assertEqual(simulation.mtm.shape, (22, len(self.dates)))
         self.assertIsNone(simulation.margin)
         self.assertIsNone(simulation.by_trade)
+        self.assertIsNone(simulation.by_structure)
         self.assertIs(simulation.mtm, simulation.mtm)
         np.testing.assert_array_equal(simulation.exposure_steps, np.arange(len(self.dates)))
         np.testing.assert_array_equal(simulation.margin_reset_steps, simulation.exposure_steps)
@@ -77,36 +73,24 @@ class SimulateTest(unittest.TestCase):
         np.testing.assert_array_equal(first.spot, second.spot)
         self.assertFalse(np.array_equal(first.mtm[:, 1:], other.mtm[:, 1:]))
 
-    def test_means_match_the_evolver_for_the_same_seed(self):
-        portfolio = self._portfolio()
-        generator = sjd.SingleFactorEconomicScenarioGenerator(self.environment)
-        evolver = sjd.PortfolioEvolver(portfolio, generator, self.dates)
-        generator.set_random_seed(11)
-        evolver.run_monte_carlo(20)
-        detail = evolver.get_monte_carlo_detail()
-
-        simulation = sjd.simulate(portfolio, self.environment, self.dates, paths=20, seed=11)
+    def test_summary_means_match_the_paths(self):
+        simulation = sjd.simulate(self._portfolio(), self.environment, self.dates, paths=20, seed=11)
         values = stats.exposure(simulation)
-        np.testing.assert_allclose(simulation.spot.mean(axis=0), _column(detail, "Ave Path"))
-        np.testing.assert_allclose(simulation.mtm.mean(axis=0), _column(detail, "Ave MtM"))
-        np.testing.assert_allclose(stats.expected_exposure(values), _column(detail, "EE"))
-        np.testing.assert_allclose(stats.negative_expected_exposure(values), _column(detail, "NEE"))
+        table = stats.summary(simulation)
+        np.testing.assert_allclose(table["spot"], simulation.spot.mean(axis=0))
+        np.testing.assert_allclose(table["mtm"], simulation.mtm.mean(axis=0))
+        np.testing.assert_allclose(table["ee"], stats.expected_exposure(values))
+        np.testing.assert_allclose(table["nee"], stats.negative_expected_exposure(values))
 
     def test_margin_is_returned_and_reduces_exposure(self):
-        portfolio = self._margined()
-        generator = sjd.SingleFactorEconomicScenarioGenerator(self.environment)
-        evolver = sjd.PortfolioEvolver(portfolio, generator, self.dates)
-        generator.set_random_seed(13)
-        evolver.run_monte_carlo(20)
-        detail = evolver.get_monte_carlo_detail()
-
-        simulation = sjd.simulate(portfolio, self.environment, self.dates, paths=20, seed=13)
+        simulation = sjd.simulate(self._margined(), self.environment, self.dates, paths=20, seed=13)
         self.assertEqual(simulation.margin.shape, simulation.mtm.shape)
         values = stats.exposure(simulation)
         np.testing.assert_allclose(values, simulation.mtm - simulation.margin)
-        np.testing.assert_allclose(simulation.margin.mean(axis=0), _column(detail, "Ave Margin"))
-        np.testing.assert_allclose(stats.expected_exposure(values), _column(detail, "EE"))
         np.testing.assert_allclose(stats.holding_period_exposure(simulation), values)
+        table = stats.summary(simulation)
+        np.testing.assert_allclose(table["margin"], simulation.margin.mean(axis=0))
+        np.testing.assert_allclose(table["ee"], stats.expected_exposure(values))
 
     def test_holding_period_matches_the_evolver(self):
         portfolio = self._margined()
@@ -120,14 +104,6 @@ class SimulateTest(unittest.TestCase):
         self.assertEqual(evolver.exposure_dates, self.dates)
         reset = usdzar.advance(self.dates[1], -10)
         self.assertIn(reset, evolver.simulation_dates)
-        generator.set_random_seed(13)
-        evolver.run_monte_carlo(20)
-        detail = evolver.get_monte_carlo_detail()
-        headings = list(detail["headings"])
-        rows = [row for day, row in zip(detail["dates"], detail["rows"]) if day in self.dates]
-        ee_with_hp = [row[headings.index("EE with HP")] for row in rows]
-        nee_with_hp = [row[headings.index("NEE with HP")] for row in rows]
-
         simulation = sjd.simulate(
             portfolio, self.environment, self.dates, paths=20, seed=13,
             holding_period=10, holding_period_calendar=usdzar,
@@ -137,11 +113,11 @@ class SimulateTest(unittest.TestCase):
         self.assertEqual(simulation.dates[simulation.margin_reset_steps[1]], reset)
         values = stats.holding_period_exposure(simulation)
         self.assertEqual(values.shape, (20, len(self.dates)))
-        np.testing.assert_allclose(stats.expected_exposure(values), ee_with_hp)
-        np.testing.assert_allclose(stats.negative_expected_exposure(values), nee_with_hp)
+        same_day = stats.exposure(simulation)[:, simulation.exposure_steps]
+        self.assertFalse(np.allclose(values, same_day))
         table = stats.summary(simulation, holding_period=True)
         self.assertEqual(table["dates"], self.dates)
-        np.testing.assert_allclose(table["ee"], ee_with_hp)
+        np.testing.assert_allclose(table["ee"], stats.expected_exposure(values))
 
         with self.assertRaisesRegex(ValueError, "holding_period_calendar"):
             sjd.simulate(portfolio, self.environment, self.dates, paths=4, holding_period=10)
@@ -177,6 +153,58 @@ class SimulateTest(unittest.TestCase):
             self.assertEqual(table[key].shape, (len(self.dates),), key)
         self.assertTrue(np.all(table["pfe"] >= 0.0))
         self.assertTrue(np.all(table["negative_pfe"] <= 0.0))
+
+    def test_regulatory_capital_matches_the_anchor_and_runs_along_the_path(self):
+        portfolio = self._margined()
+        factors = sjd.reg_cap_factors("commodity")
+        credit = examples.credit_parameters()
+        simulation = sjd.simulate(
+            portfolio, self.environment, self.dates, paths=8, seed=4, by_structure=True
+        )
+        self.assertEqual(simulation.by_structure.shape[2], len(portfolio.netting_sets()))
+        capital = stats.regulatory_capital(simulation, portfolio.netting_sets(), factors, credit)
+        self.assertEqual(capital.shape, (8, len(self.dates)))
+        portfolio.set_margin_balance(float(simulation.margin[0, 0]))
+        self.assertAlmostEqual(capital[0, 0], portfolio.get_regulatory_capital(self.environment), places=4)
+        self.assertTrue(np.all(np.isfinite(capital)))
+        self.assertTrue(np.all(capital >= 0.0))
+
+    def test_a_moved_premium_still_prices_the_netting_set(self):
+        book = examples.sample_contracts(self.market["forward"], self.market)
+        premium_put = sjd.EuropeanOption(
+            maturity=self.market["collar_maturity"],
+            settlement=self.market["collar_settlement"],
+            strike=book["put_strike"],
+            type=sjd.PutCall.PUT,
+            volume=book["volume"],
+            premium_payment_date=self.market["anchor"],
+            premium_amount=2.5,
+            buy_sell=sjd.BuySell.BUY,
+        )
+        portfolio = sjd.PortfolioB2CEM(
+            [premium_put, book["call"], book["forward"], book["asian"]],
+            sjd.reg_cap_factors("commodity"),
+            examples.credit_parameters(),
+            True,
+        )
+        report = portfolio.validate_report(self.environment)
+        self.assertTrue(report.ok, [issue.message for issue in report.issues])
+        described = portfolio.netting_sets()
+        simulation = sjd.simulate(
+            portfolio, self.environment, self.dates, paths=2, seed=9, by_structure=True
+        )
+        capital = stats.regulatory_capital(
+            simulation, described, sjd.reg_cap_factors("commodity"), examples.credit_parameters()
+        )
+        self.assertAlmostEqual(
+            capital[0, 0], portfolio.get_regulatory_capital(self.environment), places=4
+        )
+
+    def test_by_structure_needs_a_capital_portfolio(self):
+        with self.assertRaisesRegex(ValueError, "by_structure"):
+            sjd.simulate(
+                self._portfolio(), self.environment, self.dates, paths=2, seed=1, by_structure=True
+            )
 
 
 class StatisticsTest(unittest.TestCase):
@@ -225,6 +253,39 @@ class StatisticsTest(unittest.TestCase):
         result = stats.exposure(simulation)
         result[0, 0] = 99.0
         self.assertEqual(self.values[0, 0], 0.0)
+
+    def test_flat_default_probability_matches_the_curve(self):
+        anchor = date(2014, 6, 5)
+        dates = [anchor, date(2015, 6, 5), date(2016, 6, 5)]
+        curve = sjd.FlatDefaultProbability(anchor, 0.1, 0.45)
+        self.assertTrue(curve.is_ok())
+        np.testing.assert_allclose(
+            stats.flat_default_probability(anchor, dates, 0.1),
+            [curve.get_pd(day) for day in dates],
+        )
+        probability, loss = stats.credit_curve_terms(curve, dates)
+        np.testing.assert_allclose(loss, [0.45, 0.45, 0.45])
+        self.assertAlmostEqual(curve.get_pd(dates[0], dates[2]), probability[2] - probability[0])
+
+    def test_valuation_adjustment_discounts_the_second_step(self):
+        exposure = np.array([10.0, 40.0, -5.0])
+        discount = np.array([1.0, 0.9, 0.8])
+        probability = np.array([0.0, 0.02, 0.05])
+        loss = np.array([0.4, 0.4, 0.5])
+        credit = stats.credit_valuation_adjustment(exposure, discount, probability, loss)
+        self.assertAlmostEqual(credit, 0.9 * 0.02 * 40.0 * 0.4)
+        debit = stats.debit_valuation_adjustment(exposure, discount, probability, loss)
+        self.assertAlmostEqual(debit, 0.8 * 0.03 * -5.0 * 0.5)
+
+    def test_cost_of_funding_uses_the_spread_over_the_risk_free_curve(self):
+        position = np.array([100.0, 80.0])
+        risk_free = np.array([1.0, 0.95])
+        spread = np.array([0.99, 0.90])
+        cost = stats.cost_of_funding(position, risk_free, spread)
+        expected = (1.0 - 0.99) * 100.0 + 1.0 * (0.95 / 1.0 - 0.90 / 0.99) * 80.0
+        self.assertAlmostEqual(cost, expected)
+        panel = stats.cost_of_funding(np.vstack([position, position]), risk_free, spread)
+        np.testing.assert_allclose(panel, [expected, expected])
 
 
 if __name__ == "__main__":

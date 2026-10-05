@@ -445,27 +445,8 @@ namespace sjd
     AsianContract
 
     =======================================================================================*/
-    void AsianContract::recordAsianIssue(const std::string& code,
-                                         const std::string& message,
-                                         const std::vector<std::string>& path)
-    {
-        errorTracking->record(code, message, path);
-    }
-
-    void AsianContract::absorbAsianReport(const ValidationReport& child,
-                                          const std::vector<std::string>& prefix)
-    {
-        errorTracking->absorb(child, prefix);
-    }
-
-    ValidationReport AsianContract::asianValidationReport() const
-    {
-        return errorTracking->snapshot();
-    }
-
     void AsianContract::validate()
     {
-        errorTracking->clear();
         if (orderedAveragingDates.size() < 1) 
         {
             recordAsianIssue("ASIAN_AVERAGING_DATES_MISSING",
@@ -476,7 +457,13 @@ namespace sjd
 
     void AsianContract::validate(std::shared_ptr<RatesEnvironment> re)
     {
-        AsianContract::validate();
+        // Averaging dates are checked by validate(), which the instrument's
+        // validate(re) has already run. Recording them again would duplicate
+        // the issue on the shared tracker.
+        if (orderedAveragingDates.empty())
+        {
+            return;
+        }
         Date valueDate = (re->getAnchorDate());
         if (!re->hasFixingRS()) 
         {
@@ -510,11 +497,6 @@ namespace sjd
                                  {"rates_environment", "fixing_rate_source", "fixing_dates"});
             }
         }
-    }
-
-    vector<string> AsianContract::getAsianContractErrorMessages()
-    {
-        return errorTracking->getErrorMessages();
     }
 
     void AsianContract::setAveragingDates(set<Date> dates)
@@ -727,12 +709,7 @@ namespace sjd
 
     vector<std::shared_ptr<SingleInstrumentContract>> MultipleInstrumentContract::getUnderlyingSingleInstrumentContracts()
     {
-        vector<std::shared_ptr<SingleInstrumentContract>> clonedContracts;
-        for (size_t i = 0; i < contracts.size(); ++i) 
-        {
-            clonedContracts.push_back(cloneInstrument(contracts[i]));
-        }
-        return clonedContracts;
+        return contracts;
     }
 
     vector<std::shared_ptr<SingleInstrumentContract>> MultipleInstrumentContract::getSingleInstrumentContracts(

@@ -28,6 +28,7 @@ public:
     static void testStructureCreation();
 
     static void testPortfolioB2CEM();
+    static void testInvalidRegulatoryCapitalIsNaN();
     
 
     static boost::unit_test_framework::test_suite* suite();

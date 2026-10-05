@@ -1,5 +1,8 @@
 #include <sjd/rates/Volatility/VolatilityCurve.h>
 
+#include <algorithm>
+#include <cmath>
+
 #include <boost/lexical_cast.hpp> // convert numbers to string
 
 using namespace std;
@@ -20,10 +23,34 @@ namespace sjd
                                     bool allowExtrapolationInput) 
     {
         errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilityCurve"));
+        dayCounter = dayCounterInput;
+        inputVolatilities = volatilityInput;
+        anchorVolatility = volatilityInput.empty() ? 0.0 : volatilityInput.front();
+
+        vector<double> standardDeviations(volatilityInput.size(), 0.0);
+        bool anchorSupplied = false;
+        for (size_t i = 0; i < volatilityInput.size() && i < observationDatesInput.size(); ++i)
+        {
+            if (observationDatesInput[i] == anchorDateInput)
+            {
+                anchorVolatility = volatilityInput[i];
+                anchorSupplied = true;
+                standardDeviations[i] = 0.0;
+            }
+            else
+            {
+                double yearFraction = dayCounter->yearFraction(anchorDateInput, observationDatesInput[i]);
+                standardDeviations[i] = volatilityInput[i] * std::sqrt(std::max(yearFraction, 0.0));
+            }
+        }
+        if (!anchorSupplied && !volatilityInput.empty())
+        {
+            anchorVolatility = volatilityInput.front();
+        }
 
         datedCurve = std::shared_ptr<DatedCurve>(new DatedCurve(anchorDateInput, 
                                                                   observationDatesInput, 
-                                                                  volatilityInput,
+                                                                  standardDeviations,
                                                                   typeInput,
                                                                   allowExtrapolationInput));
 
@@ -35,9 +62,8 @@ namespace sjd
         if (datedCurve->isOK(tmp) && 
            (!datedCurve->containsRateOnAnchorDate()))
         {
-            datedCurve->addPointOnAnchorDate(volatilityInput[0]);
+            datedCurve->addPointOnAnchorDate(0.0);
         }
-        dayCounter = dayCounterInput;
     }
 
     VolatilityCurve::~VolatilityCurve()
@@ -55,16 +81,13 @@ namespace sjd
             recordIssue(code, errorMessage, {"inputs"});
             return false;
         }
-        for (size_t i = 0; i < datedCurve->getObservationDates().size(); ++i) 
+        for (size_t i = 0; i < inputVolatilities.size(); ++i)
         {
-            bool hasNegativeInputs = false;
-            if ((!hasNegativeInputs) && 
-                (datedCurve->getRates()[i] <= 0) )
+            if (inputVolatilities[i] <= 0)
             {
                 recordIssue("VOLATILITY_CURVE_NEGATIVE_INPUT",
                             "has negative inputs",
                             {"volatilities"});
-                hasNegativeInputs = true;
             }
         }
         return !errorTracking->getHasErrors();
@@ -87,7 +110,16 @@ namespace sjd
 
     double VolatilityCurve::getVolatility(Date toDate) const
     {
-        return datedCurve->getRate(toDate);
+        if (toDate == anchorDate)
+        {
+            return anchorVolatility;
+        }
+        double yearFraction = dayCounter->yearFraction(anchorDate, toDate);
+        if (yearFraction <= 0.0)
+        {
+            return anchorVolatility;
+        }
+        return getStandardDeviation(toDate) / std::sqrt(yearFraction);
     }
 
     double VolatilityCurve::getVolatility(Date toDate, double strike, double forward) const         
@@ -97,8 +129,7 @@ namespace sjd
 
     double VolatilityCurve::getStandardDeviation(Date toDate) const 
     {
-        double yearFraction = dayCounter->yearFraction(anchorDate, toDate);
-        return datedCurve->getRate(toDate) * sqrt(yearFraction);
+        return datedCurve->getRate(toDate);
     }
 
     double VolatilityCurve::getStandardDeviation(Date toDate, double strike, double forward) const
@@ -108,9 +139,8 @@ namespace sjd
 
     void VolatilityCurve::getVolAndSD(Date toDate, double &vol, double& sd) const
     {
-        vol = datedCurve->getRate(toDate);
-        double yearFraction = dayCounter->yearFraction(anchorDate, toDate);
-        sd = vol * sqrt(yearFraction);
+        vol = getVolatility(toDate);
+        sd = getStandardDeviation(toDate);
         return;
    }
 

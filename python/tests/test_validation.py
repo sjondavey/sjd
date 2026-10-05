@@ -1,8 +1,10 @@
 import unittest
 from datetime import date
 
+import numpy as np
+
 import sjd
-from sjd import examples
+from sjd import examples, stats
 
 
 class ValidationReportTest(unittest.TestCase):
@@ -192,12 +194,7 @@ class PortfolioValidationTest(unittest.TestCase):
         self.assertGreaterEqual(capital, 0.0)
 
         generator = sjd.SingleFactorEconomicScenarioGenerator(environment)
-        evolver = sjd.PortfolioEvolver(
-            portfolio,
-            generator,
-            [anchor, settlement],
-            portfolio.regulatory_capital(),
-        )
+        evolver = sjd.PortfolioEvolver(portfolio, generator, [anchor, settlement])
         report = evolver.validate_report()
         self.assertTrue(any(
             issue.code == "PATH_GENERATOR_FORWARD_NOT_STOCHASTIC"
@@ -348,19 +345,18 @@ class PortfolioAnalysisTest(unittest.TestCase):
         ready = portfolio.validate_report(market["environment"])
         self.assertTrue(ready.ok, [issue.message for issue in ready.issues])
         generator = sjd.SingleFactorEconomicScenarioGenerator(market["environment"])
-        evolver = sjd.PortfolioEvolver(
-            portfolio,
-            generator,
-            market["simulation_dates"],
-            portfolio.regulatory_capital(),
-        )
+        evolver = sjd.PortfolioEvolver(portfolio, generator, market["simulation_dates"])
         report = evolver.validate_report()
         self.assertTrue(report.ok, [issue.message for issue in report.issues])
         spot_path = [market["forward"].get_forward(day) for day in market["simulation_dates"]]
-        detail = evolver.get_spot_path_detail(spot_path)
-        self.assertEqual(list(detail["headings"]), ["Spot Path", "MtM", "EE", "NEE", "EE with HP", "NEE with HP", "Reg Cap"])
-        self.assertEqual(len(detail["rows"]), len(market["simulation_dates"]))
-        self.assertAlmostEqual(detail["rows"][0][1], portfolio.get_value(market["environment"]), places=6)
+        valued = evolver.value_spot_path(spot_path, by_structure=True)
+        self.assertEqual(valued.steps, len(market["simulation_dates"]))
+        self.assertAlmostEqual(valued.mtm[0, 0], portfolio.get_value(market["environment"]), places=6)
+        capital = stats.regulatory_capital(
+            valued, portfolio.netting_sets(), sjd.reg_cap_factors("commodity"), credit
+        )
+        self.assertEqual(capital.shape, (1, len(market["simulation_dates"])))
+        self.assertAlmostEqual(capital[0, 0], portfolio.get_regulatory_capital(market["environment"]), places=4)
 
         margin = sjd.SimpleMargin(market["anchor"], True, 50_000.0, True, 50_000.0, 10_000.0, 1_000.0)
         margined = sjd.PortfolioB2CEM(
@@ -375,19 +371,17 @@ class PortfolioAnalysisTest(unittest.TestCase):
             margined,
             sjd.SingleFactorEconomicScenarioGenerator(market["environment"]),
             market["simulation_dates"],
-            margined.regulatory_capital(),
         )
         margined_report = margined_evolver.validate_report()
         self.assertTrue(margined_report.ok, [issue.message for issue in margined_report.issues])
-        margined_detail = margined_evolver.get_spot_path_detail(spot_path)
-        self.assertIn("Margin", list(margined_detail["headings"]))
+        margined_path = margined_evolver.value_spot_path(spot_path)
+        self.assertIsNotNone(margined_path.margin)
 
-        evolver.run_monte_carlo(20)
-        monte_carlo = evolver.get_monte_carlo_detail()
-        self.assertIn("Ave MtM", list(monte_carlo["headings"]))
-        self.assertIn("PFE", list(monte_carlo["headings"]))
-        self.assertEqual(len(monte_carlo["rows"]), len(market["simulation_dates"]))
-        self.assertGreater(len(monte_carlo["rows"][0]), 2)
+        simulation = sjd.simulate(portfolio, market["environment"], market["simulation_dates"], paths=20, seed=3)
+        table = stats.summary(simulation)
+        self.assertEqual(len(table["dates"]), len(market["simulation_dates"]))
+        self.assertIn("mtm", table)
+        self.assertIn("pfe", table)
 
     def test_seeded_monte_carlo_repeats(self):
         market = examples.sample_market(stochastic=True)
@@ -399,12 +393,9 @@ class PortfolioAnalysisTest(unittest.TestCase):
         report = evolver.validate_report()
         self.assertTrue(report.ok, [issue.message for issue in report.issues])
 
-        runs = []
-        for _ in range(2):
-            generator.set_random_seed(11)
-            evolver.run_monte_carlo(21)
-            runs.append(evolver.get_monte_carlo_detail()["rows"])
-        self.assertEqual(runs[0], runs[1])
+        first = sjd.simulate(portfolio, market["environment"], market["simulation_dates"], paths=21, seed=11)
+        second = sjd.simulate(portfolio, market["environment"], market["simulation_dates"], paths=21, seed=11)
+        np.testing.assert_array_equal(first.mtm, second.mtm)
 
 
 if __name__ == "__main__":

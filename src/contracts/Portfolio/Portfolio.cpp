@@ -152,9 +152,4 @@ namespace sjd
         }
     }
 
-    vector<std::shared_ptr<SingleInstrumentContract>> Portfolio::getUnderlyingSingleInstrumentContracts()
-    {
-        return contracts;
-    } 
-
 }

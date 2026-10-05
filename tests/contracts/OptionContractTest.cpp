@@ -157,10 +157,13 @@ void OptionContactTest::testValue()
     EuropeanOption deferredPremiumContract(optionMaturity, optionSettlement, strike, type, 1, optionSettlement, defPremium, BUY);
     EuropeanOption deferredPremiumContract2(optionMaturity, optionSettlement, strike, type, 2, optionSettlement, defPremium, BUY);
     
-    double yte = dayCounter->yearFraction(anchorDate, optionMaturity);
     double yts = dayCounter->yearFraction(anchorDate, optionSettlement);
     double fwd = re->getFRS()->getForward(optionSettlement);
-    Black76Put simplePut(fwd, strike, gr.defaultVolatiltiy * sqrt(yte), exp(-gr.defaultNACCRate * yts));
+    // Maturity is a pillar, so the input volatility is recovered. The premium uses
+    // the curve's standard deviation, which is that volatility times sqrt(time).
+    BOOST_CHECK(abs(re->getVRS()->getVolatility(optionMaturity) - gr.defaultVolatiltiy) < EPSILON_FOR_DOUBLES);
+    double sd = re->getVRS()->getStandardDeviation(optionMaturity, strike, fwd);
+    Black76Put simplePut(fwd, strike, sd, exp(-gr.defaultNACCRate * yts));
     double pvDefPremium = defPremium * re->getDRS()->getDiscountFactor(optionSettlement);
 
     // 1) Before maturity

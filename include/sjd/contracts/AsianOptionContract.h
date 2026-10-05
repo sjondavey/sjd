@@ -73,7 +73,11 @@ namespace sjd {
                                QuantLib::Date premiumPaymentDate, 
                                double premiumAmount, 
                                BuySell buySell);
-        
+        void recordAsianIssue(const std::string& code,
+                              const std::string& message,
+                              const std::vector<std::string>& path) override;
+        void absorbAsianReport(const ValidationReport& child,
+                               const std::vector<std::string>& prefix) override;
 
        std::shared_ptr<AverageRateOption> option;
     };

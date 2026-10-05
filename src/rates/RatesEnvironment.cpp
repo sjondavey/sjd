@@ -180,6 +180,7 @@ namespace sjd
     {
         fixingrs = fixingrsInput;
         fixingrsSet = true;
+        ++marketRevision_;
     }
 
     bool RatesEnvironment::hasFixingRS()
@@ -201,7 +202,7 @@ namespace sjd
     {
         ++marketRevision_;
         allowExtrapolation = true;
-        finalDate == anchorDate;
+        finalDate = anchorDate;
         set<Date> allFinalDates;
         if (drsSet)
         {

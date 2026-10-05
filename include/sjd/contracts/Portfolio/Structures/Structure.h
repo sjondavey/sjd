@@ -72,6 +72,8 @@ namespace sjd
         virtual bool isExposureCapped() const;
         virtual bool getHasPriceExposure() const;
         virtual double getCap() const;
+        // Effective volume used in the add-on, Spot x Volume x factor(t).
+        virtual double getVolume() const;
         virtual double getPayoff(double forSpot);
 
         // To get the structure's reg cap, multiply the value returned from this function my

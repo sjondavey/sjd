@@ -1,6 +1,8 @@
 #ifndef SJD_REGULATORY_CAPITAL_INCLUDED
 #define SJD_REGULATORY_CAPITAL_INCLUDED
 
+#include <string>
+
 #include <sjd/contracts/Portfolio/Portfolio.h>
 #include <sjd/contracts/Portfolio/Structures/Structure.h>
 #include <sjd/contracts/Portfolio/RegCap/RegCapUnderlyingFactors.h>
@@ -8,6 +10,17 @@
 
 namespace sjd
 {
+
+    // Static description of one netting set. Its mark-to-market along a path is
+    // the value of the structure's own contracts, not a weight on the book.
+    struct NettingSet
+    {
+        QuantLib::Date settlement;
+        double volume;
+        bool hasPriceExposure;
+        bool capped;
+        double cap;
+    };
 
     /*======================================================================================
     RegulatoryCapital
@@ -55,6 +68,9 @@ namespace sjd
         bool hasStructureConversionError() const;
         const std::string& structureConversionErrorMessage() const;
         const std::vector<std::shared_ptr<Structure>>& structures() const;
+
+        // Empty, with error set, when the contracts could not be turned into sets.
+        std::vector<NettingSet> nettingSets(std::string& error) const;
 
         static std::vector<std::shared_ptr<Structure>> optimiseStructuresFromContracts(
             std::vector<std::shared_ptr<SingleInstrumentContract>> contracts,
@@ -104,6 +120,8 @@ namespace sjd
 
         std::shared_ptr<RegulatoryCapital> regulatoryCapital() const;
         double getRegulatoryCapital(std::shared_ptr<RatesEnvironment> re);
+        std::vector<NettingSet> nettingSets(std::string& error);
+        std::vector<std::shared_ptr<Contract>> regulatoryStructures() const override;
 
     private:
         void attachCapital(std::vector<std::shared_ptr<Contract>> inputs,
