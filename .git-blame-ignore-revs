@@ -1,0 +1,3 @@
+# Mechanical reformats, excluded from git blame.
+# clang-format 18.1.8 across the C++ tree.
+fd52b6831eaacadba1b95dff88ab08e85d0ab3dc
