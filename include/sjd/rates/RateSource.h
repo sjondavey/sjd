@@ -37,7 +37,7 @@ namespace sjd
         virtual bool isInRange(QuantLib::Date date) const;
         // Use extendsTo(..) when you want to exclude anchor date logic, most often
         // to understand if you can call the getValue(..) method from on a contract and get a
-        // number in return which is the case even if the rate source?s anchor date is
+        // number in return which is the case even if the rate source's anchor date is
         // greater than the contract settlement date (the return value would be zero)
         virtual bool extendsTo(QuantLib::Date date) const;
 

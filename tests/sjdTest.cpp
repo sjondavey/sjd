@@ -1,4 +1,4 @@
-﻿#include "sjdTest.h"
+#include "sjdTest.h"
 
 using namespace boost::unit_test_framework;
 

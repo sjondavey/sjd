@@ -1,4 +1,4 @@
-﻿#include <sjd/maths/TwoDimensionalInterpolation.h>
+#include <sjd/maths/TwoDimensionalInterpolation.h>
 
 using namespace std;
 using namespace QuantLib;

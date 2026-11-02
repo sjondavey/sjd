@@ -1,4 +1,4 @@
-﻿#include "MathsTest.h"
+#include "MathsTest.h"
 
 // using namespace std;
 using namespace boost::unit_test_framework;

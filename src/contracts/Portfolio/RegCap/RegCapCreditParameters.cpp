@@ -1,4 +1,4 @@
-﻿#include <sjd/contracts/Portfolio/RegCap/RegCapCreditParameters.h>
+#include <sjd/contracts/Portfolio/RegCap/RegCapCreditParameters.h>
 
 using namespace std;
 

@@ -1,4 +1,4 @@
-﻿#include <sjd/pricing/Black76Formula.h>
+#include <sjd/pricing/Black76Formula.h>
 
 using namespace std;
 

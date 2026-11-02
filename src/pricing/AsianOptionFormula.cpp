@@ -1,4 +1,4 @@
-﻿#include <sjd/pricing/AsianOptionFormula.h>
+#include <sjd/pricing/AsianOptionFormula.h>
 
 using namespace std;
 

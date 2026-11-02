@@ -1,4 +1,4 @@
-﻿#include "TwoDimensionalInterpolationTest.h"
+#include "TwoDimensionalInterpolationTest.h"
 
 // using namespace std;
 using namespace boost::unit_test_framework;

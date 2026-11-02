@@ -101,7 +101,7 @@ namespace sjd
         double getVolume() const;
         virtual void setVolume(double volume);
 
-        // Used to decide if a particular structure?s MtM is capped. This theoretical method
+        // Used to decide if a particular structure's MtM is capped. This theoretical method
         // should be implemented to be independent of a rates environment
         virtual double getPayoff(double forSpot) = 0;
 

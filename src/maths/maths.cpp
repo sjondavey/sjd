@@ -1,4 +1,4 @@
-﻿#include <sjd/maths/maths.h>
+#include <sjd/maths/maths.h>
 
 #include <limits>
 

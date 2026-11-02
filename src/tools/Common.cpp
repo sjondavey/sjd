@@ -1,4 +1,4 @@
-﻿#include <sjd/tools/Common.h>
+#include <sjd/tools/Common.h>
 
 using namespace std;
 using namespace QuantLib;

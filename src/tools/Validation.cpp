@@ -1,4 +1,4 @@
-﻿#include <sjd/tools/Validation.h>
+#include <sjd/tools/Validation.h>
 
 #include <utility>
 

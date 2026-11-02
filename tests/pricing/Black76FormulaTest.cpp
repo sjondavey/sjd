@@ -1,4 +1,4 @@
-﻿
+
 #include "Black76FormulaTest.h"
 
 using namespace std;

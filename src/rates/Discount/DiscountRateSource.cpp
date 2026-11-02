@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Discount/DiscountRateSource.h>
+#include <sjd/rates/Discount/DiscountRateSource.h>
 
 using namespace std;
 using namespace QuantLib;

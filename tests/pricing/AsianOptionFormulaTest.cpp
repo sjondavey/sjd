@@ -1,4 +1,4 @@
-﻿#include "AsianOptionFormulaTest.h"
+#include "AsianOptionFormulaTest.h"
 
 using namespace std;
 

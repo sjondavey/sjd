@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Fixing/RollingFixingRateSource.h>
+#include <sjd/rates/Fixing/RollingFixingRateSource.h>
 
 using namespace std;
 using namespace QuantLib;

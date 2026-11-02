@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/Forward/ForwardRateSource.h>
+#include <sjd/rates/Forward/ForwardRateSource.h>
 
 using namespace std;
 using namespace QuantLib;

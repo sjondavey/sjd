@@ -1,4 +1,4 @@
-﻿#include "MarginTest.h"
+#include "MarginTest.h"
 
 using namespace std;
 using namespace QuantLib;

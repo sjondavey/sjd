@@ -1,4 +1,4 @@
-﻿#include <sjd/rates/RateSource.h>
+#include <sjd/rates/RateSource.h>
 
 using namespace std;
 using namespace QuantLib;

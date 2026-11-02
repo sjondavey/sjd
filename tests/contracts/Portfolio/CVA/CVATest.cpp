@@ -1,4 +1,4 @@
-﻿#include "CVATest.h"
+#include "CVATest.h"
 
 using namespace std;
 using namespace QuantLib;
