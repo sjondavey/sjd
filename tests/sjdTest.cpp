@@ -80,6 +80,8 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(PortfolioInsuranceTest::suite());
     test->add(CVATest::suite());
 
+    test->add(GoldenValuesTest::suite());
+
     test->add(BOOST_TEST_CASE(stopTimer));
 
     return test;

@@ -31,5 +31,7 @@
 #include <contracts/Portfolio/CVA/CVATest.h>
 #include <contracts/Portfolio/Insurance/PortfolioInsuranceTest.h>
 
+#include <golden/GoldenValuesTest.h>
+
 // QuantLib is linked by CMake. ql/auto_link.hpp picks the wrong .lib name
 // for the static-md triplet (it treats /MD as "QuantLib is a DLL").

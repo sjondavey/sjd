@@ -22,6 +22,7 @@ add_executable(sjdTest
     rates/Forward/ForwardCurveTest.cpp
     rates/Volatility/VolatilityCurveTest.cpp
     rates/Volatility/VolatilitySurfacesTest.cpp
+    golden/GoldenValuesTest.cpp
     support/GenerateContracts.cpp
     support/GenerateRatesEnvironments.cpp
     sjdTest.cpp
