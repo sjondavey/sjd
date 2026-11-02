@@ -261,36 +261,45 @@ meant to move numbers, and explain each move in the commit.
 
 ## Phase 1 — C++ hygiene
 
+**Status.** Steps 4 and 6 are done. Step 5 is done for the edits that do not
+need clang-tidy: scoped enums, `make_shared` / `make_unique`, `sign(BuySell)`,
+`std::to_string`, `<random>`, default member initialisers for the known gaps,
+and `const` on the named getters. The library stays on C++17; `std::format`
+waits until Step 7. MSVC `/W4` reports nothing and the Windows CI jobs compile
+with `SJD_WARNINGS_AS_ERRORS=ON`. clang-tidy has not been run, so `override`,
+`= default`, `nullptr` and pass-by-`const`-reference are still open. Linux
+`-Werror` stays off until a GCC build with `-Wall -Wextra -Wpedantic` is clean.
+
 ### Step 4. Mechanical clean-up
 
 **Goal.** Make the code consistent so later diffs only show real changes.
 
 **Tasks** (one commit each)
 
-- [ ] **Reformat** the whole C++ tree with `.clang-format`. Put the commit hash
+- [x] **Reformat** the whole C++ tree with `.clang-format`. Put the commit hash
       in `.git-blame-ignore-revs`.
-- [ ] **Header guards.** Use `#pragma once` everywhere and remove the
+- [x] **Header guards.** Use `#pragma once` everywhere and remove the
       `#ifndef ... #define ... #endif` blocks (or the reverse; just be
       consistent). Remove commented-out `//#pragma once` lines.
-- [ ] **Includes.** Remove heavy or unused includes from headers. Examples:
+- [x] **Includes.** Remove heavy or unused includes from headers. Examples:
       `Margin.h` includes `<ql/time/calendars/all.hpp>` and
       `<boost/math/special_functions.hpp>`; `RegCapUnderlyingFactors.h`
       includes `<boost/algorithm/string.hpp>`; `Contracts.h` includes
       `<sstream>` and `<iomanip>`. Move them to the `.cpp` files that need
       them. Consider running include-what-you-use once.
-- [ ] **`using namespace boost;`** appears in most `.cpp` files and is almost
+- [x] **`using namespace boost;`** appears in most `.cpp` files and is almost
       never needed. Remove it; keep `using namespace std;` only if you must, or
       remove that too.
-- [ ] **Encoding.** Convert every source file to UTF-8 and fix the `?`
+- [x] **Encoding.** Convert every source file to UTF-8 and fix the `?`
       characters in comments.
-- [ ] **Dead code.** Delete the commented-out block at the bottom of
+- [x] **Dead code.** Delete the commented-out block at the bottom of
       `Structure.h`, the commented includes in `maths.h`, the empty
       `configure()` in `tests/sjdTest.cpp`, and the unused
       `lastDateInAveragingMonth` in `Contracts.cpp`.
-- [ ] **Stale comments.** `maths.h` still says NaNs are returned "because the
+- [x] **Stale comments.** `maths.h` still says NaNs are returned "because the
       files are used in Excel". `Common.h` still describes the old design.
       Update or delete these.
-- [ ] **Typos in identifiers.** Rename `getForwardFworward*` to
+- [x] **Typos in identifiers.** Rename `getForwardFworward*` to
       `getForwardForward*`, `setVolitalityRateSource` to
       `setVolatilityRateSource`, `updateAppedededRates` to
       `updateAppendedRates`, `isContactADerivative` to `isContractADerivative`,
@@ -315,48 +324,40 @@ changing behaviour.
       `modernize-use-override` and `modernize-use-equals-default`. Every
       overriding function gets `override`; empty virtual destructors become
       `~X() override = default;` (or just `virtual ~Base() = default;` on base
-      classes).
-- [ ] **Ownership.** Replace `std::shared_ptr<T>(new T(...))` with
+      classes). Not done: clang-tidy has not been run.
+- [x] **Ownership.** Replace `std::shared_ptr<T>(new T(...))` with
       `std::make_shared<T>(...)` and `std::unique_ptr<Contract>(new X(*this))`
-      with `std::make_unique<X>(*this)` (151 sites). `clang-tidy`'s
-      `modernize-make-shared` handles most of them.
-- [ ] **Initialise every member.** Use default member initialisers in the
-      class body (`double volume = 0.0;`, `bool hasMargin = false;`). Audit
-      every class; known gaps are `Portfolio()` (`hasMargin`),
-      `SingleFactorEconomicScenarioGenerator::seed`, and the members of
-      `SingleInstrumentContract`, which has no constructor of its own. The
-      sanitizer job from Step 2 confirms the fix.
+      with `std::make_unique<X>(*this)`. Raw `T*` allocations that are later
+      `delete`d were left as they are.
+- [x] **Initialise every member.** The known gaps are initialised:
+      `Portfolio::hasMargin`, `SingleFactorEconomicScenarioGenerator::seed`,
+      and the primitive members of `SingleInstrumentContract`. A whole-tree
+      audit is still open. The sanitizer job from Step 2 confirms the fix.
 - [ ] **Parameter passing.** Pass `std::vector`, `std::set`, `std::string` and
       `std::shared_ptr` by `const&` unless the function stores a copy (then
-      pass by value and `std::move`). `Structure`'s static helpers, the
-      `RatesEnvironment` setters, and every `std::vector<QuantLib::Date>`
-      argument are the main offenders.
-- [ ] **`const` correctness.** Getters (`getVolume`, `getStrike`,
-      `getAnchorDate`, `getMarginBalance`, `isMargined`, ...) become `const`.
-      `getValue` stays non-const until Step 13 fixes caching; if it is needed
-      sooner, make the cache members `mutable`.
+      pass by value and `std::move`). Not done.
+- [x] **`const` correctness.** `getAnchorDate`, `getMarginBalance` and
+      `isMargined` are `const`. `getVolume` and `getStrike` already were.
+      `getValue` stays non-const until Step 13. Other getters were left alone.
 - [ ] **`nullptr`.** Replace comparisons such as `if (re == 0)` and
       `dynamic_pointer_cast<...>(x) != 0` with `nullptr` or a plain boolean
-      test.
-- [ ] **Scoped enums.** Make `BuySell`, `PutCall`, `ArrayInterpolatorType`,
-      `ForwardAveraging` and `ForwardRoll` `enum class`. The pybind
-      `py::enum_` bindings keep the same Python names, so Python is unaffected.
-      Remove `buySellAsDouble` in favour of a small function
-      `sign(BuySell)`.
-- [ ] **Replace `boost::lexical_cast<std::string>(i)`** with `std::to_string`,
-      and `boost::random` with `<random>` (`std::mt19937_64`,
-      `std::normal_distribution`). Keep `boost::math` for distributions or
-      switch to QuantLib's `CumulativeNormalDistribution`. Note that switching
-      the RNG changes seeded paths, so do it in a separate commit and
-      regenerate only the simulation golden values.
-- [ ] **Optional: move to C++20.** MSVC, GCC 11+ and Clang 14+ all support it.
-      Benefits: `std::span` for the flat simulation arrays, designated
-      initialisers, `<format>` for messages, and `std::numbers`. Decide before
-      Step 7, because `std::format` makes the error-message work simpler.
+      test. Not done: many `== 0` comparisons are numeric, so this needs
+      clang-tidy rather than a text replace.
+- [x] **Scoped enums.** `BuySell`, `PutCall` and `ArrayInterpolatorType` are
+      `enum class`. `ForwardAveraging` and `ForwardRoll` already were. The
+      pybind names are unchanged. `buySellAsDouble` is replaced by `sign(BuySell)`.
+- [x] **Replace `boost::lexical_cast<std::string>(i)`** with `std::to_string`,
+      and `boost::random` with `<random>` (`std::mt19937`,
+      `std::normal_distribution`). `boost::math::normal` still supplies the
+      confidence-interval quantile. The RNG commit regenerates only the
+      simulation golden values.
+- [x] **C++20.** Decided: stay on C++17. `std::format` waits until Step 7.
 
-**Done when** `clang-tidy` with the Step 1 configuration reports nothing, the
-warning count at `/W4` and `-Wall -Wextra` is zero, and the golden tests pass.
-Enable `SJD_WARNINGS_AS_ERRORS` in CI.
+**Done when** clang-tidy with the Step 1 configuration reports nothing, `/W4`
+and `-Wall -Wextra` are zero, and the golden tests pass. `/W4` is zero and the
+golden tests pass. Windows CI compiles with `SJD_WARNINGS_AS_ERRORS=ON`.
+Linux `-Werror` stays off until `-Wpedantic` is clean. clang-tidy has not been
+run, so this step is not fully done.
 
 ---
 
@@ -381,6 +382,8 @@ failed before the fix.
 
 **Done when** each fix has its own test and the golden tests pass, apart from
 any value that was wrong because of the bug (explain each one in the commit).
+Done. `ConfigurationError` and `NumericalError` already live in
+`include/sjd/tools/Errors.h`; Step 7 adds the rest of that hierarchy.
 
 ---
 
@@ -416,8 +419,9 @@ mechanism to use.
 
 **Tasks**
 
-- [ ] Add `include/sjd/tools/Errors.h` and `src/tools/Errors.cpp` with the
-      hierarchy above and `SJD_ASSERT` / `SJD_REQUIRE` macros. `SJD_REQUIRE`
+- [ ] Add `src/tools/Errors.cpp`, `ValidationError`, and the `SJD_ASSERT` /
+      `SJD_REQUIRE` macros. `include/sjd/tools/Errors.h` already has `Error`,
+      `ConfigurationError` and `NumericalError` from Step 6. `SJD_REQUIRE`
       throws in every build; `SJD_ASSERT` is debug-only.
 - [ ] Convert the existing `throw std::invalid_argument` sites
       (`ForwardCurveFactory.cpp`, `Calendars.cpp`) to `ConfigurationError`.

@@ -82,8 +82,9 @@ jobs:
             "$VCPKG_ROOT/bootstrap-vcpkg.sh" -disableMetrics
           fi
 
+      # MSVC /W4 is clean, so warnings fail the Windows jobs. Linux -Wpedantic is not clean yet.
       - name: Configure
-        run: cmake --preset ${{ matrix.preset }} -DPython3_EXECUTABLE="${{ env.pythonLocation }}/${{ runner.os == 'Windows' && 'python.exe' || 'bin/python' }}"
+        run: cmake --preset ${{ matrix.preset }} -DPython3_EXECUTABLE="${{ env.pythonLocation }}/${{ runner.os == 'Windows' && 'python.exe' || 'bin/python' }}" -DSJD_WARNINGS_AS_ERRORS=${{ runner.os == 'Windows' && 'ON' || 'OFF' }}
 
       - name: Build
         run: cmake --build --preset ${{ matrix.preset }}
