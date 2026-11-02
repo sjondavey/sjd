@@ -248,8 +248,14 @@ exposure and capital.
       as `ContractStressor` and `PortfolioInsurance`) in a Boost test case that
       compares against hard-coded numbers.
 
-**Done when** `ctest` runs the golden tests, and changing any pricing constant
-by one ulp makes a golden test fail.
+**Done when** `ctest` runs the golden tests, and any change to a priced value
+larger than the 1e-9 relative tolerance makes a golden test fail.
+
+**Status (done).** Python golden values live in `python/tests/golden/golden.json`
+and are regenerated with `python python/tests/golden_cases.py`. The C++ tables
+in `tests/golden/GoldenValuesTest.cpp` are reprinted by running `sjdTest` with
+`SJD_PRINT_GOLDEN=1` and pasting the output. Regenerate only when a change is
+meant to move numbers, and explain each move in the commit.
 
 ---
 
@@ -361,7 +367,9 @@ failed before the fix.
 
 | Defect | File | Fix |
 | --- | --- | --- |
-| Non-const reference default argument | `Structure.h` (`qualifyForRegulatoryCapitalOffset`) | Add an overload without the reason argument, or return `std::optional<std::string>` (the reason, or empty when it qualifies) |
+| ~~Non-const reference default argument~~ (fixed in Step 1 with an overload, because `/permissive-` rejects it) | `Structure.h` (`qualifyForRegulatoryCapitalOffset`) | Optionally return `std::optional<std::string>` instead (the reason, or empty when it qualifies) |
+| Standard deviation interpolated linearly from 0 at the anchor, so a flat 12% curve gives about 8.4% between the anchor and the first pillar | `VolatilityCurve.cpp` | Interpolate total variance (σ²t) instead, so that a flat curve stays flat; update the golden values that move |
+| Linear extrapolation before the first pillar gives a negative PD at the anchor (about −0.42% on the sample curve), and an implied LGD outside the input range | `cva.h` / `cva.cpp` (`CumulativeDefaultProbability`) | Pin PD to 0 at the anchor and interpolate from there, or flat-extrapolate; reject inputs that are not non-decreasing |
 | Unknown asset class gives a null factor table | `RegCapUnderlyingFactors.cpp` | Throw `sjd::ConfigurationError` (Step 7) listing the accepted names; the Python `reg_cap_factors` already raises, so align the messages |
 | Exceptions swallowed and 0 returned | `VolatilitySurfaceDelta.cpp` (`calculateDeltaFromStrike`, `calculateStrikeFromDelta`) | Propagate a `NumericalError`, or record a validation issue at setup if this can be detected once; never price with a zero strike |
 | Time-based RNG seed; `seed` never initialised | `SingleFactorGMB.cpp` | Default seed from `std::random_device`, stored in `seed` and reported back to the caller (Step 12) |
