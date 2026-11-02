@@ -14,8 +14,6 @@
 #include <ql/time/daycounters/all.hpp>
 #include <ql/types.hpp>
 
-#include <boost/algorithm/string.hpp>
-
 enum SurfaceInterpolatorType
 {
     BILINEAR,

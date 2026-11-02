@@ -1,6 +1,9 @@
 #include <boost/lexical_cast.hpp>
 #include <sjd/contracts/Contracts.h>
 
+#include <iomanip>
+#include <sstream>
+
 using namespace std;
 using namespace QuantLib;
 using namespace boost;

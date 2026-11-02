@@ -1,5 +1,7 @@
 #include <sjd/contracts/Portfolio/Margin/Margin.h>
 
+#include <boost/math/special_functions/sign.hpp>
+
 using namespace std;
 using namespace QuantLib;
 using namespace boost;

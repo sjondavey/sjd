@@ -1,12 +1,10 @@
 #pragma once
 
-#include <boost/math/special_functions.hpp> // round, sign
 #include <memory>
 #include <sjd/maths/maths.h>
 #include <sjd/tools/Validation.h>
 #include <string>
 
-#include <ql/time/calendars/all.hpp>
 #include <ql/time/date.hpp>
 
 /*======================================================================================

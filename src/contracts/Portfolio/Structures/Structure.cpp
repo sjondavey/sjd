@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <sjd/contracts/Portfolio/Structures/Structure.h>
+#include <sstream>
 
 using namespace std;
 using namespace QuantLib;

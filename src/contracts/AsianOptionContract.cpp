@@ -1,6 +1,9 @@
 
 #include <sjd/contracts/AsianOptionContract.h>
 
+#include <iomanip>
+#include <sstream>
+
 using namespace std;
 using namespace QuantLib;
 using namespace boost;

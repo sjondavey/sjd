@@ -1,5 +1,7 @@
 #include <sjd/contracts/Portfolio/RegCap/RegCapUnderlyingFactors.h>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 
 namespace sjd

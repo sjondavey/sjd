@@ -1,6 +1,5 @@
 #pragma once
 
-#include <boost/lexical_cast.hpp>
 #include <ql/time/date.hpp>
 #include <string>
 #include <vector>

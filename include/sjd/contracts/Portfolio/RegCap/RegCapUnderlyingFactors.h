@@ -1,7 +1,7 @@
 #pragma once
 
-#include <boost/algorithm/string.hpp>
 #include <memory>
+#include <string>
 /*======================================================================================
 Factors for add-ons: From Annex 4: Treatment of Counterparty Credit Risk
 
