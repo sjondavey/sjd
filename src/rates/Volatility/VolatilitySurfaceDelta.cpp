@@ -4,16 +4,15 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
 
-    
     /*======================================================================================
-    VolatilitySurfaceDelta 
+    VolatilitySurfaceDelta
 
     =======================================================================================*/
-    VolatilitySurfaceDelta::VolatilitySurfaceDelta(Date anchorDateInput, 
-                                                   vector<Date> observationDatesInput, 
+    VolatilitySurfaceDelta::VolatilitySurfaceDelta(Date anchorDateInput,
+                                                   vector<Date> observationDatesInput,
                                                    vector<double> deltaInput,
                                                    vector<vector<double>> volatilityInput,
                                                    SurfaceInterpolatorType interpolatorTypeInput,
@@ -21,16 +20,12 @@ namespace sjd
     {
         errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceDelta"));
 
-        setInputs(anchorDateInput, 
-                  observationDatesInput, 
-                  deltaInput,
-                  convertVectorOfVectorsToMatrix(volatilityInput),
-                  interpolatorTypeInput,
-                  extrapolateInput);
+        setInputs(anchorDateInput, observationDatesInput, deltaInput,
+                  convertVectorOfVectorsToMatrix(volatilityInput), interpolatorTypeInput, extrapolateInput);
     }
 
-    VolatilitySurfaceDelta::VolatilitySurfaceDelta(Date anchorDateInput, 
-                                                   vector<Date> observationDatesInput, 
+    VolatilitySurfaceDelta::VolatilitySurfaceDelta(Date anchorDateInput,
+                                                   vector<Date> observationDatesInput,
                                                    vector<double> deltaInput,
                                                    QuantLib::Matrix volatilityInput,
                                                    SurfaceInterpolatorType interpolatorTypeInput,
@@ -38,11 +33,7 @@ namespace sjd
     {
         errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceDelta"));
 
-        setInputs(anchorDateInput, 
-                  observationDatesInput, 
-                  deltaInput,
-                  volatilityInput,
-                  interpolatorTypeInput,
+        setInputs(anchorDateInput, observationDatesInput, deltaInput, volatilityInput, interpolatorTypeInput,
                   extrapolateInput);
     }
 
@@ -55,28 +46,28 @@ namespace sjd
     bool VolatilitySurfaceDelta::isInRange(QuantLib::Date date, double strike, double forward) const
     {
         return isInRange(date);
-    } 
+    }
 
     bool VolatilitySurfaceDelta::isInRange(QuantLib::Date date) const
     {
         return timeInRange(dayCounter->yearFraction(anchorDate, date));
-    } 
+    }
 
     double VolatilitySurfaceDelta::getVolatility(Date toDate) const
     {
-      return getVolatility(toDate, 1.0, 1.0);
+        return getVolatility(toDate, 1.0, 1.0);
     }
 
     double VolatilitySurfaceDelta::getVolatility(Date toDate, double strike, double forward) const
     {
-      double delta = calculateDeltaFromStrike(toDate, strike, forward);
-      double yf = dayCounter->yearFraction(anchorDate, toDate);
-      return surfaceVolatility(yf, delta);
+        double delta = calculateDeltaFromStrike(toDate, strike, forward);
+        double yf = dayCounter->yearFraction(anchorDate, toDate);
+        return surfaceVolatility(yf, delta);
     }
 
-   double VolatilitySurfaceDelta::getStandardDeviation(Date toDate) const
+    double VolatilitySurfaceDelta::getStandardDeviation(Date toDate) const
     {
-      return getStandardDeviation(toDate, 1.0, 1.0);
+        return getStandardDeviation(toDate, 1.0, 1.0);
     };
 
     double VolatilitySurfaceDelta::getStandardDeviation(Date toDate, double strike, double forward) const
@@ -88,31 +79,33 @@ namespace sjd
 
     double VolatilitySurfaceDelta::calculateDeltaFromStrike(Date date, double strike, double forward) const
     {
-      double yf = dayCounter->yearFraction(anchorDate, date);
+        double yf = dayCounter->yearFraction(anchorDate, date);
         if (yf <= 0.0)
         {
             // With no time left the put delta is a step at the strike.
-            if (strike > forward) return 100.0;
-            if (strike < forward) return 0.0;
+            if (strike > forward)
+                return 100.0;
+            if (strike < forward)
+                return 0.0;
             return 50.0;
         }
         double accuracy = 1.0e-8;
         size_t maxItterates = 20;
-        double sqrtttm = sqrt(yf); 
+        double sqrtttm = sqrt(yf);
 
         double guess1 = 50, guess2 = 50;
         double vol1, sd1 = 0.2, diff = accuracy + 1;
-       
+
         Black76Put put(forward, strike, sd1, 1);
-        
+
         size_t counter = 0;
 
-        while ((counter < maxItterates) && (diff > accuracy)) 
+        while ((counter < maxItterates) && (diff > accuracy))
         {
             guess1 = guess2;
-            try 
+            try
             {
-                vol1 = (*interpolator)(yf, clampToStrikeGrid(guess1), true); // don't want to fall over here        
+                vol1 = (*interpolator)(yf, clampToStrikeGrid(guess1), true); // don't want to fall over here
             }
             catch (std::exception)
             {
@@ -120,90 +113,76 @@ namespace sjd
             }
             sd1 = vol1 * sqrtttm;
             put.setStandardDeviation(sd1);
-            guess2 = -put.getDelta() * 100;        
+            guess2 = -put.getDelta() * 100;
             diff = abs(guess1 - guess2);
             ++counter;
-        }        
+        }
         return guess2;
     }
 
     double VolatilitySurfaceDelta::calculateStrikeFromDelta(Date date, double delta, double forward) const
-    {        
+    {
         QuantLib::Real accuracy = 1.0e-12;
-        QuantLib::Bisection solver;  
+        QuantLib::Bisection solver;
         double yf = dayCounter->yearFraction(anchorDate, date);
         double vol = surfaceVolatility(yf, delta);
         double sd = vol * sqrt(yf);
         double strike;
 
-        double guess = forward; //frs->getForward(date);
+        double guess = forward; // frs->getForward(date);
         double lowerBound = 0.1 * guess;
         double upperBound = 2.0 * guess;
-        try 
+        try
         {
-            strike = solver.solve(BlackPutImpliedStrike(delta, forward,sd),
-                                  accuracy,
-                                  guess,
-                                  lowerBound,
-                                  upperBound);        
-        } 
-        catch (...) 
+            strike = solver.solve(BlackPutImpliedStrike(delta, forward, sd), accuracy, guess, lowerBound,
+                                  upperBound);
+        }
+        catch (...)
         {
             strike = 0;
         }
-        return strike;      
+        return strike;
     }
 
     std::shared_ptr<VolatilityRateSource> VolatilitySurfaceDelta::parallelBump(double spread)
     {
         vector<Date> newDates;
         QuantLib::Matrix volatilitySubset;
-      
+
         getRolledVariables(anchorDate, newDates, volatilitySubset);
         Matrix spreadMatrix = Matrix(volatilitySubset.rows(), volatilitySubset.columns(), spread);
         Matrix bumpedVolMatrix = volatilitySubset + spreadMatrix;
 
-        return std::shared_ptr<VolatilityRateSource>(
-            new VolatilitySurfaceDelta(anchorDate, 
-                                       newDates, 
-                                       strikeDimension,
-                                       volatilitySubset,
-                                       interpolatorType,
-                                       allowExtrapolation));
+        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceDelta(
+            anchorDate, newDates, strikeDimension, volatilitySubset, interpolatorType, allowExtrapolation));
     }
 
     std::shared_ptr<VolatilityRateSource> VolatilitySurfaceDelta::rollForward(Date toDate)
     {
         vector<Date> newDates;
         QuantLib::Matrix volatilitySubset;
-      
+
         getRolledVariables(toDate, newDates, volatilitySubset);
 
-        return std::shared_ptr<VolatilityRateSource>(
-            new VolatilitySurfaceDelta(toDate, 
-                                       newDates, 
-                                       strikeDimension,
-                                       volatilitySubset,
-                                       interpolatorType,
-                                       allowExtrapolation));
+        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceDelta(
+            toDate, newDates, strikeDimension, volatilitySubset, interpolatorType, allowExtrapolation));
     }
-
 
     /*======================================================================================
     SimpleDeltaSurface
 
     =======================================================================================*/
-    SimpleDeltaSurface::SimpleDeltaSurface(vector<double> timesInput, 
-                                           vector<double> deltaInput, 
-                                           vector<vector<double>> volatility, 
-                                           bool extrapolate, 
+    SimpleDeltaSurface::SimpleDeltaSurface(vector<double> timesInput,
+                                           vector<double> deltaInput,
+                                           vector<vector<double>> volatility,
+                                           bool extrapolate,
                                            string interpolationType)
         : extrapolate(extrapolate), times(timesInput), delta(deltaInput)
     {
         className = "SimpleDeltaSurface";
         boost::algorithm::to_lower(interpolationType);
         boost::algorithm::trim(interpolationType);
-        if (!((interpolationType.compare("bilinear") == 0) || (interpolationType.compare("bicubic") == 0))) 
+        if (!((interpolationType.compare("bilinear") == 0) || (interpolationType.compare("bicubic") == 0)))
         {
             isOKVariable = false;
             errorMessage = className + "Interpolation Type must be either Bilinear or Bicubic";
@@ -211,7 +190,7 @@ namespace sjd
         }
         isOKVariable = true;
         errorMessage = "";
-        if ((times.size() == 0) || (delta.size() == 0) || (volatility.size() == 0)) 
+        if ((times.size() == 0) || (delta.size() == 0) || (volatility.size() == 0))
         {
             isOKVariable = false;
             errorMessage = className + "One of the input vectors is empty";
@@ -219,77 +198,69 @@ namespace sjd
         }
         size_t rows = volatility.size();
         size_t columns = volatility[0].size();
-        for (size_t i = 0; i < rows; ++i) 
+        for (size_t i = 0; i < rows; ++i)
         {
-            if (volatility[i].size() != columns) 
+            if (volatility[i].size() != columns)
             {
                 isOKVariable = false;
                 errorMessage = className + "The input volatlity is not square";
                 return;
             }
         }
-        if (!isStrictlyIncreasing<double>(times)) 
+        if (!isStrictlyIncreasing<double>(times))
         {
             isOKVariable = false;
-            errorMessage = className + "Times are not strictly increasing";            
+            errorMessage = className + "Times are not strictly increasing";
             return;
         }
-        if (!isStrictlyIncreasing<double>(delta)) 
+        if (!isStrictlyIncreasing<double>(delta))
         {
             isOKVariable = false;
-            errorMessage = "Deltas are not strictly increasing";            
+            errorMessage = "Deltas are not strictly increasing";
             return;
         }
-        if (delta[0] < 1.0) 
+        if (delta[0] < 1.0)
         {
             for (size_t i = 0; i < delta.size(); ++i)
             {
                 delta[i] *= 100;
             }
         }
-        if (times[0] > 0) 
+        if (times[0] > 0)
         {
             times.insert(times.begin(), 0);
-            for (size_t i = 0; i < volatility.size(); ++i) 
+            for (size_t i = 0; i < volatility.size(); ++i)
             {
                 double vol = volatility[i][0];
                 volatility[i].insert(volatility[i].begin(), vol);
             }
         }
         volatilityMatrix = Matrix(rows, columns);
-        for (size_t i = 0; i < rows; ++i) 
+        for (size_t i = 0; i < rows; ++i)
         {
-            for (size_t j = 0; j < columns; ++j) 
+            for (size_t j = 0; j < columns; ++j)
             {
                 volatilityMatrix[i][j] = volatility[i][j];
             }
         }
         if (interpolationType.compare("bilinear") == 0)
         {
-            interpolator = std::shared_ptr<Interpolation2D>(
-                new BilinearInterpolation(times.begin(), 
-                                          times.end(), 
-                                          delta.begin(), 
-                                          delta.end(), 
-                                          volatilityMatrix));
+            interpolator = std::shared_ptr<Interpolation2D>(new BilinearInterpolation(
+                times.begin(), times.end(), delta.begin(), delta.end(), volatilityMatrix));
         }
-        else 
+        else
         {
             interpolator = std::shared_ptr<Interpolation2D>(
-                new BicubicSpline(times.begin(), 
-                                  times.end(), 
-                                  delta.begin(), 
-                                  delta.end(), 
-                                  volatilityMatrix));
+                new BicubicSpline(times.begin(), times.end(), delta.begin(), delta.end(), volatilityMatrix));
         }
     }
 
-    bool SimpleDeltaSurface::isOK() 
+    bool SimpleDeltaSurface::isOK()
     {
         return isOKVariable;
     }
 
-    string SimpleDeltaSurface::getErrorMessage() 
+    string SimpleDeltaSurface::getErrorMessage()
     {
         return errorMessage;
     }
@@ -312,7 +283,7 @@ namespace sjd
         double fwd = 1;
         double strike = moneyness + fwd;
         double vol = calculateDeltaFromStrike(fwd, strike, time);
-        if (abs(vol)<1e-8)
+        if (abs(vol) < 1e-8)
         {
             return false;
         }
@@ -336,7 +307,7 @@ namespace sjd
 
     double SimpleDeltaSurface::getVolatilityForMoneyness(double time, double moneyness) const
     {
-        if (time <=0)
+        if (time <= 0)
         {
             return 0;
         }
@@ -351,24 +322,24 @@ namespace sjd
     {
         double accuracy = 1.0e-8;
         size_t maxItterates = 20;
-        double sqrtttm = sqrt(time); 
+        double sqrtttm = sqrt(time);
         double guess1 = 50, guess2 = 50;
-        double vol1 = 0, sd1 = 0.2, diff = accuracy + 1;       
-        Black76Put put(forward, strike, sd1, 1);        
+        double vol1 = 0, sd1 = 0.2, diff = accuracy + 1;
+        Black76Put put(forward, strike, sd1, 1);
         size_t counter = 0;
-        while ((counter < maxItterates) && (diff > accuracy)) 
+        while ((counter < maxItterates) && (diff > accuracy))
         {
             guess1 = guess2;
             if (interpolator->isInRange(time, guess1))
             {
-                vol1 = (*interpolator)(time, guess1, extrapolate);  
+                vol1 = (*interpolator)(time, guess1, extrapolate);
             }
             sd1 = vol1 * sqrtttm;
             put.setStandardDeviation(sd1);
-            guess2 = -put.getDelta() * 100;        
+            guess2 = -put.getDelta() * 100;
             diff = abs(guess1 - guess2);
             ++counter;
-        }        
+        }
         return guess2;
     }
 }

@@ -10,15 +10,12 @@
 
 using namespace sjd;
 
-class MarginTest 
+class MarginTest
 {
-  public:
-
+public:
     static void testSimpleMargin();
 
     static boost::unit_test_framework::test_suite* suite();
 };
 
 #endif
-
-

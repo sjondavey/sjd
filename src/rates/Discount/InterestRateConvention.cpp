@@ -4,22 +4,22 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
-   /*======================================================================================
-    InterestRateConvention
+    /*======================================================================================
+     InterestRateConvention
 
-    =======================================================================================*/
+     =======================================================================================*/
 
-    InterestRateConvention::InterestRateConvention(std::shared_ptr<DayCounter> dayCounterInput, 
-                                                   Compounding compoundingInput, 
+    InterestRateConvention::InterestRateConvention(std::shared_ptr<DayCounter> dayCounterInput,
+                                                   Compounding compoundingInput,
                                                    Frequency frequencyInput)
     {
         dayCounter = dayCounterInput;
         compounding = compoundingInput;
         frequency = frequencyInput;
     }
-        
+
     std::shared_ptr<DayCounter> InterestRateConvention::getDayCounter()
     {
         return dayCounter;
@@ -40,15 +40,15 @@ namespace sjd
         double time = dayCounter->yearFraction(fromDate, toDate);
         double accumulationFactor = 1 / df;
         double r = 0;
-        switch (compounding) 
+        switch (compounding)
         {
-          case Simple:
+        case Simple:
             return (accumulationFactor - 1.0) / time;
-          case Compounded:
-            return (std::pow(accumulationFactor, 1.0 / (frequency*time)) - 1) * frequency;
-          case Continuous:
+        case Compounded:
+            return (std::pow(accumulationFactor, 1.0 / (frequency * time)) - 1) * frequency;
+        case Continuous:
             return std::log(accumulationFactor) / time;
-          default:
+        default:
             return 0;
         }
     }
@@ -57,18 +57,18 @@ namespace sjd
     {
         double time = dayCounter->yearFraction(fromDate, toDate);
         double accumulationFactor;
-        switch (compounding) 
+        switch (compounding)
         {
-          case Simple:
+        case Simple:
             accumulationFactor = 1.0 + rate * time;
             break;
-          case Compounded:
-            accumulationFactor = std::pow(1.0+rate/frequency, frequency*time);
+        case Compounded:
+            accumulationFactor = std::pow(1.0 + rate / frequency, frequency * time);
             break;
-          case Continuous:
-            accumulationFactor = std::exp(rate*time);
+        case Continuous:
+            accumulationFactor = std::exp(rate * time);
             break;
-          default: // ignore SimpleThenCompounded
+        default: // ignore SimpleThenCompounded
             accumulationFactor = 1;
             break;
         }

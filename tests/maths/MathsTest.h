@@ -1,23 +1,22 @@
 ﻿#ifndef sjd_test_maths
 #define sjd_test_maths
 
-#include <iostream>
-#include <boost/test/unit_test.hpp>
 #include <boost/math/special_functions/fpclassify.hpp> // boost::math::isnan
+#include <boost/test/unit_test.hpp>
+#include <iostream>
 #include <sjd/maths/maths.h>
 
-class MathsFunctionsTest 
+class MathsFunctionsTest
 {
-  public:
+public:
     static void testFunctions();
-   static void testLinearInterpolator();
-   // Test some of the functionality of the abstract base class using one instance
-   static void testArrayInterpolator();
-   static void testLinearArrayInterpolator();
-   static void testCubicSplineInterpolator();   
+    static void testLinearInterpolator();
+    // Test some of the functionality of the abstract base class using one instance
+    static void testArrayInterpolator();
+    static void testLinearArrayInterpolator();
+    static void testCubicSplineInterpolator();
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
 
 #endif

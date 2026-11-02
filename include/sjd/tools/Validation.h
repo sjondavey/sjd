@@ -112,8 +112,7 @@ namespace sjd
         void recordIssue(const std::string& code,
                          const std::string& message,
                          const std::vector<std::string>& tail);
-        void absorbChildReport(const ValidationReport& child,
-                               const std::vector<std::string>& extra);
+        void absorbChildReport(const ValidationReport& child, const std::vector<std::string>& extra);
 
         std::shared_ptr<IssueTracker> errorTracking;
     };

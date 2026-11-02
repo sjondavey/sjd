@@ -23,13 +23,9 @@ namespace sjd
         return "regulatory_capital";
     }
 
-    void RegulatoryCapital::validate()
-    {
-    }
+    void RegulatoryCapital::validate() {}
 
-    void RegulatoryCapital::validate(std::shared_ptr<RatesEnvironment> /*re*/)
-    {
-    }
+    void RegulatoryCapital::validate(std::shared_ptr<RatesEnvironment> /*re*/) {}
 
     CurrentExposureMethod::CurrentExposureMethod(
         vector<std::shared_ptr<Contract>> inputs,
@@ -52,19 +48,19 @@ namespace sjd
         }
         if (!regCapCreditParameters)
         {
-            regCapCreditParameters = std::shared_ptr<RegCapCreditParameters>(new RegCapCreditParameters(0, 0));
+            regCapCreditParameters =
+                std::shared_ptr<RegCapCreditParameters>(new RegCapCreditParameters(0, 0));
         }
 
         if (optimise)
         {
             bool successful = false;
-            nettingStructures = optimiseStructuresFromContracts(
-                extractedContracts, regCapAssetFactors, successful, structureErrorMessage);
+            nettingStructures = optimiseStructuresFromContracts(extractedContracts, regCapAssetFactors,
+                                                                successful, structureErrorMessage);
             structureConversionError = !successful;
             if (!successful)
             {
-                errorTracking->record("PORTFOLIO_STRUCTURE_CONVERSION",
-                                      structureErrorMessage,
+                errorTracking->record("PORTFOLIO_STRUCTURE_CONVERSION", structureErrorMessage,
                                       {"regulatory_capital", "structures"});
             }
         }
@@ -121,8 +117,7 @@ namespace sjd
         resetErrorMessages();
         if (structureConversionError)
         {
-            errorTracking->record("PORTFOLIO_STRUCTURE_CONVERSION",
-                                  structureErrorMessage,
+            errorTracking->record("PORTFOLIO_STRUCTURE_CONVERSION", structureErrorMessage,
                                   {"regulatory_capital", "structures"});
             return;
         }
@@ -142,8 +137,7 @@ namespace sjd
         resetErrorMessages();
         if (structureConversionError)
         {
-            errorTracking->record("PORTFOLIO_STRUCTURE_CONVERSION",
-                                  structureErrorMessage,
+            errorTracking->record("PORTFOLIO_STRUCTURE_CONVERSION", structureErrorMessage,
                                   {"regulatory_capital", "structures"});
             return;
         }
@@ -229,7 +223,8 @@ namespace sjd
             list<std::shared_ptr<SingleInstrumentContract>>::iterator it = tmpContracts.begin();
             while (it != tmpContracts.end())
             {
-                if (Structure::qualifyForRegulatoryCapitalOffset(*it, potentialContractsForOneStructure.front()))
+                if (Structure::qualifyForRegulatoryCapitalOffset(*it,
+                                                                 potentialContractsForOneStructure.front()))
                 {
                     potentialContractsForOneStructure.push_back(*it);
                     it = tmpContracts.erase(it);
@@ -241,14 +236,15 @@ namespace sjd
             }
 
             bool successful = false;
-            vector<std::shared_ptr<Structure>> structuresForOneSettlement =
-                Structure::createStructures(potentialContractsForOneStructure, regCapAssetFactors, successful);
+            vector<std::shared_ptr<Structure>> structuresForOneSettlement = Structure::createStructures(
+                potentialContractsForOneStructure, regCapAssetFactors, successful);
             if (!successful)
             {
                 sucessfullportfolio = false;
                 stringstream descriptionStream;
                 descriptionStream << "Unable to convert single instruments for settlement on "
-                                  << QuantLib::io::iso_date(potentialContractsForOneStructure[0]->getSettlementDate())
+                                  << QuantLib::io::iso_date(
+                                         potentialContractsForOneStructure[0]->getSettlementDate())
                                   << " into a single structure";
                 errorMessage = descriptionStream.str();
             }
@@ -317,7 +313,8 @@ namespace sjd
         {
             regCap = regCap - mtm + max(0.0, mtm);
         }
-        regCap *= regCapCreditParameters->getCapitalCharge() * regCapCreditParameters->getCounterpartyWeighting();
+        regCap *=
+            regCapCreditParameters->getCapitalCharge() * regCapCreditParameters->getCounterpartyWeighting();
         regCap = max(0.0, regCap);
         return regCap;
     }
@@ -372,13 +369,9 @@ namespace sjd
         {
             return;
         }
-        capital = std::shared_ptr<CurrentExposureMethod>(new CurrentExposureMethod(
-            inputs,
-            contracts,
-            hasMargin ? margin : std::shared_ptr<Margin>(),
-            regCapAssetFactorsInput,
-            regCapCreditParametersInput,
-            optimise));
+        capital = std::shared_ptr<CurrentExposureMethod>(
+            new CurrentExposureMethod(inputs, contracts, hasMargin ? margin : std::shared_ptr<Margin>(),
+                                      regCapAssetFactorsInput, regCapCreditParametersInput, optimise));
         if (!capital->isOK())
         {
             absorbChildReport(capital->validationReport(), {"regulatory_capital"});
@@ -392,8 +385,7 @@ namespace sjd
         Portfolio::validate();
         if (capital && capital->hasStructureConversionError())
         {
-            recordIssue("PORTFOLIO_STRUCTURE_CONVERSION",
-                        capital->structureConversionErrorMessage(),
+            recordIssue("PORTFOLIO_STRUCTURE_CONVERSION", capital->structureConversionErrorMessage(),
                         {"structures"});
             return;
         }
@@ -417,8 +409,7 @@ namespace sjd
         Portfolio::validate(re);
         if (capital && capital->hasStructureConversionError())
         {
-            recordIssue("PORTFOLIO_STRUCTURE_CONVERSION",
-                        capital->structureConversionErrorMessage(),
+            recordIssue("PORTFOLIO_STRUCTURE_CONVERSION", capital->structureConversionErrorMessage(),
                         {"structures"});
             return;
         }

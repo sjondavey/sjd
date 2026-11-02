@@ -10,10 +10,9 @@
 
 using namespace sjd;
 
-class PortfolioInsuranceTest 
+class PortfolioInsuranceTest
 {
-  public:
-
+public:
     static void testSimpleInsurance();
 
     static void testSimpleInsuranceWithTermStructure();
@@ -22,5 +21,3 @@ class PortfolioInsuranceTest
 };
 
 #endif
-
-

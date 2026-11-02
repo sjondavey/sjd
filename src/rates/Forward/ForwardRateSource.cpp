@@ -4,12 +4,12 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
     vector<double> ForwardRateSource::getForward(vector<Date> toDates) const
     {
         vector<double> rates;
-        for (size_t i = 0; i < toDates.size(); ++i) 
+        for (size_t i = 0; i < toDates.size(); ++i)
         {
             rates.push_back(getForward(toDates[i]));
         }
@@ -30,18 +30,19 @@ namespace sjd
     {
         vector<double> rates = getForward(toDates);
         double fromRate = getForward(fromDate);
-        for (size_t i = 0; i < toDates.size(); ++i) 
+        for (size_t i = 0; i < toDates.size(); ++i)
         {
             rates[i] -= fromRate;
         }
         return rates;
     }
 
-    vector<double> ForwardRateSource::getForwardFworwardMultiplicative(Date fromDate, vector<Date> toDates) const
+    vector<double> ForwardRateSource::getForwardFworwardMultiplicative(Date fromDate,
+                                                                       vector<Date> toDates) const
     {
         vector<double> rates = getForward(toDates);
         double fromRate = getForward(fromDate);
-        for (size_t i = 0; i < toDates.size(); ++i) 
+        for (size_t i = 0; i < toDates.size(); ++i)
         {
             rates[i] /= fromRate;
         }

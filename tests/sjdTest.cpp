@@ -2,32 +2,36 @@
 
 using namespace boost::unit_test_framework;
 
-
 using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace {
+namespace
+{
 
     boost::timer t;
 
-    void startTimer() { t.restart(); }
-    void stopTimer() {
+    void startTimer()
+    {
+        t.restart();
+    }
+    void stopTimer()
+    {
         double seconds = t.elapsed();
-        int hours = int(seconds/3600);
+        int hours = int(seconds / 3600);
         seconds -= hours * 3600;
-        int minutes = int(seconds/60);
+        int minutes = int(seconds / 60);
         seconds -= minutes * 60;
         std::cout << " \nTests completed in ";
         if (hours > 0)
             std::cout << hours << " h ";
         if (hours > 0 || minutes > 0)
             std::cout << minutes << " m ";
-        std::cout << std::fixed << std::setprecision(0)
-                  << seconds << " s\n" << std::endl;
+        std::cout << std::fixed << std::setprecision(0) << seconds << " s\n" << std::endl;
     }
 
-    void configure() {
+    void configure()
+    {
         /* if needed, either or both the lines below can be
            uncommented and/or changed to run the test suite with a
            different configuration. In the future, we'll need a
@@ -35,16 +39,17 @@ namespace {
            couple of command-line flags for the test suite?)
         */
 
-        //QuantLib::Settings::instance().includeReferenceDateCashFlows() = true;
-        //QuantLib::Settings::instance().includeTodaysCashFlows() = boost::none;
+        // QuantLib::Settings::instance().includeReferenceDateCashFlows() = true;
+        // QuantLib::Settings::instance().includeTodaysCashFlows() = boost::none;
     }
 
 }
 
-test_suite* init_unit_test_suite(int, char* []) {
+test_suite* init_unit_test_suite(int, char*[])
+{
 
     std::string header = "Testing SJD Libraries";
-    std::string rule = std::string(header.length(),'=');
+    std::string rule = std::string(header.length(), '=');
 
     BOOST_TEST_MESSAGE(rule);
     BOOST_TEST_MESSAGE(header);
@@ -55,12 +60,12 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(BOOST_TEST_CASE(configure));
 
     test->add(MathsFunctionsTest::suite());
-    test->add(Maths2DInterpTest::suite());    
+    test->add(Maths2DInterpTest::suite());
 
     test->add(Black76Test::suite());
-    test->add(AsianOptionTest::suite());    
+    test->add(AsianOptionTest::suite());
 
-    test->add(InterestRateConventionTest::suite());    
+    test->add(InterestRateConventionTest::suite());
     test->add(DiscountCurvesTest::suite());
     test->add(ForwardCurveTest::suite());
     test->add(CalendarMonthAverageTest::suite());

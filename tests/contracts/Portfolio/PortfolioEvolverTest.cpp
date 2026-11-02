@@ -15,20 +15,17 @@ namespace
     const double valueTolerance = 1e-6;
 
     std::shared_ptr<RatesEnvironment> europeanMarket(GenerateRates& gr,
-                                                       Date anchor,
-                                                       const vector<Date>& manditoryDates)
+                                                     Date anchor,
+                                                     const vector<Date>& manditoryDates)
     {
-        std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForEuropeanOption(anchor, manditoryDates);
+        std::shared_ptr<RatesEnvironment> re =
+            gr.getRatesEnvironmentForEuropeanOption(anchor, manditoryDates);
         std::shared_ptr<ForwardCurveDeterministic> deterministic =
             std::dynamic_pointer_cast<ForwardCurveDeterministic>(re->getFRS());
         BOOST_REQUIRE(deterministic);
         std::shared_ptr<ForwardCurveStochasticFwdVol> stochastic(
-            new ForwardCurveStochasticFwdVol(anchor,
-                                             deterministic->getObservationDates(),
-                                             deterministic->getForwards(),
-                                             LINEAR,
-                                             false,
-                                             re->getVRS()));
+            new ForwardCurveStochasticFwdVol(anchor, deterministic->getObservationDates(),
+                                             deterministic->getForwards(), LINEAR, false, re->getVRS()));
         re->setFRS(stochastic);
         BOOST_REQUIRE_MESSAGE(re->isOK(), re->getErrorMessagesAsString());
         return re;
@@ -40,8 +37,8 @@ namespace
     }
 
     std::shared_ptr<PortfolioEvolver> evolverFor(std::shared_ptr<Portfolio> portfolio,
-                                                   std::shared_ptr<RatesEnvironment> re,
-                                                   const set<Date>& simulationDates)
+                                                 std::shared_ptr<RatesEnvironment> re,
+                                                 const set<Date>& simulationDates)
     {
         std::shared_ptr<SingleFactorEconomicScenarioGenerator> generator(
             new SingleFactorEconomicScenarioGenerator(re));
@@ -106,7 +103,8 @@ void PortfolioEvolverTest::testPortfolioEvovler()
     vector<std::shared_ptr<Contract>> shockedContracts;
     shockedContracts.push_back(shockedOption);
     std::shared_ptr<Portfolio> shockedPortfolio(new Portfolio(shockedContracts));
-    std::shared_ptr<PortfolioEvolver> shockedEvolver = evolverFor(shockedPortfolio, shockedMarket, simulationDates);
+    std::shared_ptr<PortfolioEvolver> shockedEvolver =
+        evolverFor(shockedPortfolio, shockedMarket, simulationDates);
     BOOST_REQUIRE_MESSAGE(shockedEvolver->isOK(), shockedEvolver->getErrorMessagesAsString());
     SimulatedPaths shockedPath = shockedEvolver->valueSpotPath(shockedSpots, false);
     BOOST_REQUIRE_EQUAL(shockedPath.steps, forwardPath.steps);
@@ -118,30 +116,22 @@ void PortfolioEvolverTest::testPortfolioEvovler()
     double cptyThreshold = 1000.0;
     double minimumTransferAmount = 500.0;
     double rounding = 100.0;
-    std::shared_ptr<Margin> margin(new SimpleMargin(anchor,
-                                                     useMyThreshold,
-                                                     myThreshold,
-                                                     useCptyThreshold,
-                                                     cptyThreshold,
-                                                     minimumTransferAmount,
-                                                     rounding));
+    std::shared_ptr<Margin> margin(new SimpleMargin(anchor, useMyThreshold, myThreshold, useCptyThreshold,
+                                                    cptyThreshold, minimumTransferAmount, rounding));
     std::shared_ptr<RatesEnvironment> marginMarket = europeanMarket(gr, anchor, manditoryDates);
     std::shared_ptr<EuropeanOption> marginOption = soldPut(anchor, strike);
     vector<std::shared_ptr<Contract>> marginContracts;
     marginContracts.push_back(marginOption);
     std::shared_ptr<Portfolio> marginedPortfolio(new Portfolio(marginContracts, margin));
-    std::shared_ptr<PortfolioEvolver> marginEvolver = evolverFor(marginedPortfolio, marginMarket, simulationDates);
+    std::shared_ptr<PortfolioEvolver> marginEvolver =
+        evolverFor(marginedPortfolio, marginMarket, simulationDates);
     BOOST_REQUIRE_MESSAGE(marginEvolver->isOK(), marginEvolver->getErrorMessagesAsString());
     SimulatedPaths marginPath = marginEvolver->valueSpotPath(forwardSpots, false);
     BOOST_REQUIRE_EQUAL(marginPath.margin.size(), marginPath.mtm.size());
     vector<double> mtmPath = marginPath.mtm;
-    std::shared_ptr<SimpleMargin> agreement(new SimpleMargin(anchor,
-                                                              useMyThreshold,
-                                                              myThreshold,
-                                                              useCptyThreshold,
-                                                              cptyThreshold,
-                                                              minimumTransferAmount,
-                                                              rounding));
+    std::shared_ptr<SimpleMargin> agreement(new SimpleMargin(anchor, useMyThreshold, myThreshold,
+                                                             useCptyThreshold, cptyThreshold,
+                                                             minimumTransferAmount, rounding));
     vector<double> expectedMargin;
     agreement->getFutureMarginBalancesAlongPath(mtmPath, expectedMargin);
     BOOST_REQUIRE_EQUAL(expectedMargin.size(), mtmPath.size());

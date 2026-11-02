@@ -4,7 +4,7 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
 
     std::string RateSource::validationRoot() const
@@ -14,8 +14,8 @@ namespace sjd
 
     void RateSource::absorbChildReport(const ValidationReport& child, const std::string& role)
     {
-        absorbChildReport(child, role.empty() ? std::vector<std::string>()
-                                              : std::vector<std::string>(1, role));
+        absorbChildReport(child,
+                          role.empty() ? std::vector<std::string>() : std::vector<std::string>(1, role));
     }
 
     ValidationReport RateSource::validateReport()
@@ -27,33 +27,31 @@ namespace sjd
     bool RateSource::isOK()
     {
         resetErrorMessages();
-        if (finalDate < anchorDate)  
+        if (finalDate < anchorDate)
         {
-            recordIssue("RATE_SOURCE_ANCHOR_AFTER_FINAL",
-                        "Anchor date after final date",
-                        {"anchor_date"});
+            recordIssue("RATE_SOURCE_ANCHOR_AFTER_FINAL", "Anchor date after final date", {"anchor_date"});
         }
         return !hasErrors();
     }
 
-    QuantLib::Date RateSource::getAnchorDate() const 
+    QuantLib::Date RateSource::getAnchorDate() const
     {
         return anchorDate;
     }
 
-    QuantLib::Date RateSource::getFinalDate() const 
+    QuantLib::Date RateSource::getFinalDate() const
     {
         return finalDate;
     }
 
-    bool RateSource::getAllowsExtrapolation() const 
+    bool RateSource::getAllowsExtrapolation() const
     {
         return allowExtrapolation;
     }
 
     bool RateSource::isInRange(QuantLib::Date date) const
     {
-        if (allowExtrapolation) 
+        if (allowExtrapolation)
         {
             return (date >= anchorDate);
         }
@@ -62,7 +60,7 @@ namespace sjd
 
     bool RateSource::extendsTo(QuantLib::Date date) const
     {
-        if (allowExtrapolation) 
+        if (allowExtrapolation)
         {
             return true;
         }

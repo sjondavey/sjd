@@ -10,18 +10,17 @@ namespace sjd
                                      std::string messageInput,
                                      ValidationSeverity severityInput,
                                      std::vector<std::string> pathInput)
-        : code(std::move(codeInput)),
-          message(std::move(messageInput)),
-          severity(severityInput),
+        : code(std::move(codeInput)), message(std::move(messageInput)), severity(severityInput),
           path(std::move(pathInput))
-    {}
+    {
+    }
 
-    ValidationReport::ValidationReport()
-    {}
+    ValidationReport::ValidationReport() {}
 
     ValidationReport::ValidationReport(std::vector<ValidationIssue> issuesInput)
         : issues(std::move(issuesInput))
-    {}
+    {
+    }
 
     bool ValidationReport::isOK() const
     {
@@ -77,9 +76,7 @@ namespace sjd
         return ValidationReport(issues);
     }
 
-    IssueTracker::IssueTracker(std::string classNameInput)
-        : className(std::move(classNameInput))
-    {}
+    IssueTracker::IssueTracker(std::string classNameInput) : className(std::move(classNameInput)) {}
 
     const std::string& IssueTracker::getClassName() const
     {
@@ -152,9 +149,7 @@ namespace sjd
         return log.snapshot();
     }
 
-    Validatable::Validatable()
-        : errorTracking(new IssueTracker(""))
-    {}
+    Validatable::Validatable() : errorTracking(new IssueTracker("")) {}
 
     bool Validatable::hasErrors() const
     {
@@ -190,8 +185,7 @@ namespace sjd
         errorTracking->record(code, message, path);
     }
 
-    void Validatable::absorbChildReport(const ValidationReport& child,
-                                        const std::vector<std::string>& extra)
+    void Validatable::absorbChildReport(const ValidationReport& child, const std::vector<std::string>& extra)
     {
         std::vector<std::string> prefix(1, validationRoot());
         prefix.insert(prefix.end(), extra.begin(), extra.end());

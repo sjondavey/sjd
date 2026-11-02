@@ -1,38 +1,38 @@
 #ifndef SJD_CURVE_INCLUDED
 #define SJD_CURVE_INCLUDED
 
-#include <sjd/maths/maths.h>
-#include <ql/time/date.hpp>
 #include <memory>
+#include <ql/time/date.hpp>
+#include <sjd/maths/maths.h>
 
-namespace sjd 
+namespace sjd
 {
-   /*======================================================================================
-    Curve: 
+    /*======================================================================================
+     Curve:
 
-    NOTE 1) There are no calendar objects here, all dates are assumed to be good dates
-            by the time they hit this class
-    =======================================================================================*/
+     NOTE 1) There are no calendar objects here, all dates are assumed to be good dates
+             by the time they hit this class
+     =======================================================================================*/
     class Curve
     {
     public:
         Curve();
-        
-        Curve(QuantLib::Date anchorDate, 
-              std::vector<double> observationPoints, 
-              std::vector<double> observedRates, 
-              ArrayInterpolatorType type = LINEAR,
-              bool allowExtrapolation = false);  
 
-        void setParameters(QuantLib::Date anchorDate, 
-                           std::vector<double> observationPoints, 
-                           std::vector<double> observedRates, 
+        Curve(QuantLib::Date anchorDate,
+              std::vector<double> observationPoints,
+              std::vector<double> observedRates,
+              ArrayInterpolatorType type = LINEAR,
+              bool allowExtrapolation = false);
+
+        void setParameters(QuantLib::Date anchorDate,
+                           std::vector<double> observationPoints,
+                           std::vector<double> observedRates,
                            ArrayInterpolatorType type = LINEAR,
                            bool allowExtrapolation = false);
-        
+
         virtual ~Curve() {};
 
-        bool isOK(std::string &errorMessage);
+        bool isOK(std::string& errorMessage);
 
         QuantLib::Date getAnchorDate();
         QuantLib::Date getFinalDate();
@@ -47,7 +47,6 @@ namespace sjd
         double getRate(double toPoint) const;
 
         std::vector<double> getObservationPoints() const;
-
 
     protected:
         QuantLib::Date anchorDate;

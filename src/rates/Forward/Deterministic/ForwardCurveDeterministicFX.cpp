@@ -13,7 +13,8 @@ namespace sjd
                                                              std::shared_ptr<DiscountRateSource> domesticDRS,
                                                              std::shared_ptr<DiscountRateSource> foreignDRS)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveDeterministicFX"));
+        errorTracking =
+            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveDeterministicFX"));
         double spotAtAnchor;
         if (!domesticDRS->extendsTo(spotDate) || (!foreignDRS->extendsTo(spotDate)))
         {
@@ -21,7 +22,8 @@ namespace sjd
         }
         else
         {
-            spotAtAnchor = spot * domesticDRS->getDiscountFactor(spotDate) / foreignDRS->getDiscountFactor(spotDate);
+            spotAtAnchor =
+                spot * domesticDRS->getDiscountFactor(spotDate) / foreignDRS->getDiscountFactor(spotDate);
         }
         setParameters(anchorDate, spotAtAnchor, domesticDRS, foreignDRS);
     }
@@ -31,7 +33,8 @@ namespace sjd
                                                              std::shared_ptr<DiscountRateSource> domesticDRS,
                                                              std::shared_ptr<DiscountRateSource> foreignDRS)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveDeterministicFX"));
+        errorTracking =
+            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveDeterministicFX"));
         setParameters(anchorDate, spotAtT0, domesticDRS, foreignDRS);
     }
 
@@ -40,12 +43,8 @@ namespace sjd
                                                     std::shared_ptr<DiscountRateSource> domesticDRSInput,
                                                     std::shared_ptr<DiscountRateSource> foreignDRSInput)
     {
-        quotes.setInterestDifferential(anchorDateInput,
-                                       spotInput,
-                                       domesticDRSInput,
-                                       foreignDRSInput,
-                                       ForwardRoll::Deterministic,
-                                       std::shared_ptr<VolatilityRateSource>());
+        quotes.setInterestDifferential(anchorDateInput, spotInput, domesticDRSInput, foreignDRSInput,
+                                       ForwardRoll::Deterministic, std::shared_ptr<VolatilityRateSource>());
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
         finalDate = quotes.finalDate();
@@ -79,13 +78,13 @@ namespace sjd
         }
         if (!quotes.domesticRateSource()->isOK())
         {
-            absorbChildReport(quotes.domesticRateSource()->validationReport(), "domestic_discount_rate_source");
+            absorbChildReport(quotes.domesticRateSource()->validationReport(),
+                              "domestic_discount_rate_source");
             return false;
         }
         if (quotes.domesticRateSource()->getAnchorDate() != anchorDate)
         {
-            recordIssue("FX_DOMESTIC_ANCHOR_MISMATCH",
-                        "Domestic DRS does not have the correct anchor date",
+            recordIssue("FX_DOMESTIC_ANCHOR_MISMATCH", "Domestic DRS does not have the correct anchor date",
                         {"domestic_discount_rate_source"});
             return false;
         }
@@ -96,8 +95,7 @@ namespace sjd
         }
         if (quotes.foreignRateSource()->getAnchorDate() != anchorDate)
         {
-            recordIssue("FX_FOREIGN_ANCHOR_MISMATCH",
-                        "Foreign DRS does not have the correct anchor date",
+            recordIssue("FX_FOREIGN_ANCHOR_MISMATCH", "Foreign DRS does not have the correct anchor date",
                         {"foreign_discount_rate_source"});
             return false;
         }

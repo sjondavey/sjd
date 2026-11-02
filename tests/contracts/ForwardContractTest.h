@@ -3,28 +3,26 @@
 
 #include <iostream>
 
-#include <math.h>
-#include <boost/test/unit_test.hpp>
 #include <boost/math/special_functions/fpclassify.hpp> // boost::math::isnan
+#include <boost/test/unit_test.hpp>
+#include <math.h>
 // to use the boost::math::isnan(...) function
 #include <boost/math/special_functions/fpclassify.hpp>
 
-#include <sjd/contracts/EuropeanForwardContract.h>
 #include <sjd/contracts/AsianForwardContract.h>
+#include <sjd/contracts/EuropeanForwardContract.h>
 
 #include <support/GenerateRatesEnvironments.h>
 #include <support/TestingParameters.h>
-
 
 #include <ql/time/daycounter.hpp>
 #include <ql/time/daycounters/all.hpp>
 
 using namespace sjd;
 
-class ForwardContactTest 
+class ForwardContactTest
 {
-  public:
-
+public:
     // Returns a EuropeanForward which matures 2 years after the anchor date
     // using a null calendar
     static std::shared_ptr<EuropeanForward> getDefaultEuropeanForward(QuantLib::Date anchorDate);
@@ -39,7 +37,7 @@ class ForwardContactTest
     static void testValue();
     static void testGetPayoffAfterMaturity();
 
-    static void testAsianAveragingDates(); 
+    static void testAsianAveragingDates();
     static void testFixingAndForwardDates();
     static void testAsianGetPayoffAfterMaturity();
 
@@ -49,5 +47,3 @@ class ForwardContactTest
 };
 
 #endif
-
-

@@ -3,30 +3,30 @@
 using namespace std;
 using namespace QuantLib;
 
-namespace sjd 
+namespace sjd
 {
-   /*======================================================================================
-   VolatlityRateSource
+    /*======================================================================================
+    VolatlityRateSource
 
-    =======================================================================================*/
+     =======================================================================================*/
     bool VolatilityRateSource::isOK()
     {
         RateSource::isOK();
-        if (dayCounter == NULL) 
+        if (dayCounter == NULL)
         {
-            recordIssue("VOLATILITY_DAY_COUNTER_MISSING",
-                        "Day counter not set",
-                        {"day_counter"});
+            recordIssue("VOLATILITY_DAY_COUNTER_MISSING", "Day counter not set", {"day_counter"});
         }
         return !errorTracking->getHasErrors();
     }
 
-    std::shared_ptr<QuantLib::DayCounter> VolatilityRateSource::getDayCounter() const 
+    std::shared_ptr<QuantLib::DayCounter> VolatilityRateSource::getDayCounter() const
     {
         return dayCounter;
     }
 
-    bool VolatilityRateSource::hasNegativeATMFwdFwdVariances(vector<Date> checkDates, Date &startOfNegVar, Date &endOfNegVar)
+    bool VolatilityRateSource::hasNegativeATMFwdFwdVariances(vector<Date> checkDates,
+                                                             Date& startOfNegVar,
+                                                             Date& endOfNegVar)
     {
         Date d2 = checkDates[0];
         double sd2 = getStandardDeviation(d2);
@@ -49,7 +49,7 @@ namespace sjd
         return false;
     }
 
-    bool VolatilityRateSource::hasNegativeATMFwdFwdVariances(Date &startOfNegVar, Date &endOfNegVar)
+    bool VolatilityRateSource::hasNegativeATMFwdFwdVariances(Date& startOfNegVar, Date& endOfNegVar)
     {
         vector<Date> observationDates = getObservationDates();
         return hasNegativeATMFwdFwdVariances(observationDates, startOfNegVar, endOfNegVar);
@@ -69,27 +69,28 @@ namespace sjd
         return vol * sqrt(dt);
     }
 
-   void VolatilityRateSource::getVolAndSD(Date toDate, double &vol, double& sd) const
-   {
-      vol = getVolatility(toDate);
-      sd = getStandardDeviation(toDate);
-   }
+    void VolatilityRateSource::getVolAndSD(Date toDate, double& vol, double& sd) const
+    {
+        vol = getVolatility(toDate);
+        sd = getStandardDeviation(toDate);
+    }
 
-   void VolatilityRateSource::getVolAndSD(Date toDate, double strike, double forward, double &vol, double& sd) const
-   {
-      vol = getVolatility(toDate, strike, forward);
-      sd = getStandardDeviation(toDate, strike, forward);
-   }
+    void VolatilityRateSource::getVolAndSD(
+        Date toDate, double strike, double forward, double& vol, double& sd) const
+    {
+        vol = getVolatility(toDate, strike, forward);
+        sd = getStandardDeviation(toDate, strike, forward);
+    }
 
-   void VolatilityRateSource::getVolAndSD(vector<Date> toDates, 
-                                          double strike, 
-                                          vector<double> forwards,
-                                          vector<double> &vols,
-                                          vector<double> &sds) const
-   {
-       for (size_t i = 0; i < toDates.size(); ++i) 
-       {
-           getVolAndSD(toDates[i], strike, forwards[i], vols[i], sds[i]);
-       }
-   }
+    void VolatilityRateSource::getVolAndSD(vector<Date> toDates,
+                                           double strike,
+                                           vector<double> forwards,
+                                           vector<double>& vols,
+                                           vector<double>& sds) const
+    {
+        for (size_t i = 0; i < toDates.size(); ++i)
+        {
+            getVolAndSD(toDates[i], strike, forwards[i], vols[i], sds[i]);
+        }
+    }
 }

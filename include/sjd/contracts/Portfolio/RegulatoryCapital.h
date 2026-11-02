@@ -4,9 +4,9 @@
 #include <string>
 
 #include <sjd/contracts/Portfolio/Portfolio.h>
-#include <sjd/contracts/Portfolio/Structures/Structure.h>
-#include <sjd/contracts/Portfolio/RegCap/RegCapUnderlyingFactors.h>
 #include <sjd/contracts/Portfolio/RegCap/RegCapCreditParameters.h>
+#include <sjd/contracts/Portfolio/RegCap/RegCapUnderlyingFactors.h>
+#include <sjd/contracts/Portfolio/Structures/Structure.h>
 
 namespace sjd
 {

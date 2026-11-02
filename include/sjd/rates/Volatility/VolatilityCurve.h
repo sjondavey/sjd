@@ -2,13 +2,13 @@
 #define SJD_VOLATILITYCURVE_INCLUDED
 #pragma once
 
-#include <sjd/tools/DatedCurve.h>
 #include <sjd/rates/Volatility/DeterministicVolatilityRateSource.h>
+#include <sjd/tools/DatedCurve.h>
 
-#include <ql/time/daycounters/simpledaycounter.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/time/daycounters/simpledaycounter.hpp>
 
-namespace sjd 
+namespace sjd
 {
 
     /*======================================================================================
@@ -27,14 +27,13 @@ namespace sjd
     class VolatilityCurve : public DeterministicVolatilityRateSource
     {
     public:
-        
-        VolatilityCurve(QuantLib::Date anchorDate, 
-                        std::vector<QuantLib::Date> observationDates, 
-                        std::vector<double> volatility, 
+        VolatilityCurve(QuantLib::Date anchorDate,
+                        std::vector<QuantLib::Date> observationDates,
+                        std::vector<double> volatility,
                         std::shared_ptr<QuantLib::DayCounter> dayCounter,
                         ArrayInterpolatorType type = LINEAR,
-                        bool allowExtrapolation = false);    
-        
+                        bool allowExtrapolation = false);
+
         virtual ~VolatilityCurve();
 
         virtual bool isOK();
@@ -50,8 +49,9 @@ namespace sjd
         virtual double getStandardDeviation(QuantLib::Date toDate) const;
         virtual double getStandardDeviation(QuantLib::Date toDate, double strike, double forward) const;
 
-        virtual void getVolAndSD(QuantLib::Date toDate, double &vol, double& sd) const;
-        virtual void getVolAndSD(QuantLib::Date toDate, double strike, double forward, double &vol, double& sd) const;
+        virtual void getVolAndSD(QuantLib::Date toDate, double& vol, double& sd) const;
+        virtual void getVolAndSD(
+            QuantLib::Date toDate, double strike, double forward, double& vol, double& sd) const;
 
         std::vector<QuantLib::Date> getObservationDates() const;
         ArrayInterpolatorType getType();

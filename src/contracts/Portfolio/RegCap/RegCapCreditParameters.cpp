@@ -2,7 +2,8 @@
 
 using namespace std;
 
-namespace sjd {
+namespace sjd
+{
 
     RegCapCreditParameters::RegCapCreditParameters(double counterpartyWeighting, double capitalCharge)
     {
@@ -10,14 +11,14 @@ namespace sjd {
         cc = capitalCharge;
     }
 
-    double RegCapCreditParameters::getCounterpartyWeighting() 
+    double RegCapCreditParameters::getCounterpartyWeighting()
     {
         return cpw;
     }
 
-    double RegCapCreditParameters::getCapitalCharge() 
+    double RegCapCreditParameters::getCapitalCharge()
     {
         return cc;
     }
-            
+
 }

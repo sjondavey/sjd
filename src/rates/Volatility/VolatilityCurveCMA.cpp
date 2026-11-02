@@ -6,43 +6,37 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
 
     /*======================================================================================
-    VolatilityCurve 
+    VolatilityCurve
     =======================================================================================*/
-    VolatilityCurveCMA::VolatilityCurveCMA(Date anchorDateInput, 
-                                    vector<Date> observationDatesInput, 
-                                    vector<double> volatilityInput, 
-                                    std::shared_ptr<DayCounter> dayCounterInput,
-                                    ArrayInterpolatorType typeInput,
-                                    bool allowExtrapolationInput) 
+    VolatilityCurveCMA::VolatilityCurveCMA(Date anchorDateInput,
+                                           vector<Date> observationDatesInput,
+                                           vector<double> volatilityInput,
+                                           std::shared_ptr<DayCounter> dayCounterInput,
+                                           ArrayInterpolatorType typeInput,
+                                           bool allowExtrapolationInput)
     {
         errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilityCurveCMA"));
 
-        curve = std::shared_ptr<CalendarMonthAverageCurve>(new CalendarMonthAverageCurve(anchorDateInput, 
-                                                                  observationDatesInput, 
-                                                                  volatilityInput,
-                                                                  typeInput,
-                                                                  allowExtrapolationInput));
-
+        curve = std::shared_ptr<CalendarMonthAverageCurve>(new CalendarMonthAverageCurve(
+            anchorDateInput, observationDatesInput, volatilityInput, typeInput, allowExtrapolationInput));
 
         anchorDate = curve->getAnchorDate();
         allowExtrapolation = curve->getAllowsExtrapolation();
         finalDate = curve->getFinalDate();
         type = typeInput;
         string tmp;
-        if (curve->isOK(tmp) && 
-           (!curve->containsRateOnAnchorDate()))
+        if (curve->isOK(tmp) && (!curve->containsRateOnAnchorDate()))
         {
             curve->addPointOnAnchorDate(volatilityInput[0]);
         }
         dayCounter = dayCounterInput;
     }
 
-    VolatilityCurveCMA::~VolatilityCurveCMA()
-    {}
+    VolatilityCurveCMA::~VolatilityCurveCMA() {}
 
     bool VolatilityCurveCMA::isOK()
     {
@@ -51,20 +45,17 @@ namespace sjd
         if (!curve->isOK(errorMessage))
         {
             const std::string code = errorMessage.find("same dimension") != std::string::npos
-                ? "VOLATILITY_CURVE_CMA_DIMENSION_MISMATCH"
-                : "VOLATILITY_CURVE_CMA_INVALID";
+                                         ? "VOLATILITY_CURVE_CMA_DIMENSION_MISMATCH"
+                                         : "VOLATILITY_CURVE_CMA_INVALID";
             recordIssue(code, errorMessage, {"inputs"});
             return false;
         }
-        for (size_t i = 0; i < curve->getObservationDates().size(); ++i) 
+        for (size_t i = 0; i < curve->getObservationDates().size(); ++i)
         {
             bool hasNegativeInputs = false;
-            if ((!hasNegativeInputs) && 
-                (curve->getRates()[i] <= 0) )
+            if ((!hasNegativeInputs) && (curve->getRates()[i] <= 0))
             {
-                recordIssue("VOLATILITY_CURVE_CMA_NEGATIVE_INPUT",
-                            "has negative inputs",
-                            {"volatilities"});
+                recordIssue("VOLATILITY_CURVE_CMA_NEGATIVE_INPUT", "has negative inputs", {"volatilities"});
                 hasNegativeInputs = true;
             }
         }
@@ -80,11 +71,11 @@ namespace sjd
     {
         Date beginningOfMonth = Date(1, d.month(), d.year());
         Date beginningOfAnchorDate = Date(1, anchorDate.month(), anchorDate.year());
-        if (allowExtrapolation) 
+        if (allowExtrapolation)
         {
             return (beginningOfMonth >= beginningOfAnchorDate);
         }
-        else 
+        else
         {
             return ((beginningOfMonth >= beginningOfAnchorDate) && (beginningOfMonth <= finalDate));
         }
@@ -98,7 +89,7 @@ namespace sjd
 
     bool VolatilityCurveCMA::isInRange(Date date, double strike, double forward) const
     {
-      return isInRange(date);
+        return isInRange(date);
     }
 
     double VolatilityCurveCMA::getVolatility(Date toDate) const
@@ -106,12 +97,12 @@ namespace sjd
         return curve->getRate(toDate);
     }
 
-    double VolatilityCurveCMA::getVolatility(Date toDate, double strike, double forward) const         
+    double VolatilityCurveCMA::getVolatility(Date toDate, double strike, double forward) const
     {
-      return getVolatility(toDate);
+        return getVolatility(toDate);
     }
 
-    double VolatilityCurveCMA::getStandardDeviation(Date toDate) const 
+    double VolatilityCurveCMA::getStandardDeviation(Date toDate) const
     {
         double yearFraction = dayCounter->yearFraction(anchorDate, toDate);
         return curve->getRate(toDate) * sqrt(yearFraction);
@@ -122,24 +113,25 @@ namespace sjd
         return getStandardDeviation(toDate);
     }
 
-    void VolatilityCurveCMA::getVolAndSD(Date toDate, double &vol, double& sd) const
+    void VolatilityCurveCMA::getVolAndSD(Date toDate, double& vol, double& sd) const
     {
         vol = curve->getRate(toDate);
         double yearFraction = dayCounter->yearFraction(anchorDate, toDate);
         sd = vol * sqrt(yearFraction);
         return;
-   }
+    }
 
-    void VolatilityCurveCMA::getVolAndSD(Date toDate, double strike, double forward, double &vol, double& sd) const 
+    void VolatilityCurveCMA::getVolAndSD(
+        Date toDate, double strike, double forward, double& vol, double& sd) const
     {
         return getVolAndSD(toDate, vol, sd);
     };
 
     vector<Date> VolatilityCurveCMA::getObservationDates() const
     {
-         return curve->getObservationDates();
+        return curve->getObservationDates();
     }
-    
+
     ArrayInterpolatorType VolatilityCurveCMA::getType()
     {
         return type;
@@ -148,25 +140,22 @@ namespace sjd
     std::shared_ptr<VolatilityRateSource> VolatilityCurveCMA::parallelBump(double spread)
     {
         vector<Date> rolledObservationDates;
-        vector<double> rolledVols; 
+        vector<double> rolledVols;
         for (size_t i = 0; i < getObservationDates().size(); ++i)
         {
             rolledObservationDates.push_back(getObservationDates()[i]);
-            rolledVols.push_back(getVolatility(getObservationDates()[i])+spread);
+            rolledVols.push_back(getVolatility(getObservationDates()[i]) + spread);
         }
 
-       return std::shared_ptr<VolatilityCurveCMA>(new VolatilityCurveCMA(anchorDate, 
-                                                                      rolledObservationDates, 
-                                                                      rolledVols, 
-                                                                      dayCounter,
-                                                                      curve->getType(),
-                                                                      allowExtrapolation));     
-     }
+        return std::shared_ptr<VolatilityCurveCMA>(
+            new VolatilityCurveCMA(anchorDate, rolledObservationDates, rolledVols, dayCounter,
+                                   curve->getType(), allowExtrapolation));
+    }
 
     std::shared_ptr<VolatilityRateSource> VolatilityCurveCMA::rollForward(Date toDate)
     {
         vector<Date> rolledObservationDates;
-        vector<double> rolledVols; 
+        vector<double> rolledVols;
         if (!isInRange(toDate))
         {
             rolledObservationDates.push_back(toDate);
@@ -176,18 +165,14 @@ namespace sjd
         {
             for (size_t i = 0; i < getObservationDates().size(); ++i)
             {
-                if (getObservationDates()[i] >= toDate) 
+                if (getObservationDates()[i] >= toDate)
                 {
                     rolledObservationDates.push_back(getObservationDates()[i]);
                     rolledVols.push_back(getVolatility(getObservationDates()[i]));
                 }
             }
         }
-        return std::shared_ptr<VolatilityCurveCMA>(new VolatilityCurveCMA(toDate, 
-                                                                      rolledObservationDates, 
-                                                                      rolledVols, 
-                                                                      dayCounter,
-                                                                      curve->getType(),
-                                                                      allowExtrapolation));     
-     }
+        return std::shared_ptr<VolatilityCurveCMA>(new VolatilityCurveCMA(
+            toDate, rolledObservationDates, rolledVols, dayCounter, curve->getType(), allowExtrapolation));
+    }
 }

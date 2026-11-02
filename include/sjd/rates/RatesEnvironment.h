@@ -3,13 +3,13 @@
 
 #include <cstddef>
 
-#include <sjd/rates/Forward/ForwardRateSource.h>
-#include <sjd/rates/Volatility/VolatilityRateSource.h>
 #include <sjd/rates/Discount/DiscountRateSource.h>
 #include <sjd/rates/Fixing/FixingRateSource.h>
+#include <sjd/rates/Forward/ForwardRateSource.h>
+#include <sjd/rates/Volatility/VolatilityRateSource.h>
 #include <sjd/tools/Validation.h>
 
-namespace sjd 
+namespace sjd
 {
     /**
      * The curves for one single-asset valuation, all sharing this environment's

@@ -7,13 +7,13 @@
 
 #include <sjd/contracts/Portfolio/PortfolioEvolver.h>
 
-#include <support/GenerateRatesEnvironments.h>
 #include <support/GenerateContracts.h>
+#include <support/GenerateRatesEnvironments.h>
 #include <support/TestingParameters.h>
 
 using namespace sjd;
 
-class PortfolioEvolverTest 
+class PortfolioEvolverTest
 {
 public:
     static void testPortfolioEvovler();

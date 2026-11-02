@@ -14,8 +14,10 @@ namespace sjd
                                                                bool allowExtrapolationInput,
                                                                std::shared_ptr<VolatilityRateSource> vrs)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveStochasticFwdVol"));
-        setParameters(anchorDateInput, observationDatesInput, forwardsInput, typeInput, allowExtrapolationInput, vrs);
+        errorTracking =
+            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveStochasticFwdVol"));
+        setParameters(anchorDateInput, observationDatesInput, forwardsInput, typeInput,
+                      allowExtrapolationInput, vrs);
     }
 
     void ForwardCurveStochasticFwdVol::setParameters(Date anchorDateInput,
@@ -25,14 +27,9 @@ namespace sjd
                                                      bool allowExtrapolationInput,
                                                      std::shared_ptr<VolatilityRateSource> vrs)
     {
-        quotes.setInterpolated(anchorDateInput,
-                               observationDatesInput,
-                               forwardsInput,
-                               typeInput,
-                               allowExtrapolationInput,
-                               ForwardAveraging::Point,
-                               ForwardRoll::ForwardVolatility,
-                               vrs);
+        quotes.setInterpolated(anchorDateInput, observationDatesInput, forwardsInput, typeInput,
+                               allowExtrapolationInput, ForwardAveraging::Point,
+                               ForwardRoll::ForwardVolatility, vrs);
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
         finalDate = quotes.finalDate();
@@ -66,12 +63,11 @@ namespace sjd
         return quotes.rollForward(toDate, normalRV, isInRange(toDate));
     }
 
-    std::shared_ptr<ForwardRateSource> ForwardCurveStochasticFwdVol::rollForward(Date toDate,
-                                                                                   double normalRV,
-                                                                                   vector<Date> rateSetDates,
-                                                                                   vector<double>& rateSetsFromAnchorToDate)
+    std::shared_ptr<ForwardRateSource> ForwardCurveStochasticFwdVol::rollForward(
+        Date toDate, double normalRV, vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToDate)
     {
-        return ForwardRateSourceStochastic::rollForward(toDate, normalRV, rateSetDates, rateSetsFromAnchorToDate);
+        return ForwardRateSourceStochastic::rollForward(toDate, normalRV, rateSetDates,
+                                                        rateSetsFromAnchorToDate);
     }
 
     void ForwardCurveStochasticFwdVol::setForwardValuationDates(set<Date> datesInput)
@@ -91,8 +87,7 @@ namespace sjd
     }
 
     vector<std::shared_ptr<ForwardRateSource>> ForwardCurveStochasticFwdVol::rollForward(
-        vector<Date> rateSetDates,
-        vector<double>& rateSetsFromAnchorToFinalRollDate)
+        vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToFinalRollDate)
     {
         return ForwardRateSourceStochastic::rollForward(rateSetDates, rateSetsFromAnchorToFinalRollDate);
     }

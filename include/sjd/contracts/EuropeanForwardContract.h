@@ -4,19 +4,19 @@
 
 #include "Contracts.h"
 
-namespace sjd 
+namespace sjd
 {
 
-   /*======================================================================================
-   ForwardContract
-    Base Class for single forward contracts. This is not intended to house a collection of 
-    Forwards only single contracts.
+    /*======================================================================================
+    ForwardContract
+     Base Class for single forward contracts. This is not intended to house a collection of
+     Forwards only single contracts.
 
-    This contract does not contain any calendar functionality so all dates must be supplied
-    as "good dates" by the user.
+     This contract does not contain any calendar functionality so all dates must be supplied
+     as "good dates" by the user.
 
-    NB: Forwards do NOT have PREMIUM
-    =======================================================================================*/
+     NB: Forwards do NOT have PREMIUM
+     =======================================================================================*/
     class ForwardContract : public SingleDerivativeContract
     {
     public:
@@ -27,25 +27,28 @@ namespace sjd
         virtual double getPayoff(double forSpot);
     };
 
+    /*======================================================================================
+    EuropeanForward
 
-   /*======================================================================================
-   EuropeanForward
+     The simplest forward contract
 
-    The simplest forward contract 
-
-    This contract does not contain any calendar functionality so all dates must be supplied
-    as "good dates" by the user.
-    =======================================================================================*/
+     This contract does not contain any calendar functionality so all dates must be supplied
+     as "good dates" by the user.
+     =======================================================================================*/
     class EuropeanForward : public ForwardContract
     {
     public:
-        // If the forward is going to be cash settled against an obsetvable rate then the rateSetDate is the 
+        // If the forward is going to be cash settled against an obsetvable rate then the rateSetDate is the
         // date on which the underlying index is observed and the cash exchanges hands on the settlement
-        EuropeanForward(QuantLib::Date maturityDate, QuantLib::Date settlementDate, double strike, double volume, BuySell buySell);
+        EuropeanForward(QuantLib::Date maturityDate,
+                        QuantLib::Date settlementDate,
+                        double strike,
+                        double volume,
+                        BuySell buySell);
         // If the forward is an exchange of the asset for cash we do not need a rate std::set date
         EuropeanForward(QuantLib::Date settlementDate, double strike, double volume, BuySell buySell);
 
-        EuropeanForward(EuropeanForward &forward);
+        EuropeanForward(EuropeanForward& forward);
 
         std::unique_ptr<Contract> clone() override;
 
@@ -53,10 +56,13 @@ namespace sjd
         virtual std::string validationRoot() const { return "european_forward"; }
 
     protected:
-        void constructorCommon(QuantLib::Date rateSetDate, QuantLib::Date settlementDate, double strike, double volume, BuySell buySell);
+        void constructorCommon(QuantLib::Date rateSetDate,
+                               QuantLib::Date settlementDate,
+                               double strike,
+                               double volume,
+                               BuySell buySell);
     };
 
 }
 
 #endif
-

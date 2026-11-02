@@ -8,11 +8,12 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
-    PortfolioEvolver::PortfolioEvolver(std::shared_ptr<Portfolio> portfolioInput, 
-                                       std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGeneratorInput,
-                                       set<Date> forwardDatesSet)
+    PortfolioEvolver::PortfolioEvolver(
+        std::shared_ptr<Portfolio> portfolioInput,
+        std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGeneratorInput,
+        set<Date> forwardDatesSet)
     {
         errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("PortfolioEvolver"));
         portfolio = portfolioInput;
@@ -22,11 +23,12 @@ namespace sjd
         setSimulationDates(forwardDatesSet);
     }
 
-    PortfolioEvolver::PortfolioEvolver(std::shared_ptr<Portfolio> portfolioInput, 
-                                       std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGeneratorInput,
-                                       set<Date> forwardDatesSet,
-                                       std::shared_ptr<Calendar> calendarForHoldingPeriodInput, 
-                                       size_t holdingPeriodInput)
+    PortfolioEvolver::PortfolioEvolver(
+        std::shared_ptr<Portfolio> portfolioInput,
+        std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGeneratorInput,
+        set<Date> forwardDatesSet,
+        std::shared_ptr<Calendar> calendarForHoldingPeriodInput,
+        size_t holdingPeriodInput)
     {
         errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("PortfolioEvolver"));
         portfolio = portfolioInput;
@@ -48,14 +50,13 @@ namespace sjd
         return validationReport();
     }
 
-    bool PortfolioEvolver::isOK() 
+    bool PortfolioEvolver::isOK()
     {
         errorTracking->clear();
         if ((holdingPeriod > 0) && !calendarForHoldingPeriod)
         {
             recordIssue("HOLDING_PERIOD_CALENDAR_MISSING",
-                        "A holding period needs a calendar to count its business days",
-                        {"holding_period"});
+                        "A holding period needs a calendar to count its business days", {"holding_period"});
             return false;
         }
         if (simulationDates.size() == 0)
@@ -65,8 +66,7 @@ namespace sjd
         }
         if (simulationDates.front() != pathGenerator->getAnchorDate())
         {
-            recordIssue("SIMULATION_ANCHOR_MISMATCH",
-                        "First simulation date must be the anchor date",
+            recordIssue("SIMULATION_ANCHOR_MISMATCH", "First simulation date must be the anchor date",
                         {"simulation_dates"});
             return false;
         }
@@ -89,11 +89,10 @@ namespace sjd
             portfolio->validate(testPath->getRatesEnvironment(i));
             if (!portfolio->isOK())
             {
-                stringstream descriptionStream; 
+                stringstream descriptionStream;
                 descriptionStream << "Portfolio cannot value against Rate Environment ";
                 descriptionStream << i << ": " << portfolio->getErrorMessagesAsString();
-                recordIssue("SIMULATION_MARKET_INVALID",
-                            descriptionStream.str(),
+                recordIssue("SIMULATION_MARKET_INVALID", descriptionStream.str(),
                             {"simulation_steps", boost::lexical_cast<std::string>(i)});
                 absorbChildReport(portfolio->validationReport(),
                                   {"simulation_steps", boost::lexical_cast<std::string>(i)});
@@ -118,13 +117,12 @@ namespace sjd
         return subset;
     }
 
-    SimulatedPaths PortfolioEvolver::prepareResult(
-        size_t paths,
-        bool antithetic,
-        bool byTrade,
-        bool byStructure,
-        vector<std::shared_ptr<SingleInstrumentContract>>& trades,
-        vector<std::shared_ptr<Contract>>& structures)
+    SimulatedPaths PortfolioEvolver::prepareResult(size_t paths,
+                                                   bool antithetic,
+                                                   bool byTrade,
+                                                   bool byStructure,
+                                                   vector<std::shared_ptr<SingleInstrumentContract>>& trades,
+                                                   vector<std::shared_ptr<Contract>>& structures)
     {
         SimulatedPaths result;
         if (byTrade)
@@ -160,7 +158,10 @@ namespace sjd
         return result;
     }
 
-    SimulatedPaths PortfolioEvolver::simulatePaths(unsigned long N, bool antithetic, bool byTrade, bool byStructure)
+    SimulatedPaths PortfolioEvolver::simulatePaths(unsigned long N,
+                                                   bool antithetic,
+                                                   bool byTrade,
+                                                   bool byStructure)
     {
         SimulatedPaths result;
         if (!validateReport().isOK())
@@ -173,7 +174,7 @@ namespace sjd
             return result;
         }
         set<Date> valuationDatesSet = set<Date>(simulationDates.begin(), simulationDates.end());
-        if (!pathGenerator->setSimulationDates(valuationDatesSet) || (!pathGenerator->isOK())) 
+        if (!pathGenerator->setSimulationDates(valuationDatesSet) || (!pathGenerator->isOK()))
         {
             return result;
         }
@@ -186,7 +187,7 @@ namespace sjd
         result = prepareResult(N, antithetic, byTrade, byStructure, trades, structures);
 
         size_t draws = antithetic ? N / 2 : N;
-        for (size_t i = 0; i < draws; ++i) 
+        for (size_t i = 0; i < draws; ++i)
         {
             recordPath(result, i, pathGenerator->getRandomPath(), trades, structures);
             if (antithetic)
@@ -197,7 +198,9 @@ namespace sjd
         return result;
     }
 
-    SimulatedPaths PortfolioEvolver::valueSpotPath(const vector<double>& spots, bool byTrade, bool byStructure)
+    SimulatedPaths PortfolioEvolver::valueSpotPath(const vector<double>& spots,
+                                                   bool byTrade,
+                                                   bool byStructure)
     {
         return valueSpotPaths(spots, 1, byTrade, byStructure);
     }
@@ -219,8 +222,7 @@ namespace sjd
         }
         if (spots.size() != numberOfPaths * simulationSteps)
         {
-            recordIssue("SPOT_PATHS_LENGTH",
-                        "Spot paths must be number_of_paths times simulation dates",
+            recordIssue("SPOT_PATHS_LENGTH", "Spot paths must be number_of_paths times simulation dates",
                         {"spot_paths"});
             return result;
         }
@@ -231,8 +233,7 @@ namespace sjd
         for (size_t i = 0; i < numberOfPaths; ++i)
         {
             copy(spots.begin() + static_cast<std::ptrdiff_t>(i * simulationSteps),
-                 spots.begin() + static_cast<std::ptrdiff_t>((i + 1) * simulationSteps),
-                 pathSpots.begin());
+                 spots.begin() + static_cast<std::ptrdiff_t>((i + 1) * simulationSteps), pathSpots.begin());
             recordPath(result, i, pathGenerator->getPathForSpot(pathSpots), trades, structures);
         }
         return result;
@@ -257,8 +258,7 @@ namespace sjd
             }
             for (size_t k = 0; k < trades.size(); ++k)
             {
-                result.byTrade[(offset + j) * trades.size() + k] =
-                    trades[k]->getValue(environment);
+                result.byTrade[(offset + j) * trades.size() + k] = trades[k]->getValue(environment);
             }
             for (size_t k = 0; k < structures.size(); ++k)
             {
@@ -268,13 +268,13 @@ namespace sjd
         }
     }
 
-   void PortfolioEvolver::setSimulationDates(set<Date> dates)
-   {
+    void PortfolioEvolver::setSimulationDates(set<Date> dates)
+    {
         holdingPeriodIndex.clear();
         exposureDatesIndex.clear();
         simulationSteps = 0;
         exposureSteps = 0;
-        simulationDates = vector<Date>(dates.begin(), dates.end());       
+        simulationDates = vector<Date>(dates.begin(), dates.end());
 
         if ((holdingPeriod == 0) || !portfolioIsMargined || !calendarForHoldingPeriod)
         {
@@ -291,10 +291,10 @@ namespace sjd
             vector<Date> regCapMarginResetDates;
             int numDays = holdingPeriod;
             set<Date>::iterator it;
-            for (it = exposureDatesSet.begin(); it != exposureDatesSet.end(); ++it) 
+            for (it = exposureDatesSet.begin(); it != exposureDatesSet.end(); ++it)
             {
                 Date marginResetDate = calendarForHoldingPeriod->advance(*it, -numDays, Days);
-                if (marginResetDate < portfolio->getMargin()->getAnchorDate()) 
+                if (marginResetDate < portfolio->getMargin()->getAnchorDate())
                 {
                     marginResetDate = portfolio->getMargin()->getAnchorDate();
                 }
@@ -325,32 +325,32 @@ namespace sjd
         }
         simulationSteps = simulationDates.size();
         exposureSteps = exposureDatesIndex.size();
-   }
+    }
 
-   vector<double> PortfolioEvolver::getSpotAlongAPath(std::shared_ptr<Path> inputPath)
-   {
-       size_t steps = inputPath->getNumberOfSteps();
-       vector<double> spot = vector<double>(steps);
-       for (size_t i = 0; i < steps; ++i) 
-       {
-           Date ad = inputPath->getRatesEnvironment(i)->getAnchorDate();
-           spot[i] = inputPath->getRatesEnvironment(i)->getFRS()->getForward(ad);
-       }
-       return spot;
-   }
+    vector<double> PortfolioEvolver::getSpotAlongAPath(std::shared_ptr<Path> inputPath)
+    {
+        size_t steps = inputPath->getNumberOfSteps();
+        vector<double> spot = vector<double>(steps);
+        for (size_t i = 0; i < steps; ++i)
+        {
+            Date ad = inputPath->getRatesEnvironment(i)->getAnchorDate();
+            spot[i] = inputPath->getRatesEnvironment(i)->getFRS()->getForward(ad);
+        }
+        return spot;
+    }
 
-   vector<double> PortfolioEvolver::getMtMAlongAPath(std::shared_ptr<Path> inputPath)
-   {
-       size_t steps = inputPath->getNumberOfSteps();
-       vector<double> mtm = vector<double>(steps);
-       for (size_t i = 0; i < steps; ++i) 
-       {
-           mtm[i] = portfolio->getValue(inputPath->getRatesEnvironment(i));
-       }
-       return mtm;
-   }
+    vector<double> PortfolioEvolver::getMtMAlongAPath(std::shared_ptr<Path> inputPath)
+    {
+        size_t steps = inputPath->getNumberOfSteps();
+        vector<double> mtm = vector<double>(steps);
+        for (size_t i = 0; i < steps; ++i)
+        {
+            mtm[i] = portfolio->getValue(inputPath->getRatesEnvironment(i));
+        }
+        return mtm;
+    }
 
-   void PortfolioEvolver::evolvePortfolioAlongPath(std::shared_ptr<Path> inputPath)
+    void PortfolioEvolver::evolvePortfolioAlongPath(std::shared_ptr<Path> inputPath)
     {
         spotPath = getSpotAlongAPath(inputPath);
         mtmOnPath = getMtMAlongAPath(inputPath);

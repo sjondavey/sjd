@@ -13,8 +13,10 @@ namespace sjd
                                                          ArrayInterpolatorType typeInput,
                                                          bool allowExtrapolationInput)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveDeterministic"));
-        setParameters(anchorDateInput, observationDatesInput, forwardsInput, typeInput, allowExtrapolationInput);
+        errorTracking =
+            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveDeterministic"));
+        setParameters(anchorDateInput, observationDatesInput, forwardsInput, typeInput,
+                      allowExtrapolationInput);
     }
 
     void ForwardCurveDeterministic::setParameters(Date anchorDateInput,
@@ -23,13 +25,8 @@ namespace sjd
                                                   ArrayInterpolatorType typeInput,
                                                   bool allowExtrapolationInput)
     {
-        quotes.setInterpolated(anchorDateInput,
-                               observationDatesInput,
-                               forwardsInput,
-                               typeInput,
-                               allowExtrapolationInput,
-                               ForwardAveraging::Point,
-                               ForwardRoll::Deterministic,
+        quotes.setInterpolated(anchorDateInput, observationDatesInput, forwardsInput, typeInput,
+                               allowExtrapolationInput, ForwardAveraging::Point, ForwardRoll::Deterministic,
                                std::shared_ptr<VolatilityRateSource>());
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
@@ -43,8 +40,8 @@ namespace sjd
         if (!quotes.quotesAreOk(errorMessage))
         {
             const std::string code = errorMessage.find("same dimension") != std::string::npos
-                ? "FORWARD_CURVE_DIMENSION_MISMATCH"
-                : "FORWARD_CURVE_INVALID";
+                                         ? "FORWARD_CURVE_DIMENSION_MISMATCH"
+                                         : "FORWARD_CURVE_INVALID";
             recordIssue(code, errorMessage, {"inputs"});
             return false;
         }
@@ -81,9 +78,8 @@ namespace sjd
         return quotes.rollForward(toDate, isInRange(toDate));
     }
 
-    std::shared_ptr<ForwardRateSource> ForwardCurveDeterministic::rollForward(Date toDate,
-                                                                                vector<Date> rateSetDates,
-                                                                                vector<double>& rateSetsFromAnchorToDate)
+    std::shared_ptr<ForwardRateSource> ForwardCurveDeterministic::rollForward(
+        Date toDate, vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToDate)
     {
         return ForwardRateSourceDeterministic::rollForward(toDate, rateSetDates, rateSetsFromAnchorToDate);
     }
@@ -94,8 +90,7 @@ namespace sjd
     }
 
     vector<std::shared_ptr<ForwardRateSource>> ForwardCurveDeterministic::rollForward(
-        vector<Date> rateSetDates,
-        vector<double>& rateSetsFromAnchorToFinalRollDate)
+        vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToFinalRollDate)
     {
         return ForwardRateSourceDeterministic::rollForward(rateSetDates, rateSetsFromAnchorToFinalRollDate);
     }

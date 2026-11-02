@@ -1,13 +1,13 @@
 #ifndef CVA_INCLUDED
 #define CVA_INCLUDED
-//#pragma once
+// #pragma once
 
-#include <sjd/tools/Validation.h>
 #include <math.h>
-#include <string>
+#include <memory>
 #include <ql/time/date.hpp>
 #include <sjd/maths/maths.h>
-#include <memory>
+#include <sjd/tools/Validation.h>
+#include <string>
 
 /*======================================================================================
 Overview
@@ -15,23 +15,24 @@ Overview
 Probability of Default and Loss Given Default classes
 =======================================================================================*/
 
-namespace sjd {
-   /*======================================================================================
-   CVA
+namespace sjd
+{
+    /*======================================================================================
+    CVA
 
-    =======================================================================================*/
+     =======================================================================================*/
     class CVA : public Validatable
     {
     public:
         virtual ~CVA() {};
-       
-      virtual bool isOK();
 
-      virtual double getLGD(QuantLib::Date d) = 0;
-      // return 0 if t2 <= t1. 
-      virtual double getPD(QuantLib::Date d) = 0;
-      virtual double getPD(QuantLib::Date t1, QuantLib::Date t2);
-      virtual bool extendsTo(QuantLib::Date date) = 0;
+        virtual bool isOK();
+
+        virtual double getLGD(QuantLib::Date d) = 0;
+        // return 0 if t2 <= t1.
+        virtual double getPD(QuantLib::Date d) = 0;
+        virtual double getPD(QuantLib::Date t1, QuantLib::Date t2);
+        virtual bool extendsTo(QuantLib::Date date) = 0;
         virtual void setAnchorDate(QuantLib::Date date);
 
     protected:
@@ -40,7 +41,6 @@ namespace sjd {
         QuantLib::Date anchorDate;
         std::string className;
     };
-
 
     /*======================================================================================
    Flat PD
@@ -58,18 +58,18 @@ namespace sjd {
         FlatPD(QuantLib::Date anchorDate, double pd, double lgd);
         virtual ~FlatPD() {};
 
-      bool isOK();
+        bool isOK();
 
-      virtual void setLGD(double lgdInput);
-         virtual double getLGD(QuantLib::Date d);
+        virtual void setLGD(double lgdInput);
+        virtual double getLGD(QuantLib::Date d);
 
-      virtual void setPD(double pd);
-      virtual double getPD(QuantLib::Date d);
-      virtual bool extendsTo(QuantLib::Date date);
+        virtual void setPD(double pd);
+        virtual double getPD(QuantLib::Date d);
+        virtual bool extendsTo(QuantLib::Date date);
 
     private:
-      double pd, lgd, hazardRate;
-   };
+        double pd, lgd, hazardRate;
+    };
 
     /*======================================================================================
    CumulativeDefaultProbability
@@ -80,24 +80,26 @@ namespace sjd {
     {
     public:
         // PD is the conditional annual risk of default
-        CumulativeDefaultProbability(QuantLib::Date anchorDate, std::vector<QuantLib::Date> dates, std::vector<double> cdp, std::vector<double> lgd);
+        CumulativeDefaultProbability(QuantLib::Date anchorDate,
+                                     std::vector<QuantLib::Date> dates,
+                                     std::vector<double> cdp,
+                                     std::vector<double> lgd);
         virtual ~CumulativeDefaultProbability() {};
 
-      bool isOK();
-      virtual double getPD(QuantLib::Date d);
-      virtual double getLGD(QuantLib::Date d);
+        bool isOK();
+        virtual double getPD(QuantLib::Date d);
+        virtual double getLGD(QuantLib::Date d);
 
-      virtual bool extendsTo(QuantLib::Date date);
+        virtual bool extendsTo(QuantLib::Date date);
 
     private:
         QuantLib::Date anchorDate;
-        std::vector<QuantLib::Date> observationDates;        
+        std::vector<QuantLib::Date> observationDates;
         std::vector<double> cumulativeDefaultProbability;
         std::vector<double> lossGivenDefault;
         std::shared_ptr<ArrayInterpolator> defaultInterpolator;
         std::shared_ptr<ArrayInterpolator> lossInterpolator;
-   };
+    };
 }
 
 #endif
-

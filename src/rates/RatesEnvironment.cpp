@@ -4,7 +4,7 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
     RatesEnvironment::RatesEnvironment(Date anchorDateInput)
     {
@@ -23,10 +23,7 @@ namespace sjd
     bool RatesEnvironment::isOK()
     {
         resetErrorMessages();
-        if (frsSet == false &&
-            vrsSet == false &&
-            drsSet == false &&
-            foreignDrsSet == false &&
+        if (frsSet == false && vrsSet == false && drsSet == false && foreignDrsSet == false &&
             fixingrsSet == false)
         {
             recordIssue("RATES_ENVIRONMENT_NO_RATES", "No rates set", {});
@@ -227,6 +224,6 @@ namespace sjd
         if (allFinalDates.size() > 0)
         {
             finalDate = *allFinalDates.begin();
-        }        
+        }
     }
 }

@@ -5,13 +5,13 @@
 
 #include <sjd/contracts/AsianForwardContract.h>
 #include <sjd/contracts/AsianOptionContract.h>
+#include <sjd/contracts/Cashflow.h>
 #include <sjd/contracts/EuropeanForwardContract.h>
 #include <sjd/contracts/EuropeanOptionContract.h>
-#include <sjd/contracts/Cashflow.h>
 #include <sjd/contracts/Portfolio/Structures/Structure.h>
 
-#include <support/GenerateRatesEnvironments.h>
 #include <support/GenerateContracts.h>
+#include <support/GenerateRatesEnvironments.h>
 
 #include <support/TestingParameters.h>
 
@@ -24,10 +24,10 @@
 
 using namespace sjd;
 
-class StructureTest 
+class StructureTest
 {
-    
-  public:
+
+public:
     static std::shared_ptr<RegCapUnderlyingFactors> getDefaultRegCapUnderlyingFactors();
 
     static void testGradient();
@@ -49,9 +49,6 @@ class StructureTest
 
     static void testStructureCreation();
     static boost::unit_test_framework::test_suite* suite();
-    
 };
 
 #endif
-
-

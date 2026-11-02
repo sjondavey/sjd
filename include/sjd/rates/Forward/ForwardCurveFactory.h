@@ -18,13 +18,13 @@ namespace sjd
      * std::invalid_argument.
      */
     std::shared_ptr<ForwardRateSource> makeForwardCurve(QuantLib::Date anchorDate,
-                                                          std::vector<QuantLib::Date> observationDates,
-                                                          std::vector<double> forwards,
-                                                          ArrayInterpolatorType interpolation,
-                                                          bool allowExtrapolation,
-                                                          ForwardAveraging averaging,
-                                                          ForwardRoll roll,
-                                                          std::shared_ptr<VolatilityRateSource> volatility);
+                                                        std::vector<QuantLib::Date> observationDates,
+                                                        std::vector<double> forwards,
+                                                        ArrayInterpolatorType interpolation,
+                                                        bool allowExtrapolation,
+                                                        ForwardAveraging averaging,
+                                                        ForwardRoll roll,
+                                                        std::shared_ptr<VolatilityRateSource> volatility);
 }
 
 #endif

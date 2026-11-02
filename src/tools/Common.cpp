@@ -9,46 +9,43 @@ namespace sjd
     string convertBuySellToString(BuySell bs)
     {
         string output;
-        switch (bs) 
+        switch (bs)
         {
-            case BUY :
-            {
-                output = "BUY";
-            }
-            break;
-            case SELL:
-            {
-                output = "SELL";
-            }
-            break;
-            default:
-                output = "Buy/Sell not defined";
+        case BUY:
+        {
+            output = "BUY";
+        }
+        break;
+        case SELL:
+        {
+            output = "SELL";
+        }
+        break;
+        default:
+            output = "Buy/Sell not defined";
         }
         return output;
     }
-
 
     string convertPutCallToString(PutCall pc)
     {
         string output;
-        switch (pc) 
+        switch (pc)
         {
-            case PUT :
-            {
-                output = "PUT";
-            }
-            break;
-            case CALL:
-            {
-                output = "CALL";
-            }
-            break;
-            default:
-                output = "Put/Call not defined";
+        case PUT:
+        {
+            output = "PUT";
+        }
+        break;
+        case CALL:
+        {
+            output = "CALL";
+        }
+        break;
+        default:
+            output = "Put/Call not defined";
         }
         return output;
-
     }
-
 
 }

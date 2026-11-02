@@ -1,17 +1,16 @@
 
 #include <sjd/contracts/Portfolio/Portfolio.h>
 
-
 using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
 
     /*======================================================================================
     Portfolio
-    
+
     =======================================================================================*/
     void Portfolio::setInputVariables()
     {
@@ -37,38 +36,35 @@ namespace sjd
     Portfolio::Portfolio(vector<std::shared_ptr<Contract>> inputs)
     {
         setInputVariables();
-        vector<std::shared_ptr<SingleInstrumentContract>> inputsAsSingleInstruments = 
+        vector<std::shared_ptr<SingleInstrumentContract>> inputsAsSingleInstruments =
             getSingleInstrumentContracts(inputs);
 
-        if (errorTracking->getHasErrors()) 
+        if (errorTracking->getHasErrors())
         {
             contracts = vector<std::shared_ptr<SingleInstrumentContract>>(0);
-            recordIssue("CONTRACT_EXTRACT_FAILED",
-                        "Cannot extract single instruments from input contracts",
+            recordIssue("CONTRACT_EXTRACT_FAILED", "Cannot extract single instruments from input contracts",
                         {});
         }
-        else 
+        else
         {
             contracts = inputsAsSingleInstruments;
         }
         hasMargin = false;
     }
 
-    Portfolio::Portfolio(vector<std::shared_ptr<Contract>> inputs,
-                         std::shared_ptr<Margin> marginInput)
+    Portfolio::Portfolio(vector<std::shared_ptr<Contract>> inputs, std::shared_ptr<Margin> marginInput)
     {
         setInputVariables();
-        vector<std::shared_ptr<SingleInstrumentContract>> inputsAsSingleInstruments = 
+        vector<std::shared_ptr<SingleInstrumentContract>> inputsAsSingleInstruments =
             getSingleInstrumentContracts(inputs);
 
-        if (errorTracking->getHasErrors()) 
+        if (errorTracking->getHasErrors())
         {
             contracts = vector<std::shared_ptr<SingleInstrumentContract>>(0);
-            recordIssue("CONTRACT_EXTRACT_FAILED",
-                        "Cannot extract single instruments from input contracts",
+            recordIssue("CONTRACT_EXTRACT_FAILED", "Cannot extract single instruments from input contracts",
                         {});
         }
-        else 
+        else
         {
             contracts = inputsAsSingleInstruments;
         }
@@ -76,17 +72,17 @@ namespace sjd
         margin = marginInput;
     }
 
-    Portfolio::Portfolio(Portfolio &portfolio)
+    Portfolio::Portfolio(Portfolio& portfolio)
     {
         setInputVariables();
         contracts = portfolio.contracts;
 
-        if (portfolio.hasMargin) 
+        if (portfolio.hasMargin)
         {
             hasMargin = true;
             margin = portfolio.margin;
         }
-        else 
+        else
         {
             hasMargin = false;
         }
@@ -97,12 +93,12 @@ namespace sjd
         return std::unique_ptr<Contract>(new Portfolio(*this));
     }
 
-    void Portfolio::validate() 
-   {
+    void Portfolio::validate()
+    {
         MultipleInstrumentContract::validate();
     }
 
-    void Portfolio::validate(std::shared_ptr<RatesEnvironment> re) 
+    void Portfolio::validate(std::shared_ptr<RatesEnvironment> re)
     {
         return MultipleInstrumentContract::validate(re);
     }
@@ -117,33 +113,33 @@ namespace sjd
         return margin;
     }
 
-    void Portfolio::setMarginBalance(double balance) 
+    void Portfolio::setMarginBalance(double balance)
     {
-        if (hasMargin) 
+        if (hasMargin)
         {
             margin->setMarginBalance(balance);
         }
     }
 
-    double Portfolio::getMarginBalance() 
+    double Portfolio::getMarginBalance()
     {
-        if (margin) 
+        if (margin)
         {
             return margin->getMarginBalance();
         }
         return 0;
     }
 
-    double Portfolio::getMarginCall(std::shared_ptr<RatesEnvironment> re) 
+    double Portfolio::getMarginCall(std::shared_ptr<RatesEnvironment> re)
     {
-        if (margin) 
+        if (margin)
         {
             double mtm = getValue(re);
             return margin->getMarginCall(mtm);
         }
         return 0;
     }
-        
+
     void Portfolio::updateMarginBalanceWithCall(double marginCall)
     {
         if (margin)

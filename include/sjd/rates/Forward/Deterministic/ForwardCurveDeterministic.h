@@ -4,36 +4,35 @@
 #include <sjd/rates/Forward/ForwardCurve.h>
 #include <sjd/rates/Forward/ForwardRateSourceDeterministic.h>
 
-
-namespace sjd 
+namespace sjd
 {
 
-   /*======================================================================================
-   ForwardCurveDeterministic 
-    
-    A curve containing date / rate inputs and a way to interpolate between these points.
-    
-    Note: If the first observation date is greater than the anchor date then, we will use
-          the first observation date for all points between the two if 
-          allowExtrapolation == false
-    =======================================================================================*/
+    /*======================================================================================
+    ForwardCurveDeterministic
+
+     A curve containing date / rate inputs and a way to interpolate between these points.
+
+     Note: If the first observation date is greater than the anchor date then, we will use
+           the first observation date for all points between the two if
+           allowExtrapolation == false
+     =======================================================================================*/
     class ForwardCurveDeterministic : public ForwardRateSourceDeterministic
     {
     public:
         ForwardCurveDeterministic() {};
 
-        ForwardCurveDeterministic(QuantLib::Date anchorDate, 
-                                  std::vector<QuantLib::Date> observationDates, 
-                                  std::vector<double> forwards, 
+        ForwardCurveDeterministic(QuantLib::Date anchorDate,
+                                  std::vector<QuantLib::Date> observationDates,
+                                  std::vector<double> forwards,
                                   ArrayInterpolatorType type = LINEAR,
                                   bool allowExtrapolation = false);
 
         virtual bool isOK();
         virtual std::string validationRoot() const { return "forward_curve"; }
 
-        void setParameters(QuantLib::Date anchorDate, 
-                           std::vector<QuantLib::Date> observationDates, 
-                           std::vector<double> forwards, 
+        void setParameters(QuantLib::Date anchorDate,
+                           std::vector<QuantLib::Date> observationDates,
+                           std::vector<double> forwards,
                            ArrayInterpolatorType type = LINEAR,
                            bool allowExtrapolation = false);
 
@@ -47,14 +46,13 @@ namespace sjd
 
         virtual std::shared_ptr<ForwardRateSource> parallelBump(double spread);
         virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate);
-        virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, 
-                                                                 std::vector<QuantLib::Date> rateSetDates,
-                                                                 std::vector<double> &rateSetsFromAnchorToDate);
+        virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate,
+                                                               std::vector<QuantLib::Date> rateSetDates,
+                                                               std::vector<double>& rateSetsFromAnchorToDate);
 
-        virtual std::vector<std::shared_ptr<ForwardRateSource> > rollForward();
-        virtual std::vector<std::shared_ptr<ForwardRateSource> > rollForward(std::vector<QuantLib::Date> rateSetDates,
-                                                              std::vector<double> &rateSetsFromAnchorToFinalRollDate);
-
+        virtual std::vector<std::shared_ptr<ForwardRateSource>> rollForward();
+        virtual std::vector<std::shared_ptr<ForwardRateSource>> rollForward(
+            std::vector<QuantLib::Date> rateSetDates, std::vector<double>& rateSetsFromAnchorToFinalRollDate);
 
     protected:
         ForwardCurve quotes;

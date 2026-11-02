@@ -4,7 +4,7 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
     double DiscountRateSource::getDiscountFactor(Date fromDate, Date toDate) const
     {
@@ -16,7 +16,7 @@ namespace sjd
     vector<double> DiscountRateSource::getDiscountFactor(vector<Date> times) const
     {
         vector<double> dfs;
-        for (size_t i = 0; i < times.size(); ++i) 
+        for (size_t i = 0; i < times.size(); ++i)
         {
             double df = getDiscountFactor(times[i]);
             dfs.push_back(df);
@@ -28,7 +28,7 @@ namespace sjd
     {
         double fromDF = getDiscountFactor(fromTime);
         vector<double> dfs;
-        for (size_t i = 0; i < times.size(); ++i) 
+        for (size_t i = 0; i < times.size(); ++i)
         {
             double df = getDiscountFactor(times[i]);
             dfs.push_back(df / fromDF);

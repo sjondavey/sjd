@@ -4,41 +4,39 @@
 
 #include "VolatilitySurfaces.h"
 
-
-namespace sjd 
+namespace sjd
 {
 
     /*======================================================================================
-    BlackPutImpliedStrike 
+    BlackPutImpliedStrike
 
-    A classes built to utilise the QuantLib "solver framework" to imply the standard 
-    deviation an option given all the other inputs. These all now solve for Standard 
+    A classes built to utilise the QuantLib "solver framework" to imply the standard
+    deviation an option given all the other inputs. These all now solve for Standard
     Deviation rather than Volatility. It is up to the user to do the simple conversion
     =======================================================================================*/
-    class BlackPutImpliedStrike 
+    class BlackPutImpliedStrike
     {
     public:
-        BlackPutImpliedStrike(double delta, double forward, double standardDeviation) :     
-            delta(delta/100), forward(forward), standardDeviation(standardDeviation) 
+        BlackPutImpliedStrike(double delta, double forward, double standardDeviation)
+            : delta(delta / 100), forward(forward), standardDeviation(standardDeviation)
         {
             put = std::shared_ptr<Black76Option>(new Black76Put(forward, forward, standardDeviation, 1.0));
         };
-        
-        double operator()(double strikeEstimate) const 
+
+        double operator()(double strikeEstimate) const
         {
             put->setStrike(strikeEstimate);
             double d = put->getDelta();
             return delta + put->getDelta(); // put delta is negative
         }
-    
+
     private:
         double delta, forward, standardDeviation;
         std::shared_ptr<Black76Option> put;
     };
 
-
     /*======================================================================================
-    VolatilitySurfaceDelta 
+    VolatilitySurfaceDelta
 
     =======================================================================================*/
     class VolatilitySurfaceDelta : public VolatiltiySurfaceRateSource
@@ -46,15 +44,15 @@ namespace sjd
     public:
         // Note that delta should be for a put and therefore must be a strictly increasing std::vector.
         // Also use 50 NOT 0.5 for 50 delta options
-        VolatilitySurfaceDelta(QuantLib::Date anchorDate, 
-                               std::vector<QuantLib::Date> observationDates, 
+        VolatilitySurfaceDelta(QuantLib::Date anchorDate,
+                               std::vector<QuantLib::Date> observationDates,
                                std::vector<double> deltas,
                                std::vector<std::vector<double>> volatilityData,
                                SurfaceInterpolatorType interpolatorType,
                                bool extrapolate = false); // row = delta, column = time
 
-        VolatilitySurfaceDelta(QuantLib::Date anchorDate, 
-                               std::vector<QuantLib::Date> observationDates, 
+        VolatilitySurfaceDelta(QuantLib::Date anchorDate,
+                               std::vector<QuantLib::Date> observationDates,
                                std::vector<double> deltas,
                                QuantLib::Matrix volatilityData,
                                SurfaceInterpolatorType interpolatorType,
@@ -70,16 +68,15 @@ namespace sjd
         virtual double getVolatility(QuantLib::Date toDate) const;
         virtual double getVolatility(QuantLib::Date toDate, double strike, double forward) const;
 
-        virtual double getStandardDeviation(QuantLib::Date toDate) const; 
+        virtual double getStandardDeviation(QuantLib::Date toDate) const;
         virtual double getStandardDeviation(QuantLib::Date toDate, double strike, double forward) const;
 
         double calculateDeltaFromStrike(QuantLib::Date date, double strike, double forward) const;
         double calculateStrikeFromDelta(QuantLib::Date date, double delta, double forward) const;
-      
+
         virtual std::shared_ptr<VolatilityRateSource> parallelBump(double spread);
         virtual std::shared_ptr<VolatilityRateSource> rollForward(QuantLib::Date toDate);
     };
-   
 
     /*======================================================================================
     SimpleDeltaSurface
@@ -89,10 +86,10 @@ namespace sjd
     class SimpleDeltaSurface
     {
     public:
-        SimpleDeltaSurface(std::vector<double> times, 
-                           std::vector<double> delta, 
-                           std::vector<std::vector<double>> volatility, 
-                           bool extrapolate, 
+        SimpleDeltaSurface(std::vector<double> times,
+                           std::vector<double> delta,
+                           std::vector<std::vector<double>> volatility,
+                           bool extrapolate,
                            std::string interpolationType);
         bool isOK();
         std::string getErrorMessage();

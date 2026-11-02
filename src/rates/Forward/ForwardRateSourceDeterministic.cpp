@@ -4,7 +4,7 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
     bool ForwardRateSourceDeterministic::isOK()
     {
@@ -17,14 +17,12 @@ namespace sjd
             if (!isInRange(orderedForwardDates.front()))
             {
                 recordIssue("FORWARD_RATE_SOURCE_RANGE",
-                            "First forward date is outside the rate source range",
-                            {"observation_dates"});
+                            "First forward date is outside the rate source range", {"observation_dates"});
                 return false;
             }
             if (!isInRange(orderedForwardDates.back()))
             {
-                recordIssue("FORWARD_RATE_SOURCE_RANGE",
-                            "Last forward date is outside the rate source range",
+                recordIssue("FORWARD_RATE_SOURCE_RANGE", "Last forward date is outside the rate source range",
                             {"observation_dates"});
                 return false;
             }
@@ -39,20 +37,18 @@ namespace sjd
         return marketStress;
     }
 
-
-    vector<std::shared_ptr<ForwardRateSource> > ForwardRateSourceDeterministic::rollForward()
+    vector<std::shared_ptr<ForwardRateSource>> ForwardRateSourceDeterministic::rollForward()
     {
-        vector<std::shared_ptr<ForwardRateSource> > frss;
-        for (size_t i = 0; i < orderedForwardDates.size(); ++i) 
+        vector<std::shared_ptr<ForwardRateSource>> frss;
+        for (size_t i = 0; i < orderedForwardDates.size(); ++i)
         {
             frss.push_back(rollForward(orderedForwardDates[i]));
         }
         return frss;
     }
 
-    std::shared_ptr<ForwardRateSource> ForwardRateSourceDeterministic::rollForward(Date toDate, 
-                                                                                     vector<Date> rateSetDates,
-                                                                                     vector<double> &rateSetsFromAnchorToDate)
+    std::shared_ptr<ForwardRateSource> ForwardRateSourceDeterministic::rollForward(
+        Date toDate, vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToDate)
     {
         rateSetsFromAnchorToDate.clear();
         for (size_t i = 0; i < rateSetDates.size(); ++i)
@@ -62,21 +58,21 @@ namespace sjd
         return rollForward(toDate);
     }
 
-    vector<std::shared_ptr<ForwardRateSource> > ForwardRateSourceDeterministic::rollForward(
-                                                                    vector<Date> rateSetDates,                
-                                                                    vector<double> &rateSetsFromAnchorToFinalRollDate)
+    vector<std::shared_ptr<ForwardRateSource>> ForwardRateSourceDeterministic::rollForward(
+        vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToFinalRollDate)
     {
         rateSetsFromAnchorToFinalRollDate.clear();
-        vector<std::shared_ptr<ForwardRateSource> > frss;
+        vector<std::shared_ptr<ForwardRateSource>> frss;
         vector<double> previousRateSets;
         vector<double> rateSets;
-        for (size_t i = 0; i < orderedForwardDates.size(); ++i) 
+        for (size_t i = 0; i < orderedForwardDates.size(); ++i)
         {
-            vector<Date>::iterator it = lower_bound(rateSetDates.begin(), rateSetDates.end(), orderedForwardDates[i]);
+            vector<Date>::iterator it =
+                lower_bound(rateSetDates.begin(), rateSetDates.end(), orderedForwardDates[i]);
             vector<Date> dateSubset = vector<Date>(rateSetDates.begin(), it);
             frss.push_back(rollForward(orderedForwardDates[i], dateSubset, rateSets));
-            rateSetsFromAnchorToFinalRollDate.insert(rateSetsFromAnchorToFinalRollDate.end(), 
-                                                     rateSets.begin() + previousRateSets.size(), 
+            rateSetsFromAnchorToFinalRollDate.insert(rateSetsFromAnchorToFinalRollDate.end(),
+                                                     rateSets.begin() + previousRateSets.size(),
                                                      rateSets.end());
             previousRateSets = rateSets;
         }

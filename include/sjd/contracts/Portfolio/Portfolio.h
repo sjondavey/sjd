@@ -5,13 +5,13 @@
 #include <sjd/contracts/Contracts.h>
 #include <sjd/contracts/Portfolio/Margin/Margin.h>
 
-namespace sjd 
+namespace sjd
 {
 
     /*======================================================================================
     Portfolio
-    
-    A portfolio consists of one or more single instrument contracts. A Portfolio only 
+
+    A portfolio consists of one or more single instrument contracts. A Portfolio only
     addresses issues of forward valuation of the instruments. Regulatory capital is
     calculated by a RegulatoryCapital model that sits behind the portfolio.
     =======================================================================================*/
@@ -20,12 +20,11 @@ namespace sjd
     public:
         Portfolio() {};
         Portfolio(std::vector<std::shared_ptr<SingleInstrumentContract>> input);
-        Portfolio(std::vector<std::shared_ptr<SingleInstrumentContract>> input, 
+        Portfolio(std::vector<std::shared_ptr<SingleInstrumentContract>> input,
                   std::shared_ptr<Margin> margin);
         Portfolio(std::vector<std::shared_ptr<Contract>> input);
-        Portfolio(std::vector<std::shared_ptr<Contract>> input,
-                  std::shared_ptr<Margin> margin);
-        Portfolio(Portfolio &Portfolio);
+        Portfolio(std::vector<std::shared_ptr<Contract>> input, std::shared_ptr<Margin> margin);
+        Portfolio(Portfolio& Portfolio);
         // Keeps a reference the the same underlying contracts
         std::unique_ptr<Contract> clone() override;
         virtual ~Portfolio() {};
@@ -46,10 +45,10 @@ namespace sjd
 
     protected:
         virtual void setInputVariables();
-        
+
         bool hasMargin;
         std::shared_ptr<Margin> margin;
-   };
+    };
 
 }
 

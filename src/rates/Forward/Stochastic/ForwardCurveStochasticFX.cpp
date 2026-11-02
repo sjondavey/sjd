@@ -30,7 +30,8 @@ namespace sjd
                                                        std::shared_ptr<VolatilityRateSource> vrs)
     {
         errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveStochasticFX"));
-        setParameters(anchorDate, spotOnAnchor(spot, spotDate, domesticDRS, foreignDRS), domesticDRS, foreignDRS, vrs);
+        setParameters(anchorDate, spotOnAnchor(spot, spotDate, domesticDRS, foreignDRS), domesticDRS,
+                      foreignDRS, vrs);
     }
 
     ForwardCurveStochasticFX::ForwardCurveStochasticFX(Date anchorDate,
@@ -49,12 +50,8 @@ namespace sjd
                                                  std::shared_ptr<DiscountRateSource> foreignDRSInput,
                                                  std::shared_ptr<VolatilityRateSource> vrs)
     {
-        quotes.setInterestDifferential(anchorDateInput,
-                                       spotInput,
-                                       domesticDRSInput,
-                                       foreignDRSInput,
-                                       ForwardRoll::SpotVolatility,
-                                       vrs);
+        quotes.setInterestDifferential(anchorDateInput, spotInput, domesticDRSInput, foreignDRSInput,
+                                       ForwardRoll::SpotVolatility, vrs);
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
         finalDate = quotes.finalDate();
@@ -89,13 +86,13 @@ namespace sjd
         }
         if (!quotes.domesticRateSource()->isOK())
         {
-            absorbChildReport(quotes.domesticRateSource()->validationReport(), "domestic_discount_rate_source");
+            absorbChildReport(quotes.domesticRateSource()->validationReport(),
+                              "domestic_discount_rate_source");
             return false;
         }
         if (quotes.domesticRateSource()->getAnchorDate() != anchorDate)
         {
-            recordIssue("FX_DOMESTIC_ANCHOR_MISMATCH",
-                        "Domestic DRS does not have the correct anchor date",
+            recordIssue("FX_DOMESTIC_ANCHOR_MISMATCH", "Domestic DRS does not have the correct anchor date",
                         {"domestic_discount_rate_source"});
             return false;
         }
@@ -106,8 +103,7 @@ namespace sjd
         }
         if (quotes.foreignRateSource()->getAnchorDate() != anchorDate)
         {
-            recordIssue("FX_FOREIGN_ANCHOR_MISMATCH",
-                        "Foreign DRS does not have the correct anchor date",
+            recordIssue("FX_FOREIGN_ANCHOR_MISMATCH", "Foreign DRS does not have the correct anchor date",
                         {"foreign_discount_rate_source"});
             return false;
         }
@@ -131,12 +127,11 @@ namespace sjd
         return quotes.rollForward(toDate, normalRV, isInRange(toDate));
     }
 
-    std::shared_ptr<ForwardRateSource> ForwardCurveStochasticFX::rollForward(Date toDate,
-                                                                               double normalRV,
-                                                                               vector<Date> rateSetDates,
-                                                                               vector<double>& rateSetsFromAnchorToDate)
+    std::shared_ptr<ForwardRateSource> ForwardCurveStochasticFX::rollForward(
+        Date toDate, double normalRV, vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToDate)
     {
-        return ForwardRateSourceStochastic::rollForward(toDate, normalRV, rateSetDates, rateSetsFromAnchorToDate);
+        return ForwardRateSourceStochastic::rollForward(toDate, normalRV, rateSetDates,
+                                                        rateSetsFromAnchorToDate);
     }
 
     void ForwardCurveStochasticFX::setForwardValuationDates(set<Date> datesInput)
@@ -156,8 +151,7 @@ namespace sjd
     }
 
     vector<std::shared_ptr<ForwardRateSource>> ForwardCurveStochasticFX::rollForward(
-        vector<Date> rateSetDates,
-        vector<double>& rateSetsFromAnchorToFinalRollDate)
+        vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToFinalRollDate)
     {
         return ForwardRateSourceStochastic::rollForward(rateSetDates, rateSetsFromAnchorToFinalRollDate);
     }

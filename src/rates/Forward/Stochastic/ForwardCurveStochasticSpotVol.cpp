@@ -14,8 +14,10 @@ namespace sjd
                                                                  bool allowExtrapolationInput,
                                                                  std::shared_ptr<VolatilityRateSource> vrs)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveStochasticSpotVol"));
-        setParameters(anchorDateInput, observationDatesInput, forwardsInput, typeInput, allowExtrapolationInput, vrs);
+        errorTracking =
+            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveStochasticSpotVol"));
+        setParameters(anchorDateInput, observationDatesInput, forwardsInput, typeInput,
+                      allowExtrapolationInput, vrs);
     }
 
     void ForwardCurveStochasticSpotVol::setParameters(Date anchorDateInput,
@@ -25,13 +27,8 @@ namespace sjd
                                                       bool allowExtrapolationInput,
                                                       std::shared_ptr<VolatilityRateSource> vrs)
     {
-        quotes.setInterpolated(anchorDateInput,
-                               observationDatesInput,
-                               forwardsInput,
-                               typeInput,
-                               allowExtrapolationInput,
-                               ForwardAveraging::Point,
-                               ForwardRoll::SpotVolatility,
+        quotes.setInterpolated(anchorDateInput, observationDatesInput, forwardsInput, typeInput,
+                               allowExtrapolationInput, ForwardAveraging::Point, ForwardRoll::SpotVolatility,
                                vrs);
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
@@ -57,9 +54,10 @@ namespace sjd
         if (vrs->hasNegativeATMFwdFwdVariances(d1, d2))
         {
             stringstream errorDescription;
-            errorDescription << "Negative fwd fwd variance between " << QuantLib::io::iso_date(d1)
-                             << " and " << QuantLib::io::iso_date(d2);
-            recordIssue("FORWARD_NEGATIVE_FWD_FWD_VARIANCE", errorDescription.str(), {"volatility_rate_source"});
+            errorDescription << "Negative fwd fwd variance between " << QuantLib::io::iso_date(d1) << " and "
+                             << QuantLib::io::iso_date(d2);
+            recordIssue("FORWARD_NEGATIVE_FWD_FWD_VARIANCE", errorDescription.str(),
+                        {"volatility_rate_source"});
         }
         return !errorTracking->getHasErrors();
     }
@@ -69,17 +67,17 @@ namespace sjd
         return quotes.getForward(toDate);
     }
 
-    std::shared_ptr<ForwardRateSource> ForwardCurveStochasticSpotVol::rollForward(Date toDate, double normalRV)
+    std::shared_ptr<ForwardRateSource> ForwardCurveStochasticSpotVol::rollForward(Date toDate,
+                                                                                  double normalRV)
     {
         return quotes.rollForward(toDate, normalRV, isInRange(toDate));
     }
 
-    std::shared_ptr<ForwardRateSource> ForwardCurveStochasticSpotVol::rollForward(Date toDate,
-                                                                                    double normalRV,
-                                                                                    vector<Date> rateSetDates,
-                                                                                    vector<double>& rateSetsFromAnchorToDate)
+    std::shared_ptr<ForwardRateSource> ForwardCurveStochasticSpotVol::rollForward(
+        Date toDate, double normalRV, vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToDate)
     {
-        return ForwardRateSourceStochastic::rollForward(toDate, normalRV, rateSetDates, rateSetsFromAnchorToDate);
+        return ForwardRateSourceStochastic::rollForward(toDate, normalRV, rateSetDates,
+                                                        rateSetsFromAnchorToDate);
     }
 
     void ForwardCurveStochasticSpotVol::setForwardValuationDates(set<Date> datesInput)
@@ -99,8 +97,7 @@ namespace sjd
     }
 
     vector<std::shared_ptr<ForwardRateSource>> ForwardCurveStochasticSpotVol::rollForward(
-        vector<Date> rateSetDates,
-        vector<double>& rateSetsFromAnchorToFinalRollDate)
+        vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToFinalRollDate)
     {
         return ForwardRateSourceStochastic::rollForward(rateSetDates, rateSetsFromAnchorToFinalRollDate);
     }

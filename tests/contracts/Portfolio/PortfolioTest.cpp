@@ -9,8 +9,6 @@ using namespace boost::unit_test_framework;
 using namespace boost::math;
 using namespace sjd;
 
-
-
 std::shared_ptr<RegCapUnderlyingFactors> PortfolioTest::getDefaultRegCapUnderlyingFactors()
 {
     return std::shared_ptr<RegCapUnderlyingFactors>(new CommodityRegCapFactors);
@@ -20,9 +18,9 @@ std::shared_ptr<RegCapCreditParameters> PortfolioTest::getDefaultRegCreditParame
 {
     double counterpartyWeighting = 1.5;
     double capitalCharge = .1;
-    return std::shared_ptr<RegCapCreditParameters>(new RegCapCreditParameters(counterpartyWeighting, capitalCharge));
+    return std::shared_ptr<RegCapCreditParameters>(
+        new RegCapCreditParameters(counterpartyWeighting, capitalCharge));
 }
-
 
 void PortfolioTest::testStructureCreation()
 {
@@ -35,21 +33,21 @@ void PortfolioTest::testStructureCreation()
     int yearsToSettlement = 2;
     double structureVolume = 10000;
     double premiumRecievable = 2000;
-    std::shared_ptr<EuropeanForward> fwdSale1 = 
-        GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToSettlement, 112, structureVolume, SELL);
-    std::shared_ptr<EuropeanForward> fwdSale2 = 
-        GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToSettlement, 112, structureVolume, SELL);
+    std::shared_ptr<EuropeanForward> fwdSale1 = GenerateContracts::getDefaultEuropeanForward(
+        anchorDate, yearsToSettlement, 112, structureVolume, SELL);
+    std::shared_ptr<EuropeanForward> fwdSale2 = GenerateContracts::getDefaultEuropeanForward(
+        anchorDate, yearsToSettlement, 112, structureVolume, SELL);
 
-    std::shared_ptr<SingleInstrumentContract> cf1 = 
-        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, premiumRecievable, BUY);
-    std::shared_ptr<SingleInstrumentContract> cf2 = 
-        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, premiumRecievable, BUY);
+    std::shared_ptr<SingleInstrumentContract> cf1 = GenerateContracts::getDefaultFixedCashflowWithPremium(
+        anchorDate, yearsToSettlement, premiumRecievable, BUY);
+    std::shared_ptr<SingleInstrumentContract> cf2 = GenerateContracts::getDefaultFixedCashflowWithPremium(
+        anchorDate, yearsToSettlement, premiumRecievable, BUY);
 
-    std::shared_ptr<EuropeanOption> option1 = 
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 115, structureVolume, BUY, CALL, 0);
-    std::shared_ptr<EuropeanOption> option2 = 
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 115, structureVolume, BUY, CALL, 0);
-    
+    std::shared_ptr<EuropeanOption> option1 = GenerateContracts::getDefaultEuropeanOption(
+        anchorDate, yearsToSettlement, 115, structureVolume, BUY, CALL, 0);
+    std::shared_ptr<EuropeanOption> option2 = GenerateContracts::getDefaultEuropeanOption(
+        anchorDate, yearsToSettlement, 115, structureVolume, BUY, CALL, 0);
+
     vector<std::shared_ptr<SingleInstrumentContract>> siContracts;
     siContracts.push_back(fwdSale1);
     siContracts.push_back(cf1);
@@ -70,22 +68,21 @@ void PortfolioTest::testStructureCreation()
 
     BOOST_CHECK(abs(p1->getValue(re) - p2->getValue(re)) < EPSILON_FOR_DOUBLES);
 
-    bool useMyThreshold = true; 
+    bool useMyThreshold = true;
     bool useCptyThreshold = true;
-    double myThreshold = 20000.0, 
-           cptyThreshold = 10000.0, 
-           minimumTransferAmount = 5000.0, 
-           rounding = 100.0;
-    std::shared_ptr<Margin> margin1 = std::shared_ptr<Margin>(
-        new SimpleMargin(anchorDate, useMyThreshold, myThreshold, useCptyThreshold, cptyThreshold, minimumTransferAmount, rounding));
+    double myThreshold = 20000.0, cptyThreshold = 10000.0, minimumTransferAmount = 5000.0, rounding = 100.0;
+    std::shared_ptr<Margin> margin1 =
+        std::shared_ptr<Margin>(new SimpleMargin(anchorDate, useMyThreshold, myThreshold, useCptyThreshold,
+                                                 cptyThreshold, minimumTransferAmount, rounding));
     p1 = std::shared_ptr<Portfolio>(new Portfolio(siContracts, margin1));
     p1->validate(re);
     BOOST_REQUIRE(p1->isOK());
     BOOST_REQUIRE(p1->isMargined());
     BOOST_CHECK(abs(p1->getValue(re) - p2->getValue(re)) < EPSILON_FOR_DOUBLES);
 
-    std::shared_ptr<Margin> margin2 = std::shared_ptr<Margin>(
-        new SimpleMargin(anchorDate, useMyThreshold, myThreshold, useCptyThreshold, cptyThreshold, minimumTransferAmount, rounding));
+    std::shared_ptr<Margin> margin2 =
+        std::shared_ptr<Margin>(new SimpleMargin(anchorDate, useMyThreshold, myThreshold, useCptyThreshold,
+                                                 cptyThreshold, minimumTransferAmount, rounding));
     p2 = std::shared_ptr<Portfolio>(new Portfolio(contracts, margin2));
     p2->validate(re);
     BOOST_REQUIRE(p2->isOK());
@@ -93,20 +90,18 @@ void PortfolioTest::testStructureCreation()
     BOOST_CHECK(abs(p1->getValue(re) - p2->getValue(re)) < EPSILON_FOR_DOUBLES);
 
     BOOST_CHECK(abs(p1->getMarginCall(re) - p2->getMarginCall(re)) < EPSILON_FOR_DOUBLES);
-    
+
     double newBalance = -50000.0;
     p1->setMarginBalance(newBalance);
     BOOST_CHECK(abs(p1->getMarginCall(re) - p2->getMarginCall(re)) > EPSILON_FOR_DOUBLES);
     p2->getMargin()->setMarginBalance(newBalance);
     BOOST_CHECK(abs(p1->getMarginCall(re) - p2->getMarginCall(re)) < EPSILON_FOR_DOUBLES);
 
-
     p1->updateMarginBalanceWithCall(p1->getMarginCall(re));
     BOOST_CHECK(abs(p1->getMarginCall(re) - p2->getMarginCall(re)) > EPSILON_FOR_DOUBLES);
     p2->setMarginBalance(p2->getMarginBalance() + p2->getMarginCall(re));
     BOOST_CHECK(abs(p1->getMarginCall(re) - p2->getMarginCall(re)) < EPSILON_FOR_DOUBLES);
 }
-
 
 void PortfolioTest::testPortfolioB2CEM()
 {
@@ -122,48 +117,35 @@ void PortfolioTest::testPortfolioB2CEM()
     int numberOfAveragingDates = 20;
     double strike = 100;
     double volume = 5000;
-    BuySell bs= SELL;
+    BuySell bs = SELL;
     PutCall pc = PUT;
     double premium = 5.0;
     bool dp = true;
 
-    std::shared_ptr<AsianOption> put = GenerateContracts::getDefaultAsianOption(anchorDate,  
-                                                                                  yearsToSettlement, 
-                                                                                  numberOfAveragingDates, 
-                                                                                  strike, 
-                                                                                  volume, 
-                                                                                  bs, 
-                                                                                  pc, 
-                                                                                  premium, 
-                                                                                  dp);
+    std::shared_ptr<AsianOption> put = GenerateContracts::getDefaultAsianOption(
+        anchorDate, yearsToSettlement, numberOfAveragingDates, strike, volume, bs, pc, premium, dp);
 
     vector<std::shared_ptr<Contract>> contracts;
     contracts.push_back(put);
 
     string errorMessage;
 
-    std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors = PortfolioTest::getDefaultRegCapUnderlyingFactors();
-    std::shared_ptr<RegCapCreditParameters> regCapCreditParameters = PortfolioTest::getDefaultRegCreditParameters();
+    std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors =
+        PortfolioTest::getDefaultRegCapUnderlyingFactors();
+    std::shared_ptr<RegCapCreditParameters> regCapCreditParameters =
+        PortfolioTest::getDefaultRegCreditParameters();
     bool optimise = true;
 
     std::shared_ptr<PortfolioB2CEM> unmarginedPortfolio = std::shared_ptr<PortfolioB2CEM>(
-                                                    new PortfolioB2CEM(contracts, 
-                                                                       regCapAssetFactors, 
-                                                                       regCapCreditParameters, 
-                                                                       optimise));
+        new PortfolioB2CEM(contracts, regCapAssetFactors, regCapCreditParameters, optimise));
     BOOST_REQUIRE(unmarginedPortfolio->isOK());
 
-
     bool useMyThreshold = true, useCptyThreshold = true;
-    double myThreshold = 2000000.0, cptyThreshold = 1000000.0, minimumTransferAmount = 500000.0, rounding = 10000.0;
+    double myThreshold = 2000000.0, cptyThreshold = 1000000.0, minimumTransferAmount = 500000.0,
+           rounding = 10000.0;
     std::shared_ptr<SimpleMargin> margin = std::shared_ptr<SimpleMargin>(
-                                                new SimpleMargin(anchorDate,
-                                                                 useMyThreshold, 
-                                                                 myThreshold, 
-                                                                 useCptyThreshold, 
-                                                                 cptyThreshold, 
-                                                                 minimumTransferAmount, 
-                                                                 rounding));
+        new SimpleMargin(anchorDate, useMyThreshold, myThreshold, useCptyThreshold, cptyThreshold,
+                         minimumTransferAmount, rounding));
     margin->setMarginBalance(0);
     margin->updateBalanceForGivenMtM(unmarginedPortfolio->getValue(re));
 
@@ -171,14 +153,9 @@ void PortfolioTest::testPortfolioB2CEM()
     size_t holdingPeriodInBusinessDays = 10;
 
     std::shared_ptr<PortfolioB2CEM> marginedPortfolio = std::shared_ptr<PortfolioB2CEM>(
-                                                    new PortfolioB2CEM(contracts, 
-                                                                       regCapAssetFactors, 
-                                                                       regCapCreditParameters, 
-                                                                       optimise,
-                                                                       margin));
+        new PortfolioB2CEM(contracts, regCapAssetFactors, regCapCreditParameters, optimise, margin));
 
-
-    //marginedPortfolio->setMarginParameters(margin, calendar, holdingPeriodInBusinessDays);
+    // marginedPortfolio->setMarginParameters(margin, calendar, holdingPeriodInBusinessDays);
     BOOST_REQUIRE(marginedPortfolio->isOK());
 
     /*
@@ -193,7 +170,7 @@ void PortfolioTest::testPortfolioB2CEM()
     for (exposureDateIt = exposureDates.begin(); exposureDateIt != exposureDates.end(); ++exposureDateIt)
     {
         Date simDate = calendar->advance(*exposureDateIt, - ((int) holdingPeriodInBusinessDays), Days);
-        if (simDate < anchorDate) 
+        if (simDate < anchorDate)
         {
             simDate = anchorDate;
         }
@@ -201,23 +178,23 @@ void PortfolioTest::testPortfolioB2CEM()
         simulationDates.insert(*exposureDateIt);
     }
 
-    marginedPortfolio->setForwardValuationDates(exposureDates); 
+    marginedPortfolio->setForwardValuationDates(exposureDates);
     set<Date> simDatesCheck = marginedPortfolio->getSimulationDates();
     BOOST_REQUIRE(simulationDates.size() == simDatesCheck.size());
     set<Date>::iterator loopIt, searchIt;
-    for (loopIt = simulationDates.begin(); loopIt != simulationDates.end(); ++loopIt) 
+    for (loopIt = simulationDates.begin(); loopIt != simulationDates.end(); ++loopIt)
     {
         searchIt = find(simDatesCheck.begin(), simDatesCheck.end(), *loopIt);
         BOOST_REQUIRE(searchIt != simDatesCheck.end());
     }
 
-    unmarginedPortfolio->setForwardValuationDates(simulationDates); 
+    unmarginedPortfolio->setForwardValuationDates(simulationDates);
 
     BOOST_REQUIRE(unmarginedPortfolio->isOK());
     BOOST_REQUIRE(marginedPortfolio->isOK());
 
-    std::shared_ptr<SingleFactorGBMPathGenerator> mcPathGenerator = std::shared_ptr<SingleFactorGBMPathGenerator>(
-                                                                            new SingleFactorGBMPathGenerator(fc, vc));
+    std::shared_ptr<SingleFactorGBMPathGenerator> mcPathGenerator =
+    std::shared_ptr<SingleFactorGBMPathGenerator>( new SingleFactorGBMPathGenerator(fc, vc));
 
     marginedPortfolio->setPathGenerator(mcPathGenerator);
     unmarginedPortfolio->setPathGenerator(mcPathGenerator);
@@ -235,7 +212,6 @@ void PortfolioTest::testPortfolioB2CEM()
     */
 }
 
-
 void PortfolioTest::testInvalidRegulatoryCapitalIsNaN()
 {
     BOOST_TEST_MESSAGE("Testing B2 CEM on a netting set that cannot be offset ...");
@@ -252,11 +228,8 @@ void PortfolioTest::testInvalidRegulatoryCapitalIsNaN()
     nettingSets.push_back(std::shared_ptr<Contract>(new Portfolio(legs)));
 
     bool optimise = false;
-    CurrentExposureMethod capital(nettingSets,
-                                  legs,
-                                  std::shared_ptr<Margin>(),
-                                  getDefaultRegCapUnderlyingFactors(),
-                                  getDefaultRegCreditParameters(),
+    CurrentExposureMethod capital(nettingSets, legs, std::shared_ptr<Margin>(),
+                                  getDefaultRegCapUnderlyingFactors(), getDefaultRegCreditParameters(),
                                   optimise);
     BOOST_REQUIRE(capital.isOK());
     capital.validate();
@@ -271,22 +244,21 @@ void PortfolioTest::testInvalidRegulatoryCapitalIsNaN()
     BOOST_CHECK_EQUAL(capital.validationReport().getIssues().size(), issuesWithRates);
     BOOST_CHECK(std::isnan(capital.getRegulatoryCapital(re)));
 
-    PortfolioB2CEM book(nettingSets, getDefaultRegCapUnderlyingFactors(), getDefaultRegCreditParameters(), optimise);
+    PortfolioB2CEM book(nettingSets, getDefaultRegCapUnderlyingFactors(), getDefaultRegCreditParameters(),
+                        optimise);
     book.validate();
     BOOST_CHECK(!book.isOK());
     book.validate(re);
     BOOST_CHECK(!book.isOK());
 }
 
-
-test_suite* PortfolioTest::suite() 
+test_suite* PortfolioTest::suite()
 {
-    
+
     test_suite* suite = BOOST_TEST_SUITE("Portfolios");
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testStructureCreation));
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testPortfolioB2CEM));
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testInvalidRegulatoryCapitalIsNaN));
 
     return suite;
-    
 }

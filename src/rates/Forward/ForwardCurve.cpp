@@ -17,11 +17,8 @@ namespace sjd
 {
 
     ForwardCurve::ForwardCurve()
-        : quoteStyle(ForwardQuote::Interpolated),
-          averagingStyle(ForwardAveraging::Point),
-          rollStyle(ForwardRoll::Deterministic),
-          extrapolation(false),
-          spot(0.0)
+        : quoteStyle(ForwardQuote::Interpolated), averagingStyle(ForwardAveraging::Point),
+          rollStyle(ForwardRoll::Deterministic), extrapolation(false), spot(0.0)
     {
     }
 
@@ -88,12 +85,30 @@ namespace sjd
         anchor = anchorDate;
     }
 
-    Date ForwardCurve::anchorDate() const { return anchor; }
-    Date ForwardCurve::finalDate() const { return final; }
-    bool ForwardCurve::allowsExtrapolation() const { return extrapolation; }
-    ForwardAveraging ForwardCurve::averaging() const { return averagingStyle; }
-    ForwardRoll ForwardCurve::roll() const { return rollStyle; }
-    ForwardQuote ForwardCurve::quote() const { return quoteStyle; }
+    Date ForwardCurve::anchorDate() const
+    {
+        return anchor;
+    }
+    Date ForwardCurve::finalDate() const
+    {
+        return final;
+    }
+    bool ForwardCurve::allowsExtrapolation() const
+    {
+        return extrapolation;
+    }
+    ForwardAveraging ForwardCurve::averaging() const
+    {
+        return averagingStyle;
+    }
+    ForwardRoll ForwardCurve::roll() const
+    {
+        return rollStyle;
+    }
+    ForwardQuote ForwardCurve::quote() const
+    {
+        return quoteStyle;
+    }
 
     bool ForwardCurve::quotesAreOk(string& errorMessage)
     {
@@ -202,8 +217,14 @@ namespace sjd
         return LINEAR;
     }
 
-    void ForwardCurve::setSpotAtT0(double spotAtT0) { spot = spotAtT0; }
-    double ForwardCurve::spotAtT0() const { return spot; }
+    void ForwardCurve::setSpotAtT0(double spotAtT0)
+    {
+        spot = spotAtT0;
+    }
+    double ForwardCurve::spotAtT0() const
+    {
+        return spot;
+    }
 
     void ForwardCurve::setRateSources(std::shared_ptr<DiscountRateSource> domesticCurve,
                                       std::shared_ptr<DiscountRateSource> foreignCurve)
@@ -214,9 +235,18 @@ namespace sjd
         final = min(domestic->getFinalDate(), foreign->getFinalDate());
     }
 
-    std::shared_ptr<DiscountRateSource> ForwardCurve::domesticRateSource() const { return domestic; }
-    std::shared_ptr<DiscountRateSource> ForwardCurve::foreignRateSource() const { return foreign; }
-    std::shared_ptr<VolatilityRateSource> ForwardCurve::volatility() const { return vol; }
+    std::shared_ptr<DiscountRateSource> ForwardCurve::domesticRateSource() const
+    {
+        return domestic;
+    }
+    std::shared_ptr<DiscountRateSource> ForwardCurve::foreignRateSource() const
+    {
+        return foreign;
+    }
+    std::shared_ptr<VolatilityRateSource> ForwardCurve::volatility() const
+    {
+        return vol;
+    }
 
     bool ForwardCurve::calendarMonthInRange(Date date) const
     {
@@ -229,16 +259,17 @@ namespace sjd
         return beginningOfMonth >= beginningOfAnchorDate && beginningOfMonth <= final;
     }
 
-    std::shared_ptr<ForwardRateSource> ForwardCurve::rolledInterpolated(Date toDate,
-                                                                          const vector<Date>& dates,
-                                                                          const vector<double>& forwards,
-                                                                          ArrayInterpolatorType interpolationType,
-                                                                          bool allowExtrapolation) const
+    std::shared_ptr<ForwardRateSource> ForwardCurve::rolledInterpolated(
+        Date toDate,
+        const vector<Date>& dates,
+        const vector<double>& forwards,
+        ArrayInterpolatorType interpolationType,
+        bool allowExtrapolation) const
     {
         if (averagingStyle == ForwardAveraging::CalendarMonth)
         {
-            return std::shared_ptr<ForwardCurveCMADeterministic>(
-                new ForwardCurveCMADeterministic(toDate, dates, forwards, interpolationType, allowExtrapolation));
+            return std::shared_ptr<ForwardCurveCMADeterministic>(new ForwardCurveCMADeterministic(
+                toDate, dates, forwards, interpolationType, allowExtrapolation));
         }
         return std::shared_ptr<ForwardCurveDeterministic>(
             new ForwardCurveDeterministic(toDate, dates, forwards, interpolationType, allowExtrapolation));
@@ -262,7 +293,8 @@ namespace sjd
         {
             return rolledInterpolated(anchor, observationDates, bumpedForwards, LINEAR, true);
         }
-        return rolledInterpolated(anchor, observationDates, bumpedForwards, interpolation(), allowsExtrapolation());
+        return rolledInterpolated(anchor, observationDates, bumpedForwards, interpolation(),
+                                  allowsExtrapolation());
     }
 
     std::shared_ptr<ForwardRateSource> ForwardCurve::rollForward(Date toDate, bool inRange)
@@ -280,12 +312,10 @@ namespace sjd
                 domesticDF[i] = domestic->getDiscountFactor(rolledDRSDates[i]) / domesticScalingFactor;
                 foreignDF[i] = foreign->getDiscountFactor(rolledDRSDates[i]) / foreignScalingFactor;
             }
-            std::shared_ptr<DiscountRateSource> rolledDomestic =
-                std::shared_ptr<DiscountRateSource>(
-                    new DiscountCurve(toDate, rolledDRSDates, domesticDF, LINEAR, extrapolation));
-            std::shared_ptr<DiscountRateSource> rolledForeign =
-                std::shared_ptr<DiscountRateSource>(
-                    new DiscountCurve(toDate, rolledDRSDates, foreignDF, LINEAR, extrapolation));
+            std::shared_ptr<DiscountRateSource> rolledDomestic = std::shared_ptr<DiscountRateSource>(
+                new DiscountCurve(toDate, rolledDRSDates, domesticDF, LINEAR, extrapolation));
+            std::shared_ptr<DiscountRateSource> rolledForeign = std::shared_ptr<DiscountRateSource>(
+                new DiscountCurve(toDate, rolledDRSDates, foreignDF, LINEAR, extrapolation));
             return std::shared_ptr<ForwardRateSource>(
                 new ForwardCurveFX(toDate, rolledSpot, rolledDomestic, rolledForeign));
         }
@@ -313,7 +343,8 @@ namespace sjd
         {
             return rolledInterpolated(toDate, rolledObservationDates, rolledForwards, LINEAR, true);
         }
-        return rolledInterpolated(toDate, rolledObservationDates, rolledForwards, interpolation(), allowsExtrapolation());
+        return rolledInterpolated(toDate, rolledObservationDates, rolledForwards, interpolation(),
+                                  allowsExtrapolation());
     }
 
     std::shared_ptr<ForwardRateSource> ForwardCurve::rollForward(Date toDate, double normalRV, bool inRange)
@@ -333,12 +364,10 @@ namespace sjd
                 domesticDF[i] = domestic->getDiscountFactor(rolledDRSDates[i]) / domesticScalingFactor;
                 foreignDF[i] = foreign->getDiscountFactor(rolledDRSDates[i]) / foreignScalingFactor;
             }
-            std::shared_ptr<DiscountRateSource> rolledDomestic =
-                std::shared_ptr<DiscountRateSource>(
-                    new DiscountCurve(toDate, rolledDRSDates, domesticDF, LINEAR, extrapolation));
-            std::shared_ptr<DiscountRateSource> rolledForeign =
-                std::shared_ptr<DiscountRateSource>(
-                    new DiscountCurve(toDate, rolledDRSDates, foreignDF, LINEAR, extrapolation));
+            std::shared_ptr<DiscountRateSource> rolledDomestic = std::shared_ptr<DiscountRateSource>(
+                new DiscountCurve(toDate, rolledDRSDates, domesticDF, LINEAR, extrapolation));
+            std::shared_ptr<DiscountRateSource> rolledForeign = std::shared_ptr<DiscountRateSource>(
+                new DiscountCurve(toDate, rolledDRSDates, foreignDF, LINEAR, extrapolation));
             return std::shared_ptr<ForwardRateSource>(
                 new ForwardCurveFX(toDate, rolledSpot, rolledDomestic, rolledForeign));
         }
@@ -371,7 +400,8 @@ namespace sjd
             if (averagingStyle == ForwardAveraging::CalendarMonth)
             {
                 start = Date(1, toDate.month(), toDate.year());
-                observationDates = originalObservationDates.empty() ? observationDates : originalObservationDates;
+                observationDates =
+                    originalObservationDates.empty() ? observationDates : originalObservationDates;
             }
             for (size_t i = 0; i < observationDates.size(); ++i)
             {
@@ -439,8 +469,8 @@ namespace sjd
                 std::shared_ptr<DiscountRateSource> rolledForeign =
                     std::shared_ptr<DiscountRateSource>(new DiscountCurve(
                         forwardSimulationDates[i], rolledDRSDates, foreignDF, LINEAR, extrapolation));
-                pathCurves.push_back(std::shared_ptr<ForwardCurveFX>(
-                    new ForwardCurveFX(forwardSimulationDates[i], rolledSpot, rolledDomestic, rolledForeign)));
+                pathCurves.push_back(std::shared_ptr<ForwardCurveFX>(new ForwardCurveFX(
+                    forwardSimulationDates[i], rolledSpot, rolledDomestic, rolledForeign)));
                 spotDeviations.push_back(vol->getStandardDeviation(forwardSimulationDates[i]));
             }
             return;
@@ -475,7 +505,8 @@ namespace sjd
                     ratesSubset.push_back(getForward(sourceDates[j]));
                 }
             }
-            pathCurves.push_back(rolledInterpolated(forwardSimulationDates[i], datesSubset, ratesSubset, LINEAR, true));
+            pathCurves.push_back(
+                rolledInterpolated(forwardSimulationDates[i], datesSubset, ratesSubset, LINEAR, true));
         }
 
         if (rollStyle == ForwardRoll::SpotVolatility)
@@ -496,11 +527,13 @@ namespace sjd
         vector<Date> rolledCurveDates;
         if (averagingStyle == ForwardAveraging::CalendarMonth)
         {
-            rolledCurveDates = std::static_pointer_cast<ForwardCurveCMADeterministic>(pathCurves[0])->getObservationDates();
+            rolledCurveDates =
+                std::static_pointer_cast<ForwardCurveCMADeterministic>(pathCurves[0])->getObservationDates();
         }
         else
         {
-            rolledCurveDates = std::static_pointer_cast<ForwardCurveDeterministic>(pathCurves[0])->getObservationDates();
+            rolledCurveDates =
+                std::static_pointer_cast<ForwardCurveDeterministic>(pathCurves[0])->getObservationDates();
         }
         vector<double> sds(rolledCurveDates.size(), 0);
         double sqrtdt = sqrt((forwardSimulationDates[0] - anchor) / 365.0);
@@ -514,11 +547,13 @@ namespace sjd
             sqrtdt = sqrt((forwardSimulationDates[i] - forwardSimulationDates[i - 1]) / 365.0);
             if (averagingStyle == ForwardAveraging::CalendarMonth)
             {
-                rolledCurveDates = std::static_pointer_cast<ForwardCurveCMADeterministic>(pathCurves[i])->getObservationDates();
+                rolledCurveDates = std::static_pointer_cast<ForwardCurveCMADeterministic>(pathCurves[i])
+                                       ->getObservationDates();
             }
             else
             {
-                rolledCurveDates = std::static_pointer_cast<ForwardCurveDeterministic>(pathCurves[i])->getObservationDates();
+                rolledCurveDates =
+                    std::static_pointer_cast<ForwardCurveDeterministic>(pathCurves[i])->getObservationDates();
             }
             sds = vector<double>(rolledCurveDates.size(), 0);
             for (size_t j = 0; j < rolledCurveDates.size(); ++j)
@@ -530,8 +565,7 @@ namespace sjd
     }
 
     vector<std::shared_ptr<ForwardRateSource>> ForwardCurve::rollPath(
-        const vector<double>& normalRVs,
-        const vector<Date>& forwardSimulationDates)
+        const vector<double>& normalRVs, const vector<Date>& forwardSimulationDates)
     {
         vector<std::shared_ptr<ForwardRateSource>> rolled(pathCurves.size());
         if (quoteStyle == ForwardQuote::InterestDifferential)
@@ -539,7 +573,8 @@ namespace sjd
             for (size_t i = 0; i < forwardSimulationDates.size(); ++i)
             {
                 double bumpedSpot = getForward(forwardSimulationDates[i]);
-                bumpedSpot *= exp(-spotDeviations[i] * spotDeviations[i] / 2 + spotDeviations[i] * normalRVs[i]);
+                bumpedSpot *=
+                    exp(-spotDeviations[i] * spotDeviations[i] / 2 + spotDeviations[i] * normalRVs[i]);
                 std::shared_ptr<UsesInterestRateDifferential> fx =
                     std::dynamic_pointer_cast<UsesInterestRateDifferential>(pathCurves[i]);
                 fx->setSpotAtT0(bumpedSpot);
@@ -570,13 +605,13 @@ namespace sjd
             }
             if (averagingStyle == ForwardAveraging::CalendarMonth)
             {
-                std::static_pointer_cast<ForwardCurveCMADeterministic>(pathCurves[i])->setForwards(
-                    vector<double>(fwds.begin() + forwardIndexes[i], fwds.end()));
+                std::static_pointer_cast<ForwardCurveCMADeterministic>(pathCurves[i])
+                    ->setForwards(vector<double>(fwds.begin() + forwardIndexes[i], fwds.end()));
             }
             else
             {
-                std::static_pointer_cast<ForwardCurveDeterministic>(pathCurves[i])->setForwards(
-                    vector<double>(fwds.begin() + forwardIndexes[i], fwds.end()));
+                std::static_pointer_cast<ForwardCurveDeterministic>(pathCurves[i])
+                    ->setForwards(vector<double>(fwds.begin() + forwardIndexes[i], fwds.end()));
             }
             rolled[i] = pathCurves[i];
         }
@@ -597,13 +632,15 @@ namespace sjd
         else
         {
             expectedForwards[0] = getForward(forwardSimulationDates[0]);
-            normalRVs[0] = log(spotPath[0] / expectedForwards[0]) / forwardDeviations[0][0] + forwardDeviations[0][0] / 2.0;
+            normalRVs[0] = log(spotPath[0] / expectedForwards[0]) / forwardDeviations[0][0] +
+                           forwardDeviations[0][0] / 2.0;
         }
         for (size_t i = 1; i < forwardSimulationDates.size(); ++i)
         {
             rollPath(normalRVs, forwardSimulationDates);
             expectedForwards[i] = pathCurves[i - 1]->getForward(forwardSimulationDates[i]);
-            normalRVs[i] = log(spotPath[i] / expectedForwards[i]) / forwardDeviations[i][0] + forwardDeviations[i][0] / 2.0;
+            normalRVs[i] = log(spotPath[i] / expectedForwards[i]) / forwardDeviations[i][0] +
+                           forwardDeviations[i][0] / 2.0;
         }
         vector<double> randomNumbers = normalRVs;
         normalRVs = saved;

@@ -4,7 +4,7 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
     bool DeterministicDiscountRateSource::isOK()
     {
@@ -17,15 +17,13 @@ namespace sjd
             if (!isInRange(orderedForwardDates.front()))
             {
                 recordIssue("DISCOUNT_RATE_SOURCE_RANGE",
-                            "First forward date is outside the rate source range",
-                            {"observation_dates"});
+                            "First forward date is outside the rate source range", {"observation_dates"});
                 return false;
             }
             if (!isInRange(orderedForwardDates.back()))
             {
                 recordIssue("DISCOUNT_RATE_SOURCE_RANGE",
-                            "Last forward date is outside the rate source range",
-                            {"observation_dates"});
+                            "Last forward date is outside the rate source range", {"observation_dates"});
                 return false;
             }
         }
@@ -34,8 +32,8 @@ namespace sjd
 
     vector<pair<string, std::shared_ptr<RateSource>>> DeterministicDiscountRateSource::getMarketRateStresses()
     {
-        std::shared_ptr<QuantLib::DayCounter> dayCounter = std::shared_ptr<QuantLib::DayCounter>(
-            new Actual360()); 
+        std::shared_ptr<QuantLib::DayCounter> dayCounter =
+            std::shared_ptr<QuantLib::DayCounter>(new Actual360());
         std::shared_ptr<InterestRateConvention> irc = std::shared_ptr<InterestRateConvention>(
             new InterestRateConvention(dayCounter, Compounded, Annual));
         vector<pair<string, std::shared_ptr<RateSource>>> marketStress;
@@ -43,10 +41,10 @@ namespace sjd
         return marketStress;
     }
 
-    vector<std::shared_ptr<DiscountRateSource> > DeterministicDiscountRateSource::rollForward()
+    vector<std::shared_ptr<DiscountRateSource>> DeterministicDiscountRateSource::rollForward()
     {
-        vector<std::shared_ptr<DiscountRateSource> > discountRateSources;
-        for (size_t i = 0; i < orderedForwardDates.size(); ++i) 
+        vector<std::shared_ptr<DiscountRateSource>> discountRateSources;
+        for (size_t i = 0; i < orderedForwardDates.size(); ++i)
         {
             discountRateSources.push_back(rollForward(orderedForwardDates[i]));
         }

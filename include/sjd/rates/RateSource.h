@@ -2,15 +2,15 @@
 #define SJD_RATESOURCE_INCLUDED
 #pragma once
 
-#include <vector>
 #include <set>
+#include <vector>
 
 #include <memory>
-#include <sjd/tools/Validation.h>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
+#include <sjd/tools/Validation.h>
 
-namespace sjd 
+namespace sjd
 {
 
     /**
@@ -27,9 +27,9 @@ namespace sjd
      * first observation's value.
      */
     class RateSource : public Validatable
-    {        
+    {
     public:
-        virtual ~RateSource () {};
+        virtual ~RateSource() {};
 
         virtual bool isOK();
 
@@ -37,12 +37,12 @@ namespace sjd
         QuantLib::Date getFinalDate() const;
         // Use isInRange(..) when you want to include AnchorDate logic
         virtual bool isInRange(QuantLib::Date date) const;
-        // Use extendsTo(..) when you want to exclude anchor date logic, most often 
-        // to understand if you can call the getValue(..) method from on a contract and get a 
-        // number in return which is the case even if the rate source?s anchor date is 
+        // Use extendsTo(..) when you want to exclude anchor date logic, most often
+        // to understand if you can call the getValue(..) method from on a contract and get a
+        // number in return which is the case even if the rate source?s anchor date is
         // greater than the contract settlement date (the return value would be zero)
         virtual bool extendsTo(QuantLib::Date date) const;
-        
+
         bool getAllowsExtrapolation() const;
 
         virtual ValidationReport validateReport();
@@ -54,7 +54,7 @@ namespace sjd
 
         QuantLib::Date anchorDate;
         QuantLib::Date finalDate;
-        
+
         bool allowExtrapolation;
     };
 }

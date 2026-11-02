@@ -4,72 +4,65 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
 
     /*======================================================================================
-    VolatilitySurfaceMoneynessCMA 
+    VolatilitySurfaceMoneynessCMA
 
     =======================================================================================*/
-   VolatilitySurfaceMoneynessCMA::VolatilitySurfaceMoneynessCMA(Date anchorDateInput, 
-                                                                vector<Date> observationDatesInput, 
-                                                                vector<double> moneynessInput,
-                                                                vector<vector<double>> volatilityData,
-                                                                SurfaceInterpolatorType interpolatorTypeInput,
-                                                                bool extrapolate) 
+    VolatilitySurfaceMoneynessCMA::VolatilitySurfaceMoneynessCMA(
+        Date anchorDateInput,
+        vector<Date> observationDatesInput,
+        vector<double> moneynessInput,
+        vector<vector<double>> volatilityData,
+        SurfaceInterpolatorType interpolatorTypeInput,
+        bool extrapolate)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(
-            new sjd::IssueTracker("VolatilitySurfaceMoneynessCMA"));
+        errorTracking =
+            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceMoneynessCMA"));
 
-        if (volatilityData.size() == 0) 
+        if (volatilityData.size() == 0)
         {
             return;
         }
-        else 
+        else
         {
             Matrix M = convertVectorOfVectorsToMatrix(volatilityData);
-            setInputs(anchorDateInput, 
-                      observationDatesInput, 
-                      moneynessInput, 
-                      M, 
-                      interpolatorTypeInput, 
+            setInputs(anchorDateInput, observationDatesInput, moneynessInput, M, interpolatorTypeInput,
                       extrapolate);
-            }
+        }
     }
 
-    VolatilitySurfaceMoneynessCMA::VolatilitySurfaceMoneynessCMA(Date anchorDateInput, 
-                                                                 vector<Date> observationDatesInput, 
-                                                                 vector<double> moneynessInput,
-                                                                 QuantLib::Matrix volatilityInput,
-                                                                 SurfaceInterpolatorType interpolatorTypeInput,
-                                                                 bool extrapolate) 
+    VolatilitySurfaceMoneynessCMA::VolatilitySurfaceMoneynessCMA(
+        Date anchorDateInput,
+        vector<Date> observationDatesInput,
+        vector<double> moneynessInput,
+        QuantLib::Matrix volatilityInput,
+        SurfaceInterpolatorType interpolatorTypeInput,
+        bool extrapolate)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(
-            new sjd::IssueTracker("VolatilitySurfaceMoneynessCMA"));
+        errorTracking =
+            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceMoneynessCMA"));
 
-         setInputs(anchorDateInput, 
-                  observationDatesInput, 
-                  moneynessInput, 
-                  volatilityInput, 
-                  interpolatorTypeInput, 
-                  extrapolate);
+        setInputs(anchorDateInput, observationDatesInput, moneynessInput, volatilityInput,
+                  interpolatorTypeInput, extrapolate);
     }
 
-    void VolatilitySurfaceMoneynessCMA::setInputs(Date anchorDateInput, 
-                                                  vector<Date> observationDatesInput, 
+    void VolatilitySurfaceMoneynessCMA::setInputs(Date anchorDateInput,
+                                                  vector<Date> observationDatesInput,
                                                   vector<double> moneynessInput,
                                                   QuantLib::Matrix volatilityInput,
                                                   SurfaceInterpolatorType interpolatorTypeInput,
-                                                  bool extrapolateInput) 
+                                                  bool extrapolateInput)
     {
-        if (observationDatesInput.size() == 0 ||
-            moneynessInput.size() == 0 ||
+        if (observationDatesInput.size() == 0 || moneynessInput.size() == 0 ||
             volatilityInput.rows() * volatilityInput.columns() == 0)
         {
             observationDates = vector<Date>();
             strikeDimension = vector<double>();
-            volatility = Matrix(0,0);
-            finalDate = Date(01,Jan,1901);
+            volatility = Matrix(0, 0);
+            finalDate = Date(01, Jan, 1901);
             return;
         }
 
@@ -85,32 +78,33 @@ namespace sjd
         if (beginningOfMonth > beginningOfAnchorDateMonth)
         {
             observationDates.insert(observationDates.begin(), anchorDate);
-            volatility = QuantLib::Matrix(volatilityInput.rows(), volatilityInput.columns()+1);
-            for (size_t i = 0; i < volatilityInput.rows(); ++i) 
+            volatility = QuantLib::Matrix(volatilityInput.rows(), volatilityInput.columns() + 1);
+            for (size_t i = 0; i < volatilityInput.rows(); ++i)
             {
                 volatility[i][0] = volatilityInput[i][0];
-                for (size_t j = 0; j < volatilityInput.columns(); ++j) 
+                for (size_t j = 0; j < volatilityInput.columns(); ++j)
                 {
-                    volatility[i][j+1] = volatilityInput[i][j];
+                    volatility[i][j + 1] = volatilityInput[i][j];
                 }
             }
         }
-        else 
+        else
         {
             volatility = volatilityInput;
         }
 
         time.clear();
-        for (size_t i = 0; i < observationDates.size(); ++i) 
+        for (size_t i = 0; i < observationDates.size(); ++i)
         {
             Date beginningOfMonth = Date(1, observationDates[i].month(), observationDates[i].year());
-            //observationDates.push_back(beginningOfMonth);
+            // observationDates.push_back(beginningOfMonth);
             double yf = simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, beginningOfMonth);
             int monthsAsInt = boost::math::iround(yf * 12);
-            time.push_back((double) monthsAsInt); // Note that if there is more than one observation date per month the time vector will not be strictly increasing
+            time.push_back((double)monthsAsInt); // Note that if there is more than one observation date per
+                                                 // month the time vector will not be strictly increasing
         }
-         finalDate = Date(1, observationDates.back().month(), observationDates.back().year());
-        setInterpolatorType(interpolatorTypeInput);        
+        finalDate = Date(1, observationDates.back().month(), observationDates.back().year());
+        setInterpolatorType(interpolatorTypeInput);
     }
 
     bool VolatilitySurfaceMoneynessCMA::isOK()
@@ -119,14 +113,15 @@ namespace sjd
         return !errorTracking->getHasErrors();
     }
 
-    double VolatilitySurfaceMoneynessCMA::getMonthsAheadOfAnchorDate(Date toDate) const 
+    double VolatilitySurfaceMoneynessCMA::getMonthsAheadOfAnchorDate(Date toDate) const
     {
         double t1 = dayCounter->yearFraction(beginningOfAnchorDateMonth, toDate);
         int t2 = boost::math::iround(12 * t1);
-        return (double) boost::math::iround(12 * simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, toDate));
+        return (double)boost::math::iround(
+            12 * simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, toDate));
     }
 
-    bool VolatilitySurfaceMoneynessCMA::isInRange(QuantLib::Date date) const 
+    bool VolatilitySurfaceMoneynessCMA::isInRange(QuantLib::Date date) const
     {
         Date beginningOfMonth = Date(1, date.month(), date.year());
         if (allowExtrapolation)
@@ -134,10 +129,9 @@ namespace sjd
             return (beginningOfMonth >= beginningOfAnchorDateMonth);
         }
         return ((beginningOfMonth >= beginningOfAnchorDateMonth) && (beginningOfMonth <= finalDate));
-
     };
 
-   bool VolatilitySurfaceMoneynessCMA::isInRange(QuantLib::Date date, double strike, double forward) const 
+    bool VolatilitySurfaceMoneynessCMA::isInRange(QuantLib::Date date, double strike, double forward) const
     {
         return isInRange(date);
     };
@@ -150,90 +144,91 @@ namespace sjd
 
     double VolatilitySurfaceMoneynessCMA::getVolatility(Date toDate) const
     {
-        if (!isInRange(toDate)) 
+        if (!isInRange(toDate))
         {
-         return numeric_limits<double>::quiet_NaN();
+            return numeric_limits<double>::quiet_NaN();
         }
 
         Date beginningOfMonth = Date(1, toDate.month(), toDate.year());
         double yf = simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, beginningOfMonth);
         int monthsAsInt = boost::math::iround(yf * 12); // need to keep whole number of months ahead
-        double monthAsDouble = ((double) monthsAsInt); 
+        double monthAsDouble = ((double)monthsAsInt);
 
         return surfaceVolatility(monthAsDouble, 0.0);
     };
 
-    double VolatilitySurfaceMoneynessCMA::getVolatility(Date toDate, double strike, double forward) const 
+    double VolatilitySurfaceMoneynessCMA::getVolatility(Date toDate, double strike, double forward) const
     {
-        if (!isInRange(toDate, strike, forward)) 
+        if (!isInRange(toDate, strike, forward))
         {
-             return numeric_limits<double>::quiet_NaN();
+            return numeric_limits<double>::quiet_NaN();
         }
 
-         Date beginningOfMonth = Date(1, toDate.month(), toDate.year());
+        Date beginningOfMonth = Date(1, toDate.month(), toDate.year());
         double yf = simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, beginningOfMonth);
         int monthsAsInt = boost::math::iround(yf * 12); // need to keep whole number of months ahead
-        double monthAsDouble = ((double) monthsAsInt); 
+        double monthAsDouble = ((double)monthsAsInt);
 
-      double moneyness = (strike - forward) / forward;
+        double moneyness = (strike - forward) / forward;
 
-      return surfaceVolatility(monthAsDouble, moneyness);
+        return surfaceVolatility(monthAsDouble, moneyness);
     }
 
-    double VolatilitySurfaceMoneynessCMA::getStandardDeviation(Date toDate) const    
+    double VolatilitySurfaceMoneynessCMA::getStandardDeviation(Date toDate) const
     {
         double vol = getVolatility(toDate);
         double actualDt = dayCounter->yearFraction(anchorDate, toDate);
         return vol * sqrt(actualDt);
     };
 
-    double VolatilitySurfaceMoneynessCMA::getStandardDeviation(Date toDate, double strike, double forward) const    
+    double VolatilitySurfaceMoneynessCMA::getStandardDeviation(Date toDate,
+                                                               double strike,
+                                                               double forward) const
     {
         double vol = getVolatility(toDate, strike, forward);
         double actualDt = dayCounter->yearFraction(anchorDate, toDate);
         return vol * sqrt(actualDt);
     };
 
-    void VolatilitySurfaceMoneynessCMA::getVolAndSD(Date toDate, double strike, double forward, double &vol, double& sd) const
+    void VolatilitySurfaceMoneynessCMA::getVolAndSD(
+        Date toDate, double strike, double forward, double& vol, double& sd) const
     {
         vol = getVolatility(toDate, strike, forward);
         double actualDt = dayCounter->yearFraction(anchorDate, toDate);
         sd = vol * sqrt(actualDt);
     };
 
-   void VolatilitySurfaceMoneynessCMA::getVolAndSD(vector<Date> toDates, 
-                                                   double strike, 
-                                                   vector<double> forwards,                                           
-                                                   vector<double> &vols,
-                                                   vector<double> &sds) const
-   {
-       if (toDates.size() == 0)
-       {
-           vols = vector<double>(0);
-           sds =  vector<double>(0);
-           return;
-       }
+    void VolatilitySurfaceMoneynessCMA::getVolAndSD(vector<Date> toDates,
+                                                    double strike,
+                                                    vector<double> forwards,
+                                                    vector<double>& vols,
+                                                    vector<double>& sds) const
+    {
+        if (toDates.size() == 0)
+        {
+            vols = vector<double>(0);
+            sds = vector<double>(0);
+            return;
+        }
         size_t counter = 1;
         Date refDate = toDates[0];
         getVolAndSD(refDate, strike, forwards[0], vols[0], sds[0]);
         while (counter < toDates.size())
         {
-            if (refDate.month() == toDates[counter].month() && 
-                refDate.year() == toDates[counter].year())
+            if (refDate.month() == toDates[counter].month() && refDate.year() == toDates[counter].year())
             {
-                vols[counter] = vols[counter-1];
+                vols[counter] = vols[counter - 1];
                 double actualDt = dayCounter->yearFraction(anchorDate, toDates[counter]);
                 sds[counter] = vols[counter] * sqrt(actualDt);
             }
-            else 
+            else
             {
                 refDate = toDates[counter];
                 getVolAndSD(refDate, strike, forwards[counter], vols[counter], sds[counter]);
             }
             ++counter;
         }
-   }
-
+    }
 
     std::shared_ptr<VolatilityRateSource> VolatilitySurfaceMoneynessCMA::parallelBump(double spread)
     {
@@ -244,12 +239,8 @@ namespace sjd
         Matrix spreadMatrix = Matrix(volatilitySubset.rows(), volatilitySubset.columns(), spread);
         Matrix bumpedVolMatrix = volatilitySubset + spreadMatrix;
 
-        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneynessCMA(anchorDate, 
-                                                                                  newDates, 
-                                                                                  strikeDimension,
-                                                                                  bumpedVolMatrix,
-                                                                                  interpolatorType,
-                                                                                  allowExtrapolation));
+        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneynessCMA(
+            anchorDate, newDates, strikeDimension, bumpedVolMatrix, interpolatorType, allowExtrapolation));
     }
 
     std::shared_ptr<VolatilityRateSource> VolatilitySurfaceMoneynessCMA::rollForward(Date toDate)
@@ -260,21 +251,17 @@ namespace sjd
         getRolledVariables(toDate, newDates, volatilitySubset);
 
         SurfaceInterpolatorType updatedType = interpolatorType;
-        //if (toDate > anchorDate)
+        // if (toDate > anchorDate)
         //{
-        //    updatedType = BILINEAR;
-        //}
+        //     updatedType = BILINEAR;
+        // }
 
-        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneynessCMA(toDate, 
-                                                                                  newDates, 
-                                                                                  strikeDimension,
-                                                                                  volatilitySubset,
-                                                                                  updatedType,
-                                                                                  allowExtrapolation));
+        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneynessCMA(
+            toDate, newDates, strikeDimension, volatilitySubset, updatedType, allowExtrapolation));
     }
 
     void VolatilitySurfaceMoneynessCMA::getRolledVariables(Date toDate,
-                                                           vector<Date>& newDates, 
+                                                           vector<Date>& newDates,
                                                            QuantLib::Matrix& volatilitySubset)
     {
         if (!isInRange(toDate))
@@ -284,7 +271,7 @@ namespace sjd
             volatilitySubset = QuantLib::Matrix(0, 0);
             return;
         }
-        else 
+        else
         {
             Date beginningOfRollToDateMonth = Date(1, toDate.month(), toDate.year());
             size_t offset = 0;
@@ -292,25 +279,26 @@ namespace sjd
             {
                 double t1 = simpleDayCounter->yearFraction(beginningOfRollToDateMonth, observationDates[i]);
                 int t2 = boost::math::iround(12 * t1);
-                double time = (double) boost::math::iround(12 * simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, toDate));        
-                if (time >= 0) 
+                double time = (double)boost::math::iround(
+                    12 * simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, toDate));
+                if (time >= 0)
                 {
                     newDates.push_back(observationDates[i]);
                 }
-                else 
+                else
                 {
                     ++offset;
                 }
             }
             volatilitySubset = QuantLib::Matrix(strikeDimension.size(), newDates.size());
-            for (size_t i = 0; i < strikeDimension.size(); ++i) 
+            for (size_t i = 0; i < strikeDimension.size(); ++i)
             {
                 for (size_t j = 0; j < newDates.size(); ++j)
                 {
-                    volatilitySubset[i][j] = volatility[i][j+offset];
+                    volatilitySubset[i][j] = volatility[i][j + offset];
                 }
             }
-         return;
+            return;
         }
     }
 }

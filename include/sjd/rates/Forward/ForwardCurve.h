@@ -97,8 +97,8 @@ namespace sjd
 
         void preparePath(const std::vector<QuantLib::Date>& forwardSimulationDates,
                          const std::vector<QuantLib::Date>& monthStarts);
-        std::vector<std::shared_ptr<ForwardRateSource>> rollPath(const std::vector<double>& normalRVs,
-                                                                   const std::vector<QuantLib::Date>& forwardSimulationDates);
+        std::vector<std::shared_ptr<ForwardRateSource>> rollPath(
+            const std::vector<double>& normalRVs, const std::vector<QuantLib::Date>& forwardSimulationDates);
         std::vector<double> impliedRandomNumbers(std::vector<double> spot,
                                                  std::vector<double>& normalRVs,
                                                  QuantLib::Date anchor,
@@ -107,10 +107,10 @@ namespace sjd
     private:
         std::vector<QuantLib::Date> rolledDatesAheadOf(QuantLib::Date date) const;
         std::shared_ptr<ForwardRateSource> rolledInterpolated(QuantLib::Date toDate,
-                                                                const std::vector<QuantLib::Date>& dates,
-                                                                const std::vector<double>& forwards,
-                                                                ArrayInterpolatorType interpolation,
-                                                                bool allowExtrapolation) const;
+                                                              const std::vector<QuantLib::Date>& dates,
+                                                              const std::vector<double>& forwards,
+                                                              ArrayInterpolatorType interpolation,
+                                                              bool allowExtrapolation) const;
 
         ForwardQuote quoteStyle;
         ForwardAveraging averagingStyle;

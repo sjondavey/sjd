@@ -4,31 +4,27 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
 
     /*======================================================================================
-    DatedCurve 
+    DatedCurve
     =======================================================================================*/
-    DatedCurve::DatedCurve() 
-    {}
+    DatedCurve::DatedCurve() {}
 
-    DatedCurve::DatedCurve(Date anchorDateInput, 
-                           vector<Date> observationDatesInput, 
-                           vector<double> observedRatesInput, 
+    DatedCurve::DatedCurve(Date anchorDateInput,
+                           vector<Date> observationDatesInput,
+                           vector<double> observedRatesInput,
                            ArrayInterpolatorType typeInput,
                            bool allowExtrapolationInput)
     {
-        setParameters(anchorDateInput, 
-                      observationDatesInput, 
-                      observedRatesInput, 
-                      typeInput, 
+        setParameters(anchorDateInput, observationDatesInput, observedRatesInput, typeInput,
                       allowExtrapolationInput);
     }
 
-    void DatedCurve::setParameters(Date anchorDateInput, 
-                                   vector<Date> observationPointsInput, 
-                                   vector<double> observedRatesInput, 
+    void DatedCurve::setParameters(Date anchorDateInput,
+                                   vector<Date> observationPointsInput,
+                                   vector<double> observedRatesInput,
                                    ArrayInterpolatorType typeInput,
                                    bool allowExtrapolationInput)
     {
@@ -39,33 +35,33 @@ namespace sjd
         allowExtrapolation = allowExtrapolationInput;
 
         // Other errors handled by ArrayInterpolator
-        if (observationDates.size() < 1) 
+        if (observationDates.size() < 1)
         {
             finalDate = anchorDate;
             interpolator = std::shared_ptr<ArrayInterpolator>(
-                            new LinearArrayInterpolator(vector<double>(1,0), vector<double>(1,1), allowExtrapolation));
+                new LinearArrayInterpolator(vector<double>(1, 0), vector<double>(1, 1), allowExtrapolation));
             return;
         }
         finalDate = observationPointsInput.back();
         observationPoints.clear();
-        for (size_t i = 0; i < observationPointsInput.size(); ++i) 
+        for (size_t i = 0; i < observationPointsInput.size(); ++i)
         {
             observationPoints.push_back(observationPointsInput[i].serialNumber());
-        }        
+        }
 
-        switch (type) 
+        switch (type)
         {
-            case CUBIC:
-                interpolator = std::shared_ptr<ArrayInterpolator>(
-                    new CubicSplineInterpolator(observationPoints, observedRates, allowExtrapolation));
-                break;
-            default:
-                interpolator = std::shared_ptr<ArrayInterpolator>(
-                    new LinearArrayInterpolator(observationPoints, observedRates, allowExtrapolation));
-        }        
+        case CUBIC:
+            interpolator = std::shared_ptr<ArrayInterpolator>(
+                new CubicSplineInterpolator(observationPoints, observedRates, allowExtrapolation));
+            break;
+        default:
+            interpolator = std::shared_ptr<ArrayInterpolator>(
+                new LinearArrayInterpolator(observationPoints, observedRates, allowExtrapolation));
+        }
     }
 
-    bool DatedCurve::isOK(string &errorMessage)
+    bool DatedCurve::isOK(string& errorMessage)
     {
         errorMessage = "";
         if (observationPoints.size() < 1)
@@ -78,7 +74,7 @@ namespace sjd
             errorMessage = "First ovservation time before Anchor Date";
             return false;
         }
-        if (!interpolator->isOk()) 
+        if (!interpolator->isOk())
         {
             errorMessage = interpolator->getErrorMessage();
             return false;
@@ -104,11 +100,7 @@ namespace sjd
         observationPointsInput.insert(observationPointsInput.begin(), anchorDate);
         observedRatesInput.insert(observedRatesInput.begin(), valueToAdd);
 
-        setParameters(anchorDate, 
-                     observationPointsInput, 
-                     observedRatesInput, 
-                     type,
-                     allowExtrapolation);
+        setParameters(anchorDate, observationPointsInput, observedRatesInput, type, allowExtrapolation);
     }
 
     double DatedCurve::getRate(Date toDate) const

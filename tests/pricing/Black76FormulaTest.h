@@ -1,15 +1,15 @@
 ﻿#ifndef black76_test_maths
 #define black76_test_maths
 
-#include <iostream>
-#include <boost/test/unit_test.hpp>
 #include <boost/math/special_functions/fpclassify.hpp> // boost::math::isnan
-#include <support/TestingParameters.h>
+#include <boost/test/unit_test.hpp>
+#include <iostream>
 #include <sjd/pricing/Black76Formula.h>
+#include <support/TestingParameters.h>
 
-class Black76Test {
-  public:
-
+class Black76Test
+{
+public:
     static void testPutCallParity();
 
     /*
@@ -20,5 +20,3 @@ class Black76Test {
 };
 
 #endif
-
-

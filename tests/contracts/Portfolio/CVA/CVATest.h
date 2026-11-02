@@ -11,9 +11,9 @@
 
 using namespace sjd;
 
-class CVATest {
-  public:
-
+class CVATest
+{
+public:
     static void testFlatPD();
     static void testCumulativeDefaultProbability();
 
@@ -21,5 +21,3 @@ class CVATest {
 };
 
 #endif
-
-

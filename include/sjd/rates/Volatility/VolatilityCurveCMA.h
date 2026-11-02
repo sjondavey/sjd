@@ -2,31 +2,30 @@
 #define SJD_VOLATILITYCURVECMA_INCLUDED
 #pragma once
 
-#include <sjd/tools/CalendarMonthAverageCurve.h>
 #include <sjd/rates/Volatility/DeterministicVolatilityRateSource.h>
+#include <sjd/tools/CalendarMonthAverageCurve.h>
 
-#include <ql/time/daycounters/simpledaycounter.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/time/daycounters/simpledaycounter.hpp>
 
-namespace sjd 
+namespace sjd
 {
     /*======================================================================================
     VolatilityCurveCMA
 
-    Use this for volatility curves where every date in a single calendar month has the same 
+    Use this for volatility curves where every date in a single calendar month has the same
     volatility
     =======================================================================================*/
     class VolatilityCurveCMA : public DeterministicVolatilityRateSource
     {
     public:
-        
-        VolatilityCurveCMA(QuantLib::Date anchorDate, 
-                        std::vector<QuantLib::Date> observationDates, 
-                        std::vector<double> volatility, 
-                        std::shared_ptr<QuantLib::DayCounter> dayCounter,
-                        ArrayInterpolatorType type = LINEAR,
-                        bool allowExtrapolation = false);    
-        
+        VolatilityCurveCMA(QuantLib::Date anchorDate,
+                           std::vector<QuantLib::Date> observationDates,
+                           std::vector<double> volatility,
+                           std::shared_ptr<QuantLib::DayCounter> dayCounter,
+                           ArrayInterpolatorType type = LINEAR,
+                           bool allowExtrapolation = false);
+
         virtual ~VolatilityCurveCMA();
 
         virtual bool isOK();
@@ -35,7 +34,7 @@ namespace sjd
 
         virtual bool isInRange(QuantLib::Date date) const;
         virtual bool isInRange(QuantLib::Date date, double strike, double forward) const;
-        virtual bool extendsTo(QuantLib::Date date) const;        
+        virtual bool extendsTo(QuantLib::Date date) const;
 
         virtual double getVolatility(QuantLib::Date toDate) const;
         virtual double getVolatility(QuantLib::Date toDate, double strike, double forward) const;
@@ -43,8 +42,9 @@ namespace sjd
         virtual double getStandardDeviation(QuantLib::Date toDate) const;
         virtual double getStandardDeviation(QuantLib::Date toDate, double strike, double forward) const;
 
-        virtual void getVolAndSD(QuantLib::Date toDate, double &vol, double& sd) const;
-        virtual void getVolAndSD(QuantLib::Date toDate, double strike, double forward, double &vol, double& sd) const;
+        virtual void getVolAndSD(QuantLib::Date toDate, double& vol, double& sd) const;
+        virtual void getVolAndSD(
+            QuantLib::Date toDate, double strike, double forward, double& vol, double& sd) const;
 
         std::vector<QuantLib::Date> getObservationDates() const;
         ArrayInterpolatorType getType();

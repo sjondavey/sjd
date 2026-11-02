@@ -9,18 +9,18 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
 
     /*======================================================================================
-    VolatilityCurve 
+    VolatilityCurve
     =======================================================================================*/
-    VolatilityCurve::VolatilityCurve(Date anchorDateInput, 
-                                    vector<Date> observationDatesInput, 
-                                    vector<double> volatilityInput, 
-                                    std::shared_ptr<DayCounter> dayCounterInput,
-                                    ArrayInterpolatorType typeInput,
-                                    bool allowExtrapolationInput) 
+    VolatilityCurve::VolatilityCurve(Date anchorDateInput,
+                                     vector<Date> observationDatesInput,
+                                     vector<double> volatilityInput,
+                                     std::shared_ptr<DayCounter> dayCounterInput,
+                                     ArrayInterpolatorType typeInput,
+                                     bool allowExtrapolationInput)
     {
         errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilityCurve"));
         dayCounter = dayCounterInput;
@@ -48,26 +48,21 @@ namespace sjd
             anchorVolatility = volatilityInput.front();
         }
 
-        datedCurve = std::shared_ptr<DatedCurve>(new DatedCurve(anchorDateInput, 
-                                                                  observationDatesInput, 
-                                                                  standardDeviations,
-                                                                  typeInput,
-                                                                  allowExtrapolationInput));
+        datedCurve = std::shared_ptr<DatedCurve>(new DatedCurve(
+            anchorDateInput, observationDatesInput, standardDeviations, typeInput, allowExtrapolationInput));
 
         anchorDate = datedCurve->getAnchorDate();
         allowExtrapolation = datedCurve->getAllowsExtrapolation();
         finalDate = datedCurve->getFinalDate();
         type = typeInput;
         string tmp;
-        if (datedCurve->isOK(tmp) && 
-           (!datedCurve->containsRateOnAnchorDate()))
+        if (datedCurve->isOK(tmp) && (!datedCurve->containsRateOnAnchorDate()))
         {
             datedCurve->addPointOnAnchorDate(0.0);
         }
     }
 
-    VolatilityCurve::~VolatilityCurve()
-    {}
+    VolatilityCurve::~VolatilityCurve() {}
 
     bool VolatilityCurve::isOK()
     {
@@ -76,8 +71,8 @@ namespace sjd
         if (!datedCurve->isOK(errorMessage))
         {
             const std::string code = errorMessage.find("same dimension") != std::string::npos
-                ? "VOLATILITY_CURVE_DIMENSION_MISMATCH"
-                : "VOLATILITY_CURVE_INVALID";
+                                         ? "VOLATILITY_CURVE_DIMENSION_MISMATCH"
+                                         : "VOLATILITY_CURVE_INVALID";
             recordIssue(code, errorMessage, {"inputs"});
             return false;
         }
@@ -85,9 +80,7 @@ namespace sjd
         {
             if (inputVolatilities[i] <= 0)
             {
-                recordIssue("VOLATILITY_CURVE_NEGATIVE_INPUT",
-                            "has negative inputs",
-                            {"volatilities"});
+                recordIssue("VOLATILITY_CURVE_NEGATIVE_INPUT", "has negative inputs", {"volatilities"});
             }
         }
         return !errorTracking->getHasErrors();
@@ -100,12 +93,12 @@ namespace sjd
 
     bool VolatilityCurve::isInRange(Date date) const
     {
-      return RateSource::isInRange(date);
+        return RateSource::isInRange(date);
     }
 
     bool VolatilityCurve::isInRange(Date date, double strike, double forward) const
     {
-      return RateSource::isInRange(date);
+        return RateSource::isInRange(date);
     }
 
     double VolatilityCurve::getVolatility(Date toDate) const
@@ -122,12 +115,12 @@ namespace sjd
         return getStandardDeviation(toDate) / std::sqrt(yearFraction);
     }
 
-    double VolatilityCurve::getVolatility(Date toDate, double strike, double forward) const         
+    double VolatilityCurve::getVolatility(Date toDate, double strike, double forward) const
     {
-      return getVolatility(toDate);
+        return getVolatility(toDate);
     }
 
-    double VolatilityCurve::getStandardDeviation(Date toDate) const 
+    double VolatilityCurve::getStandardDeviation(Date toDate) const
     {
         return datedCurve->getRate(toDate);
     }
@@ -137,23 +130,24 @@ namespace sjd
         return getStandardDeviation(toDate);
     }
 
-    void VolatilityCurve::getVolAndSD(Date toDate, double &vol, double& sd) const
+    void VolatilityCurve::getVolAndSD(Date toDate, double& vol, double& sd) const
     {
         vol = getVolatility(toDate);
         sd = getStandardDeviation(toDate);
         return;
-   }
+    }
 
-    void VolatilityCurve::getVolAndSD(Date toDate, double strike, double forward, double &vol, double& sd) const 
+    void VolatilityCurve::getVolAndSD(
+        Date toDate, double strike, double forward, double& vol, double& sd) const
     {
         return getVolAndSD(toDate, vol, sd);
     };
 
     vector<Date> VolatilityCurve::getObservationDates() const
     {
-         return datedCurve->getObservationDates();
+        return datedCurve->getObservationDates();
     }
-    
+
     ArrayInterpolatorType VolatilityCurve::getType()
     {
         return type;
@@ -162,25 +156,22 @@ namespace sjd
     std::shared_ptr<VolatilityRateSource> VolatilityCurve::parallelBump(double spread)
     {
         vector<Date> rolledObservationDates;
-        vector<double> rolledVols; 
+        vector<double> rolledVols;
         for (size_t i = 0; i < getObservationDates().size(); ++i)
         {
             rolledObservationDates.push_back(getObservationDates()[i]);
-            rolledVols.push_back(getVolatility(getObservationDates()[i])+spread);
+            rolledVols.push_back(getVolatility(getObservationDates()[i]) + spread);
         }
 
-       return std::shared_ptr<VolatilityCurve>(new VolatilityCurve(anchorDate, 
-                                                                      rolledObservationDates, 
-                                                                      rolledVols, 
-                                                                      dayCounter,
-                                                                      datedCurve->getType(),
-                                                                      allowExtrapolation));     
-     }
+        return std::shared_ptr<VolatilityCurve>(
+            new VolatilityCurve(anchorDate, rolledObservationDates, rolledVols, dayCounter,
+                                datedCurve->getType(), allowExtrapolation));
+    }
 
     std::shared_ptr<VolatilityRateSource> VolatilityCurve::rollForward(Date toDate)
     {
         vector<Date> rolledObservationDates;
-        vector<double> rolledVols; 
+        vector<double> rolledVols;
         if (!isInRange(toDate))
         {
             rolledObservationDates.push_back(toDate);
@@ -190,18 +181,15 @@ namespace sjd
         {
             for (size_t i = 0; i < getObservationDates().size(); ++i)
             {
-                if (getObservationDates()[i] >= toDate) 
+                if (getObservationDates()[i] >= toDate)
                 {
                     rolledObservationDates.push_back(getObservationDates()[i]);
                     rolledVols.push_back(getVolatility(getObservationDates()[i]));
                 }
             }
         }
-        return std::shared_ptr<VolatilityCurve>(new VolatilityCurve(toDate, 
-                                                                      rolledObservationDates, 
-                                                                      rolledVols, 
-                                                                      dayCounter,
-                                                                      datedCurve->getType(),
-                                                                      allowExtrapolation));     
-     }
+        return std::shared_ptr<VolatilityCurve>(
+            new VolatilityCurve(toDate, rolledObservationDates, rolledVols, dayCounter, datedCurve->getType(),
+                                allowExtrapolation));
+    }
 }

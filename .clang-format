@@ -1,5 +1,5 @@
 # Matches the existing style: 4-space indent, braces on their own line,
-# namespace bodies indented. Reformatting the tree is a separate commit (plan Step 4).
+# namespace bodies indented. CI checks with clang-format 18.1.8.
 BasedOnStyle: Microsoft
 Language: Cpp
 Standard: c++17

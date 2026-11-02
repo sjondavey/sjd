@@ -4,18 +4,18 @@
 
 #include "RateSource.h"
 
-namespace sjd 
+namespace sjd
 {
 
-   /*======================================================================================
-    IHaveMarketRateStresses
-    
-    To perform market rate stresses, Rate Sources should know how to stress themselves. 
-    These rate sources will return a std::vector containing all their stresses with a std::string name 
-    or description for each stress. 
-    =======================================================================================*/
-    class IHaveMarketRateStresses 
-    {        
+    /*======================================================================================
+     IHaveMarketRateStresses
+
+     To perform market rate stresses, Rate Sources should know how to stress themselves.
+     These rate sources will return a std::vector containing all their stresses with a std::string name
+     or description for each stress.
+     =======================================================================================*/
+    class IHaveMarketRateStresses
+    {
     public:
         virtual ~IHaveMarketRateStresses() {};
 

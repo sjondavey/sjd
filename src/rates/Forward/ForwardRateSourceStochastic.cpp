@@ -4,7 +4,7 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
     void ForwardRateSourceStochastic::setVolitalityRateSource(std::shared_ptr<VolatilityRateSource> vrsInput)
     {
@@ -21,45 +21,53 @@ namespace sjd
         {
             if (!isInRange(forwardSimulationDates.front()))
             {
-                recordIssue("FORWARD_SIMULATION_DATE_BEFORE_RANGE", "First forward date is outside the rate source range", {"forward_simulation_dates"});
+                recordIssue("FORWARD_SIMULATION_DATE_BEFORE_RANGE",
+                            "First forward date is outside the rate source range",
+                            {"forward_simulation_dates"});
                 return false;
             }
             if (!isInRange(forwardSimulationDates.back()))
             {
-                recordIssue("FORWARD_SIMULATION_DATE_AFTER_RANGE", "Last forward date is outside the rate source range", {"forward_simulation_dates"});
+                recordIssue("FORWARD_SIMULATION_DATE_AFTER_RANGE",
+                            "Last forward date is outside the rate source range",
+                            {"forward_simulation_dates"});
                 return false;
             }
         }
         if (vrs == NULL)
         {
-            recordIssue("FORWARD_VOLATILITY_RATE_SOURCE_MISSING", "Volatility Rate Source has not been set", {"volatility_rate_source"});
+            recordIssue("FORWARD_VOLATILITY_RATE_SOURCE_MISSING", "Volatility Rate Source has not been set",
+                        {"volatility_rate_source"});
             return false;
         }
         if (!vrs->extendsTo(finalDate))
         {
-            recordIssue("FORWARD_VOLATILITY_RATE_SOURCE_RANGE", "Volatility Rate Source does not extend to the end of the Forward Rate Source", {"volatility_rate_source"});
+            recordIssue("FORWARD_VOLATILITY_RATE_SOURCE_RANGE",
+                        "Volatility Rate Source does not extend to the end of the Forward Rate Source",
+                        {"volatility_rate_source"});
         }
         if (vrs->getAnchorDate() != anchorDate)
         {
-            recordIssue("FORWARD_VOLATILITY_ANCHOR_MISMATCH", "Volatility Rate Source does not have the same anchor date as the Forward Rate Source", {"volatility_rate_source"});
+            recordIssue(
+                "FORWARD_VOLATILITY_ANCHOR_MISMATCH",
+                "Volatility Rate Source does not have the same anchor date as the Forward Rate Source",
+                {"volatility_rate_source"});
         }
         return !errorTracking->getHasErrors();
     }
-    
+
     void ForwardRateSourceStochastic::setForwardValuationDates(set<Date> datesSet)
     {
         forwardSimulationDates = vector<Date>(datesSet.begin(), datesSet.end());
     }
-    
+
     void ForwardRateSourceStochastic::setRandomVariables(vector<double> normalRVsInput)
     {
         normalRVs = normalRVsInput;
     }
 
-    std::shared_ptr<ForwardRateSource> ForwardRateSourceStochastic::rollForward(Date toDate, 
-                                                                                  double normalRV,
-                                                                                  vector<Date> rateSetDates,
-                                                                                  vector<double> &rateSetsFromAnchorToDate)
+    std::shared_ptr<ForwardRateSource> ForwardRateSourceStochastic::rollForward(
+        Date toDate, double normalRV, vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToDate)
     {
         std::shared_ptr<ForwardRateSource> rolledRate = rollForward(toDate, normalRV);
 
@@ -67,19 +75,20 @@ namespace sjd
         double simulatedFwd = rolledRate->getForward(toDate);
         double ratio = (simulatedFwd - expectedFwd) / expectedFwd;
         rateSetsFromAnchorToDate.clear();
-        double denominator = (double) (toDate - anchorDate);
+        double denominator = (double)(toDate - anchorDate);
         for (size_t i = 0; i < rateSetDates.size(); ++i)
         {
-            double adjustedFwd = getForward(rateSetDates[i]) * (1 + ratio * ((double) (rateSetDates[i] - anchorDate)) / denominator);
+            double adjustedFwd = getForward(rateSetDates[i]) *
+                                 (1 + ratio * ((double)(rateSetDates[i] - anchorDate)) / denominator);
             rateSetsFromAnchorToDate.push_back(adjustedFwd);
         }
         return rolledRate;
     }
 
-    vector<std::shared_ptr<ForwardRateSource> > ForwardRateSourceStochastic::rollForward(vector<Date> rateSetDates,
-                                                                                           vector<double> &rateSetsFromAnchorToFinalRollDate)
+    vector<std::shared_ptr<ForwardRateSource>> ForwardRateSourceStochastic::rollForward(
+        vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToFinalRollDate)
     {
-        vector<std::shared_ptr<ForwardRateSource> > frss = rollForward();
+        vector<std::shared_ptr<ForwardRateSource>> frss = rollForward();
         rateSetsFromAnchorToFinalRollDate = vector<double>(rateSetDates.size(), 0);
         Date startDate = anchorDate;
         Date endDate = forwardSimulationDates[0];
@@ -90,11 +99,12 @@ namespace sjd
         double expectedFwd = getForward(endDate);
         double simulatedFwd = frss[0]->getForward(endDate);
         double ratio = (simulatedFwd - expectedFwd) / expectedFwd;
-        double denominator = (double) (endDate - startDate);
+        double denominator = (double)(endDate - startDate);
         size_t index = 0;
         for (size_t j = 0; j < rateSetSubset.size(); ++j)
         {
-            double adjustedFwd = getForward(rateSetSubset[j]) * (1 + ratio * ((double) (rateSetSubset[j] - startDate)) / denominator);
+            double adjustedFwd = getForward(rateSetSubset[j]) *
+                                 (1 + ratio * ((double)(rateSetSubset[j] - startDate)) / denominator);
             rateSetsFromAnchorToFinalRollDate[index] = (adjustedFwd);
             ++index;
         }
@@ -106,19 +116,19 @@ namespace sjd
             startIt = endIt;
             endIt = upper_bound(rateSetDates.begin(), rateSetDates.end(), endDate);
             rateSetSubset = vector<Date>(startIt, endIt);
-            
-            expectedFwd = frss[i-1]->getForward(endDate);
+
+            expectedFwd = frss[i - 1]->getForward(endDate);
             simulatedFwd = frss[i]->getForward(endDate);
             ratio = (simulatedFwd - expectedFwd) / expectedFwd;
-            denominator = (double) (endDate - startDate);
+            denominator = (double)(endDate - startDate);
             for (size_t j = 0; j < rateSetSubset.size(); ++j)
             {
-                double adjustedFwd = frss[i-1]->getForward(rateSetSubset[j]);
-                adjustedFwd *= (1 + ratio * ((double) (rateSetSubset[j] - startDate)) / denominator);
+                double adjustedFwd = frss[i - 1]->getForward(rateSetSubset[j]);
+                adjustedFwd *= (1 + ratio * ((double)(rateSetSubset[j] - startDate)) / denominator);
                 rateSetsFromAnchorToFinalRollDate[index] = (adjustedFwd);
                 ++index;
             }
-        }        
+        }
         return frss;
     }
 
@@ -142,8 +152,8 @@ namespace sjd
 
             sds[i] = vrs->getStandardDeviation(forwardSimulationDates[i]);
             double sd = sqrt((sds[i] * sds[i] - sds[i - 1] * sds[i - 1]));
-            
-            rns[i] = (log((spot[i]) / (spot[i-1] * fwdFwd)) + sd * sd / 2.0) / sd;
+
+            rns[i] = (log((spot[i]) / (spot[i - 1] * fwdFwd)) + sd * sd / 2.0) / sd;
         }
         return rns;
     }

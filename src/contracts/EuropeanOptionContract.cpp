@@ -1,60 +1,48 @@
 #include <sjd/contracts/EuropeanOptionContract.h>
 
-
 using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd {
+namespace sjd
+{
 
+    /*======================================================================================
+    EuropeanOption
 
-   /*======================================================================================
-   EuropeanOption
-
-    The simplest Black-Scholes Option Contract used to price Black options on futures or
-    Black Scholes options. 
-    =======================================================================================*/
-    EuropeanOption::EuropeanOption(Date optionMaturity, 
-                                   Date optionSettlement, 
-                                   double strike, 
-                                   PutCall type, 
+     The simplest Black-Scholes Option Contract used to price Black options on futures or
+     Black Scholes options.
+     =======================================================================================*/
+    EuropeanOption::EuropeanOption(Date optionMaturity,
+                                   Date optionSettlement,
+                                   double strike,
+                                   PutCall type,
                                    double volume,
-                                   Date premiumPaymentDate, 
-                                   double premiumAmount, 
-                                   BuySell buySellInput) 
+                                   Date premiumPaymentDate,
+                                   double premiumAmount,
+                                   BuySell buySellInput)
     {
-        constructorCommon(optionMaturity, 
-                          optionSettlement, 
-                          strike, 
-                          type, 
-                          volume, 
-                          premiumPaymentDate, 
-                          premiumAmount, 
-                          buySellInput);
-    }
-        
-    EuropeanOption::EuropeanOption(EuropeanOption &optionInput)
-    {
-        constructorCommon(optionInput.maturityDate, 
-                          optionInput.settlementDate, 
-                          optionInput.strike, 
-                          optionInput.type, 
-                          optionInput.volume, 
-                          optionInput.premiumPaymentDate, 
-                          optionInput.premiumAmount, 
-                          optionInput.buySell);        
+        constructorCommon(optionMaturity, optionSettlement, strike, type, volume, premiumPaymentDate,
+                          premiumAmount, buySellInput);
     }
 
-   void EuropeanOption::constructorCommon(Date optionMaturity, 
-                                           Date optionSettlement, 
-                                           double X, 
-                                           PutCall pc, 
+    EuropeanOption::EuropeanOption(EuropeanOption& optionInput)
+    {
+        constructorCommon(optionInput.maturityDate, optionInput.settlementDate, optionInput.strike,
+                          optionInput.type, optionInput.volume, optionInput.premiumPaymentDate,
+                          optionInput.premiumAmount, optionInput.buySell);
+    }
+
+    void EuropeanOption::constructorCommon(Date optionMaturity,
+                                           Date optionSettlement,
+                                           double X,
+                                           PutCall pc,
                                            double N,
-                                           Date pDate, 
-                                           double pAmount, 
+                                           Date pDate,
+                                           double pAmount,
                                            BuySell bs)
     {
-      errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("EuropeanOption"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("EuropeanOption"));
         setMaturityDate(optionMaturity);
         setSettlementDate(optionSettlement);
         setStrike(X);
@@ -73,17 +61,17 @@ namespace sjd {
     void EuropeanOption::setType(PutCall pc)
     {
         SingleOptionContract::setType(pc);
-        if (getType() == PUT) 
+        if (getType() == PUT)
         {
             option = std::shared_ptr<Black76Option>(new Black76Put(0, 0, 0, 0));
         }
-        else 
+        else
         {
             option = std::shared_ptr<Black76Option>(new Black76Call(0, 0, 0, 0));
         }
     }
 
-   double EuropeanOption::getOptionValue(std::shared_ptr<RatesEnvironment> re)
+    double EuropeanOption::getOptionValue(std::shared_ptr<RatesEnvironment> re)
     {
         Date valueDate = re->getAnchorDate();
         if (valueDate > getSettlementDate())
@@ -93,16 +81,14 @@ namespace sjd {
         double premium = 0;
         double F = (re->getFRS())->getForward(getSettlementDate());
         double df = (re->getDRS()->getDiscountFactor(getSettlementDate()));
-        if (valueDate < getMaturityDate()) 
+        if (valueDate < getMaturityDate())
         {
             double sd = (re->getVRS())->getStandardDeviation(getMaturityDate(), getStrike(), F);
-            option->setParameters(F,strike,sd,df);    
+            option->setParameters(F, strike, sd, df);
             premium += option->getPremium();
             return premium * getVolume();
-        }            
+        }
         return option->getPremiumAfterMaturity(F, df) * volume;
     }
 
 }
-
-

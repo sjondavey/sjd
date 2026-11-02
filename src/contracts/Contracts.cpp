@@ -1,16 +1,16 @@
-#include <sjd/contracts/Contracts.h>
 #include <boost/lexical_cast.hpp>
+#include <sjd/contracts/Contracts.h>
 
 using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
-   /*======================================================================================
-   Contract
+    /*======================================================================================
+    Contract
 
-    =======================================================================================*/
+     =======================================================================================*/
     std::string Contract::validationRoot() const
     {
         return "contract";
@@ -31,7 +31,7 @@ namespace sjd
     }
 
     bool Contract::isOK()
-    {      
+    {
         return !hasErrors();
     }
 
@@ -55,7 +55,7 @@ namespace sjd
         {
             description << "Contract has errors,";
             vector<string> errorMessages = getErrorMessages();
-            for (size_t i = 0; i < errorMessages.size(); ++i) 
+            for (size_t i = 0; i < errorMessages.size(); ++i)
             {
                 description << errorMessages[i] << ",";
             }
@@ -73,7 +73,7 @@ namespace sjd
         {
             description << "Contract has errors,";
             vector<string> errorMessages = getErrorMessages();
-            for (size_t i = 0; i < errorMessages.size(); ++i) 
+            for (size_t i = 0; i < errorMessages.size(); ++i)
             {
                 description << errorMessages[i] << ",";
             }
@@ -81,7 +81,7 @@ namespace sjd
         }
         description << toStringContract();
         description << toStringRates(re);
-        return description.str() ;
+        return description.str();
     }
 
     /*======================================================================================
@@ -91,22 +91,21 @@ namespace sjd
     void SingleInstrumentContract::validate()
     {
         Contract::validate();
-        if (maturityDate > settlementDate) 
+        if (maturityDate > settlementDate)
         {
-            recordIssue("CONTRACT_MATURITY_AFTER_SETTLEMENT",
-                        "Maturity date after settlement date",
+            recordIssue("CONTRACT_MATURITY_AFTER_SETTLEMENT", "Maturity date after settlement date",
                         {"maturity_date"});
         }
         if (hasPremium && (getPremiumPaymentDate() > getSettlementDate()))
         {
             recordIssue("CONTRACT_PREMIUM_DATE_AFTER_SETTLEMENT",
-                        "Premium payment date after settlement date. Consider using a cash flow and an option without premium",
+                        "Premium payment date after settlement date. Consider using a cash flow and an "
+                        "option without premium",
                         {"premium_payment_date"});
         }
         if (hasPremium && (premiumAmount < -1e-14))
         {
-            recordIssue("CONTRACT_PREMIUM_NEGATIVE",
-                        "Premium Amount must be stored as a non-negative number",
+            recordIssue("CONTRACT_PREMIUM_NEGATIVE", "Premium Amount must be stored as a non-negative number",
                         {"premium_amount"});
         }
     }
@@ -114,21 +113,20 @@ namespace sjd
     void SingleInstrumentContract::validate(std::shared_ptr<RatesEnvironment> re)
     {
         Contract::validate(re);
-        if (!re->hasDRS()) 
+        if (!re->hasDRS())
         {
-            recordIssue("MARKET_DISCOUNT_RATE_SOURCE_MISSING",
-                        "No discounting rate source",
+            recordIssue("MARKET_DISCOUNT_RATE_SOURCE_MISSING", "No discounting rate source",
                         {"rates_environment", "discount_rate_source"});
         }
-        else 
+        else
         {
-            // can't use if (!drs->isInRange(settlementDate)) 
+            // can't use if (!drs->isInRange(settlementDate))
             // because there are legitimate instances where we may value the option after settlement
-            if (!(re->getDRS())->extendsTo(settlementDate))  
+            if (!(re->getDRS())->extendsTo(settlementDate))
             {
-            recordIssue("MARKET_DISCOUNT_RATE_SOURCE_RANGE",
-                        "Discounting rate source does not extend to settlement",
-                        {"rates_environment", "discount_rate_source"});
+                recordIssue("MARKET_DISCOUNT_RATE_SOURCE_RANGE",
+                            "Discounting rate source does not extend to settlement",
+                            {"rates_environment", "discount_rate_source"});
             }
         }
     }
@@ -150,7 +148,7 @@ namespace sjd
         {
             hasPremium = true;
         }
-        else 
+        else
         {
             hasPremium = false;
         }
@@ -164,7 +162,7 @@ namespace sjd
         {
             hasPremium = true;
         }
-        else 
+        else
         {
             hasPremium = false;
         }
@@ -186,7 +184,7 @@ namespace sjd
     {
         return maturityDate;
     }
-    
+
     void SingleInstrumentContract::setSettlementDate(Date date)
     {
         settlementDate = date;
@@ -209,7 +207,7 @@ namespace sjd
         {
             buySellAsDouble = -1;
         }
-        else 
+        else
         {
             buySellAsDouble = 0;
         }
@@ -221,10 +219,10 @@ namespace sjd
         return buySell;
     }
 
-   double SingleInstrumentContract::getBuySellAsDouble() const
-   {
-      return buySellAsDouble;
-   }
+    double SingleInstrumentContract::getBuySellAsDouble() const
+    {
+        return buySellAsDouble;
+    }
 
     double SingleInstrumentContract::getVolume() const
     {
@@ -240,17 +238,17 @@ namespace sjd
     string SingleInstrumentContract::toStringContract()
     {
         stringstream descriptionStream;
-        descriptionStream << errorTracking->getClassName()
-            << ",Set," <<  QuantLib::io::iso_date(getSettlementDate())
-            << ",Mat," <<  QuantLib::io::iso_date(getMaturityDate())
-            << "," << convertBuySellToString(buySell)
-            << ",Volume," << fixed << setprecision(2) << volume;
-        if (hasPremium) 
+        descriptionStream << errorTracking->getClassName() << ",Set,"
+                          << QuantLib::io::iso_date(getSettlementDate()) << ",Mat,"
+                          << QuantLib::io::iso_date(getMaturityDate()) << ","
+                          << convertBuySellToString(buySell) << ",Volume," << fixed << setprecision(2)
+                          << volume;
+        if (hasPremium)
         {
-            descriptionStream << ",Prem," << fixed << setprecision(4) << premiumAmount
-                << ",PremDate," << QuantLib::io::iso_date(getPremiumPaymentDate());
+            descriptionStream << ",Prem," << fixed << setprecision(4) << premiumAmount << ",PremDate,"
+                              << QuantLib::io::iso_date(getPremiumPaymentDate());
         }
-        else 
+        else
         {
             descriptionStream << ",NoPrem,0,PremDate,01/01/1901";
         }
@@ -260,9 +258,8 @@ namespace sjd
     string SingleInstrumentContract::toStringRates(std::shared_ptr<RatesEnvironment> re)
     {
         stringstream ratesDescriptionStream;
-        ratesDescriptionStream << ",MtM," << fixed << setprecision(4) << getValue(re)
-                               << ",DF(set)," << fixed << setprecision(6) 
-                               << (re->getDRS())->getDiscountFactor(getSettlementDate());
+        ratesDescriptionStream << ",MtM," << fixed << setprecision(4) << getValue(re) << ",DF(set)," << fixed
+                               << setprecision(6) << (re->getDRS())->getDiscountFactor(getSettlementDate());
         return ratesDescriptionStream.str();
     }
 
@@ -273,32 +270,31 @@ namespace sjd
     void SingleDerivativeContract::validate()
     {
         SingleInstrumentContract::validate();
-        if (strike < 0) 
+        if (strike < 0)
         {
-           recordIssue("CONTRACT_STRIKE_NEGATIVE", "Strike is negative", {"strike"});
+            recordIssue("CONTRACT_STRIKE_NEGATIVE", "Strike is negative", {"strike"});
         }
     }
 
     void SingleDerivativeContract::validate(std::shared_ptr<RatesEnvironment> re)
     {
         SingleInstrumentContract::validate(re);
-        if (!re->hasFRS()) 
+        if (!re->hasFRS())
         {
-            recordIssue("MARKET_FORWARD_RATE_SOURCE_MISSING",
-                        "No forward rate source",
+            recordIssue("MARKET_FORWARD_RATE_SOURCE_MISSING", "No forward rate source",
                         {"rates_environment", "forward_rate_source"});
         }
-      else 
+        else
         {
-         // NB This will need to be overwritten for Asian derivaitves which only require fwds to the
-         // averaging dates
-         if (!(re->getFRS())->extendsTo(getSettlementDate())) 
-         {
-            recordIssue("MARKET_FORWARD_RATE_SOURCE_RANGE",
-                        "Contract settlement not in forward rate source range",
-                        {"rates_environment", "forward_rate_source"});
-         }
-      }
+            // NB This will need to be overwritten for Asian derivaitves which only require fwds to the
+            // averaging dates
+            if (!(re->getFRS())->extendsTo(getSettlementDate()))
+            {
+                recordIssue("MARKET_FORWARD_RATE_SOURCE_RANGE",
+                            "Contract settlement not in forward rate source range",
+                            {"rates_environment", "forward_rate_source"});
+            }
+        }
     }
 
     void SingleDerivativeContract::setStrike(double X)
@@ -326,7 +322,7 @@ namespace sjd
         descriptionStream << SingleInstrumentContract::toStringRates(re);
         if (isOK())
         {
-            descriptionStream << ",Fwd(Set)," << fixed << setprecision(4) 
+            descriptionStream << ",Fwd(Set)," << fixed << setprecision(4)
                               << (re->getFRS())->getForward(getSettlementDate());
         }
         return descriptionStream.str();
@@ -341,45 +337,42 @@ namespace sjd
         SingleDerivativeContract::validate();
         if ((type != CALL) && (type != PUT))
         {
-            recordIssue("OPTION_TYPE_INVALID",
-                        "Type must be either CALL or PUT",
-                        {"put_call"});
+            recordIssue("OPTION_TYPE_INVALID", "Type must be either CALL or PUT", {"put_call"});
         }
     }
 
     void SingleOptionContract::validate(std::shared_ptr<RatesEnvironment> re)
-    {      
+    {
         SingleDerivativeContract::validate(re);
-        if (!re->hasVRS()) 
+        if (!re->hasVRS())
         {
-            recordIssue("MARKET_VOLATILITY_RATE_SOURCE_MISSING",
-                        "No volatiltiy rate source",
+            recordIssue("MARKET_VOLATILITY_RATE_SOURCE_MISSING", "No volatiltiy rate source",
                         {"rates_environment", "volatility_rate_source"});
         }
-        else 
+        else
         {
-            if (!(re->getVRS())->extendsTo(getSettlementDate())) 
-             {
+            if (!(re->getVRS())->extendsTo(getSettlementDate()))
+            {
                 recordIssue("MARKET_VOLATILITY_RATE_SOURCE_RANGE",
                             "Contract settlement not in volatility rate source range",
                             {"rates_environment", "volatility_rate_source"});
-             }
+            }
         }
     }
 
     double SingleOptionContract::getPayoff(double forSpot)
     {
         double premium = 0;
-        if (getPremiumPaymentDate() > getMaturityDate()) 
+        if (getPremiumPaymentDate() > getMaturityDate())
         {
             premium = getPremiumAmount();
         }
 
-        if (type == PUT) 
+        if (type == PUT)
         {
             return (max(0.0, getStrike() - forSpot) - premium) * getVolume() * getBuySellAsDouble();
         }
-        else 
+        else
         {
             return (max(0.0, forSpot - getStrike()) - premium) * getVolume() * getBuySellAsDouble();
         }
@@ -397,10 +390,10 @@ namespace sjd
             return 0;
         }
         double premium = getOptionValue(re);
-        if (valueDate <= getPremiumPaymentDate()) 
+        if (valueDate <= getPremiumPaymentDate())
         {
             double df = (re->getDRS())->getDiscountFactor(getPremiumPaymentDate());
-            premium -= getPremiumAmount()  * getVolume() * df;
+            premium -= getPremiumAmount() * getVolume() * df;
         }
         cachedRE = re;
         cachedMarketRevision = re->marketRevision();
@@ -409,7 +402,7 @@ namespace sjd
         return cachedContractValue;
     }
 
-   void SingleOptionContract::setType(PutCall pc)
+    void SingleOptionContract::setType(PutCall pc)
     {
         type = pc;
         valueCalculated = false;
@@ -420,22 +413,21 @@ namespace sjd
         return type;
     }
 
-
     string SingleOptionContract::toStringContract()
     {
-        stringstream descriptionStream; 
+        stringstream descriptionStream;
         descriptionStream << SingleDerivativeContract::toStringContract();
-        descriptionStream <<"," << convertPutCallToString(type);
+        descriptionStream << "," << convertPutCallToString(type);
         return descriptionStream.str();
     }
 
     string SingleOptionContract::toStringRates(std::shared_ptr<RatesEnvironment> re)
     {
-        stringstream descriptionStream; 
+        stringstream descriptionStream;
         descriptionStream << SingleDerivativeContract::toStringRates(re);
         if (isOK())
         {
-            descriptionStream <<",Vol(Mat)," << fixed << setprecision(6) 
+            descriptionStream << ",Vol(Mat)," << fixed << setprecision(6)
                               << (re->getVRS())->getVolatility(getMaturityDate());
         }
         return descriptionStream.str();
@@ -447,11 +439,9 @@ namespace sjd
     =======================================================================================*/
     void AsianContract::validate()
     {
-        if (orderedAveragingDates.size() < 1) 
+        if (orderedAveragingDates.size() < 1)
         {
-            recordAsianIssue("ASIAN_AVERAGING_DATES_MISSING",
-                             "Averaging Dates not set",
-                             {"averaging_dates"});
+            recordAsianIssue("ASIAN_AVERAGING_DATES_MISSING", "Averaging Dates not set", {"averaging_dates"});
         }
     }
 
@@ -465,13 +455,12 @@ namespace sjd
             return;
         }
         Date valueDate = (re->getAnchorDate());
-        if (!re->hasFixingRS()) 
+        if (!re->hasFixingRS())
         {
-            recordAsianIssue("MARKET_FIXING_RATE_SOURCE_MISSING",
-                             "No Fixing rate source",
+            recordAsianIssue("MARKET_FIXING_RATE_SOURCE_MISSING", "No Fixing rate source",
                              {"rates_environment", "fixing_rate_source"});
         }
-        else if (!(re->getFixingRS())->isOK()) 
+        else if (!(re->getFixingRS())->isOK())
         {
             absorbAsianReport(re->getFixingRS()->validationReport(),
                               {"rates_environment", "fixing_rate_source"});
@@ -484,16 +473,15 @@ namespace sjd
         {
             return;
         }
-        for (size_t i = 0; i < fixingDates.size(); ++i) 
+        for (size_t i = 0; i < fixingDates.size(); ++i)
         {
             Date d = fixingDates[i];
-            if (!(re->getFixingRS())->containsARateSetOn(d)) 
+            if (!(re->getFixingRS())->containsARateSetOn(d))
             {
                 stringstream descriptionStream;
                 descriptionStream << "Fixing Rate Source does not contain a fixing rate on "
-                          << QuantLib::io::iso_date(d);
-                recordAsianIssue("ASIAN_FIXING_DATE_MISSING",
-                                 descriptionStream.str(),
+                                  << QuantLib::io::iso_date(d);
+                recordAsianIssue("ASIAN_FIXING_DATE_MISSING", descriptionStream.str(),
                                  {"rates_environment", "fixing_rate_source", "fixing_dates"});
             }
         }
@@ -510,13 +498,13 @@ namespace sjd
     }
 
     set<Date> AsianContract::getAllBusinessDaysBetween(Date startDate, Date endDate, Calendar calendar)
-    {            
+    {
         Date averagingStart;
-        if (calendar.isBusinessDay(startDate)) 
+        if (calendar.isBusinessDay(startDate))
         {
             averagingStart = startDate;
         }
-        else 
+        else
         {
             averagingStart = calendar.advance(startDate, 1, Days);
         }
@@ -525,13 +513,13 @@ namespace sjd
         {
             lastDateInAveragingMonth = endDate;
         }
-        else 
+        else
         {
             lastDateInAveragingMonth = calendar.advance(endDate, -1, Days);
         }
         set<Date> averagingDates;
         Date tmp = averagingStart;
-        while (tmp <= endDate) 
+        while (tmp <= endDate)
         {
             averagingDates.insert(tmp);
             tmp = calendar.advance(tmp, 1, Days);
@@ -539,9 +527,9 @@ namespace sjd
         return averagingDates;
     }
 
-    void AsianContract::getFixingAndForwardDates(Date valuationDate, 
-                                                 vector<Date> &fixingDates, 
-                                                 vector<Date> &forwardDates)
+    void AsianContract::getFixingAndForwardDates(Date valuationDate,
+                                                 vector<Date>& fixingDates,
+                                                 vector<Date>& forwardDates)
     {
         if (valuationDate < orderedAveragingDates[0])
         {
@@ -551,41 +539,41 @@ namespace sjd
         }
         fixingDates.clear();
         forwardDates.clear();
-        for (size_t i = 0; i < orderedAveragingDates.size(); ++i) 
+        for (size_t i = 0; i < orderedAveragingDates.size(); ++i)
         {
-            if (orderedAveragingDates[i] <= valuationDate) 
+            if (orderedAveragingDates[i] <= valuationDate)
             {
                 fixingDates.push_back(orderedAveragingDates[i]);
             }
-            else 
+            else
             {
                 forwardDates.push_back(orderedAveragingDates[i]);
             }
         }
     }
 
-    void AsianContract::getFixingAndForwardRates(Date valueDate, 
-                                              vector<double> &fixingRates, 
-                                              vector<double> &forwardRates,
-                                              std::shared_ptr<RatesEnvironment> re)
+    void AsianContract::getFixingAndForwardRates(Date valueDate,
+                                                 vector<double>& fixingRates,
+                                                 vector<double>& forwardRates,
+                                                 std::shared_ptr<RatesEnvironment> re)
     {
         vector<Date> fixingDates, forwardDates;
-        getFixingAndForwardDates(valueDate, fixingDates, forwardDates);        
+        getFixingAndForwardDates(valueDate, fixingDates, forwardDates);
         fixingRates = (re->getFixingRS())->getRateSetOn(fixingDates);
-        forwardRates = (re->getFRS())->getForward(forwardDates);        
+        forwardRates = (re->getFRS())->getForward(forwardDates);
         return;
     }
 
+    /*======================================================================================
+     MultipleInstrumentContract
 
-   /*======================================================================================
-    MultipleInstrumentContract
-
-    Base class for derivatives may contain more than one underlying contract
-    =======================================================================================*/
-    MultipleInstrumentContract::MultipleInstrumentContract(MultipleInstrumentContract &multipleInstrumentContract)
+     Base class for derivatives may contain more than one underlying contract
+     =======================================================================================*/
+    MultipleInstrumentContract::MultipleInstrumentContract(
+        MultipleInstrumentContract& multipleInstrumentContract)
     {
         setInputVariables();
-        contracts = multipleInstrumentContract.contracts;        
+        contracts = multipleInstrumentContract.contracts;
     }
 
     std::unique_ptr<Contract> MultipleInstrumentContract::clone()
@@ -594,10 +582,12 @@ namespace sjd
     }
     void MultipleInstrumentContract::setInputVariables()
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("MultipleInstrumentContract"));
+        errorTracking =
+            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("MultipleInstrumentContract"));
     }
 
-    MultipleInstrumentContract::MultipleInstrumentContract(vector<std::shared_ptr<SingleInstrumentContract>> inputs)
+    MultipleInstrumentContract::MultipleInstrumentContract(
+        vector<std::shared_ptr<SingleInstrumentContract>> inputs)
     {
         setInputVariables();
         contracts = inputs;
@@ -606,14 +596,15 @@ namespace sjd
     MultipleInstrumentContract::MultipleInstrumentContract(vector<std::shared_ptr<Contract>> inputs)
     {
         setInputVariables();
-        vector<std::shared_ptr<SingleInstrumentContract>> inputsAsSingleInstruments = 
+        vector<std::shared_ptr<SingleInstrumentContract>> inputsAsSingleInstruments =
             getSingleInstrumentContracts(inputs);
-        if (!isOK()) 
+        if (!isOK())
         {
             contracts = vector<std::shared_ptr<SingleInstrumentContract>>(0);
-            recordIssue("CONTRACT_EXTRACT_FAILED", "Cannot extract single instruments from input contracts", {});
+            recordIssue("CONTRACT_EXTRACT_FAILED", "Cannot extract single instruments from input contracts",
+                        {});
         }
-        else 
+        else
         {
             contracts = inputsAsSingleInstruments;
         }
@@ -628,7 +619,7 @@ namespace sjd
             return;
         }
 
-        for (size_t i = 0; i < contracts.size(); ++i) 
+        for (size_t i = 0; i < contracts.size(); ++i)
         {
             contracts[i]->validate();
             if (!contracts[i]->isOK())
@@ -647,7 +638,7 @@ namespace sjd
             recordIssue("PORTFOLIO_EMPTY", ", contains no contracts", {});
             return;
         }
-        for (size_t i = 0; i < contracts.size(); ++i) 
+        for (size_t i = 0; i < contracts.size(); ++i)
         {
             contracts[i]->validate(re);
             if (!contracts[i]->isOK())
@@ -661,7 +652,7 @@ namespace sjd
     double MultipleInstrumentContract::getValue(std::shared_ptr<RatesEnvironment> re)
     {
         double value = 0;
-        for (size_t i = 0; i < contracts.size(); ++i) 
+        for (size_t i = 0; i < contracts.size(); ++i)
         {
             value += contracts[i]->getValue(re);
         }
@@ -676,7 +667,7 @@ namespace sjd
         {
             description << "Contract has errors,";
             vector<string> errorMessages = getErrorMessages();
-            for (size_t i = 0; i < errorMessages.size(); ++i) 
+            for (size_t i = 0; i < errorMessages.size(); ++i)
             {
                 description << errorMessages[i] << ",";
             }
@@ -684,7 +675,7 @@ namespace sjd
         }
         description << "Net MtM," << fixed << setprecision(4) << getValue(re) << "\n";
         description << toStringRates(re);
-        return description.str() ;
+        return description.str();
     }
 
     string MultipleInstrumentContract::toStringContract()
@@ -692,7 +683,7 @@ namespace sjd
         string description;
         for (size_t i = 0; i < contracts.size(); ++i)
         {
-            description += contracts[i]->toStringContract() +"\n";
+            description += contracts[i]->toStringContract() + "\n";
         }
         return description;
     }
@@ -702,33 +693,35 @@ namespace sjd
         string description;
         for (size_t i = 0; i < contracts.size(); ++i)
         {
-            description += contracts[i]->toStringContract() + contracts[i]->toStringRates(re) +"\n";
+            description += contracts[i]->toStringContract() + contracts[i]->toStringRates(re) + "\n";
         }
         return description;
     }
 
-    vector<std::shared_ptr<SingleInstrumentContract>> MultipleInstrumentContract::getUnderlyingSingleInstrumentContracts()
+    vector<std::shared_ptr<SingleInstrumentContract>> MultipleInstrumentContract::
+        getUnderlyingSingleInstrumentContracts()
     {
         return contracts;
     }
 
-    vector<std::shared_ptr<SingleInstrumentContract>> MultipleInstrumentContract::getSingleInstrumentContracts(
-                                                                            vector<std::shared_ptr<Contract>> inputs)
+    vector<std::shared_ptr<SingleInstrumentContract>> MultipleInstrumentContract::
+        getSingleInstrumentContracts(vector<std::shared_ptr<Contract>> inputs)
     {
         vector<std::shared_ptr<SingleInstrumentContract>> inputsAsSingleInstruments;
-        for (size_t i = 0; i < inputs.size(); ++i) 
+        for (size_t i = 0; i < inputs.size(); ++i)
         {
-            if (std::dynamic_pointer_cast<SingleInstrumentContract>(inputs[i]) != 0) 
+            if (std::dynamic_pointer_cast<SingleInstrumentContract>(inputs[i]) != 0)
             {
-                inputsAsSingleInstruments.push_back(std::dynamic_pointer_cast<SingleInstrumentContract>(inputs[i]));
+                inputsAsSingleInstruments.push_back(
+                    std::dynamic_pointer_cast<SingleInstrumentContract>(inputs[i]));
             }
-            else if (std::dynamic_pointer_cast<MultipleInstrumentContract>(inputs[i]) != 0) 
+            else if (std::dynamic_pointer_cast<MultipleInstrumentContract>(inputs[i]) != 0)
             {
-                vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts = 
-                    std::dynamic_pointer_cast<MultipleInstrumentContract>(inputs[i])->
-                    getUnderlyingSingleInstrumentContracts();
+                vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts =
+                    std::dynamic_pointer_cast<MultipleInstrumentContract>(inputs[i])
+                        ->getUnderlyingSingleInstrumentContracts();
 
-                for (size_t j = 0; j < underlyingContracts.size(); ++j) 
+                for (size_t j = 0; j < underlyingContracts.size(); ++j)
                 {
                     inputsAsSingleInstruments.push_back(underlyingContracts[j]);
                 }

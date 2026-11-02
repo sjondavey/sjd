@@ -4,17 +4,17 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
 
     void FixingRateSource::setDatesAndRates(vector<Date> fixingDatesInput, vector<double> fixingRatesInput)
     {
         fixingDates = fixingDatesInput;
         fixingRates = fixingRatesInput;
-        if (fixingDates.size() != 0) 
+        if (fixingDates.size() != 0)
         {
             firstDate = fixingDates.front();
-            lastDate =  fixingDates.back();
+            lastDate = fixingDates.back();
         }
     }
 
@@ -28,22 +28,18 @@ namespace sjd
         errorTracking->clear();
         if (fixingDates.size() != fixingRates.size())
         {
-            recordIssue("FIXING_DATES_AND_RATES_LENGTH",
-                        "Number of Dates and Rates inputs are not equal",
+            recordIssue("FIXING_DATES_AND_RATES_LENGTH", "Number of Dates and Rates inputs are not equal",
                         {"fixing_dates"});
         }
-        if (fixingDates.size() == 0) 
+        if (fixingDates.size() == 0)
         {
-            recordIssue("FIXING_DATES_EMPTY",
-                        "No fixing dates entered",
-                        {"fixing_dates"});
+            recordIssue("FIXING_DATES_EMPTY", "No fixing dates entered", {"fixing_dates"});
         }
-        else 
+        else
         {
             if (!isStrictlyIncreasing<Date>(fixingDates))
             {
-                recordIssue("FIXING_DATES_NOT_INCREASING",
-                            "Input Dates are not strictly increasing",
+                recordIssue("FIXING_DATES_NOT_INCREASING", "Input Dates are not strictly increasing",
                             {"fixing_dates"});
             }
             if (firstDate != fixingDates.front())
@@ -59,7 +55,7 @@ namespace sjd
     bool FixingRateSource::containsARateSetOn(Date date) const
     {
         vector<Date>::const_iterator low;
-        low = std::lower_bound (fixingDates.begin(), fixingDates.end(), date);
+        low = std::lower_bound(fixingDates.begin(), fixingDates.end(), date);
         if (low == fixingDates.cend())
         {
             return false;
@@ -70,11 +66,11 @@ namespace sjd
     double FixingRateSource::getRateSetOn(Date date) const
     {
         vector<Date>::const_iterator low;
-        low = std::lower_bound (fixingDates.begin(), fixingDates.end(), date);
+        low = std::lower_bound(fixingDates.begin(), fixingDates.end(), date);
         return fixingRates[low - fixingDates.begin()];
     }
 
-    Date FixingRateSource::getEarliestDate() const 
+    Date FixingRateSource::getEarliestDate() const
     {
         return firstDate;
     }

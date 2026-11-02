@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <sjd/rates/RatesEnvironment.h>
 
-namespace sjd 
+namespace sjd
 {
 
     /*======================================================================================
@@ -20,8 +20,8 @@ namespace sjd
 
         bool isOK();
 
-        std::shared_ptr<RatesEnvironment> getRatesEnvironment(size_t i);  
-        std::vector<QuantLib::Date>  getPathDates() const;
+        std::shared_ptr<RatesEnvironment> getRatesEnvironment(size_t i);
+        std::vector<QuantLib::Date> getPathDates() const;
         size_t getNumberOfSteps() const;
 
         std::vector<double> getSpotRates();
@@ -32,7 +32,6 @@ namespace sjd
         std::vector<std::shared_ptr<RatesEnvironment>> ratesPath;
         std::vector<QuantLib::Date> pathDates;
     };
-
 
 }
 

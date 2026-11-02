@@ -4,7 +4,7 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
 
     /*======================================================================================
@@ -15,37 +15,45 @@ namespace sjd
     {
         DeterministicVolatilityRateSource::isOK();
 
-        if ((observationDates.size() == 0) || (strikeDimension.size() == 0) || (volatility.empty())) 
+        if ((observationDates.size() == 0) || (strikeDimension.size() == 0) || (volatility.empty()))
         {
-            recordIssue("VOLATILITY_SURFACE_INPUTS_EMPTY", "One of observation dates, moneyness or volatility is empty", {"inputs"});
+            recordIssue("VOLATILITY_SURFACE_INPUTS_EMPTY",
+                        "One of observation dates, moneyness or volatility is empty", {"inputs"});
         }
-        if ((observationDates.size() != volatility.columns()) || (strikeDimension.size() != volatility.rows()) ) 
+        if ((observationDates.size() != volatility.columns()) ||
+            (strikeDimension.size() != volatility.rows()))
         {
-            recordIssue("VOLATILITY_SURFACE_DIMENSION_MISMATCH", "Input vectors and matricies have inconsistent dimension", {"inputs"});
+            recordIssue("VOLATILITY_SURFACE_DIMENSION_MISMATCH",
+                        "Input vectors and matricies have inconsistent dimension", {"inputs"});
         }
         if (!isStrictlyIncreasing<Date>(observationDates))
         {
-            recordIssue("VOLATILITY_SURFACE_DATES_NOT_INCREASING", "Input dates not strictly increasing", {"observation_dates"});
+            recordIssue("VOLATILITY_SURFACE_DATES_NOT_INCREASING", "Input dates not strictly increasing",
+                        {"observation_dates"});
         }
-        if (!isStrictlyIncreasing<double>(time)) 
+        if (!isStrictlyIncreasing<double>(time))
         {
-            recordIssue("VOLATILITY_SURFACE_TIMES_NOT_INCREASING", "Input times not strictly increasing", {"times"});
+            recordIssue("VOLATILITY_SURFACE_TIMES_NOT_INCREASING", "Input times not strictly increasing",
+                        {"times"});
         }
         if (!isStrictlyIncreasing<double>(strikeDimension))
         {
-            recordIssue("VOLATILITY_SURFACE_STRIKES_NOT_INCREASING", "Strike dimension inputs are not strictly increasing", {"strikes"});
+            recordIssue("VOLATILITY_SURFACE_STRIKES_NOT_INCREASING",
+                        "Strike dimension inputs are not strictly increasing", {"strikes"});
         }
-        if ((interpolatorType!=BILINEAR) && (interpolatorType!=BICUBIC)) 
+        if ((interpolatorType != BILINEAR) && (interpolatorType != BICUBIC))
         {
-            recordIssue("VOLATILITY_SURFACE_INTERPOLATOR_TYPE", "Interpolator Type must be either Bilinear or Bicubic", {"interpolator"});
+            recordIssue("VOLATILITY_SURFACE_INTERPOLATOR_TYPE",
+                        "Interpolator Type must be either Bilinear or Bicubic", {"interpolator"});
         }
-        if (interpolator == NULL) 
+        if (interpolator == NULL)
         {
             recordIssue("VOLATILITY_SURFACE_INTERPOLATOR_MISSING", "Interpolator not set", {"interpolator"});
         }
-        if (finalDate < anchorDate) 
+        if (finalDate < anchorDate)
         {
-            recordIssue("VOLATILITY_SURFACE_FINAL_BEFORE_ANCHOR", "Final date before anchor date", {"final_date"});
+            recordIssue("VOLATILITY_SURFACE_FINAL_BEFORE_ANCHOR", "Final date before anchor date",
+                        {"final_date"});
         }
         return !errorTracking->getHasErrors();
     }
@@ -82,20 +90,19 @@ namespace sjd
         return (*interpolator)(t, clampToStrikeGrid(strikeValue), allowExtrapolation);
     }
 
-    void VolatiltiySurfaceRateSource::setInputs(Date anchorDateInput, 
-                                                vector<Date> observationDatesInput, 
+    void VolatiltiySurfaceRateSource::setInputs(Date anchorDateInput,
+                                                vector<Date> observationDatesInput,
                                                 vector<double> strikeDimensionInput,
                                                 QuantLib::Matrix volatilityInput,
                                                 SurfaceInterpolatorType interpolatorTypeInput,
                                                 bool extrapolateInput)
     {
-        if (observationDatesInput.size() == 0 ||
-             strikeDimensionInput.size() == 0 ||
-             volatilityInput.rows() * volatilityInput.columns() == 0)
+        if (observationDatesInput.size() == 0 || strikeDimensionInput.size() == 0 ||
+            volatilityInput.rows() * volatilityInput.columns() == 0)
         {
             observationDates = vector<Date>();
             strikeDimension = vector<double>();
-            volatility = Matrix(0,0);
+            volatility = Matrix(0, 0);
             return;
         }
         anchorDate = anchorDateInput;
@@ -104,38 +111,38 @@ namespace sjd
 
         strikeDimension = strikeDimensionInput;
         observationDates = observationDatesInput;
-        if (observationDates[0] > anchorDate) 
+        if (observationDates[0] > anchorDate)
         {
             observationDates.insert(observationDates.begin(), anchorDate);
-            volatility = QuantLib::Matrix(volatilityInput.rows(), volatilityInput.columns()+1);
-            for (size_t i = 0; i < volatilityInput.rows(); ++i) 
+            volatility = QuantLib::Matrix(volatilityInput.rows(), volatilityInput.columns() + 1);
+            for (size_t i = 0; i < volatilityInput.rows(); ++i)
             {
                 volatility[i][0] = volatilityInput[i][0];
-                for (size_t j = 0; j < volatilityInput.columns(); ++j) 
+                for (size_t j = 0; j < volatilityInput.columns(); ++j)
                 {
-                    volatility[i][j+1] = volatilityInput[i][j];
+                    volatility[i][j + 1] = volatilityInput[i][j];
                 }
             }
         }
-        else 
+        else
         {
             volatility = volatilityInput;
         }
-        
+
         time.clear();
-        for (size_t i = 0; i < observationDates.size(); ++i) 
+        for (size_t i = 0; i < observationDates.size(); ++i)
         {
             double yf = dayCounter->yearFraction(anchorDate, observationDates[i]);
             time.push_back(yf);
         }
 
-        if (observationDates.size() > 0) 
+        if (observationDates.size() > 0)
         {
             finalDate = observationDates.back();
         }
-        else 
+        else
         {
-         finalDate = Date(01,Jan,1901);
+            finalDate = Date(01, Jan, 1901);
         }
         setInterpolatorType(interpolatorTypeInput);
     }
@@ -147,42 +154,34 @@ namespace sjd
 
     void VolatiltiySurfaceRateSource::setInterpolatorType(SurfaceInterpolatorType interpolatorTypeInput)
     {
-        if ((time.size() == 0) || (strikeDimension.size() == 0) || (volatility.rows() * volatility.columns() == 0)) 
+        if ((time.size() == 0) || (strikeDimension.size() == 0) ||
+            (volatility.rows() * volatility.columns() == 0))
         {
             return;
         }
-        interpolatorType = interpolatorTypeInput;        
-        if (interpolatorType == BILINEAR) 
+        interpolatorType = interpolatorTypeInput;
+        if (interpolatorType == BILINEAR)
         {
-            interpolator = std::shared_ptr<Interpolation2D>(new QuantLib::BilinearInterpolation(time.begin(), 
-                                                                                                  time.end(), 
-                                                                                                  strikeDimension.begin(), 
-                                                                                                  strikeDimension.end(), 
-                                                                                                  volatility));        
+            interpolator = std::shared_ptr<Interpolation2D>(new QuantLib::BilinearInterpolation(
+                time.begin(), time.end(), strikeDimension.begin(), strikeDimension.end(), volatility));
         }
-        else if (interpolatorType == BICUBIC) 
+        else if (interpolatorType == BICUBIC)
         {
-            interpolator = std::shared_ptr<Interpolation2D>(new QuantLib::BicubicSpline(time.begin(), 
-                                                                                          time.end(), 
-                                                                                          strikeDimension.begin(), 
-                                                                                          strikeDimension.end(), 
-                                                                                          volatility));
+            interpolator = std::shared_ptr<Interpolation2D>(new QuantLib::BicubicSpline(
+                time.begin(), time.end(), strikeDimension.begin(), strikeDimension.end(), volatility));
         }
-        else 
-        {            
-            interpolator = std::shared_ptr<Interpolation2D>(new QuantLib::BicubicSpline(time.begin(), 
-                                                                                          time.end(), 
-                                                                                          strikeDimension.begin(), 
-                                                                                          strikeDimension.end(), 
-                                                                                          volatility));
+        else
+        {
+            interpolator = std::shared_ptr<Interpolation2D>(new QuantLib::BicubicSpline(
+                time.begin(), time.end(), strikeDimension.begin(), strikeDimension.end(), volatility));
             interpolatorType = BICUBIC;
         }
     }
 
-   void VolatiltiySurfaceRateSource::getRolledVariables(Date toDate,
-                                                        vector<Date>& newDates, 
-                                                        QuantLib::Matrix& volatilitySubset)
-   {
+    void VolatiltiySurfaceRateSource::getRolledVariables(Date toDate,
+                                                         vector<Date>& newDates,
+                                                         QuantLib::Matrix& volatilitySubset)
+    {
         if (!isInRange(toDate))
         {
             newDates.clear();
@@ -190,52 +189,54 @@ namespace sjd
             volatilitySubset = QuantLib::Matrix(0, 0);
             return;
         }
-        else 
+        else
         {
             size_t offset = 0;
             for (size_t i = 0; i < observationDates.size(); ++i)
             {
                 double time = dayCounter->yearFraction(toDate, observationDates[i]);
-                if (time >= 0) 
+                if (time >= 0)
                 {
                     newDates.push_back(observationDates[i]);
                 }
-                else 
+                else
                 {
                     ++offset;
                 }
             }
             volatilitySubset = QuantLib::Matrix(strikeDimension.size(), newDates.size());
-            for (size_t i = 0; i < strikeDimension.size(); ++i) 
+            for (size_t i = 0; i < strikeDimension.size(); ++i)
             {
                 for (size_t j = 0; j < newDates.size(); ++j)
                 {
-                    volatilitySubset[i][j] = volatility[i][j+offset];
+                    volatilitySubset[i][j] = volatility[i][j + offset];
                 }
             }
             return;
         }
-   }
+    }
 
-    QuantLib::Matrix VolatiltiySurfaceRateSource::convertVectorOfVectorsToMatrix(vector<vector<double>> volatilityData)
+    QuantLib::Matrix VolatiltiySurfaceRateSource::convertVectorOfVectorsToMatrix(
+        vector<vector<double>> volatilityData)
     {
-        if (volatilityData.size() == 0) 
+        if (volatilityData.size() == 0)
         {
             return Matrix(1, 1, 0);
         }
-        else 
+        else
         {
             size_t rows, columns;
             rows = volatilityData.size();
             columns = volatilityData[0].size();
             Matrix M = Matrix(rows, columns);
-            for (size_t i = 0; i < rows; ++i) 
+            for (size_t i = 0; i < rows; ++i)
             {
                 if (columns != volatilityData[i].size())
                 {
-                    return Matrix(1, 1, 0);;
+                    return Matrix(1, 1, 0);
+                    ;
                 }
-                for (size_t j = 0; j < columns; ++j) 
+                for (size_t j = 0; j < columns; ++j)
                 {
                     M[i][j] = volatilityData[i][j];
                 }

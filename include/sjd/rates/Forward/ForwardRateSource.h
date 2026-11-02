@@ -2,11 +2,11 @@
 #define SJD_FORWARDRATESOURCE_INCLUDED
 #pragma once
 
-#include <vector>
 #include <sjd/rates/RateSource.h>
 #include <sjd/rates/Volatility/VolatilityRateSource.h>
+#include <vector>
 
-namespace sjd 
+namespace sjd
 {
     /**
      * A forward or futures curve: an interpolated curve, a calendar-month average,
@@ -29,8 +29,10 @@ namespace sjd
         // the forward to T1 where T0 <= T1 <= T2
         virtual double getForwardFworwardAdditive(QuantLib::Date fromDate, QuantLib::Date toDate) const;
         virtual double getForwardFworwardMultiplicative(QuantLib::Date fromDate, QuantLib::Date toDate) const;
-        virtual std::vector<double> getForwardFworwardAdditive(QuantLib::Date fromDate, std::vector<QuantLib::Date> toDates) const;
-        virtual std::vector<double> getForwardFworwardMultiplicative(QuantLib::Date fromDate, std::vector<QuantLib::Date> toDates) const;
+        virtual std::vector<double> getForwardFworwardAdditive(QuantLib::Date fromDate,
+                                                               std::vector<QuantLib::Date> toDates) const;
+        virtual std::vector<double> getForwardFworwardMultiplicative(
+            QuantLib::Date fromDate, std::vector<QuantLib::Date> toDates) const;
     };
 
 }

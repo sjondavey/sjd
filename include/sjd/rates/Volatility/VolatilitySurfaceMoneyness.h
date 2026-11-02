@@ -4,8 +4,7 @@
 
 #include "VolatilitySurfaces.h"
 
-
-namespace sjd 
+namespace sjd
 {
 
     /*======================================================================================
@@ -14,23 +13,22 @@ namespace sjd
     European Moneyness Surface
     =======================================================================================*/
     class VolatilitySurfaceMoneyness : public VolatiltiySurfaceRateSource
-        // VolSurfaceMoneyness
+    // VolSurfaceMoneyness
     {
     public:
-        
-      VolatilitySurfaceMoneyness(QuantLib::Date anchorDate, 
-                         std::vector<QuantLib::Date> observationDates, 
-                         std::vector<double> moneyness,
-                         QuantLib::Matrix volatilityData,
-                         SurfaceInterpolatorType interpolatorType,
-                         bool extrapolate = true); // row = moneyness, column = time
-        
-      VolatilitySurfaceMoneyness(QuantLib::Date anchorDate, 
-                         std::vector<QuantLib::Date> observationDates, 
-                         std::vector<double> moneyness,
-                         std::vector<std::vector<double>> volatilityData,
-                         SurfaceInterpolatorType interpolatorType,
-                         bool extrapolate = true); // row = moneyness, column = time
+        VolatilitySurfaceMoneyness(QuantLib::Date anchorDate,
+                                   std::vector<QuantLib::Date> observationDates,
+                                   std::vector<double> moneyness,
+                                   QuantLib::Matrix volatilityData,
+                                   SurfaceInterpolatorType interpolatorType,
+                                   bool extrapolate = true); // row = moneyness, column = time
+
+        VolatilitySurfaceMoneyness(QuantLib::Date anchorDate,
+                                   std::vector<QuantLib::Date> observationDates,
+                                   std::vector<double> moneyness,
+                                   std::vector<std::vector<double>> volatilityData,
+                                   SurfaceInterpolatorType interpolatorType,
+                                   bool extrapolate = true); // row = moneyness, column = time
 
         virtual ~VolatilitySurfaceMoneyness() {};
 
@@ -45,7 +43,6 @@ namespace sjd
 
         virtual std::shared_ptr<VolatilityRateSource> parallelBump(double spread);
         virtual std::shared_ptr<VolatilityRateSource> rollForward(QuantLib::Date toDate);
-
     };
 }
 

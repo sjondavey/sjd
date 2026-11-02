@@ -4,22 +4,22 @@
 
 #include <math.h>
 
-#include <set>
 #include <boost/math/distributions/normal.hpp>
 #include <boost/random.hpp>
+#include <set>
 #include <sjd/rates/RatesEnvironment.h>
 
+#include <sjd/rates/Discount/DeterministicDiscountRateSource.h>
+#include <sjd/rates/Fixing/RollingFixingRateSource.h>
 #include <sjd/rates/Forward/ForwardRateSourceStochastic.h>
 #include <sjd/rates/Forward/UsesInterestRateDifferential.h>
-#include <sjd/rates/Discount/DeterministicDiscountRateSource.h>
 #include <sjd/rates/Volatility/DeterministicVolatilityRateSource.h>
-#include <sjd/rates/Fixing/RollingFixingRateSource.h>
 
 #include "Path.h"
 
-typedef boost::mt19937 RNGType;  
+typedef boost::mt19937 RNGType;
 
-namespace sjd 
+namespace sjd
 {
     /*======================================================================================
     EconomicScenarioGenerator
@@ -33,10 +33,11 @@ namespace sjd
         virtual void setBaseRates(const std::shared_ptr<RatesEnvironment> re);
         std::shared_ptr<RatesEnvironment> getBaseRates();
 
-        // returns a false if there was any problem setting the dates and calculating the values used in the simulation
+        // returns a false if there was any problem setting the dates and calculating the values used in the
+        // simulation
         virtual bool setSimulationDates(std::set<QuantLib::Date> simulationDates);
-        
-        virtual std::shared_ptr<Path> getRandomPath() = 0;        
+
+        virtual std::shared_ptr<Path> getRandomPath() = 0;
         virtual std::shared_ptr<Path> getAntitheticPath() = 0;
 
     protected:
@@ -57,8 +58,6 @@ namespace sjd
         size_t numDates;
     };
 
-
-
     /*======================================================================================
     SingleFactorEconomicScenarioGenerator
 
@@ -73,21 +72,20 @@ namespace sjd
         virtual void setBaseRates(const std::shared_ptr<RatesEnvironment> re);
         bool isOK();
 
-        // returns a false if there was any problem setting the dates and calculating the values used in the simulation
+        // returns a false if there was any problem setting the dates and calculating the values used in the
+        // simulation
         virtual bool setSimulationDates(std::set<QuantLib::Date> simulationDates);
-        
+
         virtual void setRandomSeed(long seed);
 
         // 0 < confidenceInterval < 1
         virtual std::shared_ptr<Path> getConfidenceInterval(double confidenceInterval);
-        virtual std::shared_ptr<Path> getRandomPath();        
+        virtual std::shared_ptr<Path> getRandomPath();
         virtual std::shared_ptr<Path> getAntitheticPath();
         virtual std::shared_ptr<Path> getPathForRandomNumber(std::vector<double> randomNumbers);
         virtual std::shared_ptr<Path> getPathForSpot(std::vector<double> spot);
 
-
     protected:
-
         void updateFXForwardWithRolledDiscountRateSources(size_t stepNumber);
         bool frsDependsOnInterestRateDifferential;
 
@@ -100,14 +98,11 @@ namespace sjd
         std::vector<double> allFixingRates;
 
         long seed;
-        RNGType rng;     
+        RNGType rng;
         boost::normal_distribution<double> nd;
-        boost::variate_generator<RNGType, boost::normal_distribution<> > normalVariable; 
+        boost::variate_generator<RNGType, boost::normal_distribution<>> normalVariable;
         std::vector<double> randomNumbers;
-
     };
-
-
 
 }
 

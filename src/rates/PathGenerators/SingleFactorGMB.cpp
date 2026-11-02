@@ -1,11 +1,10 @@
 #include <sjd/rates/PathGenerators/SingleFactorGMB.h>
 
-
 using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
     /*======================================================================================
     EconomicScenarioGenerator
@@ -20,26 +19,22 @@ namespace sjd
         resetErrorMessages();
         if (re == 0)
         {
-            recordIssue("PATH_GENERATOR_RATES_MISSING",
-                        "Rates environment not set",
-                        {});
+            recordIssue("PATH_GENERATOR_RATES_MISSING", "Rates environment not set", {});
             return false;
         }
         if (!re->isOK())
         {
             absorbChildReport(re->validationReport(), {});
         }
-        if ((simulationDates.size() > 0) && (simulationDates.front() < anchorDate)) 
+        if ((simulationDates.size() > 0) && (simulationDates.front() < anchorDate))
         {
-            recordIssue("PATH_GENERATOR_DATES_BEFORE_ANCHOR",
-                        "Simulation dates before anchor date",
+            recordIssue("PATH_GENERATOR_DATES_BEFORE_ANCHOR", "Simulation dates before anchor date",
                         {"simulation_dates"});
             return false;
         }
         if ((simulationDates.size() > 0) && (!re->isInRange(simulationDates.back())))
         {
-            recordIssue("PATH_GENERATOR_DATES_AFTER_END",
-                        "Simulation dates after rate source end",
+            recordIssue("PATH_GENERATOR_DATES_AFTER_END", "Simulation dates after rate source end",
                         {"simulation_dates"});
             return false;
         }
@@ -72,10 +67,12 @@ namespace sjd
     /*======================================================================================
     SingleFactorEconomicScenarioGenerator
     =======================================================================================*/
-    SingleFactorEconomicScenarioGenerator::SingleFactorEconomicScenarioGenerator(const std::shared_ptr<RatesEnvironment> re)
-                                                : rng((boost::uint32_t) time(0)), nd(0,1), normalVariable(rng, nd)
+    SingleFactorEconomicScenarioGenerator::SingleFactorEconomicScenarioGenerator(
+        const std::shared_ptr<RatesEnvironment> re)
+        : rng((boost::uint32_t)time(0)), nd(0, 1), normalVariable(rng, nd)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("SingleFactorEconomicScenarioGenerator"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(
+            new sjd::IssueTracker("SingleFactorEconomicScenarioGenerator"));
         setBaseRates(re);
     }
 
@@ -85,21 +82,21 @@ namespace sjd
         frsDependsOnInterestRateDifferential = false;
         if (re->hasDRS())
         {
-            drs = std::dynamic_pointer_cast<sjd::DeterministicDiscountRateSource>(re->getDRS()); 
+            drs = std::dynamic_pointer_cast<sjd::DeterministicDiscountRateSource>(re->getDRS());
         }
         if (re->hasForeignDRS())
         {
-            foreigndrs = std::dynamic_pointer_cast<sjd::DeterministicDiscountRateSource>(re->getForeignDRS()); 
+            foreigndrs = std::dynamic_pointer_cast<sjd::DeterministicDiscountRateSource>(re->getForeignDRS());
         }
         if (re->hasVRS())
         {
-            vrs = std::dynamic_pointer_cast<sjd::DeterministicVolatilityRateSource>(re->getVRS()); 
+            vrs = std::dynamic_pointer_cast<sjd::DeterministicVolatilityRateSource>(re->getVRS());
         }
         if (re->hasFRS())
         {
-            frs = std::dynamic_pointer_cast<sjd::ForwardRateSourceStochastic>(re->getFRS()); 
-            std::shared_ptr<sjd::UsesInterestRateDifferential> tmpFRS = 
-                std::dynamic_pointer_cast<sjd::UsesInterestRateDifferential>(frs); 
+            frs = std::dynamic_pointer_cast<sjd::ForwardRateSourceStochastic>(re->getFRS());
+            std::shared_ptr<sjd::UsesInterestRateDifferential> tmpFRS =
+                std::dynamic_pointer_cast<sjd::UsesInterestRateDifferential>(frs);
             if (tmpFRS != 0)
             {
                 frsDependsOnInterestRateDifferential = true;
@@ -107,7 +104,7 @@ namespace sjd
         }
         if (re->hasFixingRS())
         {
-            fixingrs = std::dynamic_pointer_cast<sjd::RollingFixingRateSource>(re->getFixingRS()); 
+            fixingrs = std::dynamic_pointer_cast<sjd::RollingFixingRateSource>(re->getFixingRS());
         }
     }
 
@@ -119,21 +116,24 @@ namespace sjd
         }
         if (drs == 0)
         {
-            recordIssue("PATH_GENERATOR_DISCOUNT_NOT_DETERMINISTIC",
-                        "Rates environment does not contain a discounting rate source that rolls deterministically",
-                        {"discount_rate_source"});
+            recordIssue(
+                "PATH_GENERATOR_DISCOUNT_NOT_DETERMINISTIC",
+                "Rates environment does not contain a discounting rate source that rolls deterministically",
+                {"discount_rate_source"});
         }
-        if (foreigndrs == 0 && (re->hasForeignDRS())) // foreign DRS may not be required 
+        if (foreigndrs == 0 && (re->hasForeignDRS())) // foreign DRS may not be required
         {
             recordIssue("PATH_GENERATOR_FOREIGN_DISCOUNT_NOT_DETERMINISTIC",
-                        "Rates environment does not contain a foreign discounting rate source that rolls deterministically",
+                        "Rates environment does not contain a foreign discounting rate source that rolls "
+                        "deterministically",
                         {"foreign_discount_rate_source"});
         }
         if (vrs == 0)
         {
-            recordIssue("PATH_GENERATOR_VOLATILITY_NOT_DETERMINISTIC",
-                        "Rates environment does not contain a volatility rate source that rolls deterministically",
-                        {"volatility_rate_source"});
+            recordIssue(
+                "PATH_GENERATOR_VOLATILITY_NOT_DETERMINISTIC",
+                "Rates environment does not contain a volatility rate source that rolls deterministically",
+                {"volatility_rate_source"});
         }
         if (frs == 0)
         {
@@ -144,7 +144,8 @@ namespace sjd
         if (frsDependsOnInterestRateDifferential && foreigndrs == 0)
         {
             recordIssue("PATH_GENERATOR_FOREIGN_DISCOUNT_REQUIRED",
-                        "FRS requires a foreign interest rate source but rates environment does not contain one that rolls deterministically",
+                        "FRS requires a foreign interest rate source but rates environment does not contain "
+                        "one that rolls deterministically",
                         {"foreign_discount_rate_source"});
         }
         if (re->hasFixingRS() && (fixingrs == 0))
@@ -161,12 +162,12 @@ namespace sjd
         EconomicScenarioGenerator::setSimulationDates(simulationDatesSet);
         if (isOK())
         {
-            drs->setForwardValuationDates(simulationDatesSet); 
+            drs->setForwardValuationDates(simulationDatesSet);
             drss = drs->rollForward();
 
             if (foreigndrs != 0)
             {
-                foreigndrs->setForwardValuationDates(simulationDatesSet); 
+                foreigndrs->setForwardValuationDates(simulationDatesSet);
                 foreigndrss = foreigndrs->rollForward();
             }
 
@@ -180,12 +181,12 @@ namespace sjd
             frss = frs->rollForward();
 
             fixingrss.clear();
-            
+
             vector<std::shared_ptr<RatesEnvironment>> ratesPath;
             for (size_t i = 0; i < numDates; ++i)
             {
-                std::shared_ptr<RatesEnvironment> tmpRE = std::shared_ptr<RatesEnvironment>(
-                    new RatesEnvironment(simulationDates[i]));
+                std::shared_ptr<RatesEnvironment> tmpRE =
+                    std::shared_ptr<RatesEnvironment>(new RatesEnvironment(simulationDates[i]));
                 tmpRE->setDRS(drss[i]);
                 if (foreigndrs != 0)
                 {
@@ -197,11 +198,11 @@ namespace sjd
                 }
                 tmpRE->setFRS(frss[i]);
                 tmpRE->setVRS(vrss[i]);
-                if (re->hasFixingRS()) 
+                if (re->hasFixingRS())
                 {
                     allFixingDates = fixingrs->getFixingDatesFor(simulationDates);
                     allFixingRates = vector<double>(allFixingDates.size(), 0);
-                    std::shared_ptr<RollingFixingRateSource> rolledfixingrs = 
+                    std::shared_ptr<RollingFixingRateSource> rolledfixingrs =
                         fixingrs->rollForward(simulationDates[i], allFixingDates, allFixingRates);
                     fixingrss.push_back(rolledfixingrs);
                     tmpRE->setFixingRS(rolledfixingrs);
@@ -221,7 +222,8 @@ namespace sjd
         normalVariable.distribution().reset();
     }
 
-    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getConfidenceInterval(double confidenceInterval)
+    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getConfidenceInterval(
+        double confidenceInterval)
     {
         boost::math::normal dist(0.0, 1.0);
         double epsi = quantile(dist, confidenceInterval);
@@ -262,7 +264,7 @@ namespace sjd
 
     std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getRandomPath()
     {
-        for (size_t i = 0; i < numDates; ++i) 
+        for (size_t i = 0; i < numDates; ++i)
         {
             randomNumbers[i] = normalVariable();
         }
@@ -271,14 +273,15 @@ namespace sjd
 
     std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getAntitheticPath()
     {
-        for (size_t i = 0; i < numDates; ++i) 
+        for (size_t i = 0; i < numDates; ++i)
         {
             randomNumbers[i] = -randomNumbers[i];
         }
         return getPathForRandomNumber(randomNumbers);
     }
 
-    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getPathForRandomNumber(vector<double> randomNumbers)
+    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getPathForRandomNumber(
+        vector<double> randomNumbers)
     {
         frs->setRandomVariables(randomNumbers);
         if (fixingrs == 0)
@@ -294,10 +297,10 @@ namespace sjd
             }
         }
 
-        for (size_t i = 0; i < numDates; ++i) 
+        for (size_t i = 0; i < numDates; ++i)
         {
             path->getRatesEnvironment(i)->setFRS(frss[i]);
-        }        
+        }
         return path;
     }
 
@@ -307,16 +310,15 @@ namespace sjd
         return getPathForRandomNumber(impliedRV);
     }
 
-
-    void SingleFactorEconomicScenarioGenerator::updateFXForwardWithRolledDiscountRateSources(size_t stepNumber)
+    void SingleFactorEconomicScenarioGenerator::updateFXForwardWithRolledDiscountRateSources(
+        size_t stepNumber)
     {
-        std::shared_ptr<sjd::UsesInterestRateDifferential> tmpFRS = 
-            std::dynamic_pointer_cast<sjd::UsesInterestRateDifferential>(frss[stepNumber]); 
+        std::shared_ptr<sjd::UsesInterestRateDifferential> tmpFRS =
+            std::dynamic_pointer_cast<sjd::UsesInterestRateDifferential>(frss[stepNumber]);
         if (tmpFRS != 0)
         {
             tmpFRS->setRateSources(drss[stepNumber], foreigndrss[stepNumber]);
         }
-
     }
 
 }

@@ -1,17 +1,17 @@
 #ifndef SJD_CALENDARMONTHAVERAGECURVE_INCLUDED
 #define SJD_CALENDARMONTHAVERAGECURVE_INCLUDED
 
-#include <sjd/maths/maths.h>
-#include <ql/time/date.hpp>
-#include <memory>
 #include <boost/math/special_functions/round.hpp>
+#include <memory>
+#include <ql/time/date.hpp>
+#include <sjd/maths/maths.h>
 
-#include <ql/time/daycounters/simpledaycounter.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/time/daycounters/simpledaycounter.hpp>
 
-namespace sjd 
+namespace sjd
 {
     /*======================================================================================
     CalendarMonthAverageCurve
@@ -22,19 +22,19 @@ namespace sjd
     public:
         CalendarMonthAverageCurve();
 
-        CalendarMonthAverageCurve(QuantLib::Date anchorDate, 
-                                  std::vector<QuantLib::Date> observationDates, 
-                                  std::vector<double> rates, 
+        CalendarMonthAverageCurve(QuantLib::Date anchorDate,
+                                  std::vector<QuantLib::Date> observationDates,
+                                  std::vector<double> rates,
                                   ArrayInterpolatorType type = LINEAR,
-                                  bool allowExtrapolation = false);    
-        
-        void setParameters(QuantLib::Date anchorDate, 
-                           std::vector<QuantLib::Date> observationDates, 
-                           std::vector<double> rates, 
-                           ArrayInterpolatorType type = LINEAR,
-                           bool allowExtrapolation = false);    
+                                  bool allowExtrapolation = false);
 
-        bool isOK(std::string &errorMessage);
+        void setParameters(QuantLib::Date anchorDate,
+                           std::vector<QuantLib::Date> observationDates,
+                           std::vector<double> rates,
+                           ArrayInterpolatorType type = LINEAR,
+                           bool allowExtrapolation = false);
+
+        bool isOK(std::string& errorMessage);
 
         QuantLib::Date getAnchorDate();
         QuantLib::Date getBeginningOfAnchorDateMonth();
@@ -55,7 +55,6 @@ namespace sjd
         std::vector<QuantLib::Date> getObservationDates() const;
 
         static int getNumberOfNumberOfMonthsBetween(QuantLib::Date fromDate, QuantLib::Date toDate);
-
 
     protected:
         int getNumberOfMonthsAheadOfAnchorDate(QuantLib::Date date) const;

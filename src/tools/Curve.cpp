@@ -4,64 +4,57 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
 
     /*======================================================================================
-   Curve 
+   Curve
     =======================================================================================*/
-    Curve::Curve() 
-    {
-    }
+    Curve::Curve() {}
 
-    Curve::Curve(Date anchorDateInput, 
-                vector<double> observationPointsInput, 
-                vector<double> observedRatesInput, 
-                ArrayInterpolatorType typeInput,
-                bool allowExtrapolationInput) 
+    Curve::Curve(Date anchorDateInput,
+                 vector<double> observationPointsInput,
+                 vector<double> observedRatesInput,
+                 ArrayInterpolatorType typeInput,
+                 bool allowExtrapolationInput)
     {
-        setParameters(anchorDateInput, 
-                      observationPointsInput, 
-                      observedRatesInput, 
-                      typeInput,
+        setParameters(anchorDateInput, observationPointsInput, observedRatesInput, typeInput,
                       allowExtrapolationInput);
     }
 
-    void Curve::setParameters(Date anchorDateInput, 
-                vector<double> observationPointsInput, 
-                vector<double> observedRatesInput, 
-                ArrayInterpolatorType typeInput,
-                bool allowExtrapolationInput) 
-    {        
+    void Curve::setParameters(Date anchorDateInput,
+                              vector<double> observationPointsInput,
+                              vector<double> observedRatesInput,
+                              ArrayInterpolatorType typeInput,
+                              bool allowExtrapolationInput)
+    {
         type = typeInput;
         observationPoints = observationPointsInput;
         observedRates = observedRatesInput;
         anchorDate = anchorDateInput;
         allowExtrapolation = allowExtrapolationInput;
-        
+
         // Other errors handled by ArrayInterpolator
-        if (observationPoints.size() < 1 ||
-            observedRates[0] < 0) 
+        if (observationPoints.size() < 1 || observedRates[0] < 0)
         {
             interpolator = std::shared_ptr<ArrayInterpolator>(
-                            new LinearArrayInterpolator(vector<double>(1,0), vector<double>(1,1), allowExtrapolation));
+                new LinearArrayInterpolator(vector<double>(1, 0), vector<double>(1, 1), allowExtrapolation));
             return;
         }
 
-        switch (type) 
+        switch (type)
         {
-            case CUBIC:
-                interpolator = std::shared_ptr<ArrayInterpolator>(
-                    new CubicSplineInterpolator(observationPoints, observedRates, allowExtrapolation));
-                break;
-            default:
-                interpolator = std::shared_ptr<ArrayInterpolator>(
-                    new LinearArrayInterpolator(observationPoints, observedRates, allowExtrapolation));
-        }        
+        case CUBIC:
+            interpolator = std::shared_ptr<ArrayInterpolator>(
+                new CubicSplineInterpolator(observationPoints, observedRates, allowExtrapolation));
+            break;
+        default:
+            interpolator = std::shared_ptr<ArrayInterpolator>(
+                new LinearArrayInterpolator(observationPoints, observedRates, allowExtrapolation));
+        }
     }
 
-
-    bool Curve::isOK(string &errorMessage)
+    bool Curve::isOK(string& errorMessage)
     {
         errorMessage = "";
         if (observationPoints.size() < 1)
@@ -74,7 +67,7 @@ namespace sjd
             errorMessage = "First ovservation time before zero";
             return false;
         }
-        if (!interpolator->isOk()) 
+        if (!interpolator->isOk())
         {
             errorMessage = interpolator->getErrorMessage();
             return false;
@@ -120,11 +113,7 @@ namespace sjd
         observationPointsInput.insert(observationPointsInput.begin(), 0);
         observedRatesInput.insert(observedRatesInput.begin(), valueToAdd);
 
-        setParameters(anchorDate, 
-                      observationPointsInput, 
-                      observedRatesInput, 
-                      type,
-                      allowExtrapolation);
+        setParameters(anchorDate, observationPointsInput, observedRatesInput, type, allowExtrapolation);
     }
 
     double Curve::getRate(double toTime) const
@@ -132,9 +121,9 @@ namespace sjd
         return interpolator->getRate(toTime);
     }
 
-     vector<double> Curve::getObservationPoints() const
-     {
-         return observationPoints;
-     }
+    vector<double> Curve::getObservationPoints() const
+    {
+        return observationPoints;
+    }
 
 }

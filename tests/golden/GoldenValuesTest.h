@@ -10,7 +10,7 @@
 // printed table over the expected values, and explain the change in the commit.
 class GoldenValuesTest
 {
-  public:
+public:
     static void testContractStressor();
     static void testSimpleInsurance();
 

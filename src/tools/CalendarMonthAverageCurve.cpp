@@ -1,36 +1,31 @@
 #include <sjd/tools/CalendarMonthAverageCurve.h>
 
-
 using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
     /*======================================================================================
-    CalendarMonthAverageCurve 
+    CalendarMonthAverageCurve
     =======================================================================================*/
-    CalendarMonthAverageCurve::CalendarMonthAverageCurve()
-    {}
+    CalendarMonthAverageCurve::CalendarMonthAverageCurve() {}
 
-    CalendarMonthAverageCurve::CalendarMonthAverageCurve(Date anchorDateInput, 
-                                     vector<Date> observationDatesInput, 
-                                     vector<double> observedRatesInput,                                                                        
-                                     ArrayInterpolatorType typeInput,
-                                     bool allowExtrapolationInput) 
+    CalendarMonthAverageCurve::CalendarMonthAverageCurve(Date anchorDateInput,
+                                                         vector<Date> observationDatesInput,
+                                                         vector<double> observedRatesInput,
+                                                         ArrayInterpolatorType typeInput,
+                                                         bool allowExtrapolationInput)
     {
-        setParameters(anchorDateInput, 
-                      observationDatesInput, 
-                      observedRatesInput,                                                                        
-                      typeInput,
+        setParameters(anchorDateInput, observationDatesInput, observedRatesInput, typeInput,
                       allowExtrapolationInput);
     }
 
-    void CalendarMonthAverageCurve::setParameters(Date anchorDateInput, 
-                                                  vector<Date> observationDatesInput, 
-                                                  vector<double> observedRatesInput,                                                                        
+    void CalendarMonthAverageCurve::setParameters(Date anchorDateInput,
+                                                  vector<Date> observationDatesInput,
+                                                  vector<double> observedRatesInput,
                                                   ArrayInterpolatorType typeInput,
-                                                  bool allowExtrapolationInput) 
+                                                  bool allowExtrapolationInput)
     {
         type = typeInput;
         observationDates = observationDatesInput;
@@ -41,35 +36,35 @@ namespace sjd
         beginningOfAnchorDateMonth = Date(1, anchorDateInput.month(), anchorDateInput.year());
         allowExtrapolation = allowExtrapolationInput;
 
-        if (observationDates.size() < 1) 
+        if (observationDates.size() < 1)
         {
             finalDate = anchorDate;
             interpolator = std::shared_ptr<ArrayInterpolator>(
-                            new LinearArrayInterpolator(vector<double>(1,0), vector<double>(1,1), allowExtrapolation));
+                new LinearArrayInterpolator(vector<double>(1, 0), vector<double>(1, 1), allowExtrapolation));
             return;
         }
         finalDate = observationDates.back();
 
-        //vector<double> monthsAhead = vector<double>(observationDatesInput.size());
+        // vector<double> monthsAhead = vector<double>(observationDatesInput.size());
         observationPoints = vector<double>(observationDatesInput.size());
-        for (size_t i = 0; i < observationDatesInput.size(); ++i) 
+        for (size_t i = 0; i < observationDatesInput.size(); ++i)
         {
             observationPoints[i] = getNumberOfMonthsAheadOfAnchorDate(observationDatesInput[i]);
         }
 
-        switch (type) 
+        switch (type)
         {
-            case CUBIC:
-                interpolator = std::shared_ptr<ArrayInterpolator>(
-                    new CubicSplineInterpolator(observationPoints, observedRates, allowExtrapolation));
-                break;
-            default:
-                interpolator = std::shared_ptr<ArrayInterpolator>(
-                    new LinearArrayInterpolator(observationPoints, observedRates, allowExtrapolation));
-        }        
+        case CUBIC:
+            interpolator = std::shared_ptr<ArrayInterpolator>(
+                new CubicSplineInterpolator(observationPoints, observedRates, allowExtrapolation));
+            break;
+        default:
+            interpolator = std::shared_ptr<ArrayInterpolator>(
+                new LinearArrayInterpolator(observationPoints, observedRates, allowExtrapolation));
+        }
     }
-   
-    bool CalendarMonthAverageCurve::isOK(string &errorMessage)
+
+    bool CalendarMonthAverageCurve::isOK(string& errorMessage)
     {
         errorMessage = "";
         if (observationPoints.size() < 1)
@@ -82,7 +77,7 @@ namespace sjd
             errorMessage = "First observation time before Anchor Date";
             return false;
         }
-        if (!interpolator->isOk()) 
+        if (!interpolator->isOk())
         {
             errorMessage = interpolator->getErrorMessage();
             return false;
@@ -115,7 +110,6 @@ namespace sjd
         return allowExtrapolation;
     }
 
-
     vector<double> CalendarMonthAverageCurve::getRates()
     {
         return observedRates;
@@ -140,11 +134,7 @@ namespace sjd
         observationPointsInput.insert(observationPointsInput.begin(), anchorDate);
         observedRatesInput.insert(observedRatesInput.begin(), valueToAdd);
 
-        setParameters(anchorDate, 
-                     observationPointsInput, 
-                     observedRatesInput, 
-                     type,
-                     allowExtrapolation);
+        setParameters(anchorDate, observationPointsInput, observedRatesInput, type, allowExtrapolation);
     }
 
     double CalendarMonthAverageCurve::getRate(Date toDate) const
@@ -162,12 +152,11 @@ namespace sjd
         rates[0] = rate;
         while (counter < toDates.size())
         {
-            if (refDate.month() == toDates[counter].month() && 
-                refDate.year() == toDates[counter].year())
+            if (refDate.month() == toDates[counter].month() && refDate.year() == toDates[counter].year())
             {
                 rates[counter] = rate;
             }
-            else 
+            else
             {
                 refDate = toDates[counter];
                 rate = getRate(refDate);
@@ -177,7 +166,6 @@ namespace sjd
         }
         return rates;
     }
-
 
     vector<double> CalendarMonthAverageCurve::getObservationPoints() const
     {

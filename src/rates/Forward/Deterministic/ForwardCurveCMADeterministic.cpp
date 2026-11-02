@@ -13,15 +13,11 @@ namespace sjd
                                                                ArrayInterpolatorType typeInput,
                                                                bool allowExtrapolationInput)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveCMADeterministic"));
-        quotes.setInterpolated(anchorDateInput,
-                               observationDatesInput,
-                               forwardsInput,
-                               typeInput,
-                               allowExtrapolationInput,
-                               ForwardAveraging::CalendarMonth,
-                               ForwardRoll::Deterministic,
-                               std::shared_ptr<VolatilityRateSource>());
+        errorTracking =
+            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveCMADeterministic"));
+        quotes.setInterpolated(anchorDateInput, observationDatesInput, forwardsInput, typeInput,
+                               allowExtrapolationInput, ForwardAveraging::CalendarMonth,
+                               ForwardRoll::Deterministic, std::shared_ptr<VolatilityRateSource>());
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
         finalDate = quotes.finalDate();
@@ -37,8 +33,8 @@ namespace sjd
         if (!quotes.quotesAreOk(errorMessage))
         {
             const std::string code = errorMessage.find("same dimension") != std::string::npos
-                ? "FORWARD_CURVE_CMA_DIMENSION_MISMATCH"
-                : "FORWARD_CURVE_CMA_INVALID";
+                                         ? "FORWARD_CURVE_CMA_DIMENSION_MISMATCH"
+                                         : "FORWARD_CURVE_CMA_INVALID";
             recordIssue(code, errorMessage, {"inputs"});
             return false;
         }
@@ -87,9 +83,7 @@ namespace sjd
     }
 
     std::shared_ptr<ForwardRateSource> ForwardCurveCMADeterministic::rollForward(
-        Date toDate,
-        vector<Date> rateSetDates,
-        vector<double>& rateSetsFromAnchorToDate)
+        Date toDate, vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToDate)
     {
         return ForwardRateSourceDeterministic::rollForward(toDate, rateSetDates, rateSetsFromAnchorToDate);
     }
@@ -105,8 +99,7 @@ namespace sjd
     }
 
     vector<std::shared_ptr<ForwardRateSource>> ForwardCurveCMADeterministic::rollForward(
-        vector<Date> rateSetDates,
-        vector<double>& rateSetsFromAnchorToFinalRollDate)
+        vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToFinalRollDate)
     {
         return ForwardRateSourceDeterministic::rollForward(rateSetDates, rateSetsFromAnchorToFinalRollDate);
     }

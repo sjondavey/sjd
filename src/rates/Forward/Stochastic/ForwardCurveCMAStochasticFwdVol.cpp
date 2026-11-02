@@ -7,22 +7,19 @@ using namespace boost;
 namespace sjd
 {
 
-    ForwardCurveCMAStochasticFwdVol::ForwardCurveCMAStochasticFwdVol(Date anchorDateInput,
-                                                                     vector<Date> observationDatesInput,
-                                                                     vector<double> forwardsInput,
-                                                                     ArrayInterpolatorType typeInput,
-                                                                     bool allowExtrapolationInput,
-                                                                     std::shared_ptr<VolatilityRateSource> vrs)
+    ForwardCurveCMAStochasticFwdVol::ForwardCurveCMAStochasticFwdVol(
+        Date anchorDateInput,
+        vector<Date> observationDatesInput,
+        vector<double> forwardsInput,
+        ArrayInterpolatorType typeInput,
+        bool allowExtrapolationInput,
+        std::shared_ptr<VolatilityRateSource> vrs)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveCMAStochasticFwdVol"));
-        quotes.setInterpolated(anchorDateInput,
-                               observationDatesInput,
-                               forwardsInput,
-                               typeInput,
-                               allowExtrapolationInput,
-                               ForwardAveraging::CalendarMonth,
-                               ForwardRoll::ForwardVolatility,
-                               vrs);
+        errorTracking =
+            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveCMAStochasticFwdVol"));
+        quotes.setInterpolated(anchorDateInput, observationDatesInput, forwardsInput, typeInput,
+                               allowExtrapolationInput, ForwardAveraging::CalendarMonth,
+                               ForwardRoll::ForwardVolatility, vrs);
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
         finalDate = quotes.finalDate();
@@ -85,18 +82,17 @@ namespace sjd
         return quotes.getForward(month, year);
     }
 
-    std::shared_ptr<ForwardRateSource> ForwardCurveCMAStochasticFwdVol::rollForward(Date toDateInput, double normalRV)
+    std::shared_ptr<ForwardRateSource> ForwardCurveCMAStochasticFwdVol::rollForward(Date toDateInput,
+                                                                                    double normalRV)
     {
         return quotes.rollForward(toDateInput, normalRV, isInRange(toDateInput));
     }
 
     std::shared_ptr<ForwardRateSource> ForwardCurveCMAStochasticFwdVol::rollForward(
-        Date toDate,
-        double normalRV,
-        vector<Date> rateSetDates,
-        vector<double>& rateSetsFromAnchorToDate)
+        Date toDate, double normalRV, vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToDate)
     {
-        return ForwardRateSourceStochastic::rollForward(toDate, normalRV, rateSetDates, rateSetsFromAnchorToDate);
+        return ForwardRateSourceStochastic::rollForward(toDate, normalRV, rateSetDates,
+                                                        rateSetsFromAnchorToDate);
     }
 
     void ForwardCurveCMAStochasticFwdVol::setForwardValuationDates(set<Date> datesInput)
@@ -121,8 +117,7 @@ namespace sjd
     }
 
     vector<std::shared_ptr<ForwardRateSource>> ForwardCurveCMAStochasticFwdVol::rollForward(
-        vector<Date> rateSetDates,
-        vector<double>& rateSetsFromAnchorToFinalRollDate)
+        vector<Date> rateSetDates, vector<double>& rateSetsFromAnchorToFinalRollDate)
     {
         return ForwardRateSourceStochastic::rollForward(rateSetDates, rateSetsFromAnchorToFinalRollDate);
     }

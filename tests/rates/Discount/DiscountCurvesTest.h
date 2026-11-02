@@ -1,21 +1,20 @@
 ﻿#ifndef sjddiscountcurves_test_maths
 #define sjddiscountcurves_test_maths
 
-#include <iostream>
 #include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <sjd/rates/Discount/DiscountCurves.h>
 #include <support/GenerateRatesEnvironments.h>
 #include <support/TestingParameters.h>
-#include <sjd/rates/Discount/DiscountCurves.h>
 
-class DiscountCurvesTest 
+class DiscountCurvesTest
 {
-  public:
-
+public:
     static void testConstruction();
     static void testRatesEnvironmentValidationReport();
     static void testParallelBump();
 
-    static void testConsistencyOfGetMethods(); 
+    static void testConsistencyOfGetMethods();
     static void testValues();
     static void testRollForward();
 

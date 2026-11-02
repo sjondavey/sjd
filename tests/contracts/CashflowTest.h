@@ -3,27 +3,25 @@
 
 #include <iostream>
 
-#include <math.h>
 #include <boost/test/unit_test.hpp>
+#include <math.h>
 
 #include <sjd/contracts/Cashflow.h>
 
-#include <support/GenerateRatesEnvironments.h>
 #include <support/GenerateContracts.h>
+#include <support/GenerateRatesEnvironments.h>
 #include <support/TestingParameters.h>
 // to use the boost::math::isnan(...) function
 #include <boost/math/special_functions/fpclassify.hpp>
-
 
 #include <ql/time/daycounter.hpp>
 #include <ql/time/daycounters/all.hpp>
 
 using namespace sjd;
 
-class CashflowTest 
+class CashflowTest
 {
-  public:
-
+public:
     static void testBuySell();
     static void testVolume();
     static void testMaturityDate();
@@ -36,5 +34,3 @@ class CashflowTest
 };
 
 #endif
-
-

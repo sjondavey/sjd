@@ -4,7 +4,7 @@ using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
 
     void RollingFixingRateSource::captureOriginalState()
@@ -19,7 +19,6 @@ namespace sjd
         return inputDates;
     }
 
-    
     void RollingFixingRateSource::updateAppedededRates(vector<double> newFixingRates)
     {
         size_t numberOfOriginalFixes = originalFixes.size();
@@ -35,7 +34,6 @@ namespace sjd
         fixingRates = originalFixes;
         lastDate = originalFinalDate;
     }
-
 
     void RollingFixingRateSource::appendRateSets(vector<Date> appendedDates, vector<double> appendedRates)
     {

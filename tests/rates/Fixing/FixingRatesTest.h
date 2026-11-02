@@ -6,14 +6,13 @@
 #include <support/TestingParameters.h>
 
 #include <boost/test/unit_test.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <ql/time/calendars/nullcalendar.hpp>
 
-
-class FixingRateTest 
+class FixingRateTest
 {
-  public:
+public:
     static void testDailyFixingCurve();
     static void testMonthlyFixingCurve();
 

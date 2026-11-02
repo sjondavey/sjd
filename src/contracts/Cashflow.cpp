@@ -1,22 +1,19 @@
 #include <sjd/contracts/Cashflow.h>
 
-
 using namespace std;
 using namespace QuantLib;
 using namespace boost;
 
-namespace sjd 
+namespace sjd
 {
 
-   /*======================================================================================
-   FixedCashflow
+    /*======================================================================================
+    FixedCashflow
 
-    =======================================================================================*/
-    void FixedCashflow::commonConstructor(Date cashFlowDate, 
-                                          double amount, 
-                                          BuySell bs)
+     =======================================================================================*/
+    void FixedCashflow::commonConstructor(Date cashFlowDate, double amount, BuySell bs)
     {
-      errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("FixedCashflow"));
+        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("FixedCashflow"));
         setMaturityDate(cashFlowDate);
         setSettlementDate(cashFlowDate);
         setVolume(abs(amount));
@@ -25,13 +22,12 @@ namespace sjd
         setPremiumAmount(0);
     }
 
-
     FixedCashflow::FixedCashflow(Date cashFlowDate, double amount, BuySell bs)
     {
         commonConstructor(cashFlowDate, amount, bs);
     }
 
-    FixedCashflow::FixedCashflow(FixedCashflow &cf)
+    FixedCashflow::FixedCashflow(FixedCashflow& cf)
     {
         commonConstructor(cf.getMaturityDate(), cf.getVolume(), cf.getBuySell());
     }
@@ -45,9 +41,10 @@ namespace sjd
     {
         SingleInstrumentContract::validate();
         if (getMaturityDate() != getSettlementDate())
-      {
-            recordIssue("CASHFLOW_MATURITY_NOT_SETTLEMENT", "Maturity Date must equal Settlement Date", {"maturity_date"});
-      }
+        {
+            recordIssue("CASHFLOW_MATURITY_NOT_SETTLEMENT", "Maturity Date must equal Settlement Date",
+                        {"maturity_date"});
+        }
     }
 
     void FixedCashflow::validate(std::shared_ptr<RatesEnvironment> re)
@@ -90,4 +87,3 @@ namespace sjd
     }
 
 }
-

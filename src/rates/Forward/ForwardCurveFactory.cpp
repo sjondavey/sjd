@@ -14,13 +14,13 @@ using namespace QuantLib;
 namespace sjd
 {
     std::shared_ptr<ForwardRateSource> makeForwardCurve(Date anchorDate,
-                                                          vector<Date> observationDates,
-                                                          vector<double> forwards,
-                                                          ArrayInterpolatorType interpolation,
-                                                          bool allowExtrapolation,
-                                                          ForwardAveraging averaging,
-                                                          ForwardRoll roll,
-                                                          std::shared_ptr<VolatilityRateSource> volatility)
+                                                        vector<Date> observationDates,
+                                                        vector<double> forwards,
+                                                        ArrayInterpolatorType interpolation,
+                                                        bool allowExtrapolation,
+                                                        ForwardAveraging averaging,
+                                                        ForwardRoll roll,
+                                                        std::shared_ptr<VolatilityRateSource> volatility)
     {
         if (averaging == ForwardAveraging::CalendarMonth)
         {
@@ -33,9 +33,8 @@ namespace sjd
                 return std::shared_ptr<ForwardRateSource>(new ForwardCurveCMAStochasticFwdVol(
                     anchorDate, observationDates, forwards, interpolation, allowExtrapolation, volatility));
             case ForwardRoll::SpotVolatility:
-                throw invalid_argument(
-                    "A calendar-month forward curve cannot roll with spot volatility. "
-                    "Use the forward-volatility roll.");
+                throw invalid_argument("A calendar-month forward curve cannot roll with spot volatility. "
+                                       "Use the forward-volatility roll.");
             }
         }
         switch (roll)

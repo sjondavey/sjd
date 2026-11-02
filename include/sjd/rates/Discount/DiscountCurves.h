@@ -1,31 +1,31 @@
 #ifndef SJD_DISCOUNTCURVE_INCLUDED
 #define SJD_DISCOUNTCURVE_INCLUDED
 
-#include <sjd/tools/DatedCurve.h>
 #include <sjd/rates/Discount/DeterministicDiscountRateSource.h>
 #include <sjd/rates/Discount/InterestRateConvention.h>
+#include <sjd/tools/DatedCurve.h>
 
 #include <ql/time/calendars/nullcalendar.hpp>
 
-namespace sjd 
+namespace sjd
 {
-   /*======================================================================================
-    DiscountCurve: The simplest DiscountRateSource 
+    /*======================================================================================
+     DiscountCurve: The simplest DiscountRateSource
 
-    NOTE : There are no calendar objects here, all dates are assumed to be good dates
-            by the time they hit this class
-    =======================================================================================*/
+     NOTE : There are no calendar objects here, all dates are assumed to be good dates
+             by the time they hit this class
+     =======================================================================================*/
     class DiscountCurve : public DeterministicDiscountRateSource
     {
     public:
         DiscountCurve();
-        
-        DiscountCurve(QuantLib::Date anchorDate, 
-                      std::vector<QuantLib::Date> observationDates, 
-                      std::vector<double> discountFactors, 
+
+        DiscountCurve(QuantLib::Date anchorDate,
+                      std::vector<QuantLib::Date> observationDates,
+                      std::vector<double> discountFactors,
                       ArrayInterpolatorType type = LINEAR,
-                      bool allowExtrapolation = false);    
-        
+                      bool allowExtrapolation = false);
+
         virtual ~DiscountCurve() {};
 
         virtual bool isOK();
@@ -39,7 +39,7 @@ namespace sjd
 
         virtual std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> getMarketRateStresses();
         virtual std::shared_ptr<DiscountRateSource> parallelBump(double spread,
-                                                                   std::shared_ptr<InterestRateConvention> irc);
+                                                                 std::shared_ptr<InterestRateConvention> irc);
 
         virtual std::shared_ptr<DiscountRateSource> rollForward(QuantLib::Date toDate);
 

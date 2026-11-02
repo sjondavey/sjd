@@ -1,27 +1,27 @@
 #ifndef SJD_INTERESTRATECONVENTION_INCLUDED
 #define SJD_INTERESTRATECONVENTION_INCLUDED
 
-#include <ql/time/daycounter.hpp>
-#include <ql/compounding.hpp>
-#include <ql/time/frequency.hpp>
 #include <memory>
+#include <ql/compounding.hpp>
+#include <ql/time/daycounter.hpp>
+#include <ql/time/frequency.hpp>
 
-namespace sjd 
+namespace sjd
 {
-   /*======================================================================================
-    InterestRateConvention
+    /*======================================================================================
+     InterestRateConvention
 
-    Uses Quantlib structures and encapsulates all the information necessary to use a number 
-    (double) as an interest rate. The class also contains some basic logic to convert 
-    interest rates into discount factors and vice-versa
-    =======================================================================================*/
+     Uses Quantlib structures and encapsulates all the information necessary to use a number
+     (double) as an interest rate. The class also contains some basic logic to convert
+     interest rates into discount factors and vice-versa
+     =======================================================================================*/
     class InterestRateConvention
     {
     public:
-        InterestRateConvention(std::shared_ptr<QuantLib::DayCounter> dayCounter, 
-                               QuantLib::Compounding compounding, 
+        InterestRateConvention(std::shared_ptr<QuantLib::DayCounter> dayCounter,
+                               QuantLib::Compounding compounding,
                                QuantLib::Frequency frequency);
-        
+
         std::shared_ptr<QuantLib::DayCounter> getDayCounter();
         QuantLib::Compounding getCompounding();
         QuantLib::Frequency getFrequency();

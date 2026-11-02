@@ -6,20 +6,19 @@
 #include <sjd/rates/Forward/Stochastic/ForwardCurveStochasticFwdVol.h>
 #include <sjd/rates/Forward/Stochastic/ForwardCurveStochasticSpotVol.h>
 
-#include <support/TestingParameters.h>
 #include <support/GenerateRatesEnvironments.h>
+#include <support/TestingParameters.h>
 
 #include <boost/test/unit_test.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-class ForwardCurveTest 
+class ForwardCurveTest
 {
-  public:
+public:
     static void testForwardCurveConstruction();
 
-
-    static void testConsistencyBetweenGetMethods(); 
+    static void testConsistencyBetweenGetMethods();
     static void testValues();
     static void testRoll();
 

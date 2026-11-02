@@ -7,7 +7,7 @@
 #include <sjd/contracts/Portfolio/Portfolio.h>
 #include <sjd/rates/PathGenerators/SingleFactorGMB.h>
 
-namespace sjd 
+namespace sjd
 {
     // Every simulated value. Statistics are computed outside the evolver.
     // The arrays are flat and row-major: spot, mtm and margin are [path][step],
@@ -38,15 +38,15 @@ namespace sjd
     {
     public:
         // Use this for unmargined portfolios or portfolios that do not require holding-period calculations
-        PortfolioEvolver(std::shared_ptr<Portfolio> portfolio, 
+        PortfolioEvolver(std::shared_ptr<Portfolio> portfolio,
                          std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGenerator,
                          std::set<QuantLib::Date> forwardDates);
 
         // Use this for portfolios that require holding-period calculations
-        PortfolioEvolver(std::shared_ptr<Portfolio> portfolio, 
+        PortfolioEvolver(std::shared_ptr<Portfolio> portfolio,
                          std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGenerator,
                          std::set<QuantLib::Date> forwardDates,
-                         std::shared_ptr<QuantLib::Calendar> calendarForHoldingPeriodCalcuation, 
+                         std::shared_ptr<QuantLib::Calendar> calendarForHoldingPeriodCalcuation,
                          size_t holdingPeriodInBusinessDays);
 
         bool isOK();
@@ -57,10 +57,15 @@ namespace sjd
 
         // With antithetic paths, path i and path i + paths/2 use opposite normals, and an
         // odd request is rounded up.
-        SimulatedPaths simulatePaths(unsigned long numberOfPaths, bool antithetic, bool byTrade, bool byStructure = false);
+        SimulatedPaths simulatePaths(unsigned long numberOfPaths,
+                                     bool antithetic,
+                                     bool byTrade,
+                                     bool byStructure = false);
 
         // One path marked to these forwards. spots has one value per simulation date.
-        SimulatedPaths valueSpotPath(const std::vector<double>& spots, bool byTrade, bool byStructure = false);
+        SimulatedPaths valueSpotPath(const std::vector<double>& spots,
+                                     bool byTrade,
+                                     bool byStructure = false);
 
         // Mark the book to many forward paths. spots is row-major [path][step],
         // length numberOfPaths * simulationSteps. Use the same spots across
@@ -81,7 +86,10 @@ namespace sjd
                         const std::vector<std::shared_ptr<Contract>>& structures);
 
         void setSimulationDates(std::set<QuantLib::Date> dates);
-        SimulatedPaths prepareResult(size_t paths, bool antithetic, bool byTrade, bool byStructure,
+        SimulatedPaths prepareResult(size_t paths,
+                                     bool antithetic,
+                                     bool byTrade,
+                                     bool byStructure,
                                      std::vector<std::shared_ptr<SingleInstrumentContract>>& trades,
                                      std::vector<std::shared_ptr<Contract>>& structures);
 
@@ -96,7 +104,8 @@ namespace sjd
         size_t holdingPeriod;
 
         std::vector<QuantLib::Date> simulationDates;
-        std::vector<size_t> holdingPeriodIndex; // those simulation dates needed only for holding period calculations
+        std::vector<size_t>
+            holdingPeriodIndex; // those simulation dates needed only for holding period calculations
         std::vector<size_t> exposureDatesIndex; // dates on which exposures will be calculated
         size_t simulationSteps;
         size_t exposureSteps;

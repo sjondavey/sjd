@@ -3,9 +3,9 @@
 
 #include <iostream>
 
+#include <sjd/contracts/AsianOptionContract.h>
 #include <sjd/contracts/EuropeanForwardContract.h>
 #include <sjd/contracts/EuropeanOptionContract.h>
-#include <sjd/contracts/AsianOptionContract.h>
 
 #include <support/GenerateRatesEnvironments.h>
 #include <support/TestingParameters.h>
@@ -19,10 +19,9 @@
 
 using namespace sjd;
 
-class OptionContactTest 
+class OptionContactTest
 {
-  public:
-
+public:
     static std::shared_ptr<EuropeanOption> getDefaultEuropeanOption(QuantLib::Date anchorDate);
 
     static void testBuySell();
@@ -33,7 +32,7 @@ class OptionContactTest
     static void testType();
 
     static void testValue();
-    static void testGetPayoffAfterMaturity();    
+    static void testGetPayoffAfterMaturity();
 
     static void testPutCallParity();
 
@@ -43,4 +42,3 @@ class OptionContactTest
 };
 
 #endif
-
