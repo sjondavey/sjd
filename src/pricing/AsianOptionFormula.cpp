@@ -1,7 +1,6 @@
 ﻿#include <sjd/pricing/AsianOptionFormula.h>
 
 using namespace std;
-using namespace boost;
 
 namespace sjd
 {

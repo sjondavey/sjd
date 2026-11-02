@@ -2,7 +2,6 @@
 #include "Black76FormulaTest.h"
 
 using namespace std;
-using namespace boost;
 
 using namespace std;
 using namespace boost::unit_test_framework;
@@ -29,7 +28,6 @@ void Black76Test::testPutCallParity()
 
 void BlackScholesTest::testErrorMessages() {
     BOOST_TEST_MESSAGE("Testing Black Scholes Error Messages ...");
-
 
     double F = 11.1;
     double X = 11.0;

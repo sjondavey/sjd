@@ -13,7 +13,6 @@ using namespace boost::assign; // used to initialize vector
 
 using namespace std;
 using namespace QuantLib;
-using namespace boost;
 
 void MathsFunctionsTest::testFunctions()
 {

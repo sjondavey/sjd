@@ -4,7 +4,6 @@ using namespace boost::unit_test_framework;
 
 using namespace std;
 using namespace QuantLib;
-using namespace boost;
 
 namespace
 {

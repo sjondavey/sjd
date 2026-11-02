@@ -1,7 +1,6 @@
 ﻿#include <sjd/pricing/Black76Formula.h>
 
 using namespace std;
-using namespace boost;
 
 namespace sjd
 {

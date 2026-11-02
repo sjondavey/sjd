@@ -1,7 +1,6 @@
 ﻿#include "AsianOptionFormulaTest.h"
 
 using namespace std;
-using namespace boost;
 
 using namespace std;
 using namespace boost::unit_test_framework;
