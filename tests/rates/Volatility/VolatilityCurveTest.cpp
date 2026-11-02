@@ -92,15 +92,14 @@ void VolatilityCurveTest::testVolatilityCurveValues()
     BOOST_CHECK(abs(vc->getVolatility(pillar) - re.defaultVolatiltiy) < EPSILON_FOR_DOUBLES);
     BOOST_CHECK(abs(vc->getVolatility(anchorDate) - re.defaultVolatiltiy) < EPSILON_FOR_DOUBLES);
 
-    // 13 Mar 2012 sits between the anchor and the first yearly pillar. Standard
-    // deviation is interpolated from zero at the anchor, so the volatility there
-    // is below the flat input volatility.
+    // A flat curve stays flat between the anchor and the first pillar, because the
+    // curve interpolates total variance rather than standard deviation.
     Date date1 = Date(13, Mar, 2012);
     double time1 = dayCounter->yearFraction(anchorDate, date1);
     double sd = vc->getStandardDeviation(date1);
     double vol = vc->getVolatility(date1);
     BOOST_CHECK(abs(vol - sd / sqrt(time1)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(vol < re.defaultVolatiltiy);
+    BOOST_CHECK(abs(vol - re.defaultVolatiltiy) < EPSILON_FOR_DOUBLES);
 }
 
 void VolatilityCurveTest::testVolatilityCurveRoll()

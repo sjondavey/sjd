@@ -79,6 +79,14 @@ namespace sjd
         cap = numeric_limits<double>::quiet_NaN();
         contracts = underlyingContracts;
         regCapAssetFactors = inputFactors;
+        if (contracts.empty())
+        {
+            recordIssue("STRUCTURE_EMPTY", "Structure contains no contracts", {});
+            cappedExposure = false;
+            hasPriceExposure = false;
+            volume = 0;
+            return;
+        }
         cappedExposure = isCapped(contracts, cap, hasPriceExposure);
         volume = getEffectiveVolume(contracts);
     }
@@ -86,6 +94,11 @@ namespace sjd
     void Structure::validate()
     {
         MultipleInstrumentContract::validate();
+        if (contracts.empty())
+        {
+            recordIssue("STRUCTURE_EMPTY", "Structure contains no contracts", {});
+            return;
+        }
         if (!isPiecewiseLinear(contracts))
         {
             recordIssue("STRUCTURE_NOT_PIECEWISE_LINEAR",
@@ -146,17 +159,11 @@ namespace sjd
 
     Date Structure::getSettlementDate()
     {
-        Date settlementDate;
-        if (contracts.size() != 0)
+        if (contracts.empty())
         {
-            settlementDate = contracts[0]->getSettlementDate();
+            return Date();
         }
-        else
-        {
-            settlementDate = Date(1, Jan, 1910);
-            ;
-        }
-        return settlementDate;
+        return contracts[0]->getSettlementDate();
     }
 
     bool Structure::isExposureCapped() const

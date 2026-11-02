@@ -1,5 +1,8 @@
 #include "PortfolioTest.h"
 
+#include <sjd/contracts/Portfolio/Structures/Structure.h>
+#include <sjd/tools/Errors.h>
+
 using namespace std;
 using namespace QuantLib;
 
@@ -251,6 +254,28 @@ void PortfolioTest::testInvalidRegulatoryCapitalIsNaN()
     BOOST_CHECK(!book.isOK());
 }
 
+void PortfolioTest::testNullMarginAndUnknownFactors()
+{
+    BOOST_TEST_MESSAGE("Testing a null margin and an unknown regulatory factor name");
+
+    vector<std::shared_ptr<SingleInstrumentContract>> contracts;
+    std::shared_ptr<Portfolio> portfolio(new Portfolio(contracts, std::shared_ptr<Margin>()));
+    BOOST_CHECK(!portfolio->isMargined());
+    portfolio->validate();
+    std::string emptyMessage = portfolio->getErrorMessagesAsString();
+    BOOST_CHECK(emptyMessage.find("contains no contracts") != string::npos);
+    BOOST_CHECK(emptyMessage.find(", contains") == string::npos);
+
+    BOOST_CHECK_THROW(generateRegCapFactors("not-an-asset-class"), ConfigurationError);
+
+    vector<std::shared_ptr<SingleInstrumentContract>> none;
+    Structure empty(none, getDefaultRegCapUnderlyingFactors());
+    BOOST_CHECK(!empty.isOK());
+    BOOST_CHECK(empty.getSettlementDate() != Date(1, Jan, 1910));
+    empty.validate();
+    BOOST_CHECK(empty.getErrorMessagesAsString().find("no contracts") != string::npos);
+}
+
 test_suite* PortfolioTest::suite()
 {
 
@@ -258,6 +283,7 @@ test_suite* PortfolioTest::suite()
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testStructureCreation));
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testPortfolioB2CEM));
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testInvalidRegulatoryCapitalIsNaN));
+    suite->add(BOOST_TEST_CASE(&PortfolioTest::testNullMarginAndUnknownFactors));
 
     return suite;
 }

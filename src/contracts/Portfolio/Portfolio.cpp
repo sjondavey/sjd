@@ -28,7 +28,7 @@ namespace sjd
     {
         setInputVariables();
         contracts = inputs;
-        hasMargin = true;
+        hasMargin = static_cast<bool>(marginInputs);
         margin = marginInputs;
     }
 
@@ -67,7 +67,7 @@ namespace sjd
         {
             contracts = inputsAsSingleInstruments;
         }
-        hasMargin = true;
+        hasMargin = static_cast<bool>(marginInput);
         margin = marginInput;
     }
 

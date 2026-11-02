@@ -75,6 +75,7 @@ namespace sjd
         virtual bool setSimulationDates(std::set<QuantLib::Date> simulationDates);
 
         virtual void setRandomSeed(long seed);
+        long getRandomSeed() const;
 
         // 0 < confidenceInterval < 1
         virtual std::shared_ptr<Path> getConfidenceInterval(double confidenceInterval);
@@ -95,7 +96,7 @@ namespace sjd
         std::vector<QuantLib::Date> allFixingDates;
         std::vector<double> allFixingRates;
 
-        long seed;
+        long seed = 0;
         RNGType rng;
         boost::normal_distribution<double> nd;
         boost::variate_generator<RNGType, boost::normal_distribution<>> normalVariable;

@@ -1,6 +1,7 @@
 #include <sjd/rates/Volatility/VolatilitySurfaceDelta.h>
 
 #include <boost/algorithm/string.hpp>
+#include <sjd/tools/Errors.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -108,9 +109,9 @@ namespace sjd
             {
                 vol1 = (*interpolator)(yf, clampToStrikeGrid(guess1), true); // don't want to fall over here
             }
-            catch (std::exception)
+            catch (const std::exception&)
             {
-                return 0;
+                throw NumericalError("Could not convert a strike to a delta on the volatility surface");
             }
             sd1 = vol1 * sqrtttm;
             put.setStandardDeviation(sd1);
@@ -138,9 +139,9 @@ namespace sjd
             strike = solver.solve(BlackPutImpliedStrike(delta, forward, sd), accuracy, guess, lowerBound,
                                   upperBound);
         }
-        catch (...)
+        catch (const std::exception&)
         {
-            strike = 0;
+            throw NumericalError("Could not convert a delta to a strike on the volatility surface");
         }
         return strike;
     }

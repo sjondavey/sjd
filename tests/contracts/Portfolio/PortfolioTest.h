@@ -27,6 +27,7 @@ public:
 
     static void testPortfolioB2CEM();
     static void testInvalidRegulatoryCapitalIsNaN();
+    static void testNullMarginAndUnknownFactors();
 
     static boost::unit_test_framework::test_suite* suite();
 };

@@ -1,6 +1,7 @@
 #include <sjd/contracts/Portfolio/RegCap/RegCapUnderlyingFactors.h>
 
 #include <boost/algorithm/string.hpp>
+#include <sjd/tools/Errors.h>
 
 using namespace std;
 
@@ -23,6 +24,11 @@ namespace sjd
         else if (factorDescription.compare("commodity") == 0)
             factors = std::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::CommodityRegCapFactors());
 
+        if (!factors)
+        {
+            throw ConfigurationError(
+                "reg_cap_factors description must be ir, fx, equity, precious, or commodity");
+        }
         return factors;
     };
 

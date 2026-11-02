@@ -149,9 +149,13 @@ void PortfolioEvolverTest::testPortfolioEvovler()
     std::shared_ptr<PortfolioEvolver> monteCarloEvolver(
         new PortfolioEvolver(monteCarloPortfolio, monteCarloGenerator, simulationDates));
     BOOST_REQUIRE_MESSAGE(monteCarloEvolver->isOK(), monteCarloEvolver->getErrorMessagesAsString());
+    // isOK() only checks the portfolio and the generator. Sampling a path needs prepare(),
+    // which is what sets the generator's simulation dates.
+    BOOST_REQUIRE_MESSAGE(monteCarloEvolver->prepare(), monteCarloEvolver->getErrorMessagesAsString());
 
     const long seed = 17;
     monteCarloGenerator->setRandomSeed(seed);
+    BOOST_CHECK_EQUAL(monteCarloGenerator->getRandomSeed(), seed);
     vector<vector<double>> sampledMtM;
     sampledMtM.push_back(markToMarketAlong(monteCarloPortfolio, monteCarloGenerator->getRandomPath()));
     sampledMtM.push_back(markToMarketAlong(monteCarloPortfolio, monteCarloGenerator->getAntitheticPath()));

@@ -1,5 +1,7 @@
 #include <sjd/contracts/Portfolio/CVA/cva.h>
 
+#include <cmath>
+
 using namespace std;
 using namespace QuantLib;
 
@@ -132,7 +134,7 @@ namespace sjd
         {
             observationDates.insert(observationDates.begin(), anchorDate);
             cdp.insert(cdp.begin(), 0);
-            lgd.insert(lgd.begin(), 0);
+            lgd.insert(lgd.begin(), lgd.front());
         }
 
         cumulativeDefaultProbability = cdp;
@@ -143,8 +145,8 @@ namespace sjd
             time.push_back((observationDates[i] - anchorDate) / 365.0);
         }
         defaultInterpolator =
-            std::shared_ptr<ArrayInterpolator>(new CubicSplineInterpolator(time, cdp, false));
-        lossInterpolator = std::shared_ptr<ArrayInterpolator>(new CubicSplineInterpolator(time, lgd, false));
+            std::shared_ptr<ArrayInterpolator>(new LinearArrayInterpolator(time, cdp, false));
+        lossInterpolator = std::shared_ptr<ArrayInterpolator>(new LinearArrayInterpolator(time, lgd, false));
     }
 
     bool CumulativeDefaultProbability::isOK()
@@ -166,7 +168,7 @@ namespace sjd
             errorTracking->record("CVA_PD_RANGE", "Cumulative default probability not in the range [0, 1]",
                                   {"cva", "cumulative_pd"});
         }
-        if (abs(cumulativeDefaultProbability.front()) < -1e-14)
+        if (std::abs(cumulativeDefaultProbability.front()) > 1e-14)
         {
             errorTracking->record("CVA_PD_ANCHOR_NOT_ZERO",
                                   "Cumulative default probability on the anchor date is not 0",

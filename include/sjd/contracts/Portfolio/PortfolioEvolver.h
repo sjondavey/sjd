@@ -49,6 +49,9 @@ namespace sjd
                          size_t holdingPeriodInBusinessDays);
 
         bool isOK();
+        // Sets the simulation dates on the path generator and checks that the portfolio
+        // can be valued on those dates. isOK() does not do this.
+        bool prepare();
         ValidationReport validateReport();
 
         std::vector<QuantLib::Date> getSimulationDates();

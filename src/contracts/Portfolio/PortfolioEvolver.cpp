@@ -75,9 +75,22 @@ namespace sjd
             absorbChildReport(portfolio->validationReport(), {});
             return false;
         }
-        set<Date> valuationDatesSet = set<Date>(simulationDates.begin(), simulationDates.end());
-        pathGenerator->setSimulationDates(valuationDatesSet);
         if (!pathGenerator->isOK())
+        {
+            absorbChildReport(pathGenerator->validationReport(), {});
+            return false;
+        }
+        return !errorTracking->getHasErrors();
+    }
+
+    bool PortfolioEvolver::prepare()
+    {
+        if (!isOK())
+        {
+            return false;
+        }
+        set<Date> valuationDatesSet(simulationDates.begin(), simulationDates.end());
+        if (!pathGenerator->setSimulationDates(valuationDatesSet) || !pathGenerator->isOK())
         {
             absorbChildReport(pathGenerator->validationReport(), {});
             return false;
@@ -163,18 +176,13 @@ namespace sjd
                                                    bool byStructure)
     {
         SimulatedPaths result;
-        if (!validateReport().isOK())
+        if (!prepare())
         {
             return result;
         }
         if (N == 0)
         {
             recordIssue("MONTE_CARLO_NO_PATHS", "Number of paths must be at least 1", {"number_of_paths"});
-            return result;
-        }
-        set<Date> valuationDatesSet = set<Date>(simulationDates.begin(), simulationDates.end());
-        if (!pathGenerator->setSimulationDates(valuationDatesSet) || (!pathGenerator->isOK()))
-        {
             return result;
         }
         if (antithetic)
@@ -210,7 +218,7 @@ namespace sjd
                                                     bool byStructure)
     {
         SimulatedPaths result;
-        if (!validateReport().isOK())
+        if (!prepare())
         {
             return result;
         }

@@ -1,6 +1,7 @@
 #include "VolatilitySurfacesTest.h"
 
 #include <boost/assign/std/vector.hpp>
+#include <sjd/tools/Errors.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -387,6 +388,9 @@ void VolatilitySurfacesTest::testForwardDeltaVolatilitySurfaceConstruction()
     double strike2 = vs.calculateStrikeFromDelta(d1, 10, fwd);
     BOOST_REQUIRE(vs.isInRange(d1, strike2, fwd));
     BOOST_CHECK(abs(vs.getVolatility(d1, strike2, fwd) - 0.248396) < 1e-6);
+    // A negative put delta is outside the solver bracket. The surface used to
+    // swallow the solver failure and return a zero strike.
+    BOOST_CHECK_THROW(vs.calculateStrikeFromDelta(d1, -1.0, fwd), NumericalError);
 
     dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
     nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());

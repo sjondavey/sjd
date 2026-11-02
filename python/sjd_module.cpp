@@ -37,6 +37,7 @@
 #include <sjd/rates/Volatility/VolatilitySurfaceMoneynessCMA.h>
 #include <sjd/tools/Calendars.h>
 #include <sjd/tools/Common.h>
+#include <sjd/tools/Errors.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -699,13 +700,14 @@ PYBIND11_MODULE(_core, m)
         "reg_cap_factors",
         [](const std::string& description)
         {
-            std::shared_ptr<sjd::RegCapUnderlyingFactors> factors = sjd::generateRegCapFactors(description);
-            if (!factors)
+            try
             {
-                throw py::value_error(
-                    "reg_cap_factors description must be ir, fx, equity, precious, or commodity");
+                return sjd::generateRegCapFactors(description);
             }
-            return factors;
+            catch (const sjd::ConfigurationError& error)
+            {
+                throw py::value_error(error.what());
+            }
         },
         py::arg("description"));
 

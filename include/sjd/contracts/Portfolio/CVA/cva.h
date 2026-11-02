@@ -91,7 +91,6 @@ namespace sjd
         virtual bool extendsTo(QuantLib::Date date);
 
     private:
-        QuantLib::Date anchorDate;
         std::vector<QuantLib::Date> observationDates;
         std::vector<double> cumulativeDefaultProbability;
         std::vector<double> lossGivenDefault;

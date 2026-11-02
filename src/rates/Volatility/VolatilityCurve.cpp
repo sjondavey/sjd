@@ -39,7 +39,10 @@ namespace sjd
             else
             {
                 double yearFraction = dayCounter->yearFraction(anchorDateInput, observationDatesInput[i]);
-                standardDeviations[i] = volatilityInput[i] * std::sqrt(std::max(yearFraction, 0.0));
+                // Total variance, not standard deviation. Linear interpolation of variance
+                // keeps a flat volatility flat between the anchor and the first pillar.
+                double variance = volatilityInput[i] * volatilityInput[i] * std::max(yearFraction, 0.0);
+                standardDeviations[i] = variance;
             }
         }
         if (!anchorSupplied && !volatilityInput.empty())
@@ -121,7 +124,8 @@ namespace sjd
 
     double VolatilityCurve::getStandardDeviation(Date toDate) const
     {
-        return datedCurve->getRate(toDate);
+        const double variance = std::max(0.0, datedCurve->getRate(toDate));
+        return std::sqrt(variance);
     }
 
     double VolatilityCurve::getStandardDeviation(Date toDate, double /*strike*/, double /*forward*/) const

@@ -608,7 +608,7 @@ namespace sjd
         Contract::validate();
         if (contracts.size() == 0)
         {
-            recordIssue("PORTFOLIO_EMPTY", ", contains no contracts", {});
+            recordIssue("PORTFOLIO_EMPTY", "contains no contracts", {});
             return;
         }
 
@@ -628,7 +628,7 @@ namespace sjd
         Contract::validate(re);
         if (contracts.size() == 0)
         {
-            recordIssue("PORTFOLIO_EMPTY", ", contains no contracts", {});
+            recordIssue("PORTFOLIO_EMPTY", "contains no contracts", {});
             return;
         }
         for (size_t i = 0; i < contracts.size(); ++i)

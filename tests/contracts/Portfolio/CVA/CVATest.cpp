@@ -67,10 +67,23 @@ void CVATest::testCumulativeDefaultProbability()
     CumulativeDefaultProbability cva(anchorDate, dates, cdp, lgd);
     cva.isOK();
     BOOST_REQUIRE(cva.isOK());
+    BOOST_CHECK(abs(cva.getPD(anchorDate)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK(abs(cva.getLGD(anchorDate) - 0.4) < EPSILON_FOR_DOUBLES);
+    Date beforeFirstPillar = anchorDate + 180;
+    BOOST_CHECK(abs(cva.getLGD(beforeFirstPillar) - 0.4) < EPSILON_FOR_DOUBLES);
 
     Date d = nullCalendar.advance(anchorDate, 2, Years);
     double pd1 = cva.getPD(d);
     BOOST_CHECK(abs(pd1 - 0.02) < EPSILON_FOR_DOUBLES);
+
+    vector<double> decreasing;
+    decreasing.push_back(0.05);
+    decreasing.push_back(0.04);
+    decreasing.push_back(0.03);
+    decreasing.push_back(0.02);
+    decreasing.push_back(0.01);
+    CumulativeDefaultProbability falling(anchorDate, dates, decreasing, lgd);
+    BOOST_CHECK(!falling.isOK());
 }
 
 test_suite* CVATest::suite()

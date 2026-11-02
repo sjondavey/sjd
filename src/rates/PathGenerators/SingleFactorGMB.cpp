@@ -1,3 +1,4 @@
+#include <random>
 #include <sjd/rates/PathGenerators/SingleFactorGMB.h>
 
 using namespace std;
@@ -68,11 +69,14 @@ namespace sjd
     =======================================================================================*/
     SingleFactorEconomicScenarioGenerator::SingleFactorEconomicScenarioGenerator(
         const std::shared_ptr<RatesEnvironment> re)
-        : rng((boost::uint32_t)time(0)), nd(0, 1), normalVariable(rng, nd)
+        : nd(0, 1), normalVariable(rng, nd)
     {
         errorTracking = std::shared_ptr<sjd::IssueTracker>(
             new sjd::IssueTracker("SingleFactorEconomicScenarioGenerator"));
         setBaseRates(re);
+        // random_device, not the clock, so two generators built in the same second differ,
+        // and the value is the one setRandomSeed stored.
+        setRandomSeed(static_cast<long>(std::random_device{}()));
     }
 
     void SingleFactorEconomicScenarioGenerator::setBaseRates(const std::shared_ptr<RatesEnvironment> rates)
@@ -220,6 +224,11 @@ namespace sjd
         seed = seedInput;
         normalVariable.engine().seed(static_cast<RNGType::result_type>(seedInput));
         normalVariable.distribution().reset();
+    }
+
+    long SingleFactorEconomicScenarioGenerator::getRandomSeed() const
+    {
+        return seed;
     }
 
     std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getConfidenceInterval(
