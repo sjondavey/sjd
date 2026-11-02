@@ -1,5 +1,4 @@
-#ifndef PORTFOLIOEVOLVER_INCLUDED
-#define PORTFOLIOEVOLVER_INCLUDED
+#pragma once
 
 #include <algorithm>
 #include <set>
@@ -116,5 +115,3 @@ namespace sjd
     };
 
 }
-
-#endif

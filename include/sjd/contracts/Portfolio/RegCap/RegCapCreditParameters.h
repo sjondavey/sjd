@@ -1,5 +1,3 @@
-﻿#ifndef REGCAPCREDITPARAMTERS_INCLUDED
-#define REGCAPCREDITPARAMTERS_INCLUDED
 #pragma once
 
 namespace sjd
@@ -22,5 +20,3 @@ namespace sjd
     };
 
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef SJD_CALENDARMONTHAVERAGECURVE_INCLUDED
-#define SJD_CALENDARMONTHAVERAGECURVE_INCLUDED
+#pragma once
 
 #include <boost/math/special_functions/round.hpp>
 #include <memory>
@@ -72,5 +71,3 @@ namespace sjd
         std::shared_ptr<QuantLib::DayCounter> a365DayCounter;
     };
 }
-
-#endif

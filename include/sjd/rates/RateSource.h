@@ -1,5 +1,3 @@
-#ifndef SJD_RATESOURCE_INCLUDED
-#define SJD_RATESOURCE_INCLUDED
 #pragma once
 
 #include <set>
@@ -58,5 +56,3 @@ namespace sjd
         bool allowExtrapolation;
     };
 }
-
-#endif

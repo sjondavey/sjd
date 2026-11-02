@@ -1,5 +1,4 @@
-#ifndef SJD_DETERMINISTICFORWARDRATESOURCE_INCLUDED
-#define SJD_DETERMINISTICFORWARDRATESOURCE_INCLUDED
+#pragma once
 
 #include <sjd/rates/Forward/ForwardRateSource.h>
 #include <sjd/rates/IHaveMarketRateStresses.h>
@@ -29,7 +28,7 @@ namespace sjd
         // For rates environments that have fixing rate sources we need the ability to
         // populate the fixing rates while rolling forward. This is achieved by passing an
         // input std::vector of sorted, increasing rate std::set dates between the anchor date and
-        // the ìrolledToî date and getting back the ìsimulatedî rate sets
+        // the ‚ÄúrolledTo‚Äù date and getting back the ‚Äúsimulated‚Äù rate sets
         virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate,
                                                                std::vector<QuantLib::Date> rateSetDates,
                                                                std::vector<double>& rateSetsFromAnchorToDate);
@@ -43,7 +42,7 @@ namespace sjd
         virtual std::vector<std::shared_ptr<ForwardRateSource>> rollForward();
         // When rolling forward to multiple dates using this method, the input rate std::set dates
         // should be all the rate std::set dates between the anchor date and the *final* date to
-        // which the curve will be rolled, i.e. the final ìorderedForwardDatesî
+        // which the curve will be rolled, i.e. the final ‚ÄúorderedForwardDates‚Äù
         virtual std::vector<std::shared_ptr<ForwardRateSource>> rollForward(
             std::vector<QuantLib::Date> rateSetDates, std::vector<double>& rateSetsFromAnchorToFinalRollDate);
 
@@ -51,5 +50,3 @@ namespace sjd
         std::vector<QuantLib::Date> orderedForwardDates;
     };
 }
-
-#endif

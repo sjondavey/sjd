@@ -1,6 +1,3 @@
-#ifndef SJD_CALENDARS_INCLUDED
-#define SJD_CALENDARS_INCLUDED
-
 #pragma once
 
 #include <ql/time/calendar.hpp>
@@ -20,5 +17,3 @@ namespace sjd
 
     std::vector<std::string> calendarNames();
 }
-
-#endif

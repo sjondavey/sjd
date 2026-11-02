@@ -1,5 +1,3 @@
-#ifndef SJD_VOLATILITYCURVE_INCLUDED
-#define SJD_VOLATILITYCURVE_INCLUDED
 #pragma once
 
 #include <sjd/rates/Volatility/DeterministicVolatilityRateSource.h>
@@ -66,5 +64,3 @@ namespace sjd
         std::vector<double> inputVolatilities;
     };
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef SJD_INTERESTRATECONVENTION_INCLUDED
-#define SJD_INTERESTRATECONVENTION_INCLUDED
+#pragma once
 
 #include <memory>
 #include <ql/compounding.hpp>
@@ -36,5 +35,3 @@ namespace sjd
         QuantLib::Frequency frequency;
     };
 }
-
-#endif

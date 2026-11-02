@@ -1,5 +1,4 @@
-﻿#ifndef cashflowcontract_test
-#define cashflowcontract_test
+#pragma once
 
 #include <iostream>
 
@@ -32,5 +31,3 @@ public:
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
-#endif

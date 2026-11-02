@@ -1,5 +1,4 @@
-#ifndef SJD_DETERMINISTICDISCOUNTRATESOURCE_INCLUDED
-#define SJD_DETERMINISTICDISCOUNTRATESOURCE_INCLUDED
+#pragma once
 
 #include <ql/time/daycounters/actual360.hpp>
 #include <sjd/rates/Discount/DiscountRateSource.h>
@@ -42,5 +41,3 @@ namespace sjd
     };
 
 }
-
-#endif

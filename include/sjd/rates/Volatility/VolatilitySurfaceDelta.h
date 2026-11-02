@@ -1,6 +1,4 @@
-
-#ifndef SJD_DELTA_INCLUDED
-#define SJD_DELTA_INCLUDED
+#pragma once
 
 #include "VolatilitySurfaces.h"
 
@@ -111,5 +109,3 @@ namespace sjd
         std::string errorMessage, interpolationType, className;
     };
 }
-
-#endif

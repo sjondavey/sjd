@@ -1,6 +1,4 @@
-
-#ifndef SINGLEFACTORGMB_INCLUDED
-#define SINGLEFACTORGMB_INCLUDED
+#pragma once
 
 #include <math.h>
 
@@ -105,5 +103,3 @@ namespace sjd
     };
 
 }
-
-#endif

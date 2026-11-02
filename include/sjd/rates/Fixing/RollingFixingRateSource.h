@@ -1,5 +1,3 @@
-#ifndef SJD_ROLLINGFIXINGRATESOURCE_INCLUDED
-#define SJD_ROLLINGFIXINGRATESOURCE_INCLUDED
 #pragma once
 
 #include <sjd/rates/Fixing/FixingRateSource.h>
@@ -44,5 +42,3 @@ namespace sjd
     };
 
 }
-
-#endif

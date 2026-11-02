@@ -1,5 +1,3 @@
-﻿#ifndef SJD_TWODIMINTERP_INCLUDED
-#define SJD_TWODIMINTERP_INCLUDED
 #pragma once
 
 #include "maths.h"
@@ -99,5 +97,3 @@ namespace sjd
         std::vector<QuantLib::Interpolation> splines;
     };
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef structure_test
-#define structure_test
+#pragma once
 
 #include <iostream>
 
@@ -50,5 +49,3 @@ public:
     static void testStructureCreation();
     static boost::unit_test_framework::test_suite* suite();
 };
-
-#endif

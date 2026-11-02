@@ -1,5 +1,3 @@
-#ifndef EUROPEANFORWARDCONTRACT_INCLUDED
-#define EUROPEANFORWARDCONTRACT_INCLUDED
 #pragma once
 
 #include "Contracts.h"
@@ -64,5 +62,3 @@ namespace sjd
     };
 
 }
-
-#endif

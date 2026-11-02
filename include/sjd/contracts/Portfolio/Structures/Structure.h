@@ -1,5 +1,3 @@
-#ifndef STRUCTURE_INCLUDED
-#define STRUCTURE_INCLUDED
 #pragma once
 
 #include <list>
@@ -182,8 +180,6 @@ namespace sjd
     };
 
 }
-
-#endif
 
 /*
         virtual std::vector<double> getMtMPlusAddOnAlongPath(const std::vector<double> spotValues,

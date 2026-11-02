@@ -1,6 +1,4 @@
-
-#ifndef SJD_EUROPEANMONEYNESS_INCLUDED
-#define SJD_EUROPEANMONEYNESS_INCLUDED
+#pragma once
 
 #include "VolatilitySurfaces.h"
 
@@ -45,5 +43,3 @@ namespace sjd
         virtual std::shared_ptr<VolatilityRateSource> rollForward(QuantLib::Date toDate);
     };
 }
-
-#endif

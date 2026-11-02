@@ -1,6 +1,3 @@
-﻿#ifndef TOOLS_INCLUDED
-#define TOOLS_INCLUDED
-
 #pragma once
 
 #include <boost/lexical_cast.hpp>
@@ -39,5 +36,3 @@ namespace sjd
 
     std::string convertPutCallToString(PutCall pc);
 }
-
-#endif

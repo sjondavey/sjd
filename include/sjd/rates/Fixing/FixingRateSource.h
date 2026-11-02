@@ -1,5 +1,3 @@
-#ifndef SJD_FIXINGRATESOURCE_INCLUDED
-#define SJD_FIXINGRATESOURCE_INCLUDED
 #pragma once
 
 #include <memory>
@@ -44,5 +42,3 @@ namespace sjd
     };
 
 }
-
-#endif

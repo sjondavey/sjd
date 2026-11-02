@@ -1,5 +1,3 @@
-#ifndef CASHFLOWCONTRACT_INCLUDED
-#define CASHFLOWCONTRACT_INCLUDED
 #pragma once
 
 #include "Contracts.h"
@@ -43,5 +41,3 @@ namespace sjd
     };
 
 }
-
-#endif

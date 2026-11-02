@@ -1,5 +1,4 @@
-#ifndef SJD_DETERMINISTICVOLATILITYSOURCE_INCLUDED
-#define SJD_DETERMINISTICVOLATILITYSOURCE_INCLUDED
+#pragma once
 
 #include <sjd/rates/IHaveMarketRateStresses.h>
 #include <sjd/rates/Volatility/VolatilityRateSource.h>
@@ -35,5 +34,3 @@ namespace sjd
     };
 
 }
-
-#endif

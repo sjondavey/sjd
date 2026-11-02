@@ -1,5 +1,3 @@
-﻿#ifndef SJD_DISCOUNTINGRATESOURCE_INCLUDED
-#define SJD_DISCOUNTINGRATESOURCE_INCLUDED
 #pragma once
 
 #include <sjd/rates/RateSource.h>
@@ -30,5 +28,3 @@ namespace sjd
                                                       std::vector<QuantLib::Date> times) const;
     };
 }
-
-#endif

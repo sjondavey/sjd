@@ -1,5 +1,4 @@
-﻿#ifndef SJD_BLACKS76_INCLUDED
-#define SJD_BLACKS76_INCLUDED
+#pragma once
 
 #include <boost/math/distributions/normal.hpp> // for normal_distribution
 
@@ -92,5 +91,3 @@ namespace sjd
     };
 
 }
-
-#endif

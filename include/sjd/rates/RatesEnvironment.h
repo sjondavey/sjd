@@ -1,5 +1,4 @@
-#ifndef RATESENVIRONMENT_INCLUDED
-#define RATESENVIRONMENT_INCLUDED
+#pragma once
 
 #include <cstddef>
 
@@ -68,5 +67,3 @@ namespace sjd
         std::size_t marketRevision_;
     };
 }
-
-#endif

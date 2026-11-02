@@ -1,4 +1,6 @@
-﻿#include <boost/test/unit_test.hpp>
+﻿#pragma once
+
+#include <boost/test/unit_test.hpp>
 #include <boost/timer.hpp>
 
 #include <iomanip>

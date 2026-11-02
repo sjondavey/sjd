@@ -1,5 +1,4 @@
-#ifndef CONTRACTSTRESSOR_INCLUDED
-#define CONTRACTSTRESSOR_INCLUDED
+#pragma once
 
 #include <algorithm>
 #include <list>
@@ -31,5 +30,3 @@ namespace sjd
         std::shared_ptr<RatesEnvironment> baseRates;
     };
 }
-
-#endif

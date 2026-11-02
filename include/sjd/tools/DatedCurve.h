@@ -1,5 +1,4 @@
-#ifndef SJD_DATEDCURVE_INCLUDED
-#define SJD_DATEDCURVE_INCLUDED
+#pragma once
 
 #include <memory>
 #include <ql/time/date.hpp>
@@ -62,5 +61,3 @@ namespace sjd
     };
 
 }
-
-#endif

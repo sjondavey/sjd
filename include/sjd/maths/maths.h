@@ -1,5 +1,3 @@
-﻿#ifndef SJD_MATHS_INCLUDED
-#define SJD_MATHS_INCLUDED
 #pragma once
 
 /**
@@ -246,5 +244,3 @@ namespace sjd
     };
 
 }
-
-#endif

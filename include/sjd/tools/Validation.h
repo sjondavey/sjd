@@ -1,5 +1,3 @@
-#ifndef SJD_VALIDATION_INCLUDED
-#define SJD_VALIDATION_INCLUDED
 #pragma once
 
 #include <string>
@@ -117,5 +115,3 @@ namespace sjd
         std::shared_ptr<IssueTracker> errorTracking;
     };
 }
-
-#endif

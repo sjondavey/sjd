@@ -1,6 +1,4 @@
-#ifndef CVA_INCLUDED
-#define CVA_INCLUDED
-// #pragma once
+#pragma once
 
 #include <math.h>
 #include <memory>
@@ -101,5 +99,3 @@ namespace sjd
         std::shared_ptr<ArrayInterpolator> lossInterpolator;
     };
 }
-
-#endif

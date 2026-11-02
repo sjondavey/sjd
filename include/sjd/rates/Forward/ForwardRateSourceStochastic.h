@@ -1,5 +1,4 @@
-#ifndef SJD_STOCHASTICFORWARDRATESOURCE_INCLUDED
-#define SJD_STOCHASTICFORWARDRATESOURCE_INCLUDED
+#pragma once
 
 #include <sjd/rates/Forward/ForwardRateSource.h>
 #include <sjd/rates/Volatility/VolatilityRateSource.h>
@@ -49,5 +48,3 @@ namespace sjd
     };
 
 }
-
-#endif

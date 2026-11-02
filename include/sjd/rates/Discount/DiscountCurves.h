@@ -1,5 +1,4 @@
-#ifndef SJD_DISCOUNTCURVE_INCLUDED
-#define SJD_DISCOUNTCURVE_INCLUDED
+#pragma once
 
 #include <sjd/rates/Discount/DeterministicDiscountRateSource.h>
 #include <sjd/rates/Discount/InterestRateConvention.h>
@@ -48,5 +47,3 @@ namespace sjd
         ArrayInterpolatorType type;
     };
 }
-
-#endif

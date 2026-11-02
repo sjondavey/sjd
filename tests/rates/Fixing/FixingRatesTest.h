@@ -1,5 +1,4 @@
-﻿#ifndef sjdfixingrate_test
-#define sjdfixingrate_test
+#pragma once
 
 #include <iostream>
 #include <sjd/rates/Fixing/FixingCurves.h>
@@ -20,5 +19,3 @@ public:
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
-#endif

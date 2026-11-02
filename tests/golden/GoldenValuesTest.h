@@ -1,5 +1,4 @@
-#ifndef golden_values_test
-#define golden_values_test
+#pragma once
 
 #include <boost/test/unit_test.hpp>
 
@@ -16,5 +15,3 @@ public:
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
-#endif

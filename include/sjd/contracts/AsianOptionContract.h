@@ -1,5 +1,3 @@
-#ifndef ASIANOPTIONCONTRACT_INCLUDED
-#define ASIANOPTIONCONTRACT_INCLUDED
 #pragma once
 
 #include <boost/math/special_functions/round.hpp>
@@ -83,5 +81,3 @@ namespace sjd
         std::shared_ptr<AverageRateOption> option;
     };
 }
-
-#endif

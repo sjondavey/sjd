@@ -1,5 +1,3 @@
-#ifndef SJD_VOLATILITYRATESOURCE_INCLUDED
-#define SJD_VOLATILITYRATESOURCE_INCLUDED
 #pragma once
 
 #include <sjd/rates/RateSource.h>
@@ -54,5 +52,3 @@ namespace sjd
     };
 
 }
-
-#endif

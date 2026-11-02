@@ -1,6 +1,4 @@
-#ifndef MARGIN_INCLUDED
-#define MARGIN_INCLUDED
-// #pragma once
+#pragma once
 
 #include <boost/math/special_functions.hpp> // round, sign
 #include <memory>
@@ -111,5 +109,3 @@ namespace sjd
     };
 
 }
-
-#endif

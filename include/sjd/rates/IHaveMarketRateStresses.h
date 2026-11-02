@@ -1,5 +1,3 @@
-#ifndef SJD_IHAVEMARKETRATESTRESSES_INCLUDED
-#define SJD_IHAVEMARKETRATESTRESSES_INCLUDED
 #pragma once
 
 #include "RateSource.h"
@@ -22,5 +20,3 @@ namespace sjd
         virtual std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> getMarketRateStresses() = 0;
     };
 }
-
-#endif

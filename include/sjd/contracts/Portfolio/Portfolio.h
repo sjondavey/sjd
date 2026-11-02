@@ -1,6 +1,4 @@
-#ifndef PORTFOLIO_INCLUDED
-#define PORTFOLIO_INCLUDED
-// #pragma once
+#pragma once
 
 #include <sjd/contracts/Contracts.h>
 #include <sjd/contracts/Portfolio/Margin/Margin.h>
@@ -51,5 +49,3 @@ namespace sjd
     };
 
 }
-
-#endif

@@ -1,5 +1,4 @@
-﻿#ifndef sjdvolatilitysurfaces_test_maths
-#define sjdvolatilitysurfaces_test_maths
+#pragma once
 
 #include <boost/math/special_functions/fpclassify.hpp> // boost::math::isnan
 #include <boost/test/unit_test.hpp>
@@ -30,5 +29,3 @@ public:
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
-#endif

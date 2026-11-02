@@ -1,5 +1,4 @@
-﻿#ifndef sjd_test_2dinterp
-#define sjd_test_2dinterp
+#pragma once
 
 #include <boost/math/special_functions/fpclassify.hpp> // boost::math::isnan
 #include <boost/test/unit_test.hpp>
@@ -14,5 +13,3 @@ public:
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
-#endif

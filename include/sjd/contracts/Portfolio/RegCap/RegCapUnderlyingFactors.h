@@ -1,5 +1,3 @@
-#ifndef REGCAPUNDERLYINGFACTORS_INCLUDED
-#define REGCAPUNDERLYINGFACTORS_INCLUDED
 #pragma once
 
 #include <boost/algorithm/string.hpp>
@@ -88,5 +86,3 @@ namespace sjd
 
     std::shared_ptr<RegCapUnderlyingFactors> generateRegCapFactors(std::string factorDescription);
 }
-
-#endif

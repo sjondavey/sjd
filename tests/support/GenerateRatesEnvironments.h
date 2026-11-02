@@ -1,5 +1,4 @@
-#ifndef generateratesenvironments_test
-#define generateratesenvironments_test
+#pragma once
 
 #include <iostream>
 
@@ -125,5 +124,3 @@ public:
     std::vector<double> defaultMoneyness;
     std::vector<std::vector<double>> defaultVolatilitySurface;
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef generatecontracts_test
-#define generatecontracts_test
+#pragma once
 
 #include <iostream>
 
@@ -55,5 +54,3 @@ public:
                                                                              double volume,
                                                                              BuySell bs);
 };
-
-#endif

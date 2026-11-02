@@ -1,5 +1,4 @@
-#ifndef SJD_FORWARD_CURVE_INCLUDED
-#define SJD_FORWARD_CURVE_INCLUDED
+#pragma once
 
 #include <sjd/rates/Discount/DiscountRateSource.h>
 #include <sjd/rates/Forward/ForwardRateSource.h>
@@ -137,5 +136,3 @@ namespace sjd
     };
 
 }
-
-#endif

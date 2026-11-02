@@ -1,5 +1,4 @@
-﻿#ifndef sjd_interestrateconvention_test
-#define sjd_interestrateconvention_test
+#pragma once
 
 #include <boost/test/unit_test.hpp>
 #include <iostream>
@@ -14,5 +13,3 @@ public:
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
-#endif

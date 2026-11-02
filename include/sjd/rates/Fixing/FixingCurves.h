@@ -1,5 +1,4 @@
-#ifndef SJD_FIXINGCURVE_INCLUDED
-#define SJD_FIXINGCURVE_INCLUDED
+#pragma once
 
 #include <boost/math/special_functions/round.hpp>
 #include <sjd/rates/Fixing/RollingFixingRateSource.h>
@@ -82,5 +81,3 @@ namespace sjd
     };
 
 }
-
-#endif

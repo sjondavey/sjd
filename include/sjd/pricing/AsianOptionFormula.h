@@ -1,5 +1,4 @@
-﻿#ifndef ASIANOPTION_INCLUDED
-#define ASIANOPTION_INCLUDED
+#pragma once
 
 #include "Black76Formula.h"
 #include <sjd/maths/maths.h>
@@ -143,4 +142,3 @@ namespace sjd
     };
 
 }
-#endif

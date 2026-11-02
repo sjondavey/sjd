@@ -1,5 +1,4 @@
-﻿#ifndef sjd_calendarmonthaverage_test_maths
-#define sjd_calendarmonthaverage_test_maths
+#pragma once
 
 #include <iostream>
 
@@ -21,5 +20,3 @@ public:
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
-#endif

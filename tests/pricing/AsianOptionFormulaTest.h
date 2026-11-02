@@ -1,5 +1,4 @@
-﻿#ifndef asianoption_test_maths
-#define asianoption_test_maths
+#pragma once
 
 #include <boost/math/special_functions/fpclassify.hpp> // boost::math::isnan
 #include <boost/test/unit_test.hpp>
@@ -54,5 +53,3 @@ private:
     static AsianOptionInputParameters getAsianInputsJustBeforeSettlementWithLowAverage();  // realtive to
                                                                                            // strike
 };
-
-#endif

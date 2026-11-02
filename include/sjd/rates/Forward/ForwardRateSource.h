@@ -1,5 +1,3 @@
-﻿#ifndef SJD_FORWARDRATESOURCE_INCLUDED
-#define SJD_FORWARDRATESOURCE_INCLUDED
 #pragma once
 
 #include <sjd/rates/RateSource.h>
@@ -36,5 +34,3 @@ namespace sjd
     };
 
 }
-
-#endif

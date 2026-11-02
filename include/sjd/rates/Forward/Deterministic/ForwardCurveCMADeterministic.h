@@ -1,5 +1,4 @@
-#ifndef SJD_FORWARDCURVECMADETERMINISTIC_INCLUDED
-#define SJD_FORWARDCURVECMADETERMINISTIC_INCLUDED
+#pragma once
 
 #include <sjd/rates/Forward/ForwardCurve.h>
 #include <sjd/rates/Forward/ForwardRateSourceDeterministic.h>
@@ -49,5 +48,3 @@ namespace sjd
         ForwardCurve quotes;
     };
 }
-
-#endif

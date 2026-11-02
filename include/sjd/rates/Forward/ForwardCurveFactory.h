@@ -1,5 +1,4 @@
-#ifndef SJD_FORWARDCURVEFACTORY_INCLUDED
-#define SJD_FORWARDCURVEFACTORY_INCLUDED
+#pragma once
 
 #include <sjd/rates/Forward/ForwardCurve.h>
 #include <sjd/rates/Forward/ForwardRateSource.h>
@@ -26,5 +25,3 @@ namespace sjd
                                                         ForwardRoll roll,
                                                         std::shared_ptr<VolatilityRateSource> volatility);
 }
-
-#endif

@@ -1,6 +1,4 @@
-
-#ifndef SJD_CALENDARMONTHMONEYNESS_INCLUDED
-#define SJD_CALENDARMONTHMONEYNESS_INCLUDED
+#pragma once
 
 #include "VolatilitySurfaces.h"
 
@@ -75,5 +73,3 @@ namespace sjd
         std::shared_ptr<QuantLib::DayCounter> simpleDayCounter;
     };
 }
-
-#endif

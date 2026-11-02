@@ -1,6 +1,3 @@
-#ifndef CONTRACTS_INCLUDED
-#define CONTRACTS_INCLUDED
-
 #pragma once
 
 #include <ql/time/calendar.hpp>
@@ -276,5 +273,3 @@ namespace sjd
     }
 
 }
-
-#endif

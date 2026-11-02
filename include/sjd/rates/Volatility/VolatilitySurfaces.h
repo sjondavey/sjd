@@ -1,5 +1,4 @@
-#ifndef SJD_VOLATILITYSURFACES_INCLUDED
-#define SJD_VOLATILITYSURFACES_INCLUDED
+#pragma once
 
 #include <sjd/maths/maths.h>
 #include <sjd/pricing/Black76Formula.h>
@@ -71,5 +70,3 @@ namespace sjd
         SurfaceInterpolatorType interpolatorType;
     };
 }
-
-#endif

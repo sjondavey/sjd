@@ -1,5 +1,3 @@
-#ifndef OPTIONCONTRACT_INCLUDED
-#define OPTIONCONTRACT_INCLUDED
 #pragma once
 
 #include <boost/math/special_functions/round.hpp>
@@ -53,5 +51,3 @@ namespace sjd
     };
 
 }
-
-#endif

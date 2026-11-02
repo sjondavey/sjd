@@ -1,5 +1,3 @@
-#ifndef PORTFOLIOINSURANCE_INCLUDED
-#define PORTFOLIOINSURANCE_INCLUDED
 #pragma once
 
 #include <memory>
@@ -97,5 +95,3 @@ namespace sjd
     };
 
 }
-
-#endif

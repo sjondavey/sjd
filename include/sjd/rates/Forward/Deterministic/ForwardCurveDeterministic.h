@@ -1,5 +1,4 @@
-#ifndef SJD_FORWARDCURVERATESOURCE_INCLUDED
-#define SJD_FORWARDCURVERATESOURCE_INCLUDED
+#pragma once
 
 #include <sjd/rates/Forward/ForwardCurve.h>
 #include <sjd/rates/Forward/ForwardRateSourceDeterministic.h>
@@ -59,5 +58,3 @@ namespace sjd
     };
 
 }
-
-#endif

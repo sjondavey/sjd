@@ -1,5 +1,4 @@
-#ifndef SJD_REGULATORY_CAPITAL_INCLUDED
-#define SJD_REGULATORY_CAPITAL_INCLUDED
+#pragma once
 
 #include <string>
 
@@ -133,5 +132,3 @@ namespace sjd
     };
 
 }
-
-#endif

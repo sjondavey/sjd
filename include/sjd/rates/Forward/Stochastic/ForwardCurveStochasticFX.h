@@ -1,5 +1,4 @@
-#ifndef SJD_FORWARDCURVESTOCHASTICFX_INCLUDED
-#define SJD_FORWARDCURVESTOCHASTICFX_INCLUDED
+#pragma once
 
 #include <sjd/rates/Forward/ForwardCurve.h>
 #include <sjd/rates/Forward/ForwardCurveFX.h>
@@ -71,5 +70,3 @@ namespace sjd
     };
 
 }
-
-#endif

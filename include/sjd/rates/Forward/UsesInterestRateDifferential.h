@@ -1,5 +1,4 @@
-#ifndef SJD_USESINTERESTRATEDIFFERENTIAL_INCLUDED
-#define SJD_USESINTERESTRATEDIFFERENTIAL_INCLUDED
+#pragma once
 
 #include <sjd/rates/Discount/DiscountRateSource.h>
 
@@ -30,5 +29,3 @@ namespace sjd
     };
 
 }
-
-#endif

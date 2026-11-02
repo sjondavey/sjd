@@ -1,5 +1,4 @@
-﻿#ifndef PortfolioEvolver_Test
-#define PortfolioEvolver_Test
+#pragma once
 
 #include <iostream>
 
@@ -19,5 +18,3 @@ public:
     static void testPortfolioEvovler();
     static boost::unit_test_framework::test_suite* suite();
 };
-
-#endif

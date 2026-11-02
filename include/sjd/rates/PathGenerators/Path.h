@@ -1,6 +1,4 @@
-
-#ifndef PATH_INCLUDED
-#define PATH_INCLUDED
+#pragma once
 
 #include <algorithm>
 #include <sjd/rates/RatesEnvironment.h>
@@ -34,5 +32,3 @@ namespace sjd
     };
 
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef SJD_FORWARDCURVEROLLSATSPOTVOL_INCLUDED
-#define SJD_FORWARDCURVEROLLSATSPOTVOL_INCLUDED
+#pragma once
 
 #include <sjd/rates/Forward/Deterministic/ForwardCurveDeterministic.h>
 #include <sjd/rates/Forward/ForwardCurve.h>
@@ -59,5 +58,3 @@ namespace sjd
     };
 
 }
-
-#endif
