@@ -117,7 +117,7 @@ namespace sjd
             double& effectiveVolumeAtHighestStrike);
         static bool isCapped(std::vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts,
                              double& cap,
-                             bool& hasPriceExpsoure);
+                             bool& hasPriceExposure);
 
         // Groups all contracts by strike and finds the first strike where the contracts have have uncapped
         // exposure to the left. Returns all contracts with this strike
@@ -128,7 +128,7 @@ namespace sjd
         getContractsWithUncappedExposureOnTheRight(
             std::vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts, double& commonStrike);
 
-        static bool isContactADerivative(std::shared_ptr<SingleInstrumentContract> underlyingContract);
+        static bool isContractADerivative(std::shared_ptr<SingleInstrumentContract> underlyingContract);
         static bool isAnAsianDerivative(std::shared_ptr<SingleDerivativeContract> underlyingContract);
         // true if the underlying settlement / maturty profiles are the same and the rates environement is
         // compatable
@@ -180,11 +180,3 @@ namespace sjd
     };
 
 }
-
-/*
-        virtual std::vector<double> getMtMPlusAddOnAlongPath(const std::vector<double> spotValues,
-                                                        std::vector<double> netGrossRatios);
-        virtual std::vector<double> getMtMPlusAddOnAlongPathForGivenMtM(const std::vector<double> mtm,
-                                                                   const std::vector<double> spotValues,
-                                                                   std::vector<double> netGrossRatios);
-*/

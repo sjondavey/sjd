@@ -21,7 +21,7 @@ namespace sjd
 
         virtual bool isOK();
 
-        void setVolitalityRateSource(std::shared_ptr<VolatilityRateSource> vrs);
+        void setVolatilityRateSource(std::shared_ptr<VolatilityRateSource> vrs);
 
         virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, double normalRV) = 0;
         // rateSetDates are the sorted dates between the anchorDate and the "toDate" for

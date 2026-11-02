@@ -226,7 +226,7 @@ namespace sjd
             vector<std::shared_ptr<SingleInstrumentContract>>::iterator it = contracts.begin();
             while ((it != contracts.end()) && (spot < 0))
             {
-                if (isContactADerivative(*it))
+                if (isContractADerivative(*it))
                 {
                     std::shared_ptr<SingleDerivativeContract> derivative =
                         std::dynamic_pointer_cast<SingleDerivativeContract>(*it);
@@ -260,7 +260,7 @@ namespace sjd
         set<double> strikes;
         for (size_t i = 0; i < underlyingContracts.size(); ++i)
         {
-            if (isContactADerivative(underlyingContracts[i]))
+            if (isContractADerivative(underlyingContracts[i]))
             {
                 std::shared_ptr<SingleDerivativeContract> derivative =
                     std::dynamic_pointer_cast<SingleDerivativeContract>(underlyingContracts[i]);
@@ -276,7 +276,7 @@ namespace sjd
         vector<std::shared_ptr<SingleInstrumentContract>> contractsWithOneStrike;
         for (size_t i = 0; i < underlyingContracts.size(); ++i)
         {
-            if (isContactADerivative(underlyingContracts[i]))
+            if (isContractADerivative(underlyingContracts[i]))
             {
                 std::shared_ptr<SingleDerivativeContract> derivative =
                     std::dynamic_pointer_cast<SingleDerivativeContract>(underlyingContracts[i]);
@@ -364,7 +364,7 @@ namespace sjd
         double maxNominalVolume = 0;
         for (size_t i = 0; i < underlyingContracts.size(); ++i)
         {
-            if (isContactADerivative(underlyingContracts[i]))
+            if (isContractADerivative(underlyingContracts[i]))
             {
                 std::shared_ptr<SingleDerivativeContract> derivative =
                     std::dynamic_pointer_cast<SingleDerivativeContract>(underlyingContracts[i]);
@@ -653,7 +653,7 @@ namespace sjd
         }
 
         // if one or more is a cash flow, there is nothing more to check
-        if ((!isContactADerivative(contract1)) || (!isContactADerivative(contract2)))
+        if ((!isContractADerivative(contract1)) || (!isContractADerivative(contract2)))
         {
             return true;
         }
@@ -729,7 +729,7 @@ namespace sjd
         return allContractsMoved;
     }
 
-    bool Structure::isContactADerivative(std::shared_ptr<SingleInstrumentContract> underlyingContract)
+    bool Structure::isContractADerivative(std::shared_ptr<SingleInstrumentContract> underlyingContract)
     {
         return (std::dynamic_pointer_cast<SingleDerivativeContract>(underlyingContract) != 0);
     }

@@ -1,4 +1,4 @@
-#include "sjdTest.h"
+﻿#include "sjdTest.h"
 
 using namespace boost::unit_test_framework;
 
@@ -29,19 +29,6 @@ namespace
         std::cout << std::fixed << std::setprecision(0) << seconds << " s\n" << std::endl;
     }
 
-    void configure()
-    {
-        /* if needed, either or both the lines below can be
-           uncommented and/or changed to run the test suite with a
-           different configuration. In the future, we'll need a
-           mechanism that doesn't force us to recompile (possibly a
-           couple of command-line flags for the test suite?)
-        */
-
-        // QuantLib::Settings::instance().includeReferenceDateCashFlows() = true;
-        // QuantLib::Settings::instance().includeTodaysCashFlows() = boost::none;
-    }
-
 }
 
 test_suite* init_unit_test_suite(int, char*[])
@@ -56,7 +43,6 @@ test_suite* init_unit_test_suite(int, char*[])
     test_suite* test = BOOST_TEST_SUITE("sjd Library test suite");
 
     test->add(BOOST_TEST_CASE(startTimer));
-    test->add(BOOST_TEST_CASE(configure));
 
     test->add(MathsFunctionsTest::suite());
     test->add(Maths2DInterpTest::suite());
@@ -74,9 +60,9 @@ test_suite* init_unit_test_suite(int, char*[])
     test->add(VolatilitySurfacesTest::suite());
 
     test->add(CashflowTest::suite());
-    test->add(ForwardContactTest::suite());
-    test->add(OptionContactTest::suite());
-    test->add(AsianOptionContactTest::suite());
+    test->add(ForwardContractTest::suite());
+    test->add(OptionContractTest::suite());
+    test->add(AsianOptionContractTest::suite());
     test->add(StructureTest::suite());
     test->add(PortfolioTest::suite());
     test->add(PortfolioEvolverTest::suite());

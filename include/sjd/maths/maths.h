@@ -1,15 +1,9 @@
 #pragma once
 
 /**
- * The maths.h file adds functionality to the standard math.h file. It
- * also uses the standard namespace so that NaN's can be returned by
- * some of the functions (this is necessary when the files are used in
- * excel). This file also includes interpolation functions.
+ * Factorials, combinations, and interpolation.
  */
 
-// #include <math.h>
-// #include <limits>
-// #include <algorithm> // max / min functions
 #include <string>
 #include <vector>
 

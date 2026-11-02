@@ -15,17 +15,17 @@ namespace sjd
         return rates;
     }
 
-    double ForwardRateSource::getForwardFworwardAdditive(Date fromDate, Date toDate) const
+    double ForwardRateSource::getForwardForwardAdditive(Date fromDate, Date toDate) const
     {
         return getForward(toDate) - getForward(fromDate);
     }
 
-    double ForwardRateSource::getForwardFworwardMultiplicative(Date fromDate, Date toDate) const
+    double ForwardRateSource::getForwardForwardMultiplicative(Date fromDate, Date toDate) const
     {
         return getForward(toDate) / getForward(fromDate);
     }
 
-    vector<double> ForwardRateSource::getForwardFworwardAdditive(Date fromDate, vector<Date> toDates) const
+    vector<double> ForwardRateSource::getForwardForwardAdditive(Date fromDate, vector<Date> toDates) const
     {
         vector<double> rates = getForward(toDates);
         double fromRate = getForward(fromDate);
@@ -36,8 +36,8 @@ namespace sjd
         return rates;
     }
 
-    vector<double> ForwardRateSource::getForwardFworwardMultiplicative(Date fromDate,
-                                                                       vector<Date> toDates) const
+    vector<double> ForwardRateSource::getForwardForwardMultiplicative(Date fromDate,
+                                                                      vector<Date> toDates) const
     {
         vector<double> rates = getForward(toDates);
         double fromRate = getForward(fromDate);

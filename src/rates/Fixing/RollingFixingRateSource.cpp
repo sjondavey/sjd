@@ -18,7 +18,7 @@ namespace sjd
         return inputDates;
     }
 
-    void RollingFixingRateSource::updateAppedededRates(vector<double> newFixingRates)
+    void RollingFixingRateSource::updateAppendedRates(vector<double> newFixingRates)
     {
         size_t numberOfOriginalFixes = originalFixes.size();
         for (size_t i = 0; i < newFixingRates.size(); ++i)

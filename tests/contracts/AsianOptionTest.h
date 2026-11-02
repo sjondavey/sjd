@@ -17,7 +17,7 @@
 
 using namespace sjd;
 
-class AsianOptionContactTest
+class AsianOptionContractTest
 {
 public:
     static std::shared_ptr<AsianOption> getDefaultAsianOption(QuantLib::Date anchorDate);

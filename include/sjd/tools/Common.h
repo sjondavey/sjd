@@ -4,18 +4,7 @@
 #include <string>
 #include <vector>
 
-/*======================================================================================
-Overview
-The most basic financial instument is the Contract. When building and, more importantly,
-testing a Contract we focus on the the contracts "value" at different points in time.
-Once we are convinced that the "value" is correct we can build in additional important
-functionality by implementing various interfaces.
-
-Structure let's us implement the regulatory capital calculation for one contract or a
-logical group of contracts
-
-Portfolio lets us group Structures and perform grouped analysis
-=======================================================================================*/
+// BuySell and PutCall, shared by the contracts.
 
 namespace sjd
 {

@@ -54,7 +54,7 @@ namespace sjd
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
         finalDate = quotes.finalDate();
-        setVolitalityRateSource(vrs);
+        setVolatilityRateSource(vrs);
     }
 
     void ForwardCurveStochasticFX::setSpotAtT0(double spotAtT0Input)

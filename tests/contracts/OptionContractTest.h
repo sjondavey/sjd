@@ -18,7 +18,7 @@
 
 using namespace sjd;
 
-class OptionContactTest
+class OptionContractTest
 {
 public:
     static std::shared_ptr<EuropeanOption> getDefaultEuropeanOption(QuantLib::Date anchorDate);

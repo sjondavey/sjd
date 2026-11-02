@@ -253,7 +253,7 @@ namespace sjd
                 {
                     updateFXForwardWithRolledDiscountRateSources(i);
                 }
-                fixingrss[i]->updateAppedededRates(rateSets);
+                fixingrss[i]->updateAppendedRates(rateSets);
                 path->getRatesEnvironment(i)->setFRS(frss[i]);
                 path->getRatesEnvironment(i)->setFixingRS(fixingrss[i]);
             }
@@ -292,7 +292,7 @@ namespace sjd
             frss = frs->rollForward(allFixingDates, allFixingRates);
             for (size_t i = 0; i < fixingrss.size(); ++i)
             {
-                fixingrss[i]->updateAppedededRates(allFixingRates);
+                fixingrss[i]->updateAppendedRates(allFixingRates);
             }
         }
 

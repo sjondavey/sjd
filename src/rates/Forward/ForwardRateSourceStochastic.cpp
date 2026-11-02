@@ -5,7 +5,7 @@ using namespace QuantLib;
 
 namespace sjd
 {
-    void ForwardRateSourceStochastic::setVolitalityRateSource(std::shared_ptr<VolatilityRateSource> vrsInput)
+    void ForwardRateSourceStochastic::setVolatilityRateSource(std::shared_ptr<VolatilityRateSource> vrsInput)
     {
         vrs = vrsInput;
     }

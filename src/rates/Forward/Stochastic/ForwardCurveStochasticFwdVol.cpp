@@ -32,7 +32,7 @@ namespace sjd
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
         finalDate = quotes.finalDate();
-        setVolitalityRateSource(vrs);
+        setVolatilityRateSource(vrs);
     }
 
     ForwardCurveStochasticFwdVol::~ForwardCurveStochasticFwdVol() {}

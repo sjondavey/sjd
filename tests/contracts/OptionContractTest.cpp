@@ -8,7 +8,7 @@ using namespace boost::unit_test_framework;
 using namespace boost::math;
 using namespace sjd;
 
-std::shared_ptr<EuropeanOption> OptionContactTest::getDefaultEuropeanOption(Date anchorDate)
+std::shared_ptr<EuropeanOption> OptionContractTest::getDefaultEuropeanOption(Date anchorDate)
 {
     std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
     Date optionMaturity = nullCalendar->advance(anchorDate, 2, Years);
@@ -22,7 +22,7 @@ std::shared_ptr<EuropeanOption> OptionContactTest::getDefaultEuropeanOption(Date
                                                               volume, optionSettlement, defPremium, BUY));
 }
 
-void OptionContactTest::testBuySell()
+void OptionContractTest::testBuySell()
 {
     BOOST_TEST_MESSAGE("Testing OptionContract ...");
     Date anchorDate(1, Jan, 2013);
@@ -33,7 +33,7 @@ void OptionContactTest::testBuySell()
     BOOST_CHECK(bs == bs2);
 }
 
-void OptionContactTest::testStrike()
+void OptionContractTest::testStrike()
 {
     Date anchorDate(1, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -49,7 +49,7 @@ void OptionContactTest::testStrike()
     BOOST_CHECK(abs(contract->getStrike() - strike) < EPSILON_FOR_DOUBLES);
 }
 
-void OptionContactTest::testVolume()
+void OptionContractTest::testVolume()
 {
     Date anchorDate(1, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -64,7 +64,7 @@ void OptionContactTest::testVolume()
     BOOST_CHECK(abs(contract->getVolume() + volume) < EPSILON_FOR_DOUBLES);
 }
 
-void OptionContactTest::testMaturityDate()
+void OptionContractTest::testMaturityDate()
 {
     Date anchorDate(1, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -81,7 +81,7 @@ void OptionContactTest::testMaturityDate()
     BOOST_CHECK(contract->getMaturityDate() == optionMaturity);
 }
 
-void OptionContactTest::testPremiumAmount()
+void OptionContractTest::testPremiumAmount()
 {
     Date anchorDate(1, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -96,7 +96,7 @@ void OptionContactTest::testPremiumAmount()
     BOOST_CHECK(abs(contract->getPremiumAmount() + ppAmount) < EPSILON_FOR_DOUBLES);
 }
 
-void OptionContactTest::testType()
+void OptionContractTest::testType()
 {
     Date anchorDate(1, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -115,7 +115,7 @@ void OptionContactTest::testType()
     BOOST_CHECK(abs(valuePut - valueCall) > EPSILON_FOR_DOUBLES);
 }
 
-void OptionContactTest::testPutCallParity()
+void OptionContractTest::testPutCallParity()
 {
     Date anchorDate(1, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -132,7 +132,7 @@ void OptionContactTest::testPutCallParity()
     BOOST_CHECK(abs(put->getValue(re) + call->getValue(re) - forward.getValue(re)) < 1e-10);
 }
 
-void OptionContactTest::testValue()
+void OptionContractTest::testValue()
 {
     Date anchorDate(1, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -198,7 +198,7 @@ void OptionContactTest::testValue()
     BOOST_CHECK(abs(deferredPremiumContract2.getOptionValue(re)) < EPSILON_FOR_DOUBLES);
 }
 
-void OptionContactTest::testGetPayoffAfterMaturity()
+void OptionContractTest::testGetPayoffAfterMaturity()
 {
     std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
     std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
@@ -221,7 +221,7 @@ void OptionContactTest::testGetPayoffAfterMaturity()
     BOOST_CHECK(abs(option2->getPayoff(maturitySpot) - (maturitySpot - k1 - p1) * v1 * sign1) < 1e-14);
 }
 
-void OptionContactTest::testEuropeanOptionWithMoneynessVol()
+void OptionContractTest::testEuropeanOptionWithMoneynessVol()
 {
     BOOST_TEST_MESSAGE("Testing European Option with moneyness vol ...");
 
@@ -295,22 +295,22 @@ void OptionContactTest::testEuropeanOptionWithMoneynessVol()
     BOOST_CHECK(abs(deferredPremiumContract.getOptionValue(re)) < EPSILON_FOR_DOUBLES);
 }
 
-test_suite* OptionContactTest::suite()
+test_suite* OptionContractTest::suite()
 {
     test_suite* suite = BOOST_TEST_SUITE("Option Contract");
 
-    suite->add(BOOST_TEST_CASE(&OptionContactTest::testBuySell));
-    suite->add(BOOST_TEST_CASE(&OptionContactTest::testStrike));
-    suite->add(BOOST_TEST_CASE(&OptionContactTest::testVolume));
-    suite->add(BOOST_TEST_CASE(&OptionContactTest::testMaturityDate));
-    suite->add(BOOST_TEST_CASE(&OptionContactTest::testPremiumAmount));
-    suite->add(BOOST_TEST_CASE(&OptionContactTest::testType));
+    suite->add(BOOST_TEST_CASE(&OptionContractTest::testBuySell));
+    suite->add(BOOST_TEST_CASE(&OptionContractTest::testStrike));
+    suite->add(BOOST_TEST_CASE(&OptionContractTest::testVolume));
+    suite->add(BOOST_TEST_CASE(&OptionContractTest::testMaturityDate));
+    suite->add(BOOST_TEST_CASE(&OptionContractTest::testPremiumAmount));
+    suite->add(BOOST_TEST_CASE(&OptionContractTest::testType));
 
-    suite->add(BOOST_TEST_CASE(&OptionContactTest::testValue));
-    suite->add(BOOST_TEST_CASE(&OptionContactTest::testGetPayoffAfterMaturity));
-    suite->add(BOOST_TEST_CASE(&OptionContactTest::testPutCallParity));
+    suite->add(BOOST_TEST_CASE(&OptionContractTest::testValue));
+    suite->add(BOOST_TEST_CASE(&OptionContractTest::testGetPayoffAfterMaturity));
+    suite->add(BOOST_TEST_CASE(&OptionContractTest::testPutCallParity));
 
-    suite->add(BOOST_TEST_CASE(&OptionContactTest::testEuropeanOptionWithMoneynessVol));
+    suite->add(BOOST_TEST_CASE(&OptionContractTest::testEuropeanOptionWithMoneynessVol));
 
     return suite;
 }

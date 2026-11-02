@@ -19,7 +19,7 @@
 
 using namespace sjd;
 
-class ForwardContactTest
+class ForwardContractTest
 {
 public:
     // Returns a EuropeanForward which matures 2 years after the anchor date

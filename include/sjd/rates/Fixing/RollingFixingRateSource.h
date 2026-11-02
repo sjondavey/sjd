@@ -29,7 +29,7 @@ namespace sjd
         void captureOriginalState();
         // Ensure that appended fixing rates are after the last observation date first
         virtual void appendRateSets(std::vector<QuantLib::Date> fixingDates, std::vector<double> fixingRates);
-        virtual void updateAppedededRates(std::vector<double> fixingRates);
+        virtual void updateAppendedRates(std::vector<double> fixingRates);
         void reset();
 
     protected:

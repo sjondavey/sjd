@@ -25,11 +25,11 @@ namespace sjd
 
         // A forward forward is the factor that is applied to get the forward to T2 given
         // the forward to T1 where T0 <= T1 <= T2
-        virtual double getForwardFworwardAdditive(QuantLib::Date fromDate, QuantLib::Date toDate) const;
-        virtual double getForwardFworwardMultiplicative(QuantLib::Date fromDate, QuantLib::Date toDate) const;
-        virtual std::vector<double> getForwardFworwardAdditive(QuantLib::Date fromDate,
-                                                               std::vector<QuantLib::Date> toDates) const;
-        virtual std::vector<double> getForwardFworwardMultiplicative(
+        virtual double getForwardForwardAdditive(QuantLib::Date fromDate, QuantLib::Date toDate) const;
+        virtual double getForwardForwardMultiplicative(QuantLib::Date fromDate, QuantLib::Date toDate) const;
+        virtual std::vector<double> getForwardForwardAdditive(QuantLib::Date fromDate,
+                                                              std::vector<QuantLib::Date> toDates) const;
+        virtual std::vector<double> getForwardForwardMultiplicative(
             QuantLib::Date fromDate, std::vector<QuantLib::Date> toDates) const;
     };
 

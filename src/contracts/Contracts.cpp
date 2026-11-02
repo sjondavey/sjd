@@ -510,15 +510,6 @@ namespace sjd
         {
             averagingStart = calendar.advance(startDate, 1, Days);
         }
-        Date lastDateInAveragingMonth;
-        if (calendar.isBusinessDay(endDate))
-        {
-            lastDateInAveragingMonth = endDate;
-        }
-        else
-        {
-            lastDateInAveragingMonth = calendar.advance(endDate, -1, Days);
-        }
         set<Date> averagingDates;
         Date tmp = averagingStart;
         while (tmp <= endDate)

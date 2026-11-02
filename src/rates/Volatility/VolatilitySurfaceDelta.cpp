@@ -91,7 +91,7 @@ namespace sjd
             return 50.0;
         }
         double accuracy = 1.0e-8;
-        size_t maxItterates = 20;
+        size_t maxIterations = 20;
         double sqrtttm = sqrt(yf);
 
         double guess1 = 50, guess2 = 50;
@@ -101,7 +101,7 @@ namespace sjd
 
         size_t counter = 0;
 
-        while ((counter < maxItterates) && (diff > accuracy))
+        while ((counter < maxIterations) && (diff > accuracy))
         {
             guess1 = guess2;
             try
@@ -322,13 +322,13 @@ namespace sjd
     double SimpleDeltaSurface::calculateDeltaFromStrike(double forward, double strike, double time) const
     {
         double accuracy = 1.0e-8;
-        size_t maxItterates = 20;
+        size_t maxIterations = 20;
         double sqrtttm = sqrt(time);
         double guess1 = 50, guess2 = 50;
         double vol1 = 0, sd1 = 0.2, diff = accuracy + 1;
         Black76Put put(forward, strike, sd1, 1);
         size_t counter = 0;
-        while ((counter < maxItterates) && (diff > accuracy))
+        while ((counter < maxIterations) && (diff > accuracy))
         {
             guess1 = guess2;
             if (interpolator->isInRange(time, guess1))

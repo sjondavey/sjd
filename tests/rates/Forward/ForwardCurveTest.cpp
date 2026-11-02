@@ -157,9 +157,9 @@ void ForwardCurveTest::testConsistencyBetweenGetMethods()
         BOOST_CHECK(abs(rates[i] - fcd->getForward(dateVector[i])) < EPSILON_FOR_DOUBLES);
     }
 
-    BOOST_CHECK(abs(fcd->getForwardFworwardAdditive(date1, date2) -
+    BOOST_CHECK(abs(fcd->getForwardForwardAdditive(date1, date2) -
                     (fcd->getForward(date2) - fcd->getForward(date1))) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(fcd->getForwardFworwardMultiplicative(date1, date2) -
+    BOOST_CHECK(abs(fcd->getForwardForwardMultiplicative(date1, date2) -
                     (fcd->getForward(date2) / fcd->getForward(date1))) < EPSILON_FOR_DOUBLES);
 
     Date date3 = Date(day, December, year);
@@ -167,17 +167,17 @@ void ForwardCurveTest::testConsistencyBetweenGetMethods()
     dateVector.push_back(date2);
     dateVector.push_back(date3);
     rates.clear();
-    rates = fcd->getForwardFworwardAdditive(date1, dateVector);
+    rates = fcd->getForwardForwardAdditive(date1, dateVector);
     for (size_t i = 0; i < rates.size(); ++i)
     {
-        BOOST_CHECK(abs(rates[i] - fcd->getForwardFworwardAdditive(date1, dateVector[i])) <
+        BOOST_CHECK(abs(rates[i] - fcd->getForwardForwardAdditive(date1, dateVector[i])) <
                     EPSILON_FOR_DOUBLES);
     }
     rates.clear();
-    rates = fcd->getForwardFworwardMultiplicative(date1, dateVector);
+    rates = fcd->getForwardForwardMultiplicative(date1, dateVector);
     for (size_t i = 0; i < rates.size(); ++i)
     {
-        BOOST_CHECK(abs(rates[i] - fcd->getForwardFworwardMultiplicative(date1, dateVector[i])) <
+        BOOST_CHECK(abs(rates[i] - fcd->getForwardForwardMultiplicative(date1, dateVector[i])) <
                     EPSILON_FOR_DOUBLES);
     }
     delete fcd;
