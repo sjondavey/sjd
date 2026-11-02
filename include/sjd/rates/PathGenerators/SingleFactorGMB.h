@@ -3,7 +3,7 @@
 #include <math.h>
 
 #include <boost/math/distributions/normal.hpp>
-#include <boost/random.hpp>
+#include <random>
 #include <set>
 #include <sjd/rates/RatesEnvironment.h>
 
@@ -14,8 +14,6 @@
 #include <sjd/rates/Volatility/DeterministicVolatilityRateSource.h>
 
 #include "Path.h"
-
-typedef boost::mt19937 RNGType;
 
 namespace sjd
 {
@@ -97,9 +95,8 @@ namespace sjd
         std::vector<double> allFixingRates;
 
         long seed = 0;
-        RNGType rng;
-        boost::normal_distribution<double> nd;
-        boost::variate_generator<RNGType, boost::normal_distribution<>> normalVariable;
+        std::mt19937 rng;
+        std::normal_distribution<double> nd{0.0, 1.0};
         std::vector<double> randomNumbers;
     };
 

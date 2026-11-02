@@ -69,7 +69,6 @@ namespace sjd
     =======================================================================================*/
     SingleFactorEconomicScenarioGenerator::SingleFactorEconomicScenarioGenerator(
         const std::shared_ptr<RatesEnvironment> re)
-        : nd(0, 1), normalVariable(rng, nd)
     {
         errorTracking = std::make_shared<sjd::IssueTracker>("SingleFactorEconomicScenarioGenerator");
         setBaseRates(re);
@@ -221,8 +220,8 @@ namespace sjd
     void SingleFactorEconomicScenarioGenerator::setRandomSeed(long seedInput)
     {
         seed = seedInput;
-        normalVariable.engine().seed(static_cast<RNGType::result_type>(seedInput));
-        normalVariable.distribution().reset();
+        rng.seed(static_cast<std::mt19937::result_type>(seedInput));
+        nd.reset();
     }
 
     long SingleFactorEconomicScenarioGenerator::getRandomSeed() const
@@ -274,7 +273,7 @@ namespace sjd
     {
         for (size_t i = 0; i < numDates; ++i)
         {
-            randomNumbers[i] = normalVariable();
+            randomNumbers[i] = nd(rng);
         }
         return getPathForRandomNumber(randomNumbers);
     }
