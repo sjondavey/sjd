@@ -78,6 +78,8 @@ if(SJD_BUILD_PYTHON)
         sjdMarketSample     test_market_sample
         sjdMarketRates      test_market_rates
         sjdSimulate         test_simulate
+        sjdStrategy         test_strategy
+        sjdOptimise         test_optimise
     )
     while(_sjd_python_tests)
         list(POP_FRONT _sjd_python_tests _sjd_test_name _sjd_test_script)

@@ -62,6 +62,14 @@ namespace sjd
         // One path marked to these forwards. spots has one value per simulation date.
         SimulatedPaths valueSpotPath(const std::vector<double>& spots, bool byTrade, bool byStructure = false);
 
+        // Mark the book to many forward paths. spots is row-major [path][step],
+        // length numberOfPaths * simulationSteps. Use the same spots across
+        // candidate portfolios so common random numbers stay fixed.
+        SimulatedPaths valueSpotPaths(const std::vector<double>& spots,
+                                      size_t numberOfPaths,
+                                      bool byTrade,
+                                      bool byStructure = false);
+
     protected:
         std::vector<double> getSpotAlongAPath(std::shared_ptr<Path> path);
         std::vector<double> getMtMAlongAPath(std::shared_ptr<Path> path);

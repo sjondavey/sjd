@@ -199,22 +199,42 @@ namespace sjd
 
     SimulatedPaths PortfolioEvolver::valueSpotPath(const vector<double>& spots, bool byTrade, bool byStructure)
     {
+        return valueSpotPaths(spots, 1, byTrade, byStructure);
+    }
+
+    SimulatedPaths PortfolioEvolver::valueSpotPaths(const vector<double>& spots,
+                                                    size_t numberOfPaths,
+                                                    bool byTrade,
+                                                    bool byStructure)
+    {
         SimulatedPaths result;
         if (!validateReport().isOK())
         {
             return result;
         }
-        if (spots.size() != simulationSteps)
+        if (numberOfPaths == 0)
         {
-            recordIssue("SPOT_PATH_LENGTH",
-                        "Spot path must have one value per simulation date",
-                        {"spot_path"});
+            recordIssue("SPOT_PATHS_EMPTY", "Number of spot paths must be at least 1", {"spot_paths"});
+            return result;
+        }
+        if (spots.size() != numberOfPaths * simulationSteps)
+        {
+            recordIssue("SPOT_PATHS_LENGTH",
+                        "Spot paths must be number_of_paths times simulation dates",
+                        {"spot_paths"});
             return result;
         }
         vector<std::shared_ptr<SingleInstrumentContract>> trades;
         vector<std::shared_ptr<Contract>> structures;
-        result = prepareResult(1, false, byTrade, byStructure, trades, structures);
-        recordPath(result, 0, pathGenerator->getPathForSpot(spots), trades, structures);
+        result = prepareResult(numberOfPaths, false, byTrade, byStructure, trades, structures);
+        vector<double> pathSpots(simulationSteps);
+        for (size_t i = 0; i < numberOfPaths; ++i)
+        {
+            copy(spots.begin() + static_cast<std::ptrdiff_t>(i * simulationSteps),
+                 spots.begin() + static_cast<std::ptrdiff_t>((i + 1) * simulationSteps),
+                 pathSpots.begin());
+            recordPath(result, i, pathGenerator->getPathForSpot(pathSpots), trades, structures);
+        }
         return result;
     }
 

@@ -1,8 +1,16 @@
 # sjd
 
-Single-asset valuation library. A `RatesEnvironment` holds forward, discount, volatility, and fixing curves that share one anchor date. Contracts check that environment, then price. Portfolios group contracts and can add margin, CVA, insurance, and Basel II current exposure.
+Single-asset derivative structuring library. A `RatesEnvironment` holds forward, discount, volatility, and fixing curves that share one anchor date. Contracts check that environment, then price. Portfolios group contracts and can add margin and Basel II current-exposure capital. The Python front end simulates paths, summarises exposure and valuation adjustments, and can revalue candidate strategies on a fixed set of spot paths for cost optimisation.
 
 Option formulas stay unitless. They take a discount factor and a standard deviation, not an interest rate or a volatility with a day count, so Monte Carlo can call them without calendar logic.
+
+## Scope: capital and costs
+
+Regulatory capital today is Basel II Current Exposure Method (CEM). The C++ `Structure` / `CurrentExposureMethod` / `PortfolioB2CEM` path and the matching `sjd.stats.regulatory_capital` along a simulation are kept: CEM is a substantial, tested piece of the library and remains available for comparison and for books that still report under that measure.
+
+For a structuring optimiser, the intended capital term is SA-CCR (Basel III). CEM add-ons are notional-based and ignore option delta, so they steer collar-versus-outright decisions the wrong way. SA-CCR for a single asset in one hedging set needs supervisory delta (Black-76 delta is already on the pricing formulas), adjusted notional, maturity factor, and a PFE multiplier from MtM and collateral — all of which can live in Python on `simulate(..., by_trade=True)` output without replacing the CEM code. Until that lands, `sjd.stats.structure_costs` uses CEM when netting-set capital is requested, and treats SA-CCR as the target measure to add beside it rather than instead of it.
+
+Naming: a user-facing parametrised book is a **strategy** (`sjd.strategy`). C++ `Structure` and simulation `by_structure` still mean a regulatory-capital netting set.
 
 ## Dependencies
 
@@ -54,8 +62,6 @@ if (contract.isOK()) {
 }
 ```
 
-From Python the same steps are `validate`, `is_ok`, and `get_value`. See `python/notebooks` for worked examples. The module is `sjd`, loaded from `python/sjd_runtime`.
+From Python the same steps are `validate`, `is_ok`, and `get_value`. See `python/notebooks` for worked examples. Build the bindings so `_core` is copied into `python/sjd`, then `pip install -e python` and `import sjd`.
 
-## What is not the build
-
-CMake is the supported build, and `python/` is the supported front end. `excelFunctions` and `xllInterface` have been removed. `sjd_vc10.sln`, `sjd_vc14.sln`, `sjdObjects/`, and `sjdXllObjects/` are not inputs to CMake and are not maintained.
+CMake is the supported build. The old Excel add-in layers (`sjdObjects`, `sjdXllObjects`, and the Visual Studio solutions) have been removed.

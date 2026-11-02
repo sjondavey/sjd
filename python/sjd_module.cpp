@@ -1090,7 +1090,33 @@ PYBIND11_MODULE(_core, m)
             return simulation_from(simulated);
         }, py::arg("spots"), py::arg("by_trade") = false, py::arg("by_structure") = false,
            "Mark the book to this forward path. One spot per simulation date. "
-           "by_structure values each regulatory-capital netting set.");
+           "by_structure values each regulatory-capital netting set.")
+        .def("value_spot_paths", [](sjd::PortfolioEvolver& evolver,
+                                    const py::array_t<double, py::array::c_style | py::array::forcecast>& spots,
+                                    bool by_trade,
+                                    bool by_structure) {
+            if (spots.ndim() != 2)
+                throw py::value_error("spots must be shaped [paths, steps]");
+            const py::ssize_t paths = spots.shape(0);
+            const py::ssize_t steps = spots.shape(1);
+            std::vector<double> flat(static_cast<size_t>(paths * steps));
+            const double* data = spots.data();
+            std::copy(data, data + flat.size(), flat.begin());
+            sjd::SimulatedPaths simulated;
+            {
+                py::gil_scoped_release release;
+                simulated = evolver.valueSpotPaths(
+                    flat, static_cast<size_t>(paths), by_trade, by_structure);
+            }
+            if (simulated.paths == 0)
+                throw py::value_error("Cannot value spot paths: " + evolver.getErrorMessagesAsString());
+            if (static_cast<py::ssize_t>(simulated.steps) != steps)
+                throw py::value_error("spots steps must match the evolver simulation dates");
+            require_structures(by_structure, simulated);
+            return simulation_from(simulated);
+        }, py::arg("spots"), py::arg("by_trade") = false, py::arg("by_structure") = false,
+           "Mark the book to many forward paths. spots is shaped [paths, steps]. "
+           "Reuse the same spots across candidate portfolios for common random numbers.");
 
     py::class_<Simulation>(m, "Simulation",
                            "Simulated paths. Arrays are numpy, indexed [path, step], "

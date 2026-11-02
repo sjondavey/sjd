@@ -249,6 +249,99 @@ def cost_of_funding(position, discount_factors, spread_discount_factors):
     return cost
 
 
+def structure_costs(
+    simulation,
+    discount_factors,
+    default_probability,
+    loss_given_default,
+    *,
+    netting_sets=None,
+    factors=None,
+    credit=None,
+    capital_cost_rate=0.0,
+    funding_spread_discount_factors=None,
+    funding_position=None,
+):
+    """Aggregate CVA, DVA, funding and optional CEM capital cost for a simulation.
+
+    Exposures use ``exposure(simulation)`` on the requested simulation dates.
+    CVA and DVA are path means of ``credit_valuation_adjustment`` /
+    ``debit_valuation_adjustment``. Funding uses the mean of
+    ``funding_position`` (default: posted margin when present, otherwise the
+    negative of MtM) against ``funding_spread_discount_factors`` when given.
+
+    When ``netting_sets``, ``factors`` and ``credit`` are all set, capital is
+    the path mean of Basel II current-exposure capital on each exposure date,
+    and ``capital_cost`` is that profile times ``capital_cost_rate`` discounted
+    with ``discount_factors`` (a simple KVA-style charge; SA-CCR is the
+    intended future capital term beside CEM, not a replacement for it).
+
+    Returns a dict with ``cva``, ``dva``, ``funding``, ``capital``,
+    ``capital_cost``, ``total`` and the exposure-date profiles ``ee``, ``nee``
+    and ``expected_capital`` (the last only when capital was requested).
+    ``total`` is ``cva + dva + funding + capital_cost``.
+    """
+    steps = simulation.exposure_steps
+    values = exposure(simulation)[:, steps]
+    discount = np.asarray(discount_factors, dtype=float)
+    probability = np.asarray(default_probability, dtype=float)
+    loss = np.asarray(loss_given_default, dtype=float)
+    _check_steps(discount, values.shape[1], "discount_factors")
+    _check_steps(probability, values.shape[1], "default_probability")
+    _check_steps(loss, values.shape[1], "loss_given_default")
+
+    ee = expected_exposure(values)
+    nee = negative_expected_exposure(values)
+    cva = float(np.mean(credit_valuation_adjustment(values, discount, probability, loss)))
+    dva = float(np.mean(debit_valuation_adjustment(values, discount, probability, loss)))
+
+    funding = 0.0
+    if funding_spread_discount_factors is not None:
+        if funding_position is None:
+            if simulation.margin is None:
+                position = -np.asarray(simulation.mtm, dtype=float)[:, steps].mean(axis=0)
+            else:
+                position = np.asarray(simulation.margin, dtype=float)[:, steps].mean(axis=0)
+        else:
+            position = np.asarray(funding_position, dtype=float)
+            if position.ndim == 2:
+                if position.shape[1] == simulation.steps:
+                    position = position[:, steps].mean(axis=0)
+                else:
+                    position = position.mean(axis=0)
+        funding = float(
+            cost_of_funding(position, discount, funding_spread_discount_factors)
+        )
+
+    capital_profile = None
+    capital = 0.0
+    capital_cost = 0.0
+    if netting_sets is not None or factors is not None or credit is not None:
+        if netting_sets is None or factors is None or credit is None:
+            raise ValueError("capital needs netting_sets, factors and credit together")
+        capital_paths = regulatory_capital(simulation, netting_sets, factors, credit)
+        capital_profile = capital_paths.mean(axis=0)
+        capital = float(capital_profile.mean())
+        if capital_cost_rate:
+            if capital_profile.shape != discount.shape:
+                raise ValueError("discount_factors must match exposure dates for capital_cost")
+            capital_cost = float((discount * capital_profile * float(capital_cost_rate)).sum())
+
+    result = {
+        "cva": cva,
+        "dva": dva,
+        "funding": funding,
+        "capital": capital,
+        "capital_cost": capital_cost,
+        "total": cva + dva + funding + capital_cost,
+        "ee": ee,
+        "nee": nee,
+    }
+    if capital_profile is not None:
+        result["expected_capital"] = capital_profile
+    return result
+
+
 def regulatory_capital(simulation, netting_sets, factors, credit):
     """Basel II current-exposure capital, shaped ``[paths, exposure dates]``.
 
@@ -259,6 +352,9 @@ def regulatory_capital(simulation, netting_sets, factors, credit):
     ``factors.get_factor(time)``, scaled by the net-to-gross ratio. Posted
     margin reduces the exposure. ``credit`` supplies the capital charge and
     the counterparty weight.
+
+    Kept as the implemented capital measure. SA-CCR is the target for new
+    optimiser capital terms; see the README scope note.
     """
     if simulation.by_structure is None:
         raise ValueError("regulatory capital needs a simulation with by_structure=True")
