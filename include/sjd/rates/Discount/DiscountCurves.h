@@ -22,7 +22,7 @@ namespace sjd
         DiscountCurve(QuantLib::Date anchorDate,
                       std::vector<QuantLib::Date> observationDates,
                       std::vector<double> discountFactors,
-                      ArrayInterpolatorType type = LINEAR,
+                      ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
                       bool allowExtrapolation = false);
 
         virtual ~DiscountCurve() {};

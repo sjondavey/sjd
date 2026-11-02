@@ -14,15 +14,15 @@ namespace sjd
         boost::to_lower(factorDescription);
 
         if (factorDescription.compare("ir") == 0)
-            factors = std::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::InterestRatesRegCapFactors());
+            factors = std::make_shared<sjd::InterestRatesRegCapFactors>();
         else if (factorDescription.compare("fx") == 0)
-            factors = std::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::FXRegCapFactors());
+            factors = std::make_shared<sjd::FXRegCapFactors>();
         else if (factorDescription.compare("equity") == 0)
-            factors = std::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::EquitiesRegCapFactors());
+            factors = std::make_shared<sjd::EquitiesRegCapFactors>();
         else if (factorDescription.compare("precious") == 0)
-            factors = std::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::PreciousMetalRegCapFactors());
+            factors = std::make_shared<sjd::PreciousMetalRegCapFactors>();
         else if (factorDescription.compare("commodity") == 0)
-            factors = std::shared_ptr<sjd::RegCapUnderlyingFactors>(new sjd::CommodityRegCapFactors());
+            factors = std::make_shared<sjd::CommodityRegCapFactors>();
 
         if (!factors)
         {

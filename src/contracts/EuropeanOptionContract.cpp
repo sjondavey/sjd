@@ -41,7 +41,7 @@ namespace sjd
                                            double pAmount,
                                            BuySell bs)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("EuropeanOption"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("EuropeanOption");
         setMaturityDate(optionMaturity);
         setSettlementDate(optionSettlement);
         setStrike(X);
@@ -54,19 +54,19 @@ namespace sjd
 
     std::unique_ptr<Contract> EuropeanOption::clone()
     {
-        return std::unique_ptr<Contract>(new EuropeanOption(*this));
+        return std::make_unique<EuropeanOption>(*this);
     }
 
     void EuropeanOption::setType(PutCall pc)
     {
         SingleOptionContract::setType(pc);
-        if (getType() == PUT)
+        if (getType() == PutCall::PUT)
         {
-            option = std::shared_ptr<Black76Option>(new Black76Put(0, 0, 0, 0));
+            option = std::make_shared<Black76Put>(0, 0, 0, 0);
         }
         else
         {
-            option = std::shared_ptr<Black76Option>(new Black76Call(0, 0, 0, 0));
+            option = std::make_shared<Black76Call>(0, 0, 0, 0);
         }
     }
 

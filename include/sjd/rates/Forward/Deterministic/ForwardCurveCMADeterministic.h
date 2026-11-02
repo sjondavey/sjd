@@ -19,7 +19,7 @@ namespace sjd
         ForwardCurveCMADeterministic(QuantLib::Date anchorDate,
                                      std::vector<QuantLib::Date> observationDates,
                                      std::vector<double> forwards,
-                                     ArrayInterpolatorType type = LINEAR,
+                                     ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
                                      bool allowExtrapolation = false);
 
         bool isOK();

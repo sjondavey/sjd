@@ -26,7 +26,7 @@ namespace sjd
     {
     public:
         bool isOK();
-        QuantLib::Date getAnchorDate();
+        QuantLib::Date getAnchorDate() const;
 
         virtual void setBaseRates(const std::shared_ptr<RatesEnvironment> re);
         std::shared_ptr<RatesEnvironment> getBaseRates();

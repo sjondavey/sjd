@@ -18,8 +18,8 @@ void ForwardCurveTest::testForwardCurveConstruction()
 
     // Case 1 NULL inputs
     std::shared_ptr<ForwardCurveDeterministic> sfc =
-        std::shared_ptr<ForwardCurveDeterministic>(new ForwardCurveDeterministic(
-            anchorDate, incorrectObservationDates, futures, sjd::LINEAR, allowExtrapolation));
+        std::make_shared<ForwardCurveDeterministic>(anchorDate, incorrectObservationDates, futures,
+                                                    sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
     BOOST_CHECK(sfc->isOK() == false);
 
     // Case 2 Inputs dates not strictly monotonic
@@ -33,34 +33,34 @@ void ForwardCurveTest::testForwardCurveConstruction()
     }
     incorrectObservationDates.push_back(anchorDate);
     futures.push_back(110);
-    sfc = std::shared_ptr<ForwardCurveDeterministic>(new ForwardCurveDeterministic(
-        anchorDate, incorrectObservationDates, futures, sjd::LINEAR, allowExtrapolation));
+    sfc = std::make_shared<ForwardCurveDeterministic>(anchorDate, incorrectObservationDates, futures,
+                                                      sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
     BOOST_CHECK(sfc->isOK() == false);
 
     // Case 3 Input dates and times have different lengths
     futures.pop_back();
     incorrectObservationDates = observationDates;
     incorrectObservationDates.push_back(calendar.advance(anchorDate, static_cast<int>(i + 1), Months));
-    sfc = std::shared_ptr<ForwardCurveDeterministic>(new ForwardCurveDeterministic(
-        anchorDate, incorrectObservationDates, futures, sjd::LINEAR, allowExtrapolation));
+    sfc = std::make_shared<ForwardCurveDeterministic>(anchorDate, incorrectObservationDates, futures,
+                                                      sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
     BOOST_CHECK(sfc->isOK() == false);
 
     // Case 4 Anchor date > final curve date
     incorrectObservationDates = observationDates;
     anchorDate = calendar.advance(anchorDate, static_cast<int>(i + 1), Months);
-    sfc = std::shared_ptr<ForwardCurveDeterministic>(new ForwardCurveDeterministic(
-        anchorDate, incorrectObservationDates, futures, sjd::LINEAR, allowExtrapolation));
+    sfc = std::make_shared<ForwardCurveDeterministic>(anchorDate, incorrectObservationDates, futures,
+                                                      sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
     BOOST_CHECK(sfc->isOK() == false);
 
     // Case 5 We do not supply a point at the anchor date and we specify no extrapolation
     anchorDate = Date(27, Jan, 2012);
-    sfc = std::shared_ptr<ForwardCurveDeterministic>(new ForwardCurveDeterministic(
-        anchorDate, observationDates, futures, sjd::LINEAR, allowExtrapolation));
+    sfc = std::make_shared<ForwardCurveDeterministic>(anchorDate, observationDates, futures,
+                                                      sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
     BOOST_CHECK(sfc->isOK() == true);
     BOOST_CHECK(sfc->getForward(anchorDate) == 109.9);
 
-    sfc = std::shared_ptr<ForwardCurveDeterministic>(new ForwardCurveDeterministic(
-        anchorDate, observationDates, futures, sjd::LINEAR, allowExtrapolation));
+    sfc = std::make_shared<ForwardCurveDeterministic>(anchorDate, observationDates, futures,
+                                                      sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
     BOOST_CHECK(sfc->isOK() == true);
     Date d1 = calendar.advance(anchorDate, 5, Months);
     Date d2 = calendar.advance(anchorDate, 13, Months);
@@ -71,8 +71,8 @@ void ForwardCurveTest::testForwardCurveConstruction()
     BOOST_CHECK(sfc->isInRange(anchorDate) == true);
 
     allowExtrapolation = !allowExtrapolation;
-    sfc = std::shared_ptr<ForwardCurveDeterministic>(new ForwardCurveDeterministic(
-        anchorDate, observationDates, futures, sjd::LINEAR, allowExtrapolation));
+    sfc = std::make_shared<ForwardCurveDeterministic>(anchorDate, observationDates, futures,
+                                                      sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
     BOOST_CHECK(sfc->isInRange(d1) == true);
     BOOST_CHECK(sfc->isInRange(d2) == true);
     BOOST_CHECK(sfc->isInRange(d3) == false);
@@ -102,22 +102,22 @@ void ForwardCurveTest::testForwardCurveRollsAtForwardVolConstruction()
     }
 
     // Case 1: VRS does not extend to the end of the FRS
-    std::shared_ptr<ForwardCurveStochasticFwdVol> frs = std::shared_ptr<ForwardCurveStochasticFwdVol>(
-        new ForwardCurveStochasticFwdVol(anchorDate, observationDates, forwards, LINEAR, false, vrs));
+    std::shared_ptr<ForwardCurveStochasticFwdVol> frs = std::make_shared<ForwardCurveStochasticFwdVol>(
+        anchorDate, observationDates, forwards, ArrayInterpolatorType::LINEAR, false, vrs);
 
     BOOST_CHECK(frs->isOK() == false);
 
     // Case 2: VRS has different anchor date
     vrs = gr.getVolatilityCurve(gr.defaultDayCounter, gr.defaultCalendar,
                                 calendar.advance(anchorDate, 1, Months), 4, 0.2);
-    frs = std::shared_ptr<ForwardCurveStochasticFwdVol>(
-        new ForwardCurveStochasticFwdVol(anchorDate, observationDates, forwards, LINEAR, false, vrs));
+    frs = std::make_shared<ForwardCurveStochasticFwdVol>(anchorDate, observationDates, forwards,
+                                                         ArrayInterpolatorType::LINEAR, false, vrs);
     BOOST_CHECK(frs->isOK() == false);
 
     // Case 3, all ok
     vrs = gr.getVolatilityCurve(gr.defaultDayCounter, gr.defaultCalendar, anchorDate, 4, 0.2);
-    frs = std::shared_ptr<ForwardCurveStochasticFwdVol>(
-        new ForwardCurveStochasticFwdVol(anchorDate, observationDates, forwards, LINEAR, false, vrs));
+    frs = std::make_shared<ForwardCurveStochasticFwdVol>(anchorDate, observationDates, forwards,
+                                                         ArrayInterpolatorType::LINEAR, false, vrs);
     BOOST_CHECK(frs->isOK() == true);
 }
 
@@ -136,10 +136,10 @@ void ForwardCurveTest::testConsistencyBetweenGetMethods()
         observationDates.push_back(date);
         futures.push_back(110 - (double)i / 10.0);
     }
-    std::shared_ptr<DayCounter> dcPtr = std::shared_ptr<DayCounter>(new Actual365Fixed());
+    std::shared_ptr<DayCounter> dcPtr = std::make_shared<Actual365Fixed>();
     bool allowExtrapolation = false;
-    ForwardCurveDeterministic* fcd =
-        new ForwardCurveDeterministic(anchorDate, observationDates, futures, sjd::LINEAR, allowExtrapolation);
+    ForwardCurveDeterministic* fcd = new ForwardCurveDeterministic(
+        anchorDate, observationDates, futures, sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
 
     Month month = October;
     Year year = 2012;
@@ -193,7 +193,7 @@ void ForwardCurveTest::testValues()
     vector<double> observationDatesSerialNumbers;
     vector<double> futures;
     // vector<double> time;
-    std::shared_ptr<DayCounter> dcPtr = std::shared_ptr<DayCounter>(new Actual365Fixed());
+    std::shared_ptr<DayCounter> dcPtr = std::make_shared<Actual365Fixed>();
     size_t i;
     for (i = 1; i <= 12; ++i)
     {
@@ -203,8 +203,8 @@ void ForwardCurveTest::testValues()
         futures.push_back(110 - (double)i / 10.0);
     }
     bool allowExtrapolation = false;
-    ForwardCurveDeterministic* sfc =
-        new ForwardCurveDeterministic(anchorDate, observationDates, futures, sjd::LINEAR, allowExtrapolation);
+    ForwardCurveDeterministic* sfc = new ForwardCurveDeterministic(
+        anchorDate, observationDates, futures, sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
 
     LinearArrayInterpolator la(observationDatesSerialNumbers, futures, false);
 
@@ -239,8 +239,8 @@ void ForwardCurveTest::testRoll()
     }
 
     // Case 1: VRS does not extend to the end of the FRS
-    std::shared_ptr<ForwardCurveDeterministic> frs = std::shared_ptr<ForwardCurveDeterministic>(
-        new ForwardCurveDeterministic(anchorDate, observationDates, forwards, LINEAR, false));
+    std::shared_ptr<ForwardCurveDeterministic> frs = std::make_shared<ForwardCurveDeterministic>(
+        anchorDate, observationDates, forwards, ArrayInterpolatorType::LINEAR, false);
 
     BOOST_CHECK(frs->isOK() == true);
 
@@ -304,8 +304,8 @@ void ForwardCurveTest::testRollStochastic()
     }
 
     // Case 1: VRS does not extend to the end of the FRS
-    std::shared_ptr<ForwardCurveStochasticFwdVol> frs = std::shared_ptr<ForwardCurveStochasticFwdVol>(
-        new ForwardCurveStochasticFwdVol(anchorDate, observationDates, forwards, LINEAR, false, vrs));
+    std::shared_ptr<ForwardCurveStochasticFwdVol> frs = std::make_shared<ForwardCurveStochasticFwdVol>(
+        anchorDate, observationDates, forwards, ArrayInterpolatorType::LINEAR, false, vrs);
 
     vector<Date> intermedateDates;
     intermedateDates.push_back(calendar.advance(anchorDate, 10, Days));
@@ -388,8 +388,8 @@ void ForwardCurveTest::testSpotVolPathVariance()
         observationDates.push_back(calendar.advance(anchorDate, static_cast<QuantLib::Integer>(i), Months));
         forwards.push_back(110 - (double)i / 10.0);
     }
-    std::shared_ptr<ForwardCurveStochasticSpotVol> frs(
-        new ForwardCurveStochasticSpotVol(anchorDate, observationDates, forwards, LINEAR, false, vrs));
+    std::shared_ptr<ForwardCurveStochasticSpotVol> frs(std::make_shared<ForwardCurveStochasticSpotVol>(
+        anchorDate, observationDates, forwards, ArrayInterpolatorType::LINEAR, false, vrs));
     BOOST_REQUIRE_MESSAGE(frs->isOK(), frs->getErrorMessagesAsString());
 
     vector<Date> simulationDates;

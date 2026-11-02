@@ -11,7 +11,7 @@ namespace sjd
     =======================================================================================*/
     DiscountCurve::DiscountCurve()
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("DiscountCurve"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("DiscountCurve");
         resetErrorMessages();
     }
 
@@ -21,11 +21,10 @@ namespace sjd
                                  ArrayInterpolatorType typeInput,
                                  bool allowExtrapolationInput)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("DiscountCurve"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("DiscountCurve");
 
-        datedCurve = std::shared_ptr<DatedCurve>(new DatedCurve(anchorDateInput, observationDatesInput,
-                                                                discountFactorsInput, typeInput,
-                                                                allowExtrapolationInput));
+        datedCurve = std::make_shared<DatedCurve>(anchorDateInput, observationDatesInput,
+                                                  discountFactorsInput, typeInput, allowExtrapolationInput);
         anchorDate = datedCurve->getAnchorDate();
         allowExtrapolation = datedCurve->getAllowsExtrapolation();
         finalDate = datedCurve->getFinalDate();
@@ -94,8 +93,8 @@ namespace sjd
             bumpedDiscountFactors[i] = convention->rateToDF(rate + spread, anchorDate, curveDates[i]);
         }
 
-        return std::shared_ptr<DiscountCurve>(new DiscountCurve(anchorDate, curveDates, bumpedDiscountFactors,
-                                                                datedCurve->getType(), allowExtrapolation));
+        return std::make_shared<DiscountCurve>(anchorDate, curveDates, bumpedDiscountFactors,
+                                               datedCurve->getType(), allowExtrapolation);
     }
 
     std::shared_ptr<DiscountRateSource> DiscountCurve::rollForward(Date toDate)
@@ -128,9 +127,8 @@ namespace sjd
                 }
             }
         }
-        return std::shared_ptr<DiscountCurve>(new DiscountCurve(toDate, rolledObservationDates,
-                                                                rolledDiscountFactors, datedCurve->getType(),
-                                                                allowExtrapolation));
+        return std::make_shared<DiscountCurve>(toDate, rolledObservationDates, rolledDiscountFactors,
+                                               datedCurve->getType(), allowExtrapolation);
     }
 
     vector<pair<string, std::shared_ptr<RateSource>>> DiscountCurve::getMarketRateStresses()
@@ -138,7 +136,7 @@ namespace sjd
         vector<pair<string, std::shared_ptr<RateSource>>> marketStress =
             DeterministicDiscountRateSource::getMarketRateStresses();
 
-        std::shared_ptr<Calendar> calendar = std::shared_ptr<Calendar>(new NullCalendar());
+        std::shared_ptr<Calendar> calendar = std::make_shared<NullCalendar>();
         vector<Date> threeMonthDates;
         vector<double> threeMonthDF;
         Date dateToAdd = anchorDate;
@@ -157,12 +155,12 @@ namespace sjd
         }
         dateToAdd = anchorDate;
 
-        std::shared_ptr<DiscountCurve> dc = std::shared_ptr<DiscountCurve>(
-            new DiscountCurve(anchorDate, threeMonthDates, threeMonthDF, LINEAR, allowExtrapolation));
+        std::shared_ptr<DiscountCurve> dc = std::make_shared<DiscountCurve>(
+            anchorDate, threeMonthDates, threeMonthDF, ArrayInterpolatorType::LINEAR, allowExtrapolation);
 
         marketStress.push_back(make_pair("ZC Stress base", dc));
 
-        std::shared_ptr<DayCounter> act360 = std::shared_ptr<DayCounter>(new Actual360());
+        std::shared_ptr<DayCounter> act360 = std::make_shared<Actual360>();
         InterestRateConvention irc(act360, Compounded, Annual);
 
         for (size_t i = 1; i < threeMonthDates.size(); ++i)
@@ -179,8 +177,8 @@ namespace sjd
                 stringstream ss;
                 ss << "DF 1 bp ZC Stress at " << i * 3 << "m";
                 string description = ss.str();
-                dc = std::shared_ptr<DiscountCurve>(
-                    new DiscountCurve(anchorDate, threeMonthDates, threeMonthDF, LINEAR, allowExtrapolation));
+                dc = std::make_shared<DiscountCurve>(anchorDate, threeMonthDates, threeMonthDF,
+                                                     ArrayInterpolatorType::LINEAR, allowExtrapolation);
 
                 marketStress.push_back(make_pair(description, dc));
                 threeMonthDF[i] = originalDF;

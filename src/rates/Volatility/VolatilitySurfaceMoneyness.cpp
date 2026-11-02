@@ -17,8 +17,7 @@ namespace sjd
                                                            SurfaceInterpolatorType interpolatorTypeInput,
                                                            bool extrapolateInput)
     {
-        errorTracking =
-            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceMoneyness"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("VolatilitySurfaceMoneyness");
 
         setInputs(anchorDateInput, observationDatesInput, moneynessInput,
                   convertVectorOfVectorsToMatrix(volatilityDataInput), interpolatorTypeInput,
@@ -32,8 +31,7 @@ namespace sjd
                                                            SurfaceInterpolatorType interpolatorTypeInput,
                                                            bool extrapolateInput)
     {
-        errorTracking =
-            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceMoneyness"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("VolatilitySurfaceMoneyness");
 
         setInputs(anchorDateInput, observationDatesInput, moneynessInput, volatilityDataInput,
                   interpolatorTypeInput, extrapolateInput);
@@ -87,8 +85,8 @@ namespace sjd
         Matrix spreadMatrix = Matrix(volatilitySubset.rows(), volatilitySubset.columns(), spread);
         Matrix bumpedVolMatrix = volatilitySubset + spreadMatrix;
 
-        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneyness(
-            anchorDate, newDates, strikeDimension, bumpedVolMatrix, interpolatorType, allowExtrapolation));
+        return std::make_shared<VolatilitySurfaceMoneyness>(
+            anchorDate, newDates, strikeDimension, bumpedVolMatrix, interpolatorType, allowExtrapolation);
     }
 
     std::shared_ptr<VolatilityRateSource> VolatilitySurfaceMoneyness::rollForward(Date toDate)
@@ -98,7 +96,7 @@ namespace sjd
 
         getRolledVariables(toDate, newDates, volatilitySubset);
 
-        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneyness(
-            toDate, newDates, strikeDimension, volatilitySubset, interpolatorType, allowExtrapolation));
+        return std::make_shared<VolatilitySurfaceMoneyness>(
+            toDate, newDates, strikeDimension, volatilitySubset, interpolatorType, allowExtrapolation);
     }
 }

@@ -8,7 +8,7 @@ namespace sjd
     ContractStressor::ContractStressor(std::shared_ptr<Contract> contractInput,
                                        std::shared_ptr<RatesEnvironment> rates)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ContractStressor"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("ContractStressor");
         contract = contractInput;
         baseRates = rates;
     }
@@ -78,7 +78,7 @@ namespace sjd
                 for (size_t i = 0; i < stressedDRSS.size(); ++i)
                 {
                     std::shared_ptr<RatesEnvironment> re =
-                        std::shared_ptr<RatesEnvironment>(new RatesEnvironment(baseRates->getAnchorDate()));
+                        std::make_shared<RatesEnvironment>(baseRates->getAnchorDate());
                     std::shared_ptr<DiscountRateSource> stressDRS =
                         std::dynamic_pointer_cast<DiscountRateSource>(stressedDRSS[i].second);
                     re->setDRS(stressDRS);
@@ -88,8 +88,8 @@ namespace sjd
                         {
                             Date anchorDate = baseFRS->getAnchorDate();
                             double spotAtT0 = irdFRS->getSpotAtT0();
-                            std::shared_ptr<ForwardCurveFX> stressFRS = std::shared_ptr<ForwardCurveFX>(
-                                new ForwardCurveFX(anchorDate, spotAtT0, stressDRS, baseForeignDRS));
+                            std::shared_ptr<ForwardCurveFX> stressFRS = std::make_shared<ForwardCurveFX>(
+                                anchorDate, spotAtT0, stressDRS, baseForeignDRS);
                             re->setFRS(stressFRS);
                         }
                         else
@@ -125,7 +125,7 @@ namespace sjd
                 for (size_t i = 0; i < stressedForeignDRSS.size(); ++i)
                 {
                     std::shared_ptr<RatesEnvironment> re =
-                        std::shared_ptr<RatesEnvironment>(new RatesEnvironment(baseRates->getAnchorDate()));
+                        std::make_shared<RatesEnvironment>(baseRates->getAnchorDate());
                     std::shared_ptr<DiscountRateSource> stressForeignDRS =
                         std::dynamic_pointer_cast<DiscountRateSource>(stressedForeignDRSS[i].second);
                     re->setForeignDRS(stressForeignDRS);
@@ -136,8 +136,8 @@ namespace sjd
                             Date anchorDate = baseFRS->getAnchorDate();
                             double spotAtT0 = irdFRS->getSpotAtT0();
                             std::shared_ptr<ForwardCurveFX> stressForeignFRS =
-                                std::shared_ptr<ForwardCurveFX>(
-                                    new ForwardCurveFX(anchorDate, spotAtT0, baseDRS, stressForeignDRS));
+                                std::make_shared<ForwardCurveFX>(anchorDate, spotAtT0, baseDRS,
+                                                                 stressForeignDRS);
                             re->setFRS(stressForeignFRS);
                         }
                         else
@@ -173,7 +173,7 @@ namespace sjd
                 for (size_t i = 0; i < stressedVRSS.size(); ++i)
                 {
                     std::shared_ptr<RatesEnvironment> re =
-                        std::shared_ptr<RatesEnvironment>(new RatesEnvironment(baseRates->getAnchorDate()));
+                        std::make_shared<RatesEnvironment>(baseRates->getAnchorDate());
                     std::shared_ptr<VolatilityRateSource> stressVRS =
                         std::dynamic_pointer_cast<VolatilityRateSource>(stressedVRSS[i].second);
                     re->setVRS(stressVRS);
@@ -209,7 +209,7 @@ namespace sjd
                 for (size_t i = 0; i < stressedFRSS.size(); ++i)
                 {
                     std::shared_ptr<RatesEnvironment> re =
-                        std::shared_ptr<RatesEnvironment>(new RatesEnvironment(baseRates->getAnchorDate()));
+                        std::make_shared<RatesEnvironment>(baseRates->getAnchorDate());
                     std::shared_ptr<ForwardRateSource> stressFRS =
                         std::dynamic_pointer_cast<ForwardRateSource>(stressedFRSS[i].second);
                     re->setFRS(stressFRS);

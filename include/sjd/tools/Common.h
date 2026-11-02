@@ -9,16 +9,22 @@
 namespace sjd
 {
 
-    enum BuySell
+    enum class BuySell
     {
         BUY,
         SELL
     };
-    enum PutCall
+    enum class PutCall
     {
         PUT,
         CALL
     };
+
+    // +1 for a buy, -1 for a sell.
+    inline double sign(BuySell buySell)
+    {
+        return buySell == BuySell::BUY ? 1.0 : -1.0;
+    }
 
     std::string convertBuySellToString(BuySell bs);
 

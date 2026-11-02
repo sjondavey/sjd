@@ -105,7 +105,7 @@ namespace sjd
             return;
         }
         anchorDate = anchorDateInput;
-        dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
+        dayCounter = std::make_shared<Actual365Fixed>();
         allowExtrapolation = extrapolateInput;
 
         strikeDimension = strikeDimensionInput;
@@ -161,18 +161,18 @@ namespace sjd
         interpolatorType = interpolatorTypeInput;
         if (interpolatorType == BILINEAR)
         {
-            interpolator = std::shared_ptr<Interpolation2D>(new QuantLib::BilinearInterpolation(
-                time.begin(), time.end(), strikeDimension.begin(), strikeDimension.end(), volatility));
+            interpolator = std::make_shared<QuantLib::BilinearInterpolation>(
+                time.begin(), time.end(), strikeDimension.begin(), strikeDimension.end(), volatility);
         }
         else if (interpolatorType == BICUBIC)
         {
-            interpolator = std::shared_ptr<Interpolation2D>(new QuantLib::BicubicSpline(
-                time.begin(), time.end(), strikeDimension.begin(), strikeDimension.end(), volatility));
+            interpolator = std::make_shared<QuantLib::BicubicSpline>(
+                time.begin(), time.end(), strikeDimension.begin(), strikeDimension.end(), volatility);
         }
         else
         {
-            interpolator = std::shared_ptr<Interpolation2D>(new QuantLib::BicubicSpline(
-                time.begin(), time.end(), strikeDimension.begin(), strikeDimension.end(), volatility));
+            interpolator = std::make_shared<QuantLib::BicubicSpline>(
+                time.begin(), time.end(), strikeDimension.begin(), strikeDimension.end(), volatility);
             interpolatorType = BICUBIC;
         }
     }

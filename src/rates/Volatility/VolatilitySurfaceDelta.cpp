@@ -20,7 +20,7 @@ namespace sjd
                                                    SurfaceInterpolatorType interpolatorTypeInput,
                                                    bool extrapolateInput)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceDelta"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("VolatilitySurfaceDelta");
 
         setInputs(anchorDateInput, observationDatesInput, deltaInput,
                   convertVectorOfVectorsToMatrix(volatilityInput), interpolatorTypeInput, extrapolateInput);
@@ -33,7 +33,7 @@ namespace sjd
                                                    SurfaceInterpolatorType interpolatorTypeInput,
                                                    bool extrapolateInput)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceDelta"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("VolatilitySurfaceDelta");
 
         setInputs(anchorDateInput, observationDatesInput, deltaInput, volatilityInput, interpolatorTypeInput,
                   extrapolateInput);
@@ -155,8 +155,8 @@ namespace sjd
         Matrix spreadMatrix = Matrix(volatilitySubset.rows(), volatilitySubset.columns(), spread);
         Matrix bumpedVolMatrix = volatilitySubset + spreadMatrix;
 
-        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceDelta(
-            anchorDate, newDates, strikeDimension, volatilitySubset, interpolatorType, allowExtrapolation));
+        return std::make_shared<VolatilitySurfaceDelta>(
+            anchorDate, newDates, strikeDimension, volatilitySubset, interpolatorType, allowExtrapolation);
     }
 
     std::shared_ptr<VolatilityRateSource> VolatilitySurfaceDelta::rollForward(Date toDate)
@@ -166,8 +166,8 @@ namespace sjd
 
         getRolledVariables(toDate, newDates, volatilitySubset);
 
-        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceDelta(
-            toDate, newDates, strikeDimension, volatilitySubset, interpolatorType, allowExtrapolation));
+        return std::make_shared<VolatilitySurfaceDelta>(toDate, newDates, strikeDimension, volatilitySubset,
+                                                        interpolatorType, allowExtrapolation);
     }
 
     /*======================================================================================
@@ -247,13 +247,13 @@ namespace sjd
         }
         if (interpolationType.compare("bilinear") == 0)
         {
-            interpolator = std::shared_ptr<Interpolation2D>(new BilinearInterpolation(
-                times.begin(), times.end(), delta.begin(), delta.end(), volatilityMatrix));
+            interpolator = std::make_shared<BilinearInterpolation>(times.begin(), times.end(), delta.begin(),
+                                                                   delta.end(), volatilityMatrix);
         }
         else
         {
-            interpolator = std::shared_ptr<Interpolation2D>(
-                new BicubicSpline(times.begin(), times.end(), delta.begin(), delta.end(), volatilityMatrix));
+            interpolator = std::make_shared<BicubicSpline>(times.begin(), times.end(), delta.begin(),
+                                                           delta.end(), volatilityMatrix);
         }
     }
 

@@ -38,10 +38,10 @@ namespace sjd
         virtual bool isOK();
 
         void setAnchorDate(QuantLib::Date anchorDate);
-        QuantLib::Date getAnchorDate();
+        QuantLib::Date getAnchorDate() const;
 
         virtual void setMarginBalance(double balanceInput);
-        virtual double getMarginBalance();
+        virtual double getMarginBalance() const;
         virtual void updateBalanceForGivenMtM(double mtm);
 
         // virtual bool setFutureMarginDates(std::vector<QuantLib::Date> dates);

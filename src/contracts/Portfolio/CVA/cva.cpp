@@ -56,7 +56,7 @@ namespace sjd
     =======================================================================================*/
     FlatPD::FlatPD(Date anchorDateInput, double pdInput, double lgdInput)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("FlatPD"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("FlatPD");
         setLGD(lgdInput);
         setPD(pdInput);
         setAnchorDate(anchorDateInput);
@@ -123,8 +123,7 @@ namespace sjd
                                                                vector<double> cdpInput,
                                                                vector<double> lgdInput)
     {
-        errorTracking =
-            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("CumulativeDefaultProbability"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("CumulativeDefaultProbability");
         setAnchorDate(anchorDateInput);
         observationDates = datesInput;
         vector<double> cdp = cdpInput;
@@ -144,9 +143,8 @@ namespace sjd
         {
             time.push_back((observationDates[i] - anchorDate) / 365.0);
         }
-        defaultInterpolator =
-            std::shared_ptr<ArrayInterpolator>(new LinearArrayInterpolator(time, cdp, false));
-        lossInterpolator = std::shared_ptr<ArrayInterpolator>(new LinearArrayInterpolator(time, lgd, false));
+        defaultInterpolator = std::make_shared<LinearArrayInterpolator>(time, cdp, false);
+        lossInterpolator = std::make_shared<LinearArrayInterpolator>(time, lgd, false);
     }
 
     bool CumulativeDefaultProbability::isOK()

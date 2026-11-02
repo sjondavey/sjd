@@ -23,7 +23,7 @@ namespace sjd
         ForwardCurveDeterministic(QuantLib::Date anchorDate,
                                   std::vector<QuantLib::Date> observationDates,
                                   std::vector<double> forwards,
-                                  ArrayInterpolatorType type = LINEAR,
+                                  ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
                                   bool allowExtrapolation = false);
 
         virtual bool isOK();
@@ -32,7 +32,7 @@ namespace sjd
         void setParameters(QuantLib::Date anchorDate,
                            std::vector<QuantLib::Date> observationDates,
                            std::vector<double> forwards,
-                           ArrayInterpolatorType type = LINEAR,
+                           ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
                            bool allowExtrapolation = false);
 
         virtual double getForward(QuantLib::Date toDate) const;

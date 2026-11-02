@@ -14,7 +14,7 @@ void DiscountCurvesTest::testConstruction()
     Date anchorDate = Date(27, Jan, 2012);
     vector<Date> observationDates, incorrectObservationDates;
     vector<double> df;
-    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
+    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
     bool allowExtrapolation = false;
     size_t i;
     for (i = 1; i <= 12; ++i)
@@ -26,15 +26,15 @@ void DiscountCurvesTest::testConstruction()
     }
     incorrectObservationDates.push_back(calendar.advance(anchorDate, static_cast<int>(i + 1), Months));
 
-    std::shared_ptr<DiscountCurve> dc = std::shared_ptr<DiscountCurve>(
-        new DiscountCurve(anchorDate, incorrectObservationDates, df, LINEAR, allowExtrapolation));
+    std::shared_ptr<DiscountCurve> dc = std::make_shared<DiscountCurve>(
+        anchorDate, incorrectObservationDates, df, ArrayInterpolatorType::LINEAR, allowExtrapolation);
     BOOST_REQUIRE(dc->isOK() == false);
 
     vector<string> msgs = dc->getErrorMessages();
     BOOST_CHECK(msgs.size() == 1);
 
-    std::shared_ptr<DiscountCurve> dc2 = std::shared_ptr<DiscountCurve>(
-        new DiscountCurve(anchorDate, observationDates, df, LINEAR, allowExtrapolation));
+    std::shared_ptr<DiscountCurve> dc2 = std::make_shared<DiscountCurve>(
+        anchorDate, observationDates, df, ArrayInterpolatorType::LINEAR, allowExtrapolation);
     BOOST_CHECK(dc2->isOK() == true);
     BOOST_CHECK(dc2->getAnchorDate() == anchorDate);
     Date d1 = calendar.advance(anchorDate, 5, Months);
@@ -47,8 +47,8 @@ void DiscountCurvesTest::testConstruction()
     BOOST_CHECK(abs(dc2->getDiscountFactor(anchorDate) - 1.0) < EPSILON_FOR_DOUBLES);
 
     allowExtrapolation = !allowExtrapolation;
-    dc2 = std::shared_ptr<DiscountCurve>(
-        new DiscountCurve(anchorDate, observationDates, df, LINEAR, allowExtrapolation));
+    dc2 = std::make_shared<DiscountCurve>(anchorDate, observationDates, df, ArrayInterpolatorType::LINEAR,
+                                          allowExtrapolation);
     BOOST_CHECK(dc2->isInRange(d1) == true);
     BOOST_CHECK(dc2->isInRange(d2) == true);
     BOOST_CHECK(dc2->isInRange(d3) == false);
@@ -84,8 +84,8 @@ void DiscountCurvesTest::testRatesEnvironmentValidationReport()
     }
     observationDates.push_back(calendar.advance(anchorDate, 4, Months));
 
-    std::shared_ptr<DiscountCurve> invalidCurve(
-        new DiscountCurve(anchorDate, observationDates, discountFactors, LINEAR, false));
+    std::shared_ptr<DiscountCurve> invalidCurve(std::make_shared<DiscountCurve>(
+        anchorDate, observationDates, discountFactors, ArrayInterpolatorType::LINEAR, false));
     RatesEnvironment invalidEnvironment(anchorDate);
     invalidEnvironment.setDRS(invalidCurve);
     ValidationReport invalidReport = invalidEnvironment.validateReport();
@@ -106,7 +106,7 @@ void DiscountCurvesTest::testParallelBump()
     Date anchorDate = Date(27, Jan, 2012);
     vector<Date> observationDates;
     vector<double> df;
-    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
+    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
     bool allowExtrapolation = false;
     size_t i;
     for (i = 1; i <= 12; ++i)
@@ -115,10 +115,10 @@ void DiscountCurvesTest::testParallelBump()
         observationDates.push_back(date);
         df.push_back(exp(-0.065 * dayCounter->yearFraction(anchorDate, date)));
     }
-    std::shared_ptr<DiscountCurve> dc2 = std::shared_ptr<DiscountCurve>(
-        new DiscountCurve(anchorDate, observationDates, df, LINEAR, allowExtrapolation));
+    std::shared_ptr<DiscountCurve> dc2 = std::make_shared<DiscountCurve>(
+        anchorDate, observationDates, df, ArrayInterpolatorType::LINEAR, allowExtrapolation);
     std::shared_ptr<InterestRateConvention> irc =
-        std::shared_ptr<InterestRateConvention>(new InterestRateConvention(dayCounter, Continuous, Annual));
+        std::make_shared<InterestRateConvention>(dayCounter, Continuous, Annual);
     std::shared_ptr<DiscountRateSource> dc3 = dc2->parallelBump(0.01, irc);
     BOOST_REQUIRE(dc3->isOK());
     double dfTest = dc2->getDiscountFactor(observationDates[2]);

@@ -41,7 +41,7 @@ namespace sjd
         return !hasErrors();
     }
 
-    Date EconomicScenarioGenerator::getAnchorDate()
+    Date EconomicScenarioGenerator::getAnchorDate() const
     {
         return anchorDate;
     }
@@ -71,8 +71,7 @@ namespace sjd
         const std::shared_ptr<RatesEnvironment> re)
         : nd(0, 1), normalVariable(rng, nd)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(
-            new sjd::IssueTracker("SingleFactorEconomicScenarioGenerator"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("SingleFactorEconomicScenarioGenerator");
         setBaseRates(re);
         // random_device, not the clock, so two generators built in the same second differ,
         // and the value is the one setRandomSeed stored.
@@ -190,7 +189,7 @@ namespace sjd
             for (size_t i = 0; i < numDates; ++i)
             {
                 std::shared_ptr<RatesEnvironment> tmpRE =
-                    std::shared_ptr<RatesEnvironment>(new RatesEnvironment(simulationDates[i]));
+                    std::make_shared<RatesEnvironment>(simulationDates[i]);
                 tmpRE->setDRS(drss[i]);
                 if (foreigndrs != 0)
                 {
@@ -213,7 +212,7 @@ namespace sjd
                 }
                 ratesPath.push_back(tmpRE);
             }
-            path = std::shared_ptr<Path>(new Path(ratesPath));
+            path = std::make_shared<Path>(ratesPath);
             return true;
         }
         return false;

@@ -21,7 +21,7 @@ namespace sjd
                            std::vector<QuantLib::Date> observationDates,
                            std::vector<double> volatility,
                            std::shared_ptr<QuantLib::DayCounter> dayCounter,
-                           ArrayInterpolatorType type = LINEAR,
+                           ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
                            bool allowExtrapolation = false);
 
         virtual ~VolatilityCurveCMA();

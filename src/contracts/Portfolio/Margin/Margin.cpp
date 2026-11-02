@@ -83,7 +83,7 @@ namespace sjd
         anchorDate = anchorDateInput;
     }
 
-    Date Margin::getAnchorDate()
+    Date Margin::getAnchorDate() const
     {
         return anchorDate;
     }
@@ -93,7 +93,7 @@ namespace sjd
         balance = balanceInput;
     }
 
-    double Margin::getMarginBalance()
+    double Margin::getMarginBalance() const
     {
         return balance;
     }
@@ -131,7 +131,7 @@ namespace sjd
                                double minimumTransferAmount,
                                double rounding)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("SimpleMargin"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("SimpleMargin");
 
         Margin::setMarginParameters(anchorDate, useMyThreshold, myThreshold, false, 0, useCptyThreshold,
                                     cptyThreshold, false, 0, minimumTransferAmount, rounding);

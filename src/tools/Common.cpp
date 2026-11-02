@@ -10,12 +10,12 @@ namespace sjd
         string output;
         switch (bs)
         {
-        case BUY:
+        case BuySell::BUY:
         {
             output = "BUY";
         }
         break;
-        case SELL:
+        case BuySell::SELL:
         {
             output = "SELL";
         }
@@ -31,12 +31,12 @@ namespace sjd
         string output;
         switch (pc)
         {
-        case PUT:
+        case PutCall::PUT:
         {
             output = "PUT";
         }
         break;
-        case CALL:
+        case PutCall::CALL:
         {
             output = "CALL";
         }

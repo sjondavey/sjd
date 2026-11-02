@@ -1,7 +1,5 @@
 #include <sjd/rates/Volatility/VolatilityCurveCMA.h>
 
-#include <boost/lexical_cast.hpp> // convert numbers to string
-
 using namespace std;
 using namespace QuantLib;
 
@@ -18,10 +16,10 @@ namespace sjd
                                            ArrayInterpolatorType typeInput,
                                            bool allowExtrapolationInput)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilityCurveCMA"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("VolatilityCurveCMA");
 
-        curve = std::shared_ptr<CalendarMonthAverageCurve>(new CalendarMonthAverageCurve(
-            anchorDateInput, observationDatesInput, volatilityInput, typeInput, allowExtrapolationInput));
+        curve = std::make_shared<CalendarMonthAverageCurve>(
+            anchorDateInput, observationDatesInput, volatilityInput, typeInput, allowExtrapolationInput);
 
         anchorDate = curve->getAnchorDate();
         allowExtrapolation = curve->getAllowsExtrapolation();
@@ -146,9 +144,8 @@ namespace sjd
             rolledVols.push_back(getVolatility(getObservationDates()[i]) + spread);
         }
 
-        return std::shared_ptr<VolatilityCurveCMA>(
-            new VolatilityCurveCMA(anchorDate, rolledObservationDates, rolledVols, dayCounter,
-                                   curve->getType(), allowExtrapolation));
+        return std::make_shared<VolatilityCurveCMA>(anchorDate, rolledObservationDates, rolledVols,
+                                                    dayCounter, curve->getType(), allowExtrapolation);
     }
 
     std::shared_ptr<VolatilityRateSource> VolatilityCurveCMA::rollForward(Date toDate)
@@ -171,7 +168,7 @@ namespace sjd
                 }
             }
         }
-        return std::shared_ptr<VolatilityCurveCMA>(new VolatilityCurveCMA(
-            toDate, rolledObservationDates, rolledVols, dayCounter, curve->getType(), allowExtrapolation));
+        return std::make_shared<VolatilityCurveCMA>(toDate, rolledObservationDates, rolledVols, dayCounter,
+                                                    curve->getType(), allowExtrapolation);
     }
 }

@@ -37,8 +37,8 @@ namespace sjd
         if (observationDates.size() < 1)
         {
             finalDate = anchorDate;
-            interpolator = std::shared_ptr<ArrayInterpolator>(
-                new LinearArrayInterpolator(vector<double>(1, 0), vector<double>(1, 1), allowExtrapolation));
+            interpolator = std::make_shared<LinearArrayInterpolator>(
+                vector<double>(1, 0), vector<double>(1, 1), allowExtrapolation);
             return;
         }
         finalDate = observationPointsInput.back();
@@ -50,13 +50,13 @@ namespace sjd
 
         switch (type)
         {
-        case CUBIC:
-            interpolator = std::shared_ptr<ArrayInterpolator>(
-                new CubicSplineInterpolator(observationPoints, observedRates, allowExtrapolation));
+        case ArrayInterpolatorType::CUBIC:
+            interpolator = std::make_shared<CubicSplineInterpolator>(observationPoints, observedRates,
+                                                                     allowExtrapolation);
             break;
         default:
-            interpolator = std::shared_ptr<ArrayInterpolator>(
-                new LinearArrayInterpolator(observationPoints, observedRates, allowExtrapolation));
+            interpolator = std::make_shared<LinearArrayInterpolator>(observationPoints, observedRates,
+                                                                     allowExtrapolation);
         }
     }
 
@@ -107,7 +107,7 @@ namespace sjd
         return interpolator->getRate(toDate.serialNumber());
     }
 
-    Date DatedCurve::getAnchorDate()
+    Date DatedCurve::getAnchorDate() const
     {
         return anchorDate;
     }

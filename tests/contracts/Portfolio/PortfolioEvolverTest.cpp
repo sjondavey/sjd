@@ -23,8 +23,9 @@ namespace
             std::dynamic_pointer_cast<ForwardCurveDeterministic>(re->getFRS());
         BOOST_REQUIRE(deterministic);
         std::shared_ptr<ForwardCurveStochasticFwdVol> stochastic(
-            new ForwardCurveStochasticFwdVol(anchor, deterministic->getObservationDates(),
-                                             deterministic->getForwards(), LINEAR, false, re->getVRS()));
+            std::make_shared<ForwardCurveStochasticFwdVol>(
+                anchor, deterministic->getObservationDates(), deterministic->getForwards(),
+                ArrayInterpolatorType::LINEAR, false, re->getVRS()));
         re->setFRS(stochastic);
         BOOST_REQUIRE_MESSAGE(re->isOK(), re->getErrorMessagesAsString());
         return re;
@@ -32,7 +33,8 @@ namespace
 
     std::shared_ptr<EuropeanOption> soldPut(Date anchor, double strike)
     {
-        return GenerateContracts::getDefaultEuropeanOption(anchor, 2, strike, 10000.0, SELL, PUT, 0.0, false);
+        return GenerateContracts::getDefaultEuropeanOption(anchor, 2, strike, 10000.0, BuySell::SELL,
+                                                           PutCall::PUT, 0.0, false);
     }
 
     std::shared_ptr<PortfolioEvolver> evolverFor(std::shared_ptr<Portfolio> portfolio,
@@ -40,8 +42,8 @@ namespace
                                                  const set<Date>& simulationDates)
     {
         std::shared_ptr<SingleFactorEconomicScenarioGenerator> generator(
-            new SingleFactorEconomicScenarioGenerator(re));
-        return std::shared_ptr<PortfolioEvolver>(new PortfolioEvolver(portfolio, generator, simulationDates));
+            std::make_shared<SingleFactorEconomicScenarioGenerator>(re));
+        return std::make_shared<PortfolioEvolver>(portfolio, generator, simulationDates);
     }
 
     vector<double> markToMarketAlong(std::shared_ptr<Portfolio> portfolio, std::shared_ptr<Path> path)
@@ -85,7 +87,7 @@ void PortfolioEvolverTest::testPortfolioEvovler()
     std::shared_ptr<EuropeanOption> option = soldPut(anchor, strike);
     vector<std::shared_ptr<Contract>> contracts;
     contracts.push_back(option);
-    std::shared_ptr<Portfolio> portfolio(new Portfolio(contracts));
+    std::shared_ptr<Portfolio> portfolio(std::make_shared<Portfolio>(contracts));
     std::shared_ptr<PortfolioEvolver> evolver = evolverFor(portfolio, re, simulationDates);
     BOOST_REQUIRE_MESSAGE(evolver->isOK(), evolver->getErrorMessagesAsString());
 
@@ -101,7 +103,7 @@ void PortfolioEvolverTest::testPortfolioEvovler()
     std::shared_ptr<EuropeanOption> shockedOption = soldPut(anchor, strike);
     vector<std::shared_ptr<Contract>> shockedContracts;
     shockedContracts.push_back(shockedOption);
-    std::shared_ptr<Portfolio> shockedPortfolio(new Portfolio(shockedContracts));
+    std::shared_ptr<Portfolio> shockedPortfolio(std::make_shared<Portfolio>(shockedContracts));
     std::shared_ptr<PortfolioEvolver> shockedEvolver =
         evolverFor(shockedPortfolio, shockedMarket, simulationDates);
     BOOST_REQUIRE_MESSAGE(shockedEvolver->isOK(), shockedEvolver->getErrorMessagesAsString());
@@ -115,22 +117,23 @@ void PortfolioEvolverTest::testPortfolioEvovler()
     double cptyThreshold = 1000.0;
     double minimumTransferAmount = 500.0;
     double rounding = 100.0;
-    std::shared_ptr<Margin> margin(new SimpleMargin(anchor, useMyThreshold, myThreshold, useCptyThreshold,
-                                                    cptyThreshold, minimumTransferAmount, rounding));
+    std::shared_ptr<Margin> margin(std::make_shared<SimpleMargin>(anchor, useMyThreshold, myThreshold,
+                                                                  useCptyThreshold, cptyThreshold,
+                                                                  minimumTransferAmount, rounding));
     std::shared_ptr<RatesEnvironment> marginMarket = europeanMarket(gr, anchor, manditoryDates);
     std::shared_ptr<EuropeanOption> marginOption = soldPut(anchor, strike);
     vector<std::shared_ptr<Contract>> marginContracts;
     marginContracts.push_back(marginOption);
-    std::shared_ptr<Portfolio> marginedPortfolio(new Portfolio(marginContracts, margin));
+    std::shared_ptr<Portfolio> marginedPortfolio(std::make_shared<Portfolio>(marginContracts, margin));
     std::shared_ptr<PortfolioEvolver> marginEvolver =
         evolverFor(marginedPortfolio, marginMarket, simulationDates);
     BOOST_REQUIRE_MESSAGE(marginEvolver->isOK(), marginEvolver->getErrorMessagesAsString());
     SimulatedPaths marginPath = marginEvolver->valueSpotPath(forwardSpots, false);
     BOOST_REQUIRE_EQUAL(marginPath.margin.size(), marginPath.mtm.size());
     vector<double> mtmPath = marginPath.mtm;
-    std::shared_ptr<SimpleMargin> agreement(new SimpleMargin(anchor, useMyThreshold, myThreshold,
-                                                             useCptyThreshold, cptyThreshold,
-                                                             minimumTransferAmount, rounding));
+    std::shared_ptr<SimpleMargin> agreement(
+        std::make_shared<SimpleMargin>(anchor, useMyThreshold, myThreshold, useCptyThreshold, cptyThreshold,
+                                       minimumTransferAmount, rounding));
     vector<double> expectedMargin;
     agreement->getFutureMarginBalancesAlongPath(mtmPath, expectedMargin);
     BOOST_REQUIRE_EQUAL(expectedMargin.size(), mtmPath.size());
@@ -143,11 +146,11 @@ void PortfolioEvolverTest::testPortfolioEvovler()
     std::shared_ptr<EuropeanOption> monteCarloOption = soldPut(anchor, strike);
     vector<std::shared_ptr<Contract>> monteCarloContracts;
     monteCarloContracts.push_back(monteCarloOption);
-    std::shared_ptr<Portfolio> monteCarloPortfolio(new Portfolio(monteCarloContracts));
+    std::shared_ptr<Portfolio> monteCarloPortfolio(std::make_shared<Portfolio>(monteCarloContracts));
     std::shared_ptr<SingleFactorEconomicScenarioGenerator> monteCarloGenerator(
-        new SingleFactorEconomicScenarioGenerator(monteCarloMarket));
+        std::make_shared<SingleFactorEconomicScenarioGenerator>(monteCarloMarket));
     std::shared_ptr<PortfolioEvolver> monteCarloEvolver(
-        new PortfolioEvolver(monteCarloPortfolio, monteCarloGenerator, simulationDates));
+        std::make_shared<PortfolioEvolver>(monteCarloPortfolio, monteCarloGenerator, simulationDates));
     BOOST_REQUIRE_MESSAGE(monteCarloEvolver->isOK(), monteCarloEvolver->getErrorMessagesAsString());
     // isOK() only checks the portfolio and the generator. Sampling a path needs prepare(),
     // which is what sets the generator's simulation dates.

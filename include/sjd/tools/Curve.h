@@ -20,20 +20,20 @@ namespace sjd
         Curve(QuantLib::Date anchorDate,
               std::vector<double> observationPoints,
               std::vector<double> observedRates,
-              ArrayInterpolatorType type = LINEAR,
+              ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
               bool allowExtrapolation = false);
 
         void setParameters(QuantLib::Date anchorDate,
                            std::vector<double> observationPoints,
                            std::vector<double> observedRates,
-                           ArrayInterpolatorType type = LINEAR,
+                           ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
                            bool allowExtrapolation = false);
 
         virtual ~Curve() {};
 
         bool isOK(std::string& errorMessage);
 
-        QuantLib::Date getAnchorDate();
+        QuantLib::Date getAnchorDate() const;
         QuantLib::Date getFinalDate();
         ArrayInterpolatorType getType();
         bool getAllowsExtrapolation();

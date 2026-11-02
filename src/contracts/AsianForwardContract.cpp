@@ -19,8 +19,7 @@ namespace sjd
                                          double volumeInput,
                                          BuySell buySellInput)
     {
-        ForwardContract::errorTracking =
-            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("AsianForward"));
+        ForwardContract::errorTracking = std::make_shared<sjd::IssueTracker>("AsianForward");
         setAveragingDates(averagingDatesInput);
         setSettlementDate(settlementInput);
         setStrike(strikeInput);
@@ -57,7 +56,7 @@ namespace sjd
 
     std::unique_ptr<Contract> AsianForward::clone()
     {
-        return std::unique_ptr<Contract>(new AsianForward(*this));
+        return std::make_unique<AsianForward>(*this);
     }
 
     void AsianForward::recordAsianIssue(const std::string& code,
@@ -138,13 +137,13 @@ namespace sjd
         if (valueDate < getMaturityDate())
         {
             premium = (averageForward - (strike - averageRateSet)) * df;
-            return premium * volume * buySellAsDouble;
+            return premium * volume * sign(buySell);
         }
         else if ((valueDate >= maturityDate) && (valueDate <= settlementDate))
         {
             [[maybe_unused]] double averageFwd = 0;
             premium = (averageRateSet - strike) * df;
-            return premium * volume * buySellAsDouble;
+            return premium * volume * sign(buySell);
         }
         return 0;
     }

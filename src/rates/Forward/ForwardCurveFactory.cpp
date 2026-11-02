@@ -27,11 +27,11 @@ namespace sjd
             switch (roll)
             {
             case ForwardRoll::Deterministic:
-                return std::shared_ptr<ForwardRateSource>(new ForwardCurveCMADeterministic(
-                    anchorDate, observationDates, forwards, interpolation, allowExtrapolation));
+                return std::make_shared<ForwardCurveCMADeterministic>(anchorDate, observationDates, forwards,
+                                                                      interpolation, allowExtrapolation);
             case ForwardRoll::ForwardVolatility:
-                return std::shared_ptr<ForwardRateSource>(new ForwardCurveCMAStochasticFwdVol(
-                    anchorDate, observationDates, forwards, interpolation, allowExtrapolation, volatility));
+                return std::make_shared<ForwardCurveCMAStochasticFwdVol>(
+                    anchorDate, observationDates, forwards, interpolation, allowExtrapolation, volatility);
             case ForwardRoll::SpotVolatility:
                 throw invalid_argument("A calendar-month forward curve cannot roll with spot volatility. "
                                        "Use the forward-volatility roll.");
@@ -40,14 +40,14 @@ namespace sjd
         switch (roll)
         {
         case ForwardRoll::Deterministic:
-            return std::shared_ptr<ForwardRateSource>(new ForwardCurveDeterministic(
-                anchorDate, observationDates, forwards, interpolation, allowExtrapolation));
+            return std::make_shared<ForwardCurveDeterministic>(anchorDate, observationDates, forwards,
+                                                               interpolation, allowExtrapolation);
         case ForwardRoll::ForwardVolatility:
-            return std::shared_ptr<ForwardRateSource>(new ForwardCurveStochasticFwdVol(
-                anchorDate, observationDates, forwards, interpolation, allowExtrapolation, volatility));
+            return std::make_shared<ForwardCurveStochasticFwdVol>(
+                anchorDate, observationDates, forwards, interpolation, allowExtrapolation, volatility);
         case ForwardRoll::SpotVolatility:
-            return std::shared_ptr<ForwardRateSource>(new ForwardCurveStochasticSpotVol(
-                anchorDate, observationDates, forwards, interpolation, allowExtrapolation, volatility));
+            return std::make_shared<ForwardCurveStochasticSpotVol>(
+                anchorDate, observationDates, forwards, interpolation, allowExtrapolation, volatility);
         }
         throw invalid_argument("Unknown forward roll.");
     }

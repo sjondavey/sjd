@@ -32,15 +32,15 @@ void ForwardCurveFXTest::getDefaultDatesAndDF(Date anchorDate,
     double daysAhead = date - anchorDate;
     foreignDF.push_back(exp(-0.03 * daysAhead / 360.0));
 
-    domesticDRS = std::shared_ptr<DiscountCurve>(
-        new DiscountCurve(anchorDate, domesticObservationDates, domesticDF, LINEAR, false));
-    foreignDRS = std::shared_ptr<DiscountCurve>(
-        new DiscountCurve(anchorDate, foreignObservationDates, foreignDF, LINEAR, false));
+    domesticDRS = std::make_shared<DiscountCurve>(anchorDate, domesticObservationDates, domesticDF,
+                                                  ArrayInterpolatorType::LINEAR, false);
+    foreignDRS = std::make_shared<DiscountCurve>(anchorDate, foreignObservationDates, foreignDF,
+                                                 ArrayInterpolatorType::LINEAR, false);
 
     vector<double> volatility = vector<double>(domesticObservationDates.size(), 0.2);
-    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
-    vrs = std::shared_ptr<VolatilityCurve>(
-        new VolatilityCurve(anchorDate, domesticObservationDates, volatility, dayCounter, LINEAR, false));
+    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
+    vrs = std::make_shared<VolatilityCurve>(anchorDate, domesticObservationDates, volatility, dayCounter,
+                                            ArrayInterpolatorType::LINEAR, false);
 }
 
 void ForwardCurveFXTest::testForwardCurveConstruction()
@@ -56,8 +56,8 @@ void ForwardCurveFXTest::testForwardCurveConstruction()
 
     double spot = 1100.0;
     Date spotDate = calendar.advance(anchorDate, 2, Days);
-    std::shared_ptr<ForwardCurveFX> fxCurve = std::shared_ptr<ForwardCurveFX>(
-        new ForwardCurveFX(anchorDate, spot, spotDate, domesticDRS, foreignDRS));
+    std::shared_ptr<ForwardCurveFX> fxCurve =
+        std::make_shared<ForwardCurveFX>(anchorDate, spot, spotDate, domesticDRS, foreignDRS);
     BOOST_REQUIRE(fxCurve->isOK());
     double manualSpotAtT0 =
         spot * domesticDRS->getDiscountFactor(spotDate) / foreignDRS->getDiscountFactor(spotDate);
@@ -67,15 +67,14 @@ void ForwardCurveFXTest::testForwardCurveConstruction()
         manualSpotAtT0 * foreignDRS->getDiscountFactor(fwdDate) / domesticDRS->getDiscountFactor(fwdDate);
     BOOST_CHECK(abs(fxCurve->getForward(fwdDate) - manualFwd) < 10 * EPSILON_FOR_DOUBLES);
 
-    std::shared_ptr<ForwardCurveStochasticFX> stochasticFXCurve = std::shared_ptr<ForwardCurveStochasticFX>(
-        new ForwardCurveStochasticFX(anchorDate, spot, spotDate, domesticDRS, foreignDRS, vrs));
+    std::shared_ptr<ForwardCurveStochasticFX> stochasticFXCurve =
+        std::make_shared<ForwardCurveStochasticFX>(anchorDate, spot, spotDate, domesticDRS, foreignDRS, vrs);
     BOOST_REQUIRE(stochasticFXCurve->isOK());
     BOOST_CHECK(abs(fxCurve->getSpotAtT0() - stochasticFXCurve->getSpotAtT0()) < EPSILON_FOR_DOUBLES);
     BOOST_CHECK(abs(stochasticFXCurve->getForward(fwdDate) - manualFwd) < EPSILON_FOR_DOUBLES);
 
     std::shared_ptr<ForwardCurveDeterministicFX> fxCurveDeterminstic =
-        std::shared_ptr<ForwardCurveDeterministicFX>(
-            new ForwardCurveDeterministicFX(anchorDate, spot, spotDate, domesticDRS, foreignDRS));
+        std::make_shared<ForwardCurveDeterministicFX>(anchorDate, spot, spotDate, domesticDRS, foreignDRS);
     BOOST_REQUIRE(fxCurveDeterminstic->isOK());
     BOOST_CHECK(abs(fxCurve->getSpotAtT0() - fxCurveDeterminstic->getSpotAtT0()) < EPSILON_FOR_DOUBLES);
     BOOST_CHECK(abs(fxCurveDeterminstic->getForward(fwdDate) - manualFwd) < EPSILON_FOR_DOUBLES);
@@ -94,8 +93,7 @@ void ForwardCurveFXTest::testDeterministicCurve()
     double spot = 1100.0;
     Date spotDate = calendar.advance(anchorDate, 2, Days);
     std::shared_ptr<ForwardCurveDeterministicFX> fxCurveDeterminstic =
-        std::shared_ptr<ForwardCurveDeterministicFX>(
-            new ForwardCurveDeterministicFX(anchorDate, spot, domesticDRS, foreignDRS));
+        std::make_shared<ForwardCurveDeterministicFX>(anchorDate, spot, domesticDRS, foreignDRS);
 
     double bump = 1.0;
     std::shared_ptr<ForwardRateSource> bumpedCurve = fxCurveDeterminstic->parallelBump(bump);
@@ -122,8 +120,8 @@ void ForwardCurveFXTest::testStochasticCurve()
 
     double spot = 1100.0;
     Date spotDate = calendar.advance(anchorDate, 2, Days);
-    std::shared_ptr<ForwardCurveStochasticFX> stochasticFXCurve = std::shared_ptr<ForwardCurveStochasticFX>(
-        new ForwardCurveStochasticFX(anchorDate, spot, spotDate, domesticDRS, foreignDRS, vrs));
+    std::shared_ptr<ForwardCurveStochasticFX> stochasticFXCurve =
+        std::make_shared<ForwardCurveStochasticFX>(anchorDate, spot, spotDate, domesticDRS, foreignDRS, vrs);
 
     Date fwdDate = calendar.advance(anchorDate, 173, Days);
     double normalRV = 1.64;

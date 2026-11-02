@@ -20,8 +20,8 @@ void PortfolioInsuranceTest::testSimpleInsurance()
     Date policyMaturityDate = Date(27, Jan, 2020);
     double sumInsured = 50000.0;
 
-    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
-    std::shared_ptr<Calendar> calendar = std::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
+    std::shared_ptr<Calendar> calendar = std::make_shared<NullCalendar>();
     Date anchorDate = Date(27, Jan, 2013);
     size_t years = 10;
     double baseRate = 0.03;
@@ -35,8 +35,8 @@ void PortfolioInsuranceTest::testSimpleInsurance()
     std::shared_ptr<DiscountCurve> utilisationCurve =
         gr.getDiscountCurve(dayCounter, calendar, anchorDate, years, utilisationRate, manditoryDates);
 
-    std::shared_ptr<SimpleInsurance> si = std::shared_ptr<SimpleInsurance>(
-        new SimpleInsurance(policyStartDate, policyMaturityDate, sumInsured, standbyCurve, utilisationCurve));
+    std::shared_ptr<SimpleInsurance> si = std::make_shared<SimpleInsurance>(
+        policyStartDate, policyMaturityDate, sumInsured, standbyCurve, utilisationCurve);
     BOOST_REQUIRE(si->isOK());
 
     vector<double> fwdFwdDF, standbyFwdFwd, utilisationFwdFwd, mtm, insurancePayments;
@@ -93,8 +93,8 @@ void PortfolioInsuranceTest::testSimpleInsuranceWithTermStructure()
     GenerateRates gr = GenerateRates();
     Date policyStartDate = Date(27, Jan, 2010);
 
-    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
-    std::shared_ptr<Calendar> calendar = std::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
+    std::shared_ptr<Calendar> calendar = std::make_shared<NullCalendar>();
     size_t years = 10;
     Date policyMaturityDate = calendar->advance(policyStartDate, static_cast<int>(years - 1), Years);
     Date anchorDate = Date(27, Jan, 2013);
@@ -118,9 +118,9 @@ void PortfolioInsuranceTest::testSimpleInsuranceWithTermStructure()
     }
 
     std::shared_ptr<SimpleInsuranceWithTermStructure> siWT =
-        std::shared_ptr<SimpleInsuranceWithTermStructure>(
-            new SimpleInsuranceWithTermStructure(policyStartDate, policyMaturityDate, insuranceDates,
-                                                 insuredAmounts, standbyCurve, utilisationCurve));
+        std::make_shared<SimpleInsuranceWithTermStructure>(policyStartDate, policyMaturityDate,
+                                                           insuranceDates, insuredAmounts, standbyCurve,
+                                                           utilisationCurve);
     BOOST_REQUIRE(siWT->isOK());
 
     int index = (anchorDate - policyStartDate) / 366;

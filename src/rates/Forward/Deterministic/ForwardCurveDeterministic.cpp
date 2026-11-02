@@ -12,8 +12,7 @@ namespace sjd
                                                          ArrayInterpolatorType typeInput,
                                                          bool allowExtrapolationInput)
     {
-        errorTracking =
-            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveDeterministic"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("ForwardCurveDeterministic");
         setParameters(anchorDateInput, observationDatesInput, forwardsInput, typeInput,
                       allowExtrapolationInput);
     }

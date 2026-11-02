@@ -23,8 +23,8 @@ void VolatilityCurveTest::testVolatilityCurveConstruction()
         volatility.push_back(0.2);
     }
     incorrectObservationDates.push_back(calendar.advance(anchorDate, static_cast<int>(i + 1), Months));
-    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
-    ArrayInterpolatorType type = LINEAR;
+    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
+    ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR;
     bool allowExtrapolation = false;
 
     VolatilityCurve vc(anchorDate, incorrectObservationDates, volatility, dayCounter, type,

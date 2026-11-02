@@ -22,12 +22,12 @@ namespace sjd
         double df = (re->getDRS())->getDiscountFactor(getSettlementDate());
 
         premium = (F - strike) * df;
-        return premium * volume * buySellAsDouble;
+        return premium * volume * sign(buySell);
     }
 
     double ForwardContract::getPayoff(double forSpot)
     {
-        return (forSpot - strike) * volume * buySellAsDouble;
+        return (forSpot - strike) * volume * sign(buySell);
     }
 
     /*======================================================================================
@@ -37,7 +37,7 @@ namespace sjd
 
     void EuropeanForward::constructorCommon(Date maturity, Date settlement, double X, double N, BuySell bs)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("EuropeanForward"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("EuropeanForward");
         setMaturityDate(maturity);
         setSettlementDate(settlement);
         setStrike(X);
@@ -66,7 +66,7 @@ namespace sjd
 
     std::unique_ptr<Contract> EuropeanForward::clone()
     {
-        return std::unique_ptr<Contract>(new EuropeanForward(*this));
+        return std::make_unique<EuropeanForward>(*this);
     }
 
 }

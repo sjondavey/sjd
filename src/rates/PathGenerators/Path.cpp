@@ -7,7 +7,7 @@ namespace sjd
 {
     Path::Path(vector<std::shared_ptr<RatesEnvironment>> ratesPathInput)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("Path"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("Path");
         ratesPath = ratesPathInput;
         pathDates.clear();
         for (size_t i = 0; i < ratesPath.size(); i++)

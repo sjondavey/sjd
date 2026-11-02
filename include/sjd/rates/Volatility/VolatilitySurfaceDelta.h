@@ -18,7 +18,7 @@ namespace sjd
         BlackPutImpliedStrike(double delta, double forward, double standardDeviation)
             : delta(delta / 100), forward(forward), standardDeviation(standardDeviation)
         {
-            put = std::shared_ptr<Black76Option>(new Black76Put(forward, forward, standardDeviation, 1.0));
+            put = std::make_shared<Black76Put>(forward, forward, standardDeviation, 1.0);
         };
 
         double operator()(double strikeEstimate) const

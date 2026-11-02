@@ -28,7 +28,7 @@ namespace sjd
                                                        std::shared_ptr<DiscountRateSource> foreignDRS,
                                                        std::shared_ptr<VolatilityRateSource> vrs)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveStochasticFX"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("ForwardCurveStochasticFX");
         setParameters(anchorDate, spotOnAnchor(spot, spotDate, domesticDRS, foreignDRS), domesticDRS,
                       foreignDRS, vrs);
     }
@@ -39,7 +39,7 @@ namespace sjd
                                                        std::shared_ptr<DiscountRateSource> foreignDRS,
                                                        std::shared_ptr<VolatilityRateSource> vrs)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveStochasticFX"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("ForwardCurveStochasticFX");
         setParameters(anchorDate, spotAtT0, domesticDRS, foreignDRS, vrs);
     }
 

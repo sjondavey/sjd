@@ -109,17 +109,16 @@ namespace sjd
         virtual std::string toStringRates(std::shared_ptr<RatesEnvironment> re);
 
     protected:
-        double volume;
-        double premiumAmount;
-        double buySellAsDouble; // = +1 for buy / -1 for sell
+        double volume = 0.0;
+        double premiumAmount = 0.0;
 
         QuantLib::Date maturityDate;
         QuantLib::Date settlementDate;
         QuantLib::Date premiumPaymentDate;
 
-        BuySell buySell;
+        BuySell buySell = BuySell::BUY;
 
-        bool hasPremium;
+        bool hasPremium = false;
     };
 
     /**
@@ -143,7 +142,7 @@ namespace sjd
         virtual std::string toStringRates(std::shared_ptr<RatesEnvironment> re);
 
     protected:
-        double strike;
+        double strike = 0.0;
     };
 
     /**
@@ -173,7 +172,7 @@ namespace sjd
         virtual std::string toStringRates(std::shared_ptr<RatesEnvironment> re);
 
     protected:
-        PutCall type;
+        PutCall type = PutCall::CALL;
     };
 
     /**

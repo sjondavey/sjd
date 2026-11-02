@@ -10,16 +10,16 @@ using namespace sjd;
 
 std::shared_ptr<EuropeanOption> OptionContractTest::getDefaultEuropeanOption(Date anchorDate)
 {
-    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
     Date optionMaturity = nullCalendar->advance(anchorDate, 2, Years);
     Date optionSettlement = nullCalendar->advance(optionMaturity, 2, Days);
     double strike = 100;
-    PutCall type = PUT;
+    PutCall type = PutCall::PUT;
     double defPremium = 3.4;
     double volume = 10000;
 
-    return std::shared_ptr<EuropeanOption>(new EuropeanOption(optionMaturity, optionSettlement, strike, type,
-                                                              volume, optionSettlement, defPremium, BUY));
+    return std::make_shared<EuropeanOption>(optionMaturity, optionSettlement, strike, type, volume,
+                                            optionSettlement, defPremium, BuySell::BUY);
 }
 
 void OptionContractTest::testBuySell()
@@ -27,7 +27,7 @@ void OptionContractTest::testBuySell()
     BOOST_TEST_MESSAGE("Testing OptionContract ...");
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
-    BuySell bs = SELL;
+    BuySell bs = BuySell::SELL;
     contract->setBuySell(bs);
     BuySell bs2 = contract->getBuySell();
     BOOST_CHECK(bs == bs2);
@@ -73,7 +73,7 @@ void OptionContractTest::testMaturityDate()
     std::shared_ptr<RatesEnvironment> re =
         gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
     BOOST_CHECK(contract->isOK());
-    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
     Date optionMaturity = nullCalendar->advance(anchorDate, 3, Years);
     contract->setMaturityDate(optionMaturity);
     contract->validate();
@@ -104,13 +104,13 @@ void OptionContractTest::testType()
     std::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
     std::shared_ptr<RatesEnvironment> re =
         gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
-    BOOST_CHECK(contract->getType() == PUT);
+    BOOST_CHECK(contract->getType() == PutCall::PUT);
     double valuePut = contract->getValue(re);
-    contract->setType(CALL);
-    BOOST_CHECK(contract->getType() == CALL);
+    contract->setType(PutCall::CALL);
+    BOOST_CHECK(contract->getType() == PutCall::CALL);
     double valueCall = contract->getValue(re);
     std::shared_ptr<EuropeanOption> freshCall = getDefaultEuropeanOption(anchorDate);
-    freshCall->setType(CALL);
+    freshCall->setType(PutCall::CALL);
     BOOST_CHECK(abs(valueCall - freshCall->getValue(re)) < EPSILON_FOR_DOUBLES);
     BOOST_CHECK(abs(valuePut - valueCall) > EPSILON_FOR_DOUBLES);
 }
@@ -122,13 +122,13 @@ void OptionContractTest::testPutCallParity()
 
     std::shared_ptr<EuropeanOption> put = getDefaultEuropeanOption(anchorDate);
     std::shared_ptr<EuropeanOption> call = getDefaultEuropeanOption(anchorDate);
-    call->setType(CALL);
-    call->setBuySell(SELL);
+    call->setType(PutCall::CALL);
+    call->setBuySell(BuySell::SELL);
     std::shared_ptr<RatesEnvironment> re =
         gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
 
     EuropeanForward forward(put->getMaturityDate(), put->getSettlementDate(), put->getStrike(),
-                            put->getVolume(), SELL);
+                            put->getVolume(), BuySell::SELL);
     BOOST_CHECK(abs(put->getValue(re) + call->getValue(re) - forward.getValue(re)) < 1e-10);
 }
 
@@ -154,15 +154,17 @@ void OptionContractTest::testValue()
         gr.getRatesEnvironmentForEuropeanOption(anchorDate, manditoryDates);
 
     double strike = 100;
-    PutCall type = PUT;
+    PutCall type = PutCall::PUT;
     double defPremium = 3.4;
 
-    EuropeanOption contract(optionMaturity, optionSettlement, strike, type, 1.0, anchorDate, 0.0, BUY);
-    EuropeanOption contract2(optionMaturity, optionSettlement, strike, type, 2.0, anchorDate, 0.0, BUY);
+    EuropeanOption contract(optionMaturity, optionSettlement, strike, type, 1.0, anchorDate, 0.0,
+                            BuySell::BUY);
+    EuropeanOption contract2(optionMaturity, optionSettlement, strike, type, 2.0, anchorDate, 0.0,
+                             BuySell::BUY);
     EuropeanOption deferredPremiumContract(optionMaturity, optionSettlement, strike, type, 1,
-                                           optionSettlement, defPremium, BUY);
+                                           optionSettlement, defPremium, BuySell::BUY);
     EuropeanOption deferredPremiumContract2(optionMaturity, optionSettlement, strike, type, 2,
-                                            optionSettlement, defPremium, BUY);
+                                            optionSettlement, defPremium, BuySell::BUY);
 
     double yts = dayCounter->yearFraction(anchorDate, optionSettlement);
     double fwd = re->getFRS()->getForward(optionSettlement);
@@ -200,19 +202,19 @@ void OptionContractTest::testValue()
 
 void OptionContractTest::testGetPayoffAfterMaturity()
 {
-    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
-    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
+    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
 
     Date anchorDate(1, Jan, 2013);
 
     std::shared_ptr<EuropeanOption> option = getDefaultEuropeanOption(anchorDate);
     std::shared_ptr<EuropeanOption> option2 = getDefaultEuropeanOption(anchorDate);
-    option2->setType(CALL);
+    option2->setType(PutCall::CALL);
 
     double v1 = option->getVolume();
     double p1 = option->getPremiumAmount();
     double k1 = option->getStrike();
-    double sign1 = (option->getBuySell() == BUY ? 1 : -1);
+    double sign1 = (option->getBuySell() == BuySell::BUY ? 1 : -1);
 
     double maturitySpot = k1 - 10;
     BOOST_CHECK(abs(option->getPayoff(maturitySpot) - (k1 - maturitySpot - p1) * v1 * sign1) < 1e-14);
@@ -249,19 +251,20 @@ void OptionContractTest::testEuropeanOptionWithMoneynessVol()
     std::shared_ptr<ForwardCurveDeterministic> fc =
         gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, spot, naccIRDiff, manditoryDates);
     std::shared_ptr<VolatilitySurfaceMoneyness> vs = gr.getDefaultMoneynessSurface(anchorDate);
-    re = std::shared_ptr<RatesEnvironment>(new RatesEnvironment(anchorDate));
+    re = std::make_shared<RatesEnvironment>(anchorDate);
     re->setDRS(dc);
     re->setFRS(fc);
     re->setVRS(vs);
 
     double strike = 100;
-    PutCall type = PUT;
+    PutCall type = PutCall::PUT;
     double defPremium = 3.4;
     double volume = 2.5;
 
-    EuropeanOption contract(optionMaturity, optionSettlement, strike, type, volume, anchorDate, 0.0, BUY);
+    EuropeanOption contract(optionMaturity, optionSettlement, strike, type, volume, anchorDate, 0.0,
+                            BuySell::BUY);
     EuropeanOption deferredPremiumContract(optionMaturity, optionSettlement, strike, type, volume,
-                                           optionSettlement, defPremium, BUY);
+                                           optionSettlement, defPremium, BuySell::BUY);
 
     [[maybe_unused]] double yte = dayCounter->yearFraction(anchorDate, optionMaturity);
     [[maybe_unused]] double yts = dayCounter->yearFraction(anchorDate, optionSettlement);
@@ -282,7 +285,7 @@ void OptionContractTest::testEuropeanOptionWithMoneynessVol()
 
     // 3) After settlement
     Date dayAfterSettlement = nullCalendar->advance(optionSettlement, 1, Days);
-    re = std::shared_ptr<RatesEnvironment>(new RatesEnvironment(dayAfterSettlement));
+    re = std::make_shared<RatesEnvironment>(dayAfterSettlement);
     manditoryDates.clear();
     dc = gr.getDiscountCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, naccRFR);
     fc = gr.getSimpleForwardCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, spot, naccIRDiff);

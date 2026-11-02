@@ -26,8 +26,7 @@ void FixingRateTest::testDailyFixingCurve()
     Date startDate = observationDates.front();
     Date endDate = observationDates.back();
 
-    std::shared_ptr<DailyFixingCurve> fix =
-        std::shared_ptr<DailyFixingCurve>(new DailyFixingCurve(observationDates, rates));
+    std::shared_ptr<DailyFixingCurve> fix = std::make_shared<DailyFixingCurve>(observationDates, rates);
 
     BOOST_REQUIRE(fix->isOK());
     BOOST_CHECK(startDate == fix->getEarliestDate());
@@ -37,16 +36,16 @@ void FixingRateTest::testDailyFixingCurve()
     BOOST_CHECK(abs(fix->getRateSetOn(observationDates[3]) - rates[3]) < EPSILON_FOR_DOUBLES);
 
     rates.push_back(100);
-    fix = std::shared_ptr<DailyFixingCurve>(new DailyFixingCurve(observationDates, rates));
+    fix = std::make_shared<DailyFixingCurve>(observationDates, rates);
     BOOST_CHECK(!fix->isOK());
 
     observationDates.push_back(anchorDate - 1);
-    fix = std::shared_ptr<DailyFixingCurve>(new DailyFixingCurve(observationDates, rates));
+    fix = std::make_shared<DailyFixingCurve>(observationDates, rates);
     BOOST_CHECK(!fix->isOK());
 
     observationDates.pop_back();
     rates.pop_back();
-    fix = std::shared_ptr<DailyFixingCurve>(new DailyFixingCurve(observationDates, rates));
+    fix = std::make_shared<DailyFixingCurve>(observationDates, rates);
     BOOST_REQUIRE(fix->isOK());
 
     vector<Date> appendedDates;
@@ -86,8 +85,7 @@ void FixingRateTest::testMonthlyFixingCurve()
     Date startDate = observationDates.front();
     Date endDate = observationDates.back();
 
-    std::shared_ptr<MonthlyFixingCurve> fix =
-        std::shared_ptr<MonthlyFixingCurve>(new MonthlyFixingCurve(observationDates, rates));
+    std::shared_ptr<MonthlyFixingCurve> fix = std::make_shared<MonthlyFixingCurve>(observationDates, rates);
 
     BOOST_REQUIRE(fix->isOK());
     BOOST_CHECK(startDate == fix->getEarliestDate());
@@ -101,11 +99,11 @@ void FixingRateTest::testMonthlyFixingCurve()
     BOOST_CHECK(abs(fix->getRateSetOn(d1) - fix->getRateSetOn(d2)) < EPSILON_FOR_DOUBLES);
 
     rates.push_back(100);
-    fix = std::shared_ptr<MonthlyFixingCurve>(new MonthlyFixingCurve(observationDates, rates));
+    fix = std::make_shared<MonthlyFixingCurve>(observationDates, rates);
     BOOST_CHECK(!fix->isOK());
 
     observationDates.push_back(anchorDate - 1);
-    fix = std::shared_ptr<MonthlyFixingCurve>(new MonthlyFixingCurve(observationDates, rates));
+    fix = std::make_shared<MonthlyFixingCurve>(observationDates, rates);
     BOOST_CHECK(!fix->isOK());
 
     observationDates.pop_back();
@@ -116,7 +114,7 @@ void FixingRateTest::testMonthlyFixingCurve()
         appendedDates.push_back(nullCalendar.advance(endDate, static_cast<int>(i), Months));
     }
     vector<double> appendedRates(arr, arr + sizeof(arr) / sizeof(arr[0]));
-    fix = std::shared_ptr<MonthlyFixingCurve>(new MonthlyFixingCurve(observationDates, rates));
+    fix = std::make_shared<MonthlyFixingCurve>(observationDates, rates);
     BOOST_CHECK(fix->isOK());
     fix->appendRateSets(appendedDates, appendedRates);
     BOOST_CHECK(fix->isOK());

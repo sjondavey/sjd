@@ -10,7 +10,7 @@ using namespace sjd;
 
 std::shared_ptr<RegCapUnderlyingFactors> StructureTest::getDefaultRegCapUnderlyingFactors()
 {
-    return std::shared_ptr<RegCapUnderlyingFactors>(new CommodityRegCapFactors);
+    return std::shared_ptr<RegCapUnderlyingFactors>(std::make_shared<CommodityRegCapFactors>());
 }
 
 void StructureTest::testGradient()
@@ -21,12 +21,12 @@ void StructureTest::testGradient()
     int yearsToSettlement = 2;
     double volume = 12300;
 
-    std::shared_ptr<SingleInstrumentContract> call1 =
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 80, volume, BUY, CALL, 0);
+    std::shared_ptr<SingleInstrumentContract> call1 = GenerateContracts::getDefaultEuropeanOption(
+        anchorDate, yearsToSettlement, 80, volume, BuySell::BUY, PutCall::CALL, 0);
     std::shared_ptr<SingleInstrumentContract> call2 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 120, 2 * volume, SELL, CALL, 0);
-    std::shared_ptr<SingleInstrumentContract> call3 =
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 160, volume, BUY, CALL, 0);
+        anchorDate, yearsToSettlement, 120, 2 * volume, BuySell::SELL, PutCall::CALL, 0);
+    std::shared_ptr<SingleInstrumentContract> call3 = GenerateContracts::getDefaultEuropeanOption(
+        anchorDate, yearsToSettlement, 160, volume, BuySell::BUY, PutCall::CALL, 0);
 
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
     instruments.push_back(call1);
@@ -52,8 +52,8 @@ void StructureTest::testIsUncappedOnTheLeft()
     int yearsToSettlement = 2;
     double volume = 12300;
 
-    std::shared_ptr<SingleInstrumentContract> put1 =
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 80, volume, BUY, PUT, 0);
+    std::shared_ptr<SingleInstrumentContract> put1 = GenerateContracts::getDefaultEuropeanOption(
+        anchorDate, yearsToSettlement, 80, volume, BuySell::BUY, PutCall::PUT, 0);
 
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
     instruments.push_back(put1);
@@ -65,8 +65,8 @@ void StructureTest::testIsUncappedOnTheLeft()
     double g = Structure::gradient(instruments, 40, 50);
     BOOST_CHECK(abs(effectiveGradient - g) < volume * EPSILON_FOR_DOUBLES);
 
-    std::shared_ptr<SingleInstrumentContract> put2 =
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 70, volume, SELL, PUT, 0);
+    std::shared_ptr<SingleInstrumentContract> put2 = GenerateContracts::getDefaultEuropeanOption(
+        anchorDate, yearsToSettlement, 70, volume, BuySell::SELL, PutCall::PUT, 0);
     instruments.clear();
     instruments.push_back(put1);
     instruments.push_back(put2);
@@ -76,8 +76,8 @@ void StructureTest::testIsUncappedOnTheLeft()
     g = Structure::gradient(instruments, 40, 50);
     BOOST_CHECK(abs(effectiveGradient - g) < volume * EPSILON_FOR_DOUBLES);
 
-    put2 =
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 70, volume, BUY, PUT, 0);
+    put2 = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 70, volume,
+                                                       BuySell::BUY, PutCall::PUT, 0);
     instruments.clear();
     instruments.push_back(put1);
     instruments.push_back(put2);
@@ -87,8 +87,8 @@ void StructureTest::testIsUncappedOnTheLeft()
     g = Structure::gradient(instruments, 40, 50);
     BOOST_CHECK(abs(effectiveGradient - g) < volume * EPSILON_FOR_DOUBLES);
 
-    std::shared_ptr<SingleInstrumentContract> put3 =
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 60, volume, SELL, PUT, 0);
+    std::shared_ptr<SingleInstrumentContract> put3 = GenerateContracts::getDefaultEuropeanOption(
+        anchorDate, yearsToSettlement, 60, volume, BuySell::SELL, PutCall::PUT, 0);
     instruments.clear();
     instruments.push_back(put1);
     instruments.push_back(put2);
@@ -106,8 +106,8 @@ void StructureTest::testGetContractsWithUncappedExposureOnTheLeft()
     int yearsToSettlement = 2;
     double volume = 12300;
 
-    std::shared_ptr<SingleInstrumentContract> put1 =
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 80, volume, BUY, PUT, 0);
+    std::shared_ptr<SingleInstrumentContract> put1 = GenerateContracts::getDefaultEuropeanOption(
+        anchorDate, yearsToSettlement, 80, volume, BuySell::BUY, PutCall::PUT, 0);
 
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
     instruments.push_back(put1);
@@ -118,8 +118,8 @@ void StructureTest::testGetContractsWithUncappedExposureOnTheLeft()
     BOOST_CHECK(uncappedContracts.size() == 1);
     BOOST_CHECK(uncappedContracts[0] == put1);
 
-    std::shared_ptr<SingleInstrumentContract> put2 =
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 70, volume, SELL, PUT, 0);
+    std::shared_ptr<SingleInstrumentContract> put2 = GenerateContracts::getDefaultEuropeanOption(
+        anchorDate, yearsToSettlement, 70, volume, BuySell::SELL, PutCall::PUT, 0);
     instruments.clear();
     instruments.push_back(put1);
     instruments.push_back(put2);
@@ -127,8 +127,8 @@ void StructureTest::testGetContractsWithUncappedExposureOnTheLeft()
     BOOST_CHECK(uncappedContracts.size() == 1);
     BOOST_CHECK(uncappedContracts[0] == put1);
 
-    put2 =
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 70, volume, BUY, PUT, 0);
+    put2 = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 70, volume,
+                                                       BuySell::BUY, PutCall::PUT, 0);
     instruments.clear();
     instruments.push_back(put1);
     instruments.push_back(put2);
@@ -136,8 +136,8 @@ void StructureTest::testGetContractsWithUncappedExposureOnTheLeft()
     BOOST_CHECK(uncappedContracts.size() == 1);
     BOOST_CHECK(uncappedContracts[0] == put2);
 
-    put2 =
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 80, volume, BUY, PUT, 0);
+    put2 = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 80, volume,
+                                                       BuySell::BUY, PutCall::PUT, 0);
     instruments.clear();
     instruments.push_back(put1);
     instruments.push_back(put2);
@@ -152,33 +152,34 @@ void StructureTest::testQualifyForRegulatoryCapitalOffset()
     Date anchorDate = Date(27, Jan, 2013);
     int yearsToSettlement = 2;
     std::shared_ptr<SingleInstrumentContract> fwd =
-        GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToSettlement, 112, 45, BUY);
-    std::shared_ptr<SingleInstrumentContract> option =
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 115, 45, SELL, CALL, 0);
-    std::shared_ptr<SingleInstrumentContract> cf =
-        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, SELL);
+        GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToSettlement, 112, 45, BuySell::BUY);
+    std::shared_ptr<SingleInstrumentContract> option = GenerateContracts::getDefaultEuropeanOption(
+        anchorDate, yearsToSettlement, 115, 45, BuySell::SELL, PutCall::CALL, 0);
+    std::shared_ptr<SingleInstrumentContract> cf = GenerateContracts::getDefaultFixedCashflowWithPremium(
+        anchorDate, yearsToSettlement, 5, BuySell::SELL);
 
     string errorMsg;
     BOOST_CHECK(Structure::qualifyForRegulatoryCapitalOffset(fwd, cf, errorMsg));
     BOOST_CHECK(Structure::qualifyForRegulatoryCapitalOffset(fwd, option, errorMsg));
 
-    option = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement + 1, 115, 45, SELL,
-                                                         CALL, 0);
+    option = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement + 1, 115, 45,
+                                                         BuySell::SELL, PutCall::CALL, 0);
     BOOST_CHECK(!Structure::qualifyForRegulatoryCapitalOffset(fwd, option, errorMsg));
 
     int numberOfAveragingDates = 30;
     double volume = 47;
-    std::shared_ptr<SingleDerivativeContract> asianOption = GenerateContracts::getDefaultAsianOption(
-        anchorDate, yearsToSettlement, numberOfAveragingDates, 90, volume, BUY, CALL, 10, true);
+    std::shared_ptr<SingleDerivativeContract> asianOption =
+        GenerateContracts::getDefaultAsianOption(anchorDate, yearsToSettlement, numberOfAveragingDates, 90,
+                                                 volume, BuySell::BUY, PutCall::CALL, 10, true);
     BOOST_CHECK(Structure::qualifyForRegulatoryCapitalOffset(cf, asianOption, errorMsg));
     BOOST_CHECK(!Structure::qualifyForRegulatoryCapitalOffset(fwd, asianOption, errorMsg));
 
     std::shared_ptr<SingleDerivativeContract> asianFwd = GenerateContracts::getDefaultAsianForward(
-        anchorDate, yearsToSettlement, numberOfAveragingDates, 90, volume, BUY);
+        anchorDate, yearsToSettlement, numberOfAveragingDates, 90, volume, BuySell::BUY);
     BOOST_CHECK(Structure::qualifyForRegulatoryCapitalOffset(asianFwd, asianOption, errorMsg));
 
     std::shared_ptr<SingleDerivativeContract> asianFwd2 = GenerateContracts::getDefaultAsianForward(
-        anchorDate, yearsToSettlement, numberOfAveragingDates - 1, 90, volume, BUY);
+        anchorDate, yearsToSettlement, numberOfAveragingDates - 1, 90, volume, BuySell::BUY);
     BOOST_CHECK(!Structure::qualifyForRegulatoryCapitalOffset(asianFwd, asianFwd2, errorMsg));
 }
 
@@ -188,12 +189,12 @@ void StructureTest::testMoveContracts()
     int yearsToSettlement = 2;
     double volume = 12300;
 
-    std::shared_ptr<SingleInstrumentContract> put1 =
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 80, volume, BUY, PUT, 0);
-    std::shared_ptr<SingleInstrumentContract> put2 =
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 70, volume, BUY, PUT, 0);
-    std::shared_ptr<SingleInstrumentContract> call1 =
-        GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 120, volume, BUY, CALL, 0);
+    std::shared_ptr<SingleInstrumentContract> put1 = GenerateContracts::getDefaultEuropeanOption(
+        anchorDate, yearsToSettlement, 80, volume, BuySell::BUY, PutCall::PUT, 0);
+    std::shared_ptr<SingleInstrumentContract> put2 = GenerateContracts::getDefaultEuropeanOption(
+        anchorDate, yearsToSettlement, 70, volume, BuySell::BUY, PutCall::PUT, 0);
+    std::shared_ptr<SingleInstrumentContract> call1 = GenerateContracts::getDefaultEuropeanOption(
+        anchorDate, yearsToSettlement, 120, volume, BuySell::BUY, PutCall::CALL, 0);
 
     vector<std::shared_ptr<SingleInstrumentContract>> inputInstruments, identifiedInstruments,
         outputInstruments;
@@ -229,9 +230,9 @@ void StructureTest::testSettlementDate()
     Date anchorDate = Date(27, Jan, 2013);
     int yearsToMaturity = 2;
     std::shared_ptr<ForwardContract> fwd =
-        GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToMaturity, 112, 45, BUY);
+        GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToMaturity, 112, 45, BuySell::BUY);
     std::shared_ptr<FixedCashflow> cf =
-        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, SELL);
+        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, BuySell::SELL);
     std::shared_ptr<RegCapUnderlyingFactors> factors = getDefaultRegCapUnderlyingFactors();
 
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
@@ -256,10 +257,10 @@ void StructureTest::testCashFlowN()
 
     int yearsToMaturity = 2;
     std::shared_ptr<FixedCashflow> cf =
-        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, BUY);
+        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, BuySell::BUY);
     std::shared_ptr<RegCapUnderlyingFactors> factors = getDefaultRegCapUnderlyingFactors();
 
-    // std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
+    // std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
     std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
     // std::shared_ptr<DiscountCurve> dc = gr.getDiscountCurve(dayCounter, nullCalendar, anchorDate, 5, 0.05);
     double ngr = .36;
@@ -273,7 +274,7 @@ void StructureTest::testCashFlowN()
     // a) no premium
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
     instruments.push_back(cf);
-    std::shared_ptr<Structure> structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    std::shared_ptr<Structure> structure = std::make_shared<Structure>(instruments, factors);
 
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
@@ -284,10 +285,10 @@ void StructureTest::testCashFlowN()
     BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - cf->getVolume()) < EPSILON_FOR_DOUBLES);
 
     // b) premium
-    cf = GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, BUY);
+    cf = GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, BuySell::BUY);
     instruments.clear();
     instruments.push_back(cf);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_REQUIRE(structure->isExposureCapped());
@@ -298,10 +299,10 @@ void StructureTest::testCashFlowN()
                 EPSILON_FOR_DOUBLES);
 
     // c) sold cashflow
-    cf = GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, SELL);
+    cf = GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, BuySell::SELL);
     instruments.clear();
     instruments.push_back(cf);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_REQUIRE(structure->isExposureCapped());
@@ -313,16 +314,16 @@ void StructureTest::testCashFlowN()
                 EPSILON_FOR_DOUBLES);
 
     // d multiple cash flows
-    cf = GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, BUY);
+    cf = GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, BuySell::BUY);
     std::shared_ptr<FixedCashflow> cf2 =
-        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 2, SELL);
+        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 2, BuySell::SELL);
     std::shared_ptr<FixedCashflow> cf3 =
-        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 1, BUY);
+        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 1, BuySell::BUY);
     instruments.clear();
     instruments.push_back(cf);
     instruments.push_back(cf2);
     instruments.push_back(cf3);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_REQUIRE(structure->isExposureCapped());
@@ -340,7 +341,7 @@ void StructureTest::testEuropeanForward()
     std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
     Date sd = nullCalendar->advance(anchorDate, 2, Years);
     std::shared_ptr<FixedCashflow> cf =
-        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BUY);
+        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BuySell::BUY);
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
     std::shared_ptr<Structure> structure;
     std::shared_ptr<RegCapUnderlyingFactors> factors = getDefaultRegCapUnderlyingFactors();
@@ -349,11 +350,11 @@ void StructureTest::testEuropeanForward()
     double ngr = .36;
 
     // a) purchased forward
-    std::shared_ptr<EuropeanForward> ef =
-        GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToSettlement, 100, volume, BUY);
+    std::shared_ptr<EuropeanForward> ef = GenerateContracts::getDefaultEuropeanForward(
+        anchorDate, yearsToSettlement, 100, volume, BuySell::BUY);
     instruments.clear();
     instruments.push_back(ef);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(!structure->isExposureCapped());
@@ -367,7 +368,7 @@ void StructureTest::testEuropeanForward()
     instruments.clear();
     instruments.push_back(ef);
     instruments.push_back(cf);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(!structure->isExposureCapped());
@@ -379,12 +380,12 @@ void StructureTest::testEuropeanForward()
                 EPSILON_FOR_DOUBLES * volume);
 
     // c) Buy and sell forward - lock in profit
-    std::shared_ptr<EuropeanForward> ef2 =
-        GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToSettlement, 120, volume, SELL);
+    std::shared_ptr<EuropeanForward> ef2 = GenerateContracts::getDefaultEuropeanForward(
+        anchorDate, yearsToSettlement, 120, volume, BuySell::SELL);
     instruments.clear();
     instruments.push_back(ef);
     instruments.push_back(ef2);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -398,11 +399,12 @@ void StructureTest::testEuropeanForward()
                 EPSILON_FOR_DOUBLES * volume);
 
     // d) Buy and sell forward - lock in loss
-    ef2 = GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToSettlement, 80, volume, SELL);
+    ef2 = GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToSettlement, 80, volume,
+                                                       BuySell::SELL);
     instruments.clear();
     instruments.push_back(ef);
     instruments.push_back(ef2);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -415,13 +417,13 @@ void StructureTest::testEuropeanForward()
                 EPSILON_FOR_DOUBLES * volume);
 
     // e) Portfolio of 3 forwards
-    std::shared_ptr<EuropeanForward> ef3 =
-        GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToSettlement, 120, volume, SELL);
+    std::shared_ptr<EuropeanForward> ef3 = GenerateContracts::getDefaultEuropeanForward(
+        anchorDate, yearsToSettlement, 120, volume, BuySell::SELL);
     instruments.clear();
     instruments.push_back(ef);
     instruments.push_back(ef2);
     instruments.push_back(ef3);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(!structure->isExposureCapped());
@@ -443,7 +445,7 @@ void StructureTest::testAsianforward()
     std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
     Date sd = nullCalendar->advance(anchorDate, yearsToSettlement, Years);
     std::shared_ptr<FixedCashflow> cf =
-        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BUY);
+        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BuySell::BUY);
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
     std::shared_ptr<Structure> structure;
     double volume = 10000;
@@ -461,10 +463,10 @@ void StructureTest::testAsianforward()
     // a) purchased forward
     int numberOfAveragingPoints = 30;
     std::shared_ptr<AsianForward> af = GenerateContracts::getDefaultAsianForward(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 100, volume, BUY);
+        anchorDate, yearsToSettlement, numberOfAveragingPoints, 100, volume, BuySell::BUY);
     instruments.clear();
     instruments.push_back(af);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(!structure->isExposureCapped());
@@ -479,7 +481,7 @@ void StructureTest::testAsianforward()
     instruments.clear();
     instruments.push_back(af);
     instruments.push_back(cf);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
@@ -492,11 +494,11 @@ void StructureTest::testAsianforward()
 
     // c) Buy and sell forward - lock in profit
     std::shared_ptr<AsianForward> af2 = GenerateContracts::getDefaultAsianForward(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 120, volume, SELL);
+        anchorDate, yearsToSettlement, numberOfAveragingPoints, 120, volume, BuySell::SELL);
     instruments.clear();
     instruments.push_back(af);
     instruments.push_back(af2);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -511,11 +513,11 @@ void StructureTest::testAsianforward()
 
     // d) Buy and sell forward - lock in loss
     af2 = GenerateContracts::getDefaultAsianForward(anchorDate, yearsToSettlement, numberOfAveragingPoints,
-                                                    80, volume, SELL);
+                                                    80, volume, BuySell::SELL);
     instruments.clear();
     instruments.push_back(af);
     instruments.push_back(af2);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -529,12 +531,12 @@ void StructureTest::testAsianforward()
 
     // e) Portfolio of 3 forwards
     std::shared_ptr<AsianForward> af3 = GenerateContracts::getDefaultAsianForward(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 120, volume, SELL);
+        anchorDate, yearsToSettlement, numberOfAveragingPoints, 120, volume, BuySell::SELL);
     instruments.clear();
     instruments.push_back(af);
     instruments.push_back(af2);
     instruments.push_back(af3);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(!structure->isExposureCapped());
@@ -556,7 +558,7 @@ void StructureTest::testEuropeanOption()
     std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
     Date sd = nullCalendar->advance(anchorDate, yearsToSettlement, Years);
     std::shared_ptr<FixedCashflow> cf =
-        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BUY);
+        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BuySell::BUY);
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
     std::shared_ptr<Structure> structure;
     double premium = 3.4;
@@ -576,19 +578,19 @@ void StructureTest::testEuropeanOption()
 
     // a) purchased option
     std::shared_ptr<EuropeanOption> purchasedPutDP = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 80, volume, BUY, PUT, premium, true);
+        anchorDate, yearsToSettlement, 80, volume, BuySell::BUY, PutCall::PUT, premium, true);
     std::shared_ptr<EuropeanOption> purchasedPutNoDP = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 80, volume, BUY, PUT, 0, false);
+        anchorDate, yearsToSettlement, 80, volume, BuySell::BUY, PutCall::PUT, 0, false);
     std::shared_ptr<EuropeanOption> purchasedCallDP = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 80, volume, BUY, CALL, premium, true);
+        anchorDate, yearsToSettlement, 80, volume, BuySell::BUY, PutCall::CALL, premium, true);
     std::shared_ptr<EuropeanOption> purchasedCallNoDP = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 80, volume, BUY, CALL, 0, false);
+        anchorDate, yearsToSettlement, 80, volume, BuySell::BUY, PutCall::CALL, 0, false);
     instruments.clear();
     instruments.push_back(purchasedPutDP);
     instruments.push_back(purchasedPutNoDP);
     instruments.push_back(purchasedCallDP);
     instruments.push_back(purchasedCallNoDP);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(!structure->isExposureCapped());
@@ -601,16 +603,16 @@ void StructureTest::testEuropeanOption()
 
     // b) sold option
     std::shared_ptr<EuropeanOption> soldPutDP = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 80, volume, SELL, PUT, premium, true);
+        anchorDate, yearsToSettlement, 80, volume, BuySell::SELL, PutCall::PUT, premium, true);
     std::shared_ptr<EuropeanOption> soldPutNoDP = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 80, volume, SELL, PUT, 0, false);
+        anchorDate, yearsToSettlement, 80, volume, BuySell::SELL, PutCall::PUT, 0, false);
     std::shared_ptr<EuropeanOption> soldCallDP = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 80, volume, SELL, CALL, premium, true);
+        anchorDate, yearsToSettlement, 80, volume, BuySell::SELL, PutCall::CALL, premium, true);
     std::shared_ptr<EuropeanOption> soldCallNoDP = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 80, volume, SELL, CALL, 0, false);
+        anchorDate, yearsToSettlement, 80, volume, BuySell::SELL, PutCall::CALL, 0, false);
     instruments.clear();
     instruments.push_back(soldPutDP);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -625,7 +627,7 @@ void StructureTest::testEuropeanOption()
 
     instruments.clear();
     instruments.push_back(soldPutNoDP);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -634,7 +636,7 @@ void StructureTest::testEuropeanOption()
 
     instruments.clear();
     instruments.push_back(soldCallDP);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -643,7 +645,7 @@ void StructureTest::testEuropeanOption()
 
     instruments.clear();
     instruments.push_back(soldCallNoDP);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -651,14 +653,14 @@ void StructureTest::testEuropeanOption()
                                            instruments[0]->getVolume())) < EPSILON_FOR_DOUBLES);
 
     // c) Put spread
-    soldPutDP = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 80, volume, SELL,
-                                                            PUT, premium, true);
+    soldPutDP = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 80, volume,
+                                                            BuySell::SELL, PutCall::PUT, premium, true);
     purchasedPutNoDP = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 100, volume,
-                                                                   BUY, PUT, 0, false);
+                                                                   BuySell::BUY, PutCall::PUT, 0, false);
     instruments.clear();
     instruments.push_back(soldPutDP);
     instruments.push_back(purchasedPutNoDP);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     BOOST_CHECK(structure->isExposureCapped());
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
@@ -669,17 +671,17 @@ void StructureTest::testEuropeanOption()
     BOOST_CHECK(abs(structure->getCap() - expectedCap) < EPSILON_FOR_DOUBLES * volume);
 
     // d) Producer capped collar
-    soldPutNoDP = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 80, volume, SELL,
-                                                              PUT, 0, false);
-    purchasedCallNoDP = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 100,
-                                                                    volume, BUY, CALL, 0, false);
+    soldPutNoDP = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 80, volume,
+                                                              BuySell::SELL, PutCall::PUT, 0, false);
+    purchasedCallNoDP = GenerateContracts::getDefaultEuropeanOption(
+        anchorDate, yearsToSettlement, 100, volume, BuySell::BUY, PutCall::CALL, 0, false);
     soldCallNoDP = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 120, volume,
-                                                               SELL, CALL, 0, false);
+                                                               BuySell::SELL, PutCall::CALL, 0, false);
     instruments.clear();
     instruments.push_back(soldPutNoDP);
     instruments.push_back(purchasedCallNoDP);
     instruments.push_back(soldCallNoDP);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -697,7 +699,7 @@ void StructureTest::testAsianOption()
 
     int yearsToSettlement = 2;
     std::shared_ptr<FixedCashflow> cf =
-        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BUY);
+        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BuySell::BUY);
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
     std::shared_ptr<Structure> structure;
     double premium = 3.4;
@@ -706,36 +708,44 @@ void StructureTest::testAsianOption()
     std::shared_ptr<RegCapUnderlyingFactors> factors = getDefaultRegCapUnderlyingFactors();
 
     // a) purchased option
-    std::shared_ptr<AsianOption> purchasedPutDP = GenerateContracts::getDefaultAsianOption(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 80, volume, BUY, PUT, premium, true);
-    std::shared_ptr<AsianOption> purchasedPutNoDP = GenerateContracts::getDefaultAsianOption(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 80, volume, BUY, PUT, 0, false);
-    std::shared_ptr<AsianOption> purchasedCallDP = GenerateContracts::getDefaultAsianOption(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 80, volume, BUY, CALL, premium, true);
-    std::shared_ptr<AsianOption> purchasedCallNoDP = GenerateContracts::getDefaultAsianOption(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 80, volume, BUY, CALL, 0, false);
+    std::shared_ptr<AsianOption> purchasedPutDP =
+        GenerateContracts::getDefaultAsianOption(anchorDate, yearsToSettlement, numberOfAveragingPoints, 80,
+                                                 volume, BuySell::BUY, PutCall::PUT, premium, true);
+    std::shared_ptr<AsianOption> purchasedPutNoDP =
+        GenerateContracts::getDefaultAsianOption(anchorDate, yearsToSettlement, numberOfAveragingPoints, 80,
+                                                 volume, BuySell::BUY, PutCall::PUT, 0, false);
+    std::shared_ptr<AsianOption> purchasedCallDP =
+        GenerateContracts::getDefaultAsianOption(anchorDate, yearsToSettlement, numberOfAveragingPoints, 80,
+                                                 volume, BuySell::BUY, PutCall::CALL, premium, true);
+    std::shared_ptr<AsianOption> purchasedCallNoDP =
+        GenerateContracts::getDefaultAsianOption(anchorDate, yearsToSettlement, numberOfAveragingPoints, 80,
+                                                 volume, BuySell::BUY, PutCall::CALL, 0, false);
     instruments.clear();
     instruments.push_back(purchasedPutDP);
     instruments.push_back(purchasedPutNoDP);
     instruments.push_back(purchasedCallDP);
     instruments.push_back(purchasedCallNoDP);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(!structure->isExposureCapped());
 
     // b) sold option
-    std::shared_ptr<AsianOption> soldPutDP = GenerateContracts::getDefaultAsianOption(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 80, volume, SELL, PUT, premium, true);
-    std::shared_ptr<AsianOption> soldPutNoDP = GenerateContracts::getDefaultAsianOption(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 80, volume, SELL, PUT, 0, false);
-    std::shared_ptr<AsianOption> soldCallDP = GenerateContracts::getDefaultAsianOption(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 80, volume, SELL, CALL, premium, true);
-    std::shared_ptr<AsianOption> soldCallNoDP = GenerateContracts::getDefaultAsianOption(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 80, volume, SELL, CALL, 0, false);
+    std::shared_ptr<AsianOption> soldPutDP =
+        GenerateContracts::getDefaultAsianOption(anchorDate, yearsToSettlement, numberOfAveragingPoints, 80,
+                                                 volume, BuySell::SELL, PutCall::PUT, premium, true);
+    std::shared_ptr<AsianOption> soldPutNoDP =
+        GenerateContracts::getDefaultAsianOption(anchorDate, yearsToSettlement, numberOfAveragingPoints, 80,
+                                                 volume, BuySell::SELL, PutCall::PUT, 0, false);
+    std::shared_ptr<AsianOption> soldCallDP =
+        GenerateContracts::getDefaultAsianOption(anchorDate, yearsToSettlement, numberOfAveragingPoints, 80,
+                                                 volume, BuySell::SELL, PutCall::CALL, premium, true);
+    std::shared_ptr<AsianOption> soldCallNoDP =
+        GenerateContracts::getDefaultAsianOption(anchorDate, yearsToSettlement, numberOfAveragingPoints, 80,
+                                                 volume, BuySell::SELL, PutCall::CALL, 0, false);
     instruments.clear();
     instruments.push_back(soldPutDP);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -744,7 +754,7 @@ void StructureTest::testAsianOption()
 
     instruments.clear();
     instruments.push_back(soldPutNoDP);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -753,7 +763,7 @@ void StructureTest::testAsianOption()
 
     instruments.clear();
     instruments.push_back(soldCallDP);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -762,7 +772,7 @@ void StructureTest::testAsianOption()
 
     instruments.clear();
     instruments.push_back(soldCallNoDP);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -770,14 +780,16 @@ void StructureTest::testAsianOption()
                                            instruments[0]->getVolume())) < EPSILON_FOR_DOUBLES);
 
     // c) Put spread
-    soldPutDP = GenerateContracts::getDefaultAsianOption(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 80, volume, SELL, PUT, premium, true);
-    purchasedPutNoDP = GenerateContracts::getDefaultAsianOption(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 100, volume, BUY, PUT, 0, false);
+    soldPutDP =
+        GenerateContracts::getDefaultAsianOption(anchorDate, yearsToSettlement, numberOfAveragingPoints, 80,
+                                                 volume, BuySell::SELL, PutCall::PUT, premium, true);
+    purchasedPutNoDP =
+        GenerateContracts::getDefaultAsianOption(anchorDate, yearsToSettlement, numberOfAveragingPoints, 100,
+                                                 volume, BuySell::BUY, PutCall::PUT, 0, false);
     instruments.clear();
     instruments.push_back(soldPutDP);
     instruments.push_back(purchasedPutNoDP);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     BOOST_CHECK(structure->isExposureCapped());
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
@@ -788,17 +800,20 @@ void StructureTest::testAsianOption()
     BOOST_CHECK(abs(structure->getCap() - expectedCap) < EPSILON_FOR_DOUBLES * volume);
 
     // d) Producer capped collar
-    soldPutNoDP = GenerateContracts::getDefaultAsianOption(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 80, volume, SELL, PUT, 0, false);
-    purchasedCallNoDP = GenerateContracts::getDefaultAsianOption(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 100, volume, BUY, CALL, 0, false);
-    soldCallNoDP = GenerateContracts::getDefaultAsianOption(
-        anchorDate, yearsToSettlement, numberOfAveragingPoints, 120, volume, SELL, CALL, 0, false);
+    soldPutNoDP =
+        GenerateContracts::getDefaultAsianOption(anchorDate, yearsToSettlement, numberOfAveragingPoints, 80,
+                                                 volume, BuySell::SELL, PutCall::PUT, 0, false);
+    purchasedCallNoDP =
+        GenerateContracts::getDefaultAsianOption(anchorDate, yearsToSettlement, numberOfAveragingPoints, 100,
+                                                 volume, BuySell::BUY, PutCall::CALL, 0, false);
+    soldCallNoDP =
+        GenerateContracts::getDefaultAsianOption(anchorDate, yearsToSettlement, numberOfAveragingPoints, 120,
+                                                 volume, BuySell::SELL, PutCall::CALL, 0, false);
     instruments.clear();
     instruments.push_back(soldPutNoDP);
     instruments.push_back(purchasedCallNoDP);
     instruments.push_back(soldCallNoDP);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -816,7 +831,7 @@ void StructureTest::testMixedStructures()
 
     int yearsToSettlement = 2;
     std::shared_ptr<FixedCashflow> cf =
-        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BUY);
+        GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BuySell::BUY);
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
     std::shared_ptr<Structure> structure;
     [[maybe_unused]] double premium = 3.4;
@@ -824,14 +839,14 @@ void StructureTest::testMixedStructures()
     std::shared_ptr<RegCapUnderlyingFactors> factors = getDefaultRegCapUnderlyingFactors();
 
     // a) Capped Producer forward
-    std::shared_ptr<EuropeanForward> ef =
-        GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToSettlement, 100, volume, BUY);
+    std::shared_ptr<EuropeanForward> ef = GenerateContracts::getDefaultEuropeanForward(
+        anchorDate, yearsToSettlement, 100, volume, BuySell::BUY);
     std::shared_ptr<EuropeanOption> call = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 120, volume, SELL, CALL, 0, false);
+        anchorDate, yearsToSettlement, 120, volume, BuySell::SELL, PutCall::CALL, 0, false);
     instruments.clear();
     instruments.push_back(ef);
     instruments.push_back(call);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -857,19 +872,19 @@ void StructureTest::testSpecialCases()
     // a) ______/\______
     double peakStrike = 102.73;
     std::shared_ptr<EuropeanOption> c1 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 80, volume, BUY, CALL, 0, false);
+        anchorDate, yearsToSettlement, 80, volume, BuySell::BUY, PutCall::CALL, 0, false);
     std::shared_ptr<EuropeanOption> c2 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, peakStrike, volume, SELL, CALL, 0, false);
+        anchorDate, yearsToSettlement, peakStrike, volume, BuySell::SELL, PutCall::CALL, 0, false);
     std::shared_ptr<EuropeanOption> c3 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, peakStrike, volume, SELL, CALL, 0, false);
+        anchorDate, yearsToSettlement, peakStrike, volume, BuySell::SELL, PutCall::CALL, 0, false);
     std::shared_ptr<EuropeanOption> c4 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 120, volume, BUY, CALL, 0, false);
+        anchorDate, yearsToSettlement, 120, volume, BuySell::BUY, PutCall::CALL, 0, false);
     instruments.clear();
     instruments.push_back(c1);
     instruments.push_back(c2);
     instruments.push_back(c3);
     instruments.push_back(c4);
-    structure = std::shared_ptr<Structure>(new Structure(instruments, factors));
+    structure = std::make_shared<Structure>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -879,7 +894,7 @@ void StructureTest::testSpecialCases()
     BOOST_CHECK(abs(actualCap - expectedCap) < EPSILON_FOR_DOUBLES * volume);
     // Now replace the 2 solf contracts c2 and c3 with one contract with the combined volume
     std::shared_ptr<EuropeanOption> c5 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, peakStrike, 2 * volume, SELL, CALL, 0, false);
+        anchorDate, yearsToSettlement, peakStrike, 2 * volume, BuySell::SELL, PutCall::CALL, 0, false);
     instruments.clear();
     instruments.push_back(c1);
     instruments.push_back(c5);
@@ -916,13 +931,13 @@ void StructureTest::testStructureCreation()
     double structureVolume = 10000;
     double premiumRecievable = 2000;
     std::shared_ptr<EuropeanForward> fwdSale = GenerateContracts::getDefaultEuropeanForward(
-        anchorDate, yearsToSettlement, 112, structureVolume, SELL);
+        anchorDate, yearsToSettlement, 112, structureVolume, BuySell::SELL);
     std::shared_ptr<SingleInstrumentContract> cf = GenerateContracts::getDefaultFixedCashflowWithPremium(
-        anchorDate, yearsToSettlement, premiumRecievable, BUY);
+        anchorDate, yearsToSettlement, premiumRecievable, BuySell::BUY);
     std::shared_ptr<RegCapUnderlyingFactors> regCapFactors =
         StructureTest::getDefaultRegCapUnderlyingFactors();
     std::shared_ptr<EuropeanOption> option = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 115, structureVolume, BUY, CALL, 0);
+        anchorDate, yearsToSettlement, 115, structureVolume, BuySell::BUY, PutCall::CALL, 0);
 
     vector<std::shared_ptr<SingleInstrumentContract>> contracts;
     contracts.push_back(fwdSale);
@@ -936,8 +951,8 @@ void StructureTest::testStructureCreation()
     BOOST_REQUIRE(structures.size() == 1);
     BOOST_CHECK(structures[0]->isOK());
 
-    option = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 115,
-                                                         structureVolume * 1.05, BUY, CALL, 0);
+    option = GenerateContracts::getDefaultEuropeanOption(
+        anchorDate, yearsToSettlement, 115, structureVolume * 1.05, BuySell::BUY, PutCall::CALL, 0);
     contracts.clear();
     contracts.push_back(fwdSale);
     contracts.push_back(cf);
@@ -949,11 +964,11 @@ void StructureTest::testStructureCreation()
 
     // Test a call spread manually and automatically
     std::shared_ptr<EuropeanOption> put = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 80, structureVolume, SELL, PUT, 0);
+        anchorDate, yearsToSettlement, 80, structureVolume, BuySell::SELL, PutCall::PUT, 0);
     std::shared_ptr<EuropeanOption> purchasedCall = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 115, structureVolume, BUY, CALL, 0);
+        anchorDate, yearsToSettlement, 115, structureVolume, BuySell::BUY, PutCall::CALL, 0);
     std::shared_ptr<EuropeanOption> soldCall = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 130, structureVolume, SELL, CALL, 0);
+        anchorDate, yearsToSettlement, 130, structureVolume, BuySell::SELL, PutCall::CALL, 0);
     vector<std::shared_ptr<SingleInstrumentContract>> threeway;
     threeway.push_back(put);
     threeway.push_back(purchasedCall);
@@ -968,27 +983,27 @@ void StructureTest::testStructureCreation()
 
     // Test most complex case
     std::shared_ptr<EuropeanOption> s1p1 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 80, structureVolume, BUY, PUT, 0);
+        anchorDate, yearsToSettlement, 80, structureVolume, BuySell::BUY, PutCall::PUT, 0);
     std::shared_ptr<EuropeanOption> s1p2 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 85, 2 * structureVolume, BUY, PUT, 0);
+        anchorDate, yearsToSettlement, 85, 2 * structureVolume, BuySell::BUY, PutCall::PUT, 0);
     std::shared_ptr<EuropeanOption> s1p3 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 85, structureVolume, BUY, PUT, 0);
+        anchorDate, yearsToSettlement, 85, structureVolume, BuySell::BUY, PutCall::PUT, 0);
 
     std::shared_ptr<EuropeanOption> s1c1 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 100, 6 * structureVolume, BUY, CALL, 0);
+        anchorDate, yearsToSettlement, 100, 6 * structureVolume, BuySell::BUY, PutCall::CALL, 0);
     std::shared_ptr<EuropeanOption> s1c2 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 110, 6 * structureVolume, SELL, CALL, 0);
+        anchorDate, yearsToSettlement, 110, 6 * structureVolume, BuySell::SELL, PutCall::CALL, 0);
     std::shared_ptr<EuropeanOption> s1c3 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 110, 6 * structureVolume, SELL, CALL, 0);
+        anchorDate, yearsToSettlement, 110, 6 * structureVolume, BuySell::SELL, PutCall::CALL, 0);
     std::shared_ptr<EuropeanOption> s1c4 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 120, 6 * structureVolume, BUY, CALL, 0);
+        anchorDate, yearsToSettlement, 120, 6 * structureVolume, BuySell::BUY, PutCall::CALL, 0);
 
     std::shared_ptr<EuropeanOption> s1c5 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 130, 2 * structureVolume, BUY, CALL, 0);
+        anchorDate, yearsToSettlement, 130, 2 * structureVolume, BuySell::BUY, PutCall::CALL, 0);
     std::shared_ptr<EuropeanOption> s1c6 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 130, structureVolume, BUY, CALL, 0);
+        anchorDate, yearsToSettlement, 130, structureVolume, BuySell::BUY, PutCall::CALL, 0);
     std::shared_ptr<EuropeanOption> s1c7 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 140, structureVolume, SELL, CALL, 0);
+        anchorDate, yearsToSettlement, 140, structureVolume, BuySell::SELL, PutCall::CALL, 0);
 
     contracts.clear();
     contracts.push_back(s1p1);

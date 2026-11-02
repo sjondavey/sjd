@@ -29,7 +29,7 @@ namespace sjd
 
         double getForward() { return F; };
         void setForward(double forwardInput);
-        double getStrike() { return X; };
+        double getStrike() const { return X; };
         void setStrike(double strikeInput);
         double getStandardDeviation() { return sd; };
         void setStandardDeviation(double sd);

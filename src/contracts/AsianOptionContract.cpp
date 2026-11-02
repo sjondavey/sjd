@@ -23,8 +23,7 @@ namespace sjd
                                         double pAmount,
                                         BuySell bs)
     {
-        SingleOptionContract::errorTracking =
-            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("AsianOption"));
+        SingleOptionContract::errorTracking = std::make_shared<sjd::IssueTracker>("AsianOption");
         setAveragingDates(averagingDatesInput);
         setSettlementDate(optionSettlement);
         setPremiumPaymentDate(pDate);
@@ -75,7 +74,7 @@ namespace sjd
 
     std::unique_ptr<Contract> AsianOption::clone()
     {
-        return std::unique_ptr<Contract>(new AsianOption(*this));
+        return std::make_unique<AsianOption>(*this);
     }
 
     void AsianOption::setAveragingDates(set<Date> averagingDatesInput)
@@ -87,15 +86,15 @@ namespace sjd
     void AsianOption::setType(PutCall pc)
     {
         SingleOptionContract::setType(pc);
-        if (pc == PUT)
+        if (pc == PutCall::PUT)
         {
-            option = std::shared_ptr<AverageRateOption>(
-                new AverageRatePut(vector<double>(1, 0), vector<double>(1, 0), 0, vector<double>(1, 0), 0));
+            option = std::make_shared<AverageRatePut>(vector<double>(1, 0), vector<double>(1, 0), 0,
+                                                      vector<double>(1, 0), 0);
         }
         else
         {
-            option = std::shared_ptr<AverageRateOption>(
-                new AverageRateCall(vector<double>(1, 0), vector<double>(1, 0), 0, vector<double>(1, 0), 0));
+            option = std::make_shared<AverageRateCall>(vector<double>(1, 0), vector<double>(1, 0), 0,
+                                                       vector<double>(1, 0), 0);
         }
     }
 

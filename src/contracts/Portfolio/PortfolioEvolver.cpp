@@ -2,8 +2,6 @@
 
 #include <sstream>
 
-#include <boost/lexical_cast.hpp>
-
 using namespace std;
 using namespace QuantLib;
 
@@ -14,7 +12,7 @@ namespace sjd
         std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGeneratorInput,
         set<Date> forwardDatesSet)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("PortfolioEvolver"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("PortfolioEvolver");
         portfolio = portfolioInput;
         portfolioIsMargined = portfolio->isMargined();
         pathGenerator = pathGeneratorInput;
@@ -29,7 +27,7 @@ namespace sjd
         std::shared_ptr<Calendar> calendarForHoldingPeriodInput,
         size_t holdingPeriodInput)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("PortfolioEvolver"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("PortfolioEvolver");
         portfolio = portfolioInput;
         portfolioIsMargined = portfolio->isMargined();
         pathGenerator = pathGeneratorInput;
@@ -105,9 +103,8 @@ namespace sjd
                 descriptionStream << "Portfolio cannot value against Rate Environment ";
                 descriptionStream << i << ": " << portfolio->getErrorMessagesAsString();
                 recordIssue("SIMULATION_MARKET_INVALID", descriptionStream.str(),
-                            {"simulation_steps", boost::lexical_cast<std::string>(i)});
-                absorbChildReport(portfolio->validationReport(),
-                                  {"simulation_steps", boost::lexical_cast<std::string>(i)});
+                            {"simulation_steps", std::to_string(i)});
+                absorbChildReport(portfolio->validationReport(), {"simulation_steps", std::to_string(i)});
                 return false;
             }
         }

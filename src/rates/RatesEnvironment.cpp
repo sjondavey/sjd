@@ -7,7 +7,7 @@ namespace sjd
 {
     RatesEnvironment::RatesEnvironment(Date anchorDateInput)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("RatesEnvironment"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("RatesEnvironment");
         anchorDate = anchorDateInput;
         finalDate = anchorDate;
         allowExtrapolation = false;

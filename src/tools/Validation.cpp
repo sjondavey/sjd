@@ -149,7 +149,7 @@ namespace sjd
         return log.snapshot();
     }
 
-    Validatable::Validatable() : errorTracking(new IssueTracker("")) {}
+    Validatable::Validatable() : errorTracking(std::make_shared<IssueTracker>("")) {}
 
     bool Validatable::hasErrors() const
     {

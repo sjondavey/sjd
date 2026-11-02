@@ -130,7 +130,7 @@ namespace sjd
     /*======================================================================================
     As array interpolators are defined, add them here
     =======================================================================================*/
-    enum ArrayInterpolatorType
+    enum class ArrayInterpolatorType
     {
         LINEAR,
         CUBIC

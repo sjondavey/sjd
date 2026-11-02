@@ -18,8 +18,7 @@ namespace sjd
         SurfaceInterpolatorType interpolatorTypeInput,
         bool extrapolate)
     {
-        errorTracking =
-            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceMoneynessCMA"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("VolatilitySurfaceMoneynessCMA");
 
         if (volatilityData.size() == 0)
         {
@@ -41,8 +40,7 @@ namespace sjd
         SurfaceInterpolatorType interpolatorTypeInput,
         bool extrapolate)
     {
-        errorTracking =
-            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilitySurfaceMoneynessCMA"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("VolatilitySurfaceMoneynessCMA");
 
         setInputs(anchorDateInput, observationDatesInput, moneynessInput, volatilityInput,
                   interpolatorTypeInput, extrapolate);
@@ -67,8 +65,8 @@ namespace sjd
 
         allowExtrapolation = extrapolateInput;
         anchorDate = anchorDateInput;
-        dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
-        simpleDayCounter = std::shared_ptr<DayCounter>(new SimpleDayCounter());
+        dayCounter = std::make_shared<Actual365Fixed>();
+        simpleDayCounter = std::make_shared<SimpleDayCounter>();
 
         strikeDimension = moneynessInput;
         observationDates = observationDatesInput;
@@ -240,8 +238,8 @@ namespace sjd
         Matrix spreadMatrix = Matrix(volatilitySubset.rows(), volatilitySubset.columns(), spread);
         Matrix bumpedVolMatrix = volatilitySubset + spreadMatrix;
 
-        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneynessCMA(
-            anchorDate, newDates, strikeDimension, bumpedVolMatrix, interpolatorType, allowExtrapolation));
+        return std::make_shared<VolatilitySurfaceMoneynessCMA>(
+            anchorDate, newDates, strikeDimension, bumpedVolMatrix, interpolatorType, allowExtrapolation);
     }
 
     std::shared_ptr<VolatilityRateSource> VolatilitySurfaceMoneynessCMA::rollForward(Date toDate)
@@ -257,8 +255,8 @@ namespace sjd
         //     updatedType = BILINEAR;
         // }
 
-        return std::shared_ptr<VolatilityRateSource>(new VolatilitySurfaceMoneynessCMA(
-            toDate, newDates, strikeDimension, volatilitySubset, updatedType, allowExtrapolation));
+        return std::make_shared<VolatilitySurfaceMoneynessCMA>(
+            toDate, newDates, strikeDimension, volatilitySubset, updatedType, allowExtrapolation);
     }
 
     void VolatilitySurfaceMoneynessCMA::getRolledVariables(Date toDate,

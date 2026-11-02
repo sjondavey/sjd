@@ -24,18 +24,18 @@ namespace sjd
         CalendarMonthAverageCurve(QuantLib::Date anchorDate,
                                   std::vector<QuantLib::Date> observationDates,
                                   std::vector<double> rates,
-                                  ArrayInterpolatorType type = LINEAR,
+                                  ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
                                   bool allowExtrapolation = false);
 
         void setParameters(QuantLib::Date anchorDate,
                            std::vector<QuantLib::Date> observationDates,
                            std::vector<double> rates,
-                           ArrayInterpolatorType type = LINEAR,
+                           ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
                            bool allowExtrapolation = false);
 
         bool isOK(std::string& errorMessage);
 
-        QuantLib::Date getAnchorDate();
+        QuantLib::Date getAnchorDate() const;
         QuantLib::Date getBeginningOfAnchorDateMonth();
         QuantLib::Date getFinalDate();
         ArrayInterpolatorType getType();

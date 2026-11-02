@@ -92,16 +92,20 @@ void GoldenValuesTest::testContractStressor()
 
     Named actual;
     for (const auto& part :
-         {stressedValues(
-              "european call",
-              GenerateContracts::getDefaultEuropeanOption(anchorDate, 1, 100, 1000, BUY, CALL, 2.5), re),
+         {stressedValues("european call",
+                         GenerateContracts::getDefaultEuropeanOption(anchorDate, 1, 100, 1000, BuySell::BUY,
+                                                                     PutCall::CALL, 2.5),
+                         re),
           stressedValues("european put",
-                         GenerateContracts::getDefaultEuropeanOption(anchorDate, 2, 95, 1000, SELL, PUT, 0),
+                         GenerateContracts::getDefaultEuropeanOption(anchorDate, 2, 95, 1000, BuySell::SELL,
+                                                                     PutCall::PUT, 0),
                          re),
           stressedValues("european forward",
-                         GenerateContracts::getDefaultEuropeanForward(anchorDate, 1, 102, 1000, BUY), re),
+                         GenerateContracts::getDefaultEuropeanForward(anchorDate, 1, 102, 1000, BuySell::BUY),
+                         re),
           stressedValues("asian put",
-                         GenerateContracts::getDefaultAsianOption(anchorDate, 1, 20, 98, 1000, BUY, PUT, 1.0),
+                         GenerateContracts::getDefaultAsianOption(anchorDate, 1, 20, 98, 1000, BuySell::BUY,
+                                                                  PutCall::PUT, 1.0),
                          re)})
     {
         actual.insert(actual.end(), part.begin(), part.end());

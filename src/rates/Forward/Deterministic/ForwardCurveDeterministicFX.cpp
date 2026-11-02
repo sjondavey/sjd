@@ -12,8 +12,7 @@ namespace sjd
                                                              std::shared_ptr<DiscountRateSource> domesticDRS,
                                                              std::shared_ptr<DiscountRateSource> foreignDRS)
     {
-        errorTracking =
-            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveDeterministicFX"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("ForwardCurveDeterministicFX");
         double spotAtAnchor;
         if (!domesticDRS->extendsTo(spotDate) || (!foreignDRS->extendsTo(spotDate)))
         {
@@ -32,8 +31,7 @@ namespace sjd
                                                              std::shared_ptr<DiscountRateSource> domesticDRS,
                                                              std::shared_ptr<DiscountRateSource> foreignDRS)
     {
-        errorTracking =
-            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveDeterministicFX"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("ForwardCurveDeterministicFX");
         setParameters(anchorDate, spotAtT0, domesticDRS, foreignDRS);
     }
 

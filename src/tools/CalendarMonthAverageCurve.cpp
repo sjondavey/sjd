@@ -29,8 +29,8 @@ namespace sjd
         type = typeInput;
         observationDates = observationDatesInput;
         observedRates = observedRatesInput;
-        dayCounter = std::shared_ptr<DayCounter>(new SimpleDayCounter());
-        a365DayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
+        dayCounter = std::make_shared<SimpleDayCounter>();
+        a365DayCounter = std::make_shared<Actual365Fixed>();
         anchorDate = anchorDateInput;
         beginningOfAnchorDateMonth = Date(1, anchorDateInput.month(), anchorDateInput.year());
         allowExtrapolation = allowExtrapolationInput;
@@ -38,8 +38,8 @@ namespace sjd
         if (observationDates.size() < 1)
         {
             finalDate = anchorDate;
-            interpolator = std::shared_ptr<ArrayInterpolator>(
-                new LinearArrayInterpolator(vector<double>(1, 0), vector<double>(1, 1), allowExtrapolation));
+            interpolator = std::make_shared<LinearArrayInterpolator>(
+                vector<double>(1, 0), vector<double>(1, 1), allowExtrapolation);
             return;
         }
         finalDate = observationDates.back();
@@ -53,13 +53,13 @@ namespace sjd
 
         switch (type)
         {
-        case CUBIC:
-            interpolator = std::shared_ptr<ArrayInterpolator>(
-                new CubicSplineInterpolator(observationPoints, observedRates, allowExtrapolation));
+        case ArrayInterpolatorType::CUBIC:
+            interpolator = std::make_shared<CubicSplineInterpolator>(observationPoints, observedRates,
+                                                                     allowExtrapolation);
             break;
         default:
-            interpolator = std::shared_ptr<ArrayInterpolator>(
-                new LinearArrayInterpolator(observationPoints, observedRates, allowExtrapolation));
+            interpolator = std::make_shared<LinearArrayInterpolator>(observationPoints, observedRates,
+                                                                     allowExtrapolation);
         }
     }
 
@@ -84,7 +84,7 @@ namespace sjd
         return true;
     }
 
-    Date CalendarMonthAverageCurve::getAnchorDate()
+    Date CalendarMonthAverageCurve::getAnchorDate() const
     {
         return anchorDate;
     }
@@ -180,7 +180,7 @@ namespace sjd
     {
         Date beginningOfFromMonth = Date(1, fromDate.month(), fromDate.year());
         Date beginningOfToMonth = Date(1, toDate.month(), toDate.year());
-        std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
+        std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
         double yf = dayCounter->yearFraction(beginningOfFromMonth, beginningOfToMonth);
         int monthsAsInt = boost::math::iround(yf * 12); // need to keep whole number of months ahead
         return monthsAsInt;

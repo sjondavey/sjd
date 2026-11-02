@@ -12,7 +12,7 @@ namespace sjd
      =======================================================================================*/
     void FixedCashflow::commonConstructor(Date cashFlowDate, double amount, BuySell bs)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("FixedCashflow"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("FixedCashflow");
         setMaturityDate(cashFlowDate);
         setSettlementDate(cashFlowDate);
         setVolume(abs(amount));
@@ -33,7 +33,7 @@ namespace sjd
 
     std::unique_ptr<Contract> FixedCashflow::clone()
     {
-        return std::unique_ptr<Contract>(new FixedCashflow(*this));
+        return std::make_unique<FixedCashflow>(*this);
     }
 
     void FixedCashflow::validate()
@@ -77,12 +77,12 @@ namespace sjd
         }
         [[maybe_unused]] double pv = 0;
         double pvCashFlows = volume * (re->getDRS())->getDiscountFactor(settlementDate);
-        return buySellAsDouble * (pvCashFlows);
+        return sign(buySell) * (pvCashFlows);
     }
 
     double FixedCashflow::getPayoff(double /*forSpot*/)
     {
-        return buySellAsDouble * volume;
+        return sign(buySell) * volume;
     }
 
 }

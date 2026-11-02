@@ -20,20 +20,20 @@ namespace sjd
         DatedCurve(QuantLib::Date anchorDate,
                    std::vector<QuantLib::Date> observationDates,
                    std::vector<double> rates,
-                   ArrayInterpolatorType type = LINEAR,
+                   ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
                    bool allowExtrapolation = false);
 
         void setParameters(QuantLib::Date anchorDate,
                            std::vector<QuantLib::Date> observationDates,
                            std::vector<double> rates,
-                           ArrayInterpolatorType type = LINEAR,
+                           ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
                            bool allowExtrapolation = false);
 
         virtual ~DatedCurve() {};
 
         bool isOK(std::string& errorMessage);
 
-        QuantLib::Date getAnchorDate();
+        QuantLib::Date getAnchorDate() const;
         QuantLib::Date getFinalDate();
         ArrayInterpolatorType getType();
         bool getAllowsExtrapolation();

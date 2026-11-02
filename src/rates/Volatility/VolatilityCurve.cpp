@@ -3,8 +3,6 @@
 #include <algorithm>
 #include <cmath>
 
-#include <boost/lexical_cast.hpp> // convert numbers to string
-
 using namespace std;
 using namespace QuantLib;
 
@@ -21,7 +19,7 @@ namespace sjd
                                      ArrayInterpolatorType typeInput,
                                      bool allowExtrapolationInput)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("VolatilityCurve"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("VolatilityCurve");
         dayCounter = dayCounterInput;
         inputVolatilities = volatilityInput;
         anchorVolatility = volatilityInput.empty() ? 0.0 : volatilityInput.front();
@@ -50,8 +48,8 @@ namespace sjd
             anchorVolatility = volatilityInput.front();
         }
 
-        datedCurve = std::shared_ptr<DatedCurve>(new DatedCurve(
-            anchorDateInput, observationDatesInput, standardDeviations, typeInput, allowExtrapolationInput));
+        datedCurve = std::make_shared<DatedCurve>(anchorDateInput, observationDatesInput, standardDeviations,
+                                                  typeInput, allowExtrapolationInput);
 
         anchorDate = datedCurve->getAnchorDate();
         allowExtrapolation = datedCurve->getAllowsExtrapolation();
@@ -166,9 +164,8 @@ namespace sjd
             rolledVols.push_back(getVolatility(getObservationDates()[i]) + spread);
         }
 
-        return std::shared_ptr<VolatilityCurve>(
-            new VolatilityCurve(anchorDate, rolledObservationDates, rolledVols, dayCounter,
-                                datedCurve->getType(), allowExtrapolation));
+        return std::make_shared<VolatilityCurve>(anchorDate, rolledObservationDates, rolledVols, dayCounter,
+                                                 datedCurve->getType(), allowExtrapolation);
     }
 
     std::shared_ptr<VolatilityRateSource> VolatilityCurve::rollForward(Date toDate)
@@ -191,8 +188,7 @@ namespace sjd
                 }
             }
         }
-        return std::shared_ptr<VolatilityCurve>(
-            new VolatilityCurve(toDate, rolledObservationDates, rolledVols, dayCounter, datedCurve->getType(),
-                                allowExtrapolation));
+        return std::make_shared<VolatilityCurve>(toDate, rolledObservationDates, rolledVols, dayCounter,
+                                                 datedCurve->getType(), allowExtrapolation);
     }
 }

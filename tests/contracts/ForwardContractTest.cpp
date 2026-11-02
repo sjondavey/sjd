@@ -10,19 +10,18 @@ using namespace sjd;
 
 std::shared_ptr<EuropeanForward> ForwardContractTest::getDefaultEuropeanForward(Date anchorDate)
 {
-    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
     Date rateSetDate = nullCalendar->advance(anchorDate, 2, Years);
     Date settlement = nullCalendar->advance(rateSetDate, 2, Days);
 
     double strike = 100.0;
     double volume = 150;
-    return std::shared_ptr<EuropeanForward>(
-        new EuropeanForward(rateSetDate, settlement, strike, volume, BUY));
+    return std::make_shared<EuropeanForward>(rateSetDate, settlement, strike, volume, BuySell::BUY);
 }
 
 std::shared_ptr<AsianForward> ForwardContractTest::getDefaultAsianForward(Date anchorDate)
 {
-    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
     Date rateSetDate = nullCalendar->advance(anchorDate, 2, Years);
     set<Date> averagingDates;
     Date d = Date(1, rateSetDate.month(), rateSetDate.year());
@@ -38,7 +37,7 @@ std::shared_ptr<AsianForward> ForwardContractTest::getDefaultAsianForward(Date a
     double strike = 100;
     double volume = 50;
 
-    return std::shared_ptr<AsianForward>(new AsianForward(averagingDates, settlement, strike, volume, BUY));
+    return std::make_shared<AsianForward>(averagingDates, settlement, strike, volume, BuySell::BUY);
 }
 
 void ForwardContractTest::testBuySell()
@@ -47,7 +46,7 @@ void ForwardContractTest::testBuySell()
 
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<EuropeanForward> fc = getDefaultEuropeanForward(anchorDate);
-    BuySell bs = SELL;
+    BuySell bs = BuySell::SELL;
     fc->setBuySell(bs);
     BuySell bs2 = fc->getBuySell();
     BOOST_CHECK(bs == bs2);
@@ -91,7 +90,7 @@ void ForwardContractTest::testMaturityDate()
     std::shared_ptr<ForwardCurveDeterministic> fc;
     contract->validate();
     BOOST_CHECK(contract->isOK());
-    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
     Date maturityDate = nullCalendar->advance(anchorDate, 3, Years);
     contract->setMaturityDate(maturityDate);
     contract->validate();
@@ -107,7 +106,7 @@ void ForwardContractTest::testSettlementDate()
     std::shared_ptr<ForwardCurveDeterministic> fc;
     contract->validate();
     BOOST_CHECK(contract->isOK());
-    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
     Date settlementDate = nullCalendar->advance(anchorDate, 1, Years);
     contract->setSettlementDate(settlementDate);
     contract->validate();
@@ -143,7 +142,7 @@ void ForwardContractTest::testValidationReport()
     BOOST_CHECK(correctedReport.getIssues().empty());
     BOOST_CHECK(contract->getErrorMessages().empty());
 
-    std::shared_ptr<RatesEnvironment> emptyEnvironment(new RatesEnvironment(anchorDate));
+    std::shared_ptr<RatesEnvironment> emptyEnvironment(std::make_shared<RatesEnvironment>(anchorDate));
     ValidationReport marketReport = contract->validateReport(emptyEnvironment);
     BOOST_REQUIRE(!marketReport.isOK());
     BOOST_REQUIRE(marketReport.getIssues().size() == 3);
@@ -182,16 +181,16 @@ void ForwardContractTest::testValue()
         gr.getDiscountCurve(dayCounter, nullCalendar, anchorDate, 10, naccRFR, manditoryDates);
     std::shared_ptr<ForwardCurveDeterministic> fc =
         gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, spot, naccIRDiff, manditoryDates);
-    re = std::shared_ptr<RatesEnvironment>(new RatesEnvironment(anchorDate));
+    re = std::make_shared<RatesEnvironment>(anchorDate);
     re->setDRS(dc);
     re->setFRS(fc);
 
     double strike = 100;
     double volume = 50;
 
-    EuropeanForward contract(rateSetDate, settlement, strike, volume, BUY);
+    EuropeanForward contract(rateSetDate, settlement, strike, volume, BuySell::BUY);
     EuropeanForward contract2(contract);
-    contract2.setBuySell(SELL);
+    contract2.setBuySell(BuySell::SELL);
 
     contract.validate(re);
     BOOST_REQUIRE(contract.isOK());
@@ -212,7 +211,7 @@ void ForwardContractTest::testValue()
     manditoryDates.clear();
     dc = gr.getDiscountCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, naccRFR);
     fc = gr.getSimpleForwardCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, spot, naccIRDiff);
-    re = std::shared_ptr<RatesEnvironment>(new RatesEnvironment(dayAfterSettlement));
+    re = std::make_shared<RatesEnvironment>(dayAfterSettlement);
     re->setDRS(dc);
     re->setFRS(fc);
 
@@ -221,8 +220,8 @@ void ForwardContractTest::testValue()
 
 void ForwardContractTest::testGetPayoffAfterMaturity()
 {
-    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
-    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
+    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
 
     Date anchorDate(1, Jan, 2013);
 
@@ -231,7 +230,7 @@ void ForwardContractTest::testGetPayoffAfterMaturity()
     double v1 = fwd->getVolume();
     double p1 = fwd->getPremiumAmount();
     double k1 = fwd->getStrike();
-    double sign1 = (fwd->getBuySell() == BUY ? 1 : -1);
+    double sign1 = (fwd->getBuySell() == BuySell::BUY ? 1 : -1);
 
     double maturitySpot = k1 + 10;
     BOOST_CHECK(abs(fwd->getPayoff(maturitySpot) - (maturitySpot - k1 - p1) * v1 * sign1) < 1e-14);
@@ -246,7 +245,7 @@ void ForwardContractTest::testAsianAveragingDates()
     std::shared_ptr<DailyFixingCurve> fixingCurve, fixingCurve2;
     BOOST_CHECK(contract->isOK());
 
-    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
     Date rateSetDate = nullCalendar->advance(anchorDate, 3, Years); // after settlement
     set<Date> averagingDates;
     Date d = Date(1, rateSetDate.month(), rateSetDate.year());
@@ -288,7 +287,7 @@ void ForwardContractTest::testAsianForward()
     GenerateRates gr = GenerateRates();
 
     std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
 
     Date anchorDate(1, Jan, 2013);
     Date tPlus2 = nullCalendar->advance(anchorDate, 2, Days);
@@ -318,7 +317,7 @@ void ForwardContractTest::testAsianForward()
     std::shared_ptr<ForwardCurveDeterministic> fc =
         gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, spot, naccIRDiff, manditoryDates);
     std::shared_ptr<DailyFixingCurve> fixingCurve = gr.buildFixingCurve(90.0, averagingDatesAsVector);
-    re = std::shared_ptr<RatesEnvironment>(new RatesEnvironment(anchorDate));
+    re = std::make_shared<RatesEnvironment>(anchorDate);
     re->setDRS(dc);
     re->setFRS(fc);
     re->setFixingRS(fixingCurve);
@@ -326,9 +325,9 @@ void ForwardContractTest::testAsianForward()
     double strike = 100;
     double volume = 50;
 
-    AsianForward contract(averagingDates, settlement, strike, volume, BUY);
+    AsianForward contract(averagingDates, settlement, strike, volume, BuySell::BUY);
     AsianForward contract2(contract);
-    contract2.setBuySell(SELL);
+    contract2.setBuySell(BuySell::SELL);
 
     contract.validate(re);
     BOOST_REQUIRE(contract.isOK());
@@ -356,7 +355,7 @@ void ForwardContractTest::testAsianForward()
     manditoryDates.clear();
     dc = gr.getDiscountCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, naccRFR);
     fc = gr.getSimpleForwardCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, spot, naccIRDiff);
-    re = std::shared_ptr<RatesEnvironment>(new RatesEnvironment(dayAfterSettlement));
+    re = std::make_shared<RatesEnvironment>(dayAfterSettlement);
     re->setDRS(dc);
     re->setFRS(fc);
     BOOST_CHECK(abs(contract2.getValue(re)) < EPSILON_FOR_DOUBLES);
@@ -364,8 +363,8 @@ void ForwardContractTest::testAsianForward()
 
 void ForwardContractTest::testAsianGetPayoffAfterMaturity()
 {
-    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
-    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
+    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
 
     Date anchorDate(1, Jan, 2013);
 
@@ -374,7 +373,7 @@ void ForwardContractTest::testAsianGetPayoffAfterMaturity()
     double v1 = fwd->getVolume();
     double p1 = fwd->getPremiumAmount();
     double k1 = fwd->getStrike();
-    double sign1 = (fwd->getBuySell() == BUY ? 1 : -1);
+    double sign1 = (fwd->getBuySell() == BuySell::BUY ? 1 : -1);
 
     double maturitySpot = k1 + 10;
     BOOST_CHECK(abs(fwd->getPayoff(maturitySpot) - (maturitySpot - k1 - p1) * v1 * sign1) < 1e-14);

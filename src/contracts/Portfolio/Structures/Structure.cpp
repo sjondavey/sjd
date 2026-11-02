@@ -68,13 +68,13 @@ namespace sjd
 
     std::unique_ptr<Contract> Structure::clone()
     {
-        return std::unique_ptr<Contract>(new Structure(*this));
+        return std::make_unique<Structure>(*this);
     }
 
     void Structure::commonConstructor(vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts,
                                       std::shared_ptr<RegCapUnderlyingFactors> inputFactors)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("Structure"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("Structure");
         cappedExposure = false;
         cap = numeric_limits<double>::quiet_NaN();
         contracts = underlyingContracts;
@@ -775,8 +775,7 @@ namespace sjd
         if (isCapped(inputContracts, cap, hasExposure))
         {
             structures.clear();
-            std::shared_ptr<Structure> s =
-                std::shared_ptr<Structure>(new Structure(inputContracts, regCapAssetFactors));
+            std::shared_ptr<Structure> s = std::make_shared<Structure>(inputContracts, regCapAssetFactors);
             successful = !s->errorTracking->getHasErrors();
             structures.push_back(s);
             return structures;
@@ -784,8 +783,7 @@ namespace sjd
         else if (isMaximumVolumeInUncappedWing(inputContracts))
         {
             structures.clear();
-            std::shared_ptr<Structure> s =
-                std::shared_ptr<Structure>(new Structure(inputContracts, regCapAssetFactors));
+            std::shared_ptr<Structure> s = std::make_shared<Structure>(inputContracts, regCapAssetFactors);
             successful = !s->errorTracking->getHasErrors();
             structures.push_back(s);
             return structures;
@@ -809,9 +807,9 @@ namespace sjd
             }
 
             std::shared_ptr<Structure> cappedStructure =
-                std::shared_ptr<Structure>(new Structure(cappedContracts, regCapAssetFactors));
+                std::make_shared<Structure>(cappedContracts, regCapAssetFactors);
             std::shared_ptr<Structure> uncappedStructure =
-                std::shared_ptr<Structure>(new Structure(uncappedContracts, regCapAssetFactors));
+                std::make_shared<Structure>(uncappedContracts, regCapAssetFactors);
             if (cappedStructure->errorTracking->getHasErrors() ||
                 uncappedStructure->errorTracking->getHasErrors())
             {
@@ -941,27 +939,28 @@ namespace sjd
 
         for (size_t i = 0; i < cappedContracts.size(); ++i)
         {
-            if ((cappedContracts[i]->getPremiumAmount() > 1e-14) && (cappedContracts[i]->getBuySell() == BUY))
+            if ((cappedContracts[i]->getPremiumAmount() > 1e-14) &&
+                (cappedContracts[i]->getBuySell() == BuySell::BUY))
             {
                 double payable = cappedContracts[i]->getPremiumAmount() * cappedContracts[i]->getVolume();
                 cappedContracts[i]->setPremiumAmount(0);
                 Date premiumDate = cappedContracts[i]->getPremiumPaymentDate();
                 std::shared_ptr<FixedCashflow> cashflowPayable =
-                    std::shared_ptr<FixedCashflow>(new FixedCashflow(premiumDate, payable, SELL));
+                    std::make_shared<FixedCashflow>(premiumDate, payable, BuySell::SELL);
                 unCappedContracts.push_back(cashflowPayable);
             }
         }
         for (size_t i = 0; i < unCappedContracts.size(); ++i)
         {
             if ((unCappedContracts[i]->getPremiumAmount() > 1e-14) &&
-                (unCappedContracts[i]->getBuySell() == SELL))
+                (unCappedContracts[i]->getBuySell() == BuySell::SELL))
             {
                 double receivable =
                     unCappedContracts[i]->getPremiumAmount() * unCappedContracts[i]->getVolume();
                 unCappedContracts[i]->setPremiumAmount(0);
                 Date premiumDate = unCappedContracts[i]->getPremiumPaymentDate();
                 std::shared_ptr<FixedCashflow> cashflowReceivable =
-                    std::shared_ptr<FixedCashflow>(new FixedCashflow(premiumDate, receivable, SELL));
+                    std::make_shared<FixedCashflow>(premiumDate, receivable, BuySell::SELL);
                 cappedContracts.push_back(cashflowReceivable);
             }
         }

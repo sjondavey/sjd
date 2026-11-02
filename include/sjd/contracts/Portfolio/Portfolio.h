@@ -31,10 +31,10 @@ namespace sjd
         virtual void validate(std::shared_ptr<RatesEnvironment> re);
         virtual std::string validationRoot() const { return "portfolio"; }
 
-        bool isMargined();
+        bool isMargined() const;
         std::shared_ptr<Margin> getMargin();
         void setMarginBalance(double balance);
-        double getMarginBalance();
+        double getMarginBalance() const;
         double getMarginCall(std::shared_ptr<RatesEnvironment> re);
         void updateMarginBalanceWithCall(double marginCall);
 
@@ -44,7 +44,7 @@ namespace sjd
     protected:
         virtual void setInputVariables();
 
-        bool hasMargin;
+        bool hasMargin = false;
         std::shared_ptr<Margin> margin;
     };
 

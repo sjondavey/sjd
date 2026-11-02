@@ -11,7 +11,7 @@ namespace sjd
                                            std::shared_ptr<DiscountRateSource> standbyDRSInput,
                                            std::shared_ptr<DiscountRateSource> utilisationDRSInput)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("PortfolioInsurance"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("PortfolioInsurance");
 
         policyStartDate = policyStartDateInput;
         policyMaturityDate = policyMaturityDateInput;
@@ -167,8 +167,7 @@ namespace sjd
         std::shared_ptr<DiscountRateSource> standbyDRS,
         std::shared_ptr<DiscountRateSource> utilisationDRS)
     {
-        errorTracking =
-            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("SimpleInsuranceWithTermStructure"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("SimpleInsuranceWithTermStructure");
 
         dates = datesInput;
         insuredAmounts = insuredAmountsInput;

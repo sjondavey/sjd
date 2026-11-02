@@ -13,15 +13,14 @@ using namespace sjd;
 
 std::shared_ptr<RegCapUnderlyingFactors> PortfolioTest::getDefaultRegCapUnderlyingFactors()
 {
-    return std::shared_ptr<RegCapUnderlyingFactors>(new CommodityRegCapFactors);
+    return std::shared_ptr<RegCapUnderlyingFactors>(std::make_shared<CommodityRegCapFactors>());
 }
 
 std::shared_ptr<RegCapCreditParameters> PortfolioTest::getDefaultRegCreditParameters()
 {
     double counterpartyWeighting = 1.5;
     double capitalCharge = .1;
-    return std::shared_ptr<RegCapCreditParameters>(
-        new RegCapCreditParameters(counterpartyWeighting, capitalCharge));
+    return std::make_shared<RegCapCreditParameters>(counterpartyWeighting, capitalCharge);
 }
 
 void PortfolioTest::testStructureCreation()
@@ -36,25 +35,25 @@ void PortfolioTest::testStructureCreation()
     double structureVolume = 10000;
     double premiumRecievable = 2000;
     std::shared_ptr<EuropeanForward> fwdSale1 = GenerateContracts::getDefaultEuropeanForward(
-        anchorDate, yearsToSettlement, 112, structureVolume, SELL);
+        anchorDate, yearsToSettlement, 112, structureVolume, BuySell::SELL);
     std::shared_ptr<EuropeanForward> fwdSale2 = GenerateContracts::getDefaultEuropeanForward(
-        anchorDate, yearsToSettlement, 112, structureVolume, SELL);
+        anchorDate, yearsToSettlement, 112, structureVolume, BuySell::SELL);
 
     std::shared_ptr<SingleInstrumentContract> cf1 = GenerateContracts::getDefaultFixedCashflowWithPremium(
-        anchorDate, yearsToSettlement, premiumRecievable, BUY);
+        anchorDate, yearsToSettlement, premiumRecievable, BuySell::BUY);
     std::shared_ptr<SingleInstrumentContract> cf2 = GenerateContracts::getDefaultFixedCashflowWithPremium(
-        anchorDate, yearsToSettlement, premiumRecievable, BUY);
+        anchorDate, yearsToSettlement, premiumRecievable, BuySell::BUY);
 
     std::shared_ptr<EuropeanOption> option1 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 115, structureVolume, BUY, CALL, 0);
+        anchorDate, yearsToSettlement, 115, structureVolume, BuySell::BUY, PutCall::CALL, 0);
     std::shared_ptr<EuropeanOption> option2 = GenerateContracts::getDefaultEuropeanOption(
-        anchorDate, yearsToSettlement, 115, structureVolume, BUY, CALL, 0);
+        anchorDate, yearsToSettlement, 115, structureVolume, BuySell::BUY, PutCall::CALL, 0);
 
     vector<std::shared_ptr<SingleInstrumentContract>> siContracts;
     siContracts.push_back(fwdSale1);
     siContracts.push_back(cf1);
     siContracts.push_back(option1);
-    std::shared_ptr<Portfolio> p1 = std::shared_ptr<Portfolio>(new Portfolio(siContracts));
+    std::shared_ptr<Portfolio> p1 = std::make_shared<Portfolio>(siContracts);
     p1->validate(re);
     BOOST_REQUIRE(p1->isOK());
     BOOST_REQUIRE(!p1->isMargined());
@@ -63,7 +62,7 @@ void PortfolioTest::testStructureCreation()
     contracts.push_back(fwdSale2);
     contracts.push_back(cf2);
     contracts.push_back(option2);
-    std::shared_ptr<Portfolio> p2 = std::shared_ptr<Portfolio>(new Portfolio(contracts));
+    std::shared_ptr<Portfolio> p2 = std::make_shared<Portfolio>(contracts);
     p2->validate(re);
     BOOST_REQUIRE(p2->isOK());
     BOOST_REQUIRE(!p2->isMargined());
@@ -74,18 +73,18 @@ void PortfolioTest::testStructureCreation()
     bool useCptyThreshold = true;
     double myThreshold = 20000.0, cptyThreshold = 10000.0, minimumTransferAmount = 5000.0, rounding = 100.0;
     std::shared_ptr<Margin> margin1 =
-        std::shared_ptr<Margin>(new SimpleMargin(anchorDate, useMyThreshold, myThreshold, useCptyThreshold,
-                                                 cptyThreshold, minimumTransferAmount, rounding));
-    p1 = std::shared_ptr<Portfolio>(new Portfolio(siContracts, margin1));
+        std::make_shared<SimpleMargin>(anchorDate, useMyThreshold, myThreshold, useCptyThreshold,
+                                       cptyThreshold, minimumTransferAmount, rounding);
+    p1 = std::make_shared<Portfolio>(siContracts, margin1);
     p1->validate(re);
     BOOST_REQUIRE(p1->isOK());
     BOOST_REQUIRE(p1->isMargined());
     BOOST_CHECK(abs(p1->getValue(re) - p2->getValue(re)) < EPSILON_FOR_DOUBLES);
 
     std::shared_ptr<Margin> margin2 =
-        std::shared_ptr<Margin>(new SimpleMargin(anchorDate, useMyThreshold, myThreshold, useCptyThreshold,
-                                                 cptyThreshold, minimumTransferAmount, rounding));
-    p2 = std::shared_ptr<Portfolio>(new Portfolio(contracts, margin2));
+        std::make_shared<SimpleMargin>(anchorDate, useMyThreshold, myThreshold, useCptyThreshold,
+                                       cptyThreshold, minimumTransferAmount, rounding);
+    p2 = std::make_shared<Portfolio>(contracts, margin2);
     p2->validate(re);
     BOOST_REQUIRE(p2->isOK());
     BOOST_REQUIRE(p2->isMargined());
@@ -119,8 +118,8 @@ void PortfolioTest::testPortfolioB2CEM()
     int numberOfAveragingDates = 20;
     double strike = 100;
     double volume = 5000;
-    BuySell bs = SELL;
-    PutCall pc = PUT;
+    BuySell bs = BuySell::SELL;
+    PutCall pc = PutCall::PUT;
     double premium = 5.0;
     bool dp = true;
 
@@ -138,24 +137,24 @@ void PortfolioTest::testPortfolioB2CEM()
         PortfolioTest::getDefaultRegCreditParameters();
     bool optimise = true;
 
-    std::shared_ptr<PortfolioB2CEM> unmarginedPortfolio = std::shared_ptr<PortfolioB2CEM>(
-        new PortfolioB2CEM(contracts, regCapAssetFactors, regCapCreditParameters, optimise));
+    std::shared_ptr<PortfolioB2CEM> unmarginedPortfolio =
+        std::make_shared<PortfolioB2CEM>(contracts, regCapAssetFactors, regCapCreditParameters, optimise);
     BOOST_REQUIRE(unmarginedPortfolio->isOK());
 
     bool useMyThreshold = true, useCptyThreshold = true;
     double myThreshold = 2000000.0, cptyThreshold = 1000000.0, minimumTransferAmount = 500000.0,
            rounding = 10000.0;
-    std::shared_ptr<SimpleMargin> margin = std::shared_ptr<SimpleMargin>(
-        new SimpleMargin(anchorDate, useMyThreshold, myThreshold, useCptyThreshold, cptyThreshold,
-                         minimumTransferAmount, rounding));
+    std::shared_ptr<SimpleMargin> margin =
+        std::make_shared<SimpleMargin>(anchorDate, useMyThreshold, myThreshold, useCptyThreshold,
+                                       cptyThreshold, minimumTransferAmount, rounding);
     margin->setMarginBalance(0);
     margin->updateBalanceForGivenMtM(unmarginedPortfolio->getValue(re));
 
-    std::shared_ptr<Calendar> calendar = std::shared_ptr<Calendar>(new WeekendsOnly());
+    std::shared_ptr<Calendar> calendar = std::make_shared<WeekendsOnly>();
     [[maybe_unused]] size_t holdingPeriodInBusinessDays = 10;
 
-    std::shared_ptr<PortfolioB2CEM> marginedPortfolio = std::shared_ptr<PortfolioB2CEM>(
-        new PortfolioB2CEM(contracts, regCapAssetFactors, regCapCreditParameters, optimise, margin));
+    std::shared_ptr<PortfolioB2CEM> marginedPortfolio = std::make_shared<PortfolioB2CEM>(
+        contracts, regCapAssetFactors, regCapCreditParameters, optimise, margin);
 
     // marginedPortfolio->setMarginParameters(margin, calendar, holdingPeriodInBusinessDays);
     BOOST_REQUIRE(marginedPortfolio->isOK());
@@ -196,7 +195,7 @@ void PortfolioTest::testPortfolioB2CEM()
     BOOST_REQUIRE(marginedPortfolio->isOK());
 
     std::shared_ptr<SingleFactorGBMPathGenerator> mcPathGenerator =
-    std::shared_ptr<SingleFactorGBMPathGenerator>( new SingleFactorGBMPathGenerator(fc, vc));
+    std::make_shared<SingleFactorGBMPathGenerator>(fc, vc);
 
     marginedPortfolio->setPathGenerator(mcPathGenerator);
     unmarginedPortfolio->setPathGenerator(mcPathGenerator);
@@ -224,10 +223,11 @@ void PortfolioTest::testInvalidRegulatoryCapitalIsNaN()
 
     // Different settlement dates disqualify the pair from regulatory capital offset.
     vector<std::shared_ptr<SingleInstrumentContract>> legs;
-    legs.push_back(GenerateContracts::getDefaultEuropeanForward(anchorDate, 2, 112, 10000, BUY));
-    legs.push_back(GenerateContracts::getDefaultEuropeanOption(anchorDate, 3, 115, 10000, SELL, CALL, 0));
+    legs.push_back(GenerateContracts::getDefaultEuropeanForward(anchorDate, 2, 112, 10000, BuySell::BUY));
+    legs.push_back(GenerateContracts::getDefaultEuropeanOption(anchorDate, 3, 115, 10000, BuySell::SELL,
+                                                               PutCall::CALL, 0));
     vector<std::shared_ptr<Contract>> nettingSets;
-    nettingSets.push_back(std::shared_ptr<Contract>(new Portfolio(legs)));
+    nettingSets.push_back(std::make_shared<Portfolio>(legs));
 
     bool optimise = false;
     CurrentExposureMethod capital(nettingSets, legs, std::shared_ptr<Margin>(),
@@ -259,7 +259,7 @@ void PortfolioTest::testNullMarginAndUnknownFactors()
     BOOST_TEST_MESSAGE("Testing a null margin and an unknown regulatory factor name");
 
     vector<std::shared_ptr<SingleInstrumentContract>> contracts;
-    std::shared_ptr<Portfolio> portfolio(new Portfolio(contracts, std::shared_ptr<Margin>()));
+    std::shared_ptr<Portfolio> portfolio(std::make_shared<Portfolio>(contracts, std::shared_ptr<Margin>()));
     BOOST_CHECK(!portfolio->isMargined());
     portfolio->validate();
     std::string emptyMessage = portfolio->getErrorMessagesAsString();

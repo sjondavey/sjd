@@ -28,8 +28,8 @@ void VolatilitySurfacesTest::testEuropeanMoneynessConstruction()
     std::shared_ptr<ForwardRateSource> frs =
         gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, 100, .01, vector<Date>(0));
 
-    std::shared_ptr<VolatilitySurfaceMoneyness> volSurface = std::shared_ptr<VolatilitySurfaceMoneyness>(
-        new VolatilitySurfaceMoneyness(anchorDate, observationDates, moneyness, volatility, BICUBIC, false));
+    std::shared_ptr<VolatilitySurfaceMoneyness> volSurface = std::make_shared<VolatilitySurfaceMoneyness>(
+        anchorDate, observationDates, moneyness, volatility, BICUBIC, false);
     BOOST_CHECK(volSurface->isOK() == false);
 
     // initialise with inconsistent dimensions
@@ -45,8 +45,8 @@ void VolatilitySurfacesTest::testEuropeanMoneynessConstruction()
     }
     volatility = Matrix(moneyness.size(), observationDates.size() + 1, 10);
 
-    volSurface = std::shared_ptr<VolatilitySurfaceMoneyness>(
-        new VolatilitySurfaceMoneyness(anchorDate, observationDates, moneyness, volatility, BICUBIC, false));
+    volSurface = std::make_shared<VolatilitySurfaceMoneyness>(anchorDate, observationDates, moneyness,
+                                                              volatility, BICUBIC, false);
     BOOST_CHECK(volSurface->isOK() == false);
 
     Date lastObservationDate = observationDates.back();
@@ -64,8 +64,8 @@ void VolatilitySurfacesTest::testEuropeanMoneynessConstruction()
         moneyness.push_back(-0.5 + i * 0.25);
     }
     volatility = Matrix(moneyness.size(), observationDates.size(), 10);
-    volSurface = std::shared_ptr<VolatilitySurfaceMoneyness>(
-        new VolatilitySurfaceMoneyness(anchorDate, observationDates, moneyness, volatility, BICUBIC, false));
+    volSurface = std::make_shared<VolatilitySurfaceMoneyness>(anchorDate, observationDates, moneyness,
+                                                              volatility, BICUBIC, false);
     BOOST_CHECK(volSurface->isOK() == true);
 }
 
@@ -138,9 +138,8 @@ void VolatilitySurfacesTest::testEuropeanMoneynessRoll()
     vector<vector<double>> surfaceData;
     surfaceData += v1, v2, v3;
 
-    std::shared_ptr<VolatilitySurfaceMoneyness> baseCurve =
-        std::shared_ptr<VolatilitySurfaceMoneyness>(new VolatilitySurfaceMoneyness(
-            anchorDate, surfaceDates, moneyness, surfaceData, interpolatorType, false));
+    std::shared_ptr<VolatilitySurfaceMoneyness> baseCurve = std::make_shared<VolatilitySurfaceMoneyness>(
+        anchorDate, surfaceDates, moneyness, surfaceData, interpolatorType, false);
     std::shared_ptr<VolatilityRateSource> rolledCurve = baseCurve->rollForward(surfaceDates[1]);
     BOOST_CHECK(rolledCurve->isOK());
     BOOST_CHECK(!rolledCurve->isInRange(anchorDate));
@@ -151,9 +150,8 @@ void VolatilitySurfacesTest::testEuropeanMoneynessRoll()
     v3.erase(v3.begin());
     surfaceData.clear();
     surfaceData += v1, v2, v3;
-    std::shared_ptr<VolatilitySurfaceMoneyness> manualCurve =
-        std::shared_ptr<VolatilitySurfaceMoneyness>(new VolatilitySurfaceMoneyness(
-            surfaceDates[0], surfaceDates, moneyness, surfaceData, interpolatorType, false));
+    std::shared_ptr<VolatilitySurfaceMoneyness> manualCurve = std::make_shared<VolatilitySurfaceMoneyness>(
+        surfaceDates[0], surfaceDates, moneyness, surfaceData, interpolatorType, false);
 
     BOOST_CHECK(abs(rolledCurve->getVolatility(surfaceDates[1], 1, 1) -
                     manualCurve->getVolatility(surfaceDates[1], 1, 1)) < EPSILON_FOR_DOUBLES);
@@ -187,8 +185,8 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessConstruction()
         gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, 100, .01, vector<Date>(0));
 
     std::shared_ptr<VolatilitySurfaceMoneynessCMA> volSurface =
-        std::shared_ptr<VolatilitySurfaceMoneynessCMA>(new VolatilitySurfaceMoneynessCMA(
-            anchorDate, observationDates, moneyness, volatility, BICUBIC, false));
+        std::make_shared<VolatilitySurfaceMoneynessCMA>(anchorDate, observationDates, moneyness, volatility,
+                                                        BICUBIC, false);
     BOOST_CHECK(volSurface->isOK() == false);
 
     // initialise with inconsistent dimensions
@@ -200,8 +198,8 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessConstruction()
         moneyness.push_back(-0.5 + i * 0.25);
     volatility = Matrix(moneyness.size(), observationDates.size() + 1, 10);
 
-    volSurface = std::shared_ptr<VolatilitySurfaceMoneynessCMA>(new VolatilitySurfaceMoneynessCMA(
-        anchorDate, observationDates, moneyness, volatility, BICUBIC, false));
+    volSurface = std::make_shared<VolatilitySurfaceMoneynessCMA>(anchorDate, observationDates, moneyness,
+                                                                 volatility, BICUBIC, false);
     BOOST_CHECK(volSurface->isOK() == false);
 
     // Add a second date in the same observation month
@@ -209,18 +207,18 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessConstruction()
     Date laterDateInSameMonth = calendar.endOfMonth(lastObservationDate);
     observationDates.push_back(laterDateInSameMonth);
     volatility = Matrix(moneyness.size(), observationDates.size(), 10);
-    volSurface = std::shared_ptr<VolatilitySurfaceMoneynessCMA>(new VolatilitySurfaceMoneynessCMA(
-        anchorDate, observationDates, moneyness, volatility, BICUBIC, false));
+    volSurface = std::make_shared<VolatilitySurfaceMoneynessCMA>(anchorDate, observationDates, moneyness,
+                                                                 volatility, BICUBIC, false);
     BOOST_CHECK(volSurface->isOK() == false);
     observationDates.pop_back();
     volatility = Matrix(moneyness.size(), observationDates.size(), 10);
-    volSurface = std::shared_ptr<VolatilitySurfaceMoneynessCMA>(new VolatilitySurfaceMoneynessCMA(
-        anchorDate, observationDates, moneyness, volatility, BICUBIC, false));
+    volSurface = std::make_shared<VolatilitySurfaceMoneynessCMA>(anchorDate, observationDates, moneyness,
+                                                                 volatility, BICUBIC, false);
     BOOST_CHECK(volSurface->isOK() == true);
 
     // set anchor date after the last ovservation date
-    volSurface = std::shared_ptr<VolatilitySurfaceMoneynessCMA>(new VolatilitySurfaceMoneynessCMA(
-        laterDateInSameMonth, observationDates, moneyness, volatility, BICUBIC, false));
+    volSurface = std::make_shared<VolatilitySurfaceMoneynessCMA>(laterDateInSameMonth, observationDates,
+                                                                 moneyness, volatility, BICUBIC, false);
     BOOST_CHECK(volSurface->isOK() == false);
 
     anchorDate = Date(27, January, 2012);
@@ -231,8 +229,8 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessConstruction()
     for (size_t i = 0; i < 5; ++i)
         moneyness.push_back(-0.5 + i * 0.25);
     volatility = Matrix(moneyness.size(), observationDates.size(), 10);
-    volSurface = std::shared_ptr<VolatilitySurfaceMoneynessCMA>(new VolatilitySurfaceMoneynessCMA(
-        anchorDate, observationDates, moneyness, volatility, BICUBIC, false));
+    volSurface = std::make_shared<VolatilitySurfaceMoneynessCMA>(anchorDate, observationDates, moneyness,
+                                                                 volatility, BICUBIC, false);
     BOOST_CHECK(volSurface->isOK() == true);
 }
 
@@ -312,8 +310,8 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessRoll()
     surfaceData += v1, v2, v3;
 
     std::shared_ptr<VolatilitySurfaceMoneynessCMA> baseCurve =
-        std::shared_ptr<VolatilitySurfaceMoneynessCMA>(new VolatilitySurfaceMoneynessCMA(
-            anchorDate, surfaceDates, moneyness, surfaceData, interpolatorType, false));
+        std::make_shared<VolatilitySurfaceMoneynessCMA>(anchorDate, surfaceDates, moneyness, surfaceData,
+                                                        interpolatorType, false);
     std::shared_ptr<VolatilityRateSource> rolledCurve = baseCurve->rollForward(surfaceDates[1]);
     BOOST_CHECK(rolledCurve->isOK());
     BOOST_CHECK(!rolledCurve->isInRange(anchorDate));
@@ -325,8 +323,8 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessRoll()
     surfaceData.clear();
     surfaceData += v1, v2, v3;
     std::shared_ptr<VolatilitySurfaceMoneynessCMA> manualCurve =
-        std::shared_ptr<VolatilitySurfaceMoneynessCMA>(new VolatilitySurfaceMoneynessCMA(
-            surfaceDates[0], surfaceDates, moneyness, surfaceData, interpolatorType, false));
+        std::make_shared<VolatilitySurfaceMoneynessCMA>(surfaceDates[0], surfaceDates, moneyness, surfaceData,
+                                                        interpolatorType, false);
 
     BOOST_CHECK(abs(rolledCurve->getVolatility(surfaceDates[1], 1, 1) -
                     manualCurve->getVolatility(surfaceDates[1], 1, 1)) < EPSILON_FOR_DOUBLES);
@@ -372,8 +370,8 @@ void VolatilitySurfacesTest::testForwardDeltaVolatilitySurfaceConstruction()
     vector<vector<double>> volatility;
     volatility += v1, v2, v3, v4, v5;
 
-    std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
-    std::shared_ptr<Calendar> nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
+    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
+    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
     std::shared_ptr<ForwardRateSource> frs =
         gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, 100, .01, vector<Date>(0));
 
@@ -392,8 +390,8 @@ void VolatilitySurfacesTest::testForwardDeltaVolatilitySurfaceConstruction()
     // swallow the solver failure and return a zero strike.
     BOOST_CHECK_THROW(vs.calculateStrikeFromDelta(d1, -1.0, fwd), NumericalError);
 
-    dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
-    nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
+    dayCounter = std::make_shared<Actual365Fixed>();
+    nullCalendar = std::make_shared<NullCalendar>();
     Date tPlus2 = nullCalendar->advance(anchorDate, 2, Days);
     [[maybe_unused]] double spot = 100;
     [[maybe_unused]] double naccRFR = 0.065;

@@ -13,7 +13,7 @@ namespace sjd
     =======================================================================================*/
     void Portfolio::setInputVariables()
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("Portfolio"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("Portfolio");
     }
 
     Portfolio::Portfolio(vector<std::shared_ptr<SingleInstrumentContract>> inputs)
@@ -89,7 +89,7 @@ namespace sjd
 
     std::unique_ptr<Contract> Portfolio::clone()
     {
-        return std::unique_ptr<Contract>(new Portfolio(*this));
+        return std::make_unique<Portfolio>(*this);
     }
 
     void Portfolio::validate()
@@ -102,7 +102,7 @@ namespace sjd
         return MultipleInstrumentContract::validate(re);
     }
 
-    bool Portfolio::isMargined()
+    bool Portfolio::isMargined() const
     {
         return hasMargin;
     }
@@ -120,7 +120,7 @@ namespace sjd
         }
     }
 
-    double Portfolio::getMarginBalance()
+    double Portfolio::getMarginBalance() const
     {
         if (margin)
         {

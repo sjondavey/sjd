@@ -34,7 +34,7 @@ namespace sjd
         std::shared_ptr<RegCapCreditParameters> regCapCreditParametersInput,
         bool optimise)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("CurrentExposureMethod"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("CurrentExposureMethod");
         regCapAssetFactors = regCapAssetFactorsInput;
         regCapCreditParameters = regCapCreditParametersInput;
         hasMargin = static_cast<bool>(marginInput);
@@ -47,8 +47,7 @@ namespace sjd
         }
         if (!regCapCreditParameters)
         {
-            regCapCreditParameters =
-                std::shared_ptr<RegCapCreditParameters>(new RegCapCreditParameters(0, 0));
+            regCapCreditParameters = std::make_shared<RegCapCreditParameters>(0, 0);
         }
 
         if (optimise)
@@ -68,7 +67,7 @@ namespace sjd
             for (size_t i = 0; i < inputs.size(); ++i)
             {
                 std::shared_ptr<Structure> nettingSet =
-                    std::shared_ptr<Structure>(new Structure(inputs[i], regCapAssetFactors));
+                    std::make_shared<Structure>(inputs[i], regCapAssetFactors);
                 if (!nettingSet->isOK())
                 {
                     errorTracking->absorb(nettingSet->validationReport(),
@@ -91,7 +90,7 @@ namespace sjd
 
     CurrentExposureMethod::CurrentExposureMethod(const CurrentExposureMethod& other)
     {
-        errorTracking = std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("CurrentExposureMethod"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("CurrentExposureMethod");
         hasMargin = other.hasMargin;
         margin = other.margin;
         regCapAssetFactors = other.regCapAssetFactors;
@@ -350,13 +349,13 @@ namespace sjd
         hasMargin = portfolio.hasMargin;
         if (portfolio.capital)
         {
-            capital = std::shared_ptr<CurrentExposureMethod>(new CurrentExposureMethod(*portfolio.capital));
+            capital = std::make_shared<CurrentExposureMethod>(*portfolio.capital);
         }
     }
 
     std::unique_ptr<Contract> PortfolioB2CEM::clone()
     {
-        return std::unique_ptr<Contract>(new PortfolioB2CEM(*this));
+        return std::make_unique<PortfolioB2CEM>(*this);
     }
 
     void PortfolioB2CEM::attachCapital(vector<std::shared_ptr<Contract>> inputs,
@@ -368,9 +367,9 @@ namespace sjd
         {
             return;
         }
-        capital = std::shared_ptr<CurrentExposureMethod>(
-            new CurrentExposureMethod(inputs, contracts, hasMargin ? margin : std::shared_ptr<Margin>(),
-                                      regCapAssetFactorsInput, regCapCreditParametersInput, optimise));
+        capital = std::make_shared<CurrentExposureMethod>(
+            inputs, contracts, hasMargin ? margin : std::shared_ptr<Margin>(), regCapAssetFactorsInput,
+            regCapCreditParametersInput, optimise);
         if (!capital->isOK())
         {
             absorbChildReport(capital->validationReport(), {"regulatory_capital"});

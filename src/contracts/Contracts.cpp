@@ -1,4 +1,3 @@
-#include <boost/lexical_cast.hpp>
 #include <sjd/contracts/Contracts.h>
 
 #include <iomanip>
@@ -201,18 +200,6 @@ namespace sjd
     void SingleInstrumentContract::setBuySell(BuySell bs)
     {
         buySell = bs;
-        if (buySell == BUY)
-        {
-            buySellAsDouble = 1;
-        }
-        else if (buySell == SELL)
-        {
-            buySellAsDouble = -1;
-        }
-        else
-        {
-            buySellAsDouble = 0;
-        }
         valueCalculated = false;
     }
 
@@ -223,7 +210,7 @@ namespace sjd
 
     double SingleInstrumentContract::getBuySellAsDouble() const
     {
-        return buySellAsDouble;
+        return sign(buySell);
     }
 
     double SingleInstrumentContract::getVolume() const
@@ -337,7 +324,7 @@ namespace sjd
     void SingleOptionContract::validate()
     {
         SingleDerivativeContract::validate();
-        if ((type != CALL) && (type != PUT))
+        if ((type != PutCall::CALL) && (type != PutCall::PUT))
         {
             recordIssue("OPTION_TYPE_INVALID", "Type must be either CALL or PUT", {"put_call"});
         }
@@ -370,7 +357,7 @@ namespace sjd
             premium = getPremiumAmount();
         }
 
-        if (type == PUT)
+        if (type == PutCall::PUT)
         {
             return (max(0.0, getStrike() - forSpot) - premium) * getVolume() * getBuySellAsDouble();
         }
@@ -571,12 +558,11 @@ namespace sjd
 
     std::unique_ptr<Contract> MultipleInstrumentContract::clone()
     {
-        return std::unique_ptr<Contract>(new MultipleInstrumentContract(*this));
+        return std::make_unique<MultipleInstrumentContract>(*this);
     }
     void MultipleInstrumentContract::setInputVariables()
     {
-        errorTracking =
-            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("MultipleInstrumentContract"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("MultipleInstrumentContract");
     }
 
     MultipleInstrumentContract::MultipleInstrumentContract(
@@ -617,8 +603,7 @@ namespace sjd
             contracts[i]->validate();
             if (!contracts[i]->isOK())
             {
-                absorbChildReport(contracts[i]->validationReport(),
-                                  {"contracts[" + boost::lexical_cast<std::string>(i) + "]"});
+                absorbChildReport(contracts[i]->validationReport(), {"contracts[" + std::to_string(i) + "]"});
             }
         }
     }
@@ -636,8 +621,7 @@ namespace sjd
             contracts[i]->validate(re);
             if (!contracts[i]->isOK())
             {
-                absorbChildReport(contracts[i]->validationReport(),
-                                  {"contracts[" + boost::lexical_cast<std::string>(i) + "]"});
+                absorbChildReport(contracts[i]->validationReport(), {"contracts[" + std::to_string(i) + "]"});
             }
         }
     }

@@ -13,8 +13,7 @@ namespace sjd
                                                                  bool allowExtrapolationInput,
                                                                  std::shared_ptr<VolatilityRateSource> vrs)
     {
-        errorTracking =
-            std::shared_ptr<sjd::IssueTracker>(new sjd::IssueTracker("ForwardCurveStochasticSpotVol"));
+        errorTracking = std::make_shared<sjd::IssueTracker>("ForwardCurveStochasticSpotVol");
         setParameters(anchorDateInput, observationDatesInput, forwardsInput, typeInput,
                       allowExtrapolationInput, vrs);
     }
