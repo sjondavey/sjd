@@ -61,6 +61,9 @@ add_library(sjd STATIC
 )
 add_library(sjd::sjd ALIAS sjd)
 
+# The static library is linked into the Python extension, a shared module.
+set_target_properties(sjd PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 # Public headers live in include/sjd so callers use <sjd/contracts/...>
 # regardless of the repository folder name.
 target_include_directories(sjd
