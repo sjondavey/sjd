@@ -65,12 +65,15 @@ add_library(sjd::sjd ALIAS sjd)
 # regardless of the repository folder name.
 target_include_directories(sjd
     PUBLIC
-        "${CMAKE_SOURCE_DIR}/include"
+        "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
 target_link_libraries(sjd
     PUBLIC
         QuantLib::QuantLib
+    PRIVATE
+        "$<BUILD_INTERFACE:sjd_warnings>"
 )
 
 target_compile_definitions(sjd
@@ -78,7 +81,3 @@ target_compile_definitions(sjd
         QL_NO_AUTOLINK
         BOOST_ALL_NO_LIB
 )
-
-if(MSVC)
-    target_compile_options(sjd PRIVATE /W3)
-endif()

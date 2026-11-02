@@ -629,6 +629,13 @@ namespace sjd
 
 
     bool Structure::qualifyForRegulatoryCapitalOffset(std::shared_ptr<SingleInstrumentContract> contract1,
+                                                      std::shared_ptr<SingleInstrumentContract> contract2)
+    {
+        string reasonIfNot;
+        return qualifyForRegulatoryCapitalOffset(contract1, contract2, reasonIfNot);
+    }
+
+    bool Structure::qualifyForRegulatoryCapitalOffset(std::shared_ptr<SingleInstrumentContract> contract1,
                                                       std::shared_ptr<SingleInstrumentContract> contract2,
                                                       string &reasonIfNot)
     {

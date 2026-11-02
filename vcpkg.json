@@ -9,7 +9,6 @@
     "boost-assign",
     "boost-lexical-cast",
     "boost-math",
-    "boost-smart-ptr",
     "boost-test",
     "boost-timer"
   ]

@@ -12,9 +12,26 @@ description = "Commodity derivative pricing and Monte Carlo statistics"
 requires-python = ">=3.10"
 dependencies = ["numpy", "tomli; python_version < '3.11'"]
 
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
 [tool.setuptools]
 packages = ["sjd", "sjd.markets"]
 
 [tool.setuptools.package-data]
 sjd = ["_core*.pyd", "_core*.so"]
 "sjd.markets" = ["catalogue.toml", "schema.sql", "sample.db"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+# Line length is the formatter's job.
+ignore = ["E501"]

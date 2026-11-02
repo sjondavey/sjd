@@ -1,0 +1,24 @@
+# Matches the existing style: 4-space indent, braces on their own line,
+# namespace bodies indented. Reformatting the tree is a separate commit (plan Step 4).
+BasedOnStyle: Microsoft
+Language: Cpp
+Standard: c++17
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 110
+BreakBeforeBraces: Allman
+NamespaceIndentation: All
+AccessModifierOffset: -4
+PointerAlignment: Left
+ReferenceAlignment: Left
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AlignAfterOpenBracket: Align
+BinPackParameters: false
+BinPackArguments: true
+SortIncludes: CaseSensitive
+IncludeBlocks: Preserve
+FixNamespaceComments: false
+SpaceAfterTemplateKeyword: true

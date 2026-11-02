@@ -36,6 +36,7 @@ target_link_libraries(sjdTest
     PRIVATE
         sjd::sjd
         Boost::unit_test_framework
+        sjd_warnings
 )
 
 # Boost 1.86 still ships boost/timer.hpp but requires this define.
@@ -44,10 +45,6 @@ target_compile_definitions(sjdTest
     PRIVATE
         BOOST_TIMER_ENABLE_DEPRECATED
 )
-
-if(MSVC)
-    target_compile_options(sjdTest PRIVATE /W3)
-endif()
 
 add_test(
     NAME sjdTest

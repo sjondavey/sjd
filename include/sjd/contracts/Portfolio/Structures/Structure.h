@@ -128,8 +128,10 @@ namespace sjd
         static bool isAnAsianDerivative(std::shared_ptr<SingleDerivativeContract> underlyingContract);        
         // true if the underlying settlement / maturty profiles are the same and the rates environement is compatable
         static bool qualifyForRegulatoryCapitalOffset(std::shared_ptr<SingleInstrumentContract> contract1,
+                                                      std::shared_ptr<SingleInstrumentContract> contract2);
+        static bool qualifyForRegulatoryCapitalOffset(std::shared_ptr<SingleInstrumentContract> contract1,
                                                       std::shared_ptr<SingleInstrumentContract> contract2,
-                                                      std::string &reasonIfNot = std::string(""));
+                                                      std::string &reasonIfNot);
         static bool moveContracts(std::vector<std::shared_ptr<SingleInstrumentContract> > contractsToMove,
                                   std::vector<std::shared_ptr<SingleInstrumentContract> > &fromContracts,
                                   std::vector<std::shared_ptr<SingleInstrumentContract> > &toContracts);
