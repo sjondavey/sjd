@@ -7,9 +7,9 @@ set, and simulation ``by_structure`` still means the same.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
-from typing import Optional, Sequence
 
 import sjd
 
@@ -27,7 +27,7 @@ class CollarStrategy:
     put_strike: float
     call_strike: float
     volume: float
-    premium_payment_date: Optional[date] = None
+    premium_payment_date: date | None = None
     put_premium: float = 0.0
     call_premium: float = 0.0
 
@@ -48,11 +48,11 @@ class CollarStrategy:
         put_moneyness: float,
         call_moneyness: float,
         volume: float,
-        premium_payment_date: Optional[date] = None,
+        premium_payment_date: date | None = None,
         put_premium: float = 0.0,
         call_premium: float = 0.0,
         strike_decimals: int = 2,
-    ) -> "CollarStrategy":
+    ) -> CollarStrategy:
         """Build a collar with strikes ``forward * moneyness``, rounded."""
         if forward <= 0.0:
             raise ValueError("forward must be positive")

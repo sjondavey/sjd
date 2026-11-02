@@ -14,7 +14,6 @@ sample can load.
 import math
 import sqlite3
 from datetime import date
-from typing import Optional
 
 from .schema import initialize
 from .specs import CATALOGUE, CalendarMonthMoneynessVol, Catalogue, DeltaVol, QuoteSpec
@@ -121,7 +120,7 @@ def _volatility(quote: QuoteSpec, strike_dimension: float, day: date) -> float:
     return base + wing + VOL_TENOR_SLOPE * year_fraction(day)
 
 
-def load_sample(connection: sqlite3.Connection, catalogue: Optional[Catalogue] = None) -> date:
+def load_sample(connection: sqlite3.Connection, catalogue: Catalogue | None = None) -> date:
     """Create the tables if needed and insert the dummy anchor date.
 
     The connection is committed before returning.

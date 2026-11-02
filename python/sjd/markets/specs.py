@@ -19,10 +19,11 @@ Each currency has one discount curve, shared by every quote that settles in
 that currency.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Mapping, Optional, Union
+from typing import Any
 
 try:
     import tomllib
@@ -236,9 +237,9 @@ class DiscountCurveSpec:
         _require_bool(self.extrapolate, "Discount extrapolation")
 
 
-ForwardRule = Union[GofoForward, OutrightForward, MetalTimesUsdZarForward]
-VolRule = Union[DeltaVol, CalendarMonthMoneynessVol]
-DateRule = Union[PointDates, CalendarMonthDates]
+ForwardRule = GofoForward | OutrightForward | MetalTimesUsdZarForward
+VolRule = DeltaVol | CalendarMonthMoneynessVol
+DateRule = PointDates | CalendarMonthDates
 
 
 @dataclass(frozen=True)
@@ -354,7 +355,7 @@ _FORWARD_ENUMS = {
 _SECTIONS = {"calendars", "dates", "discount", "markets"}
 
 
-def load_catalogue(path: Union[str, Path] = CATALOGUE_PATH) -> Catalogue:
+def load_catalogue(path: str | Path = CATALOGUE_PATH) -> Catalogue:
     """Read a catalogue file. See ``catalogue.toml`` for the layout."""
     path = Path(path)
     try:
@@ -469,8 +470,8 @@ def _build(
     kind: type,
     table: Mapping[str, Any],
     where: str,
-    enums: Optional[Mapping[str, type]] = None,
-    refs: Optional[Mapping[str, Mapping[str, Any]]] = None,
+    enums: Mapping[str, type] | None = None,
+    refs: Mapping[str, Mapping[str, Any]] | None = None,
 ):
     fields = {}
     for key, value in table.items():

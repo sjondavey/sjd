@@ -2,10 +2,8 @@
 
 import sqlite3
 from pathlib import Path
-from typing import Optional
 
 from .specs import CATALOGUE, Catalogue
-
 
 SCHEMA_PATH = Path(__file__).with_name("schema.sql")
 SCHEMA_VERSION = 2
@@ -20,7 +18,7 @@ def schema_sql() -> str:
     return SCHEMA_PATH.read_text(encoding="utf-8")
 
 
-def initialize(connection: sqlite3.Connection, catalogue: Optional[Catalogue] = None) -> None:
+def initialize(connection: sqlite3.Connection, catalogue: Catalogue | None = None) -> None:
     """Create the tables if needed, then add the catalogue's quotes to the key tables.
 
     Quotes are only added. A quote removed from the catalogue keeps its rows,

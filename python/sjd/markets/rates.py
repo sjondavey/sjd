@@ -6,8 +6,6 @@ import math
 import sqlite3
 from datetime import date, timedelta
 
-from typing import Optional
-
 from .specs import (
     CATALOGUE,
     CalendarMonthDates,
@@ -40,8 +38,8 @@ def rates_environment(
     anchor: date,
     currency: str,
     connection: sqlite3.Connection,
-    roll: Optional[ForwardRoll] = None,
-    catalogue: Optional[Catalogue] = None,
+    roll: ForwardRoll | None = None,
+    catalogue: Catalogue | None = None,
 ):
     """Forward, discount, and volatility for one quote, ready to price.
 
@@ -70,7 +68,7 @@ def rates_environment(
     return environment
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def calendar(spec: CalendarSpec):
     """The ``sjd.Calendar`` for a spec. Raises ValueError for an unknown QuantLib name."""
     return _sjd().Calendar(spec.name, list(spec.components))

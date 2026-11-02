@@ -1,6 +1,5 @@
 """Rate functions turn the dummy pillars into a RatesEnvironment."""
 
-import math
 import sqlite3
 import unittest
 from datetime import date
