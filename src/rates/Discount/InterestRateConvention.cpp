@@ -38,7 +38,7 @@ namespace sjd
     {
         double time = dayCounter->yearFraction(fromDate, toDate);
         double accumulationFactor = 1 / df;
-        double r = 0;
+        [[maybe_unused]] double r = 0;
         switch (compounding)
         {
         case Simple:

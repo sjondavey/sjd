@@ -51,19 +51,19 @@ namespace sjd
         SingleInstrumentContract::validate(re);
     }
 
-    void FixedCashflow::setMaturityDate(Date maturityDate)
+    void FixedCashflow::setMaturityDate(Date maturity)
     {
-        SingleInstrumentContract::setMaturityDate(maturityDate);
-        SingleInstrumentContract::setSettlementDate(maturityDate);
+        SingleInstrumentContract::setMaturityDate(maturity);
+        SingleInstrumentContract::setSettlementDate(maturity);
     }
 
-    void FixedCashflow::setSettlementDate(Date settlementDate)
+    void FixedCashflow::setSettlementDate(Date settlement)
     {
-        SingleInstrumentContract::setMaturityDate(settlementDate);
-        SingleInstrumentContract::setSettlementDate(settlementDate);
+        SingleInstrumentContract::setMaturityDate(settlement);
+        SingleInstrumentContract::setSettlementDate(settlement);
     }
 
-    void FixedCashflow::setPremiumAmount(double premium)
+    void FixedCashflow::setPremiumAmount(double /*premium*/)
     {
         premiumAmount = 0;
     }
@@ -75,12 +75,12 @@ namespace sjd
         {
             return 0;
         }
-        double pv = 0;
+        [[maybe_unused]] double pv = 0;
         double pvCashFlows = volume * (re->getDRS())->getDiscountFactor(settlementDate);
         return buySellAsDouble * (pvCashFlows);
     }
 
-    double FixedCashflow::getPayoff(double forSpot)
+    double FixedCashflow::getPayoff(double /*forSpot*/)
     {
         return buySellAsDouble * volume;
     }

@@ -79,7 +79,7 @@ namespace sjd
         lgd = lgdInput;
     }
 
-    double FlatPD::getLGD(Date d)
+    double FlatPD::getLGD(Date /*d*/)
     {
         return lgd;
     }

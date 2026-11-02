@@ -59,7 +59,7 @@ void CVATest::testCumulativeDefaultProbability()
     vector<double> cdp, lgd;
     for (size_t i = 1; i < 6; ++i)
     {
-        dates.push_back(nullCalendar.advance(anchorDate, i, Years));
+        dates.push_back(nullCalendar.advance(anchorDate, static_cast<int>(i), Years));
         cdp.push_back(0.01 * i);
         lgd.push_back(0.4);
     }

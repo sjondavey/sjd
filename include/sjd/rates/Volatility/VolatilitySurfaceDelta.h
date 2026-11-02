@@ -24,7 +24,7 @@ namespace sjd
         double operator()(double strikeEstimate) const
         {
             put->setStrike(strikeEstimate);
-            double d = put->getDelta();
+            [[maybe_unused]] double d = put->getDelta();
             return delta + put->getDelta(); // put delta is negative
         }
 

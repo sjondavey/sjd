@@ -58,7 +58,7 @@ namespace sjd
             return false;
         }
         // some forwards must be live
-        size_t numberOfAveragingPoints = forwards.size();
+        [[maybe_unused]] size_t numberOfAveragingPoints = forwards.size();
         if (M == N)
         {
             errorMessage = "AverageRateOption->All forwards have rate set, this is not an option anymore";
@@ -157,7 +157,7 @@ namespace sjd
 
         // Note I do not check fwd fwd variance becuase I only use the vol out of T0
 
-        double NSquared = N * N;
+        double NSquared = static_cast<double>(N) * static_cast<double>(N);
         effectiveStandardDeviation = 0;
         for (size_t j = 0; j < N - M; ++j)
         {

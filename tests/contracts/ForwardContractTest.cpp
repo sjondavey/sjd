@@ -173,7 +173,10 @@ void ForwardContractTest::testValue()
     manditoryDates.push_back(rateSetDate);
     manditoryDates.push_back(settlement);
 
-    double spot = 100, naccRFR = 0.065, naccIRDiff = 0.045, vol = 0.2;
+    [[maybe_unused]] double spot = 100;
+    [[maybe_unused]] double naccRFR = 0.065;
+    [[maybe_unused]] double naccIRDiff = 0.045;
+    [[maybe_unused]] double vol = 0.2;
 
     std::shared_ptr<DiscountCurve> dc =
         gr.getDiscountCurve(dayCounter, nullCalendar, anchorDate, 10, naccRFR, manditoryDates);
@@ -195,8 +198,8 @@ void ForwardContractTest::testValue()
     contract2.validate(re);
     BOOST_REQUIRE(contract2.isOK());
 
-    double yte = dayCounter->yearFraction(anchorDate, rateSetDate);
-    double yts = dayCounter->yearFraction(anchorDate, settlement);
+    [[maybe_unused]] double yte = dayCounter->yearFraction(anchorDate, rateSetDate);
+    [[maybe_unused]] double yts = dayCounter->yearFraction(anchorDate, settlement);
     double F = fc->getForward(settlement);
     double df = dc->getDiscountFactor(settlement);
 
@@ -305,7 +308,10 @@ void ForwardContractTest::testAsianForward()
     Date settlement = nullCalendar->advance(averagingDatesAsVector.back(), 2, Days);
     manditoryDates.push_back(settlement);
 
-    double spot = 100, naccRFR = 0.065, naccIRDiff = 0.045, vol = 0.2;
+    [[maybe_unused]] double spot = 100;
+    [[maybe_unused]] double naccRFR = 0.065;
+    [[maybe_unused]] double naccIRDiff = 0.045;
+    [[maybe_unused]] double vol = 0.2;
 
     std::shared_ptr<DiscountCurve> dc =
         gr.getDiscountCurve(dayCounter, nullCalendar, anchorDate, 10, naccRFR, manditoryDates);
@@ -330,7 +336,7 @@ void ForwardContractTest::testAsianForward()
     BOOST_REQUIRE(contract2.isOK());
 
     // double yte = dayCounter->yearFraction(anchorDate, rateSetDate);
-    double yts = dayCounter->yearFraction(anchorDate, settlement);
+    [[maybe_unused]] double yts = dayCounter->yearFraction(anchorDate, settlement);
     double averageFwd = 0;
     for (size_t i = 0; i < averagingDatesAsVector.size(); ++i)
     {

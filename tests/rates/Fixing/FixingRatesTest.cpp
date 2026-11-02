@@ -16,7 +16,7 @@ void FixingRateTest::testDailyFixingCurve()
     Date anchorDate = Date(01, Oct, 2014);
     for (size_t i = 0; i < 10; ++i)
     {
-        observationDates.push_back(anchorDate + i);
+        observationDates.push_back(anchorDate + static_cast<int>(i));
     }
 
     static const double arr[] = {100.50, 100.30, 100.10, 102.00, 101.00,
@@ -52,7 +52,7 @@ void FixingRateTest::testDailyFixingCurve()
     vector<Date> appendedDates;
     for (size_t i = 1; i <= 10; ++i)
     {
-        appendedDates.push_back(endDate + i);
+        appendedDates.push_back(endDate + static_cast<int>(i));
     }
     vector<double> appendedRates(arr, arr + sizeof(arr) / sizeof(arr[0]));
     fix->appendRateSets(appendedDates, appendedRates);
@@ -76,7 +76,7 @@ void FixingRateTest::testMonthlyFixingCurve()
     Calendar nullCalendar = NullCalendar();
     for (size_t i = 0; i < 10; ++i)
     {
-        observationDates.push_back(nullCalendar.advance(anchorDate, i, Months));
+        observationDates.push_back(nullCalendar.advance(anchorDate, static_cast<int>(i), Months));
     }
 
     static const double arr[] = {100.50, 100.30, 100.10, 102.00, 101.00,
@@ -113,7 +113,7 @@ void FixingRateTest::testMonthlyFixingCurve()
     vector<Date> appendedDates;
     for (size_t i = 1; i <= 10; ++i)
     {
-        appendedDates.push_back(nullCalendar.advance(endDate, i, Months));
+        appendedDates.push_back(nullCalendar.advance(endDate, static_cast<int>(i), Months));
     }
     vector<double> appendedRates(arr, arr + sizeof(arr) / sizeof(arr[0]));
     fix = std::shared_ptr<MonthlyFixingCurve>(new MonthlyFixingCurve(observationDates, rates));

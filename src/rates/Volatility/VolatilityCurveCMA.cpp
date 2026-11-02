@@ -86,7 +86,7 @@ namespace sjd
         return RateSource::extendsTo(beginningOfMonth);
     }
 
-    bool VolatilityCurveCMA::isInRange(Date date, double strike, double forward) const
+    bool VolatilityCurveCMA::isInRange(Date date, double /*strike*/, double /*forward*/) const
     {
         return isInRange(date);
     }
@@ -96,7 +96,7 @@ namespace sjd
         return curve->getRate(toDate);
     }
 
-    double VolatilityCurveCMA::getVolatility(Date toDate, double strike, double forward) const
+    double VolatilityCurveCMA::getVolatility(Date toDate, double /*strike*/, double /*forward*/) const
     {
         return getVolatility(toDate);
     }
@@ -107,7 +107,7 @@ namespace sjd
         return curve->getRate(toDate) * sqrt(yearFraction);
     }
 
-    double VolatilityCurveCMA::getStandardDeviation(Date toDate, double strike, double forward) const
+    double VolatilityCurveCMA::getStandardDeviation(Date toDate, double /*strike*/, double /*forward*/) const
     {
         return getStandardDeviation(toDate);
     }
@@ -121,7 +121,7 @@ namespace sjd
     }
 
     void VolatilityCurveCMA::getVolAndSD(
-        Date toDate, double strike, double forward, double& vol, double& sd) const
+        Date toDate, double /*strike*/, double /*forward*/, double& vol, double& sd) const
     {
         return getVolAndSD(toDate, vol, sd);
     };

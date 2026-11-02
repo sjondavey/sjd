@@ -75,7 +75,7 @@ void CashflowTest::testSettlementDate()
     int yearsToSettlement = 2;
     double volume = 1000;
     BuySell bs = BUY;
-    double premium = 900;
+    [[maybe_unused]] double premium = 900;
     std::shared_ptr<FixedCashflow> cf1 =
         GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
     std::shared_ptr<FixedCashflow> cf2 =
@@ -104,14 +104,14 @@ void CashflowTest::testValue()
     manditoryDates.push_back(tPlus2);
     manditoryDates.push_back(settlement);
 
-    double spot = 100, naccRFR = 0.065;
+    [[maybe_unused]] double spot = 100, naccRFR = 0.065;
 
     std::shared_ptr<DiscountCurve> dc =
         gr.getDiscountCurve(dayCounter, nullCalendar, anchorDate, 10, naccRFR, manditoryDates);
     std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForCashflow(anchorDate, manditoryDates);
 
     double volume = 50;
-    double premiumAmount = 45;
+    [[maybe_unused]] double premiumAmount = 45;
 
     FixedCashflow cf1(settlement, volume, BUY);
     FixedCashflow cf2(cf1);
@@ -122,7 +122,7 @@ void CashflowTest::testValue()
     cf2.validate(re);
     BOOST_REQUIRE(cf2.isOK());
 
-    double yts = dayCounter->yearFraction(anchorDate, settlement);
+    [[maybe_unused]] double yts = dayCounter->yearFraction(anchorDate, settlement);
     double df = dc->getDiscountFactor(settlement);
 
     // 1) Before maturity

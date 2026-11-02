@@ -47,14 +47,14 @@ namespace sjd
                                                  double spotInput,
                                                  std::shared_ptr<DiscountRateSource> domesticDRSInput,
                                                  std::shared_ptr<DiscountRateSource> foreignDRSInput,
-                                                 std::shared_ptr<VolatilityRateSource> vrs)
+                                                 std::shared_ptr<VolatilityRateSource> volatility)
     {
         quotes.setInterestDifferential(anchorDateInput, spotInput, domesticDRSInput, foreignDRSInput,
-                                       ForwardRoll::SpotVolatility, vrs);
+                                       ForwardRoll::SpotVolatility, volatility);
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
         finalDate = quotes.finalDate();
-        setVolatilityRateSource(vrs);
+        setVolatilityRateSource(volatility);
     }
 
     void ForwardCurveStochasticFX::setSpotAtT0(double spotAtT0Input)

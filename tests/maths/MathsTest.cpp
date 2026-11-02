@@ -19,7 +19,7 @@ void MathsFunctionsTest::testFunctions()
     BOOST_TEST_MESSAGE("Testing Maths Functions...");
 
     int y = 10;
-    long fact = 1;
+    unsigned long fact = 1;
     for (int i = 1; i <= y; ++i)
         fact *= i;
     BOOST_CHECK(fact == factorial(y));
@@ -38,7 +38,7 @@ void MathsFunctionsTest::testFunctions()
     mixedVector = increasingVector;
     for (size_t i = 0; i < decreasingVector.size(); ++i)
     {
-        mixedVector.push_back(decreasingVector[i]);
+        mixedVector.push_back(static_cast<double>(decreasingVector[i]));
         constantVector.push_back(10);
     }
 
@@ -116,9 +116,9 @@ void MathsFunctionsTest::testArrayInterpolator()
 
     for (size_t i = 0; i < 5; ++i)
     {
-        double x = (double)i;
-        xVector.push_back(x);
-        yVector.push_back(m * x + c);
+        double point = (double)i;
+        xVector.push_back(point);
+        yVector.push_back(m * point + c);
     }
     LinearArrayInterpolator interpWithExtrap(xVector, yVector, true);
     BOOST_CHECK(interpWithExtrap.isInRange(1.75) == true);
@@ -135,9 +135,9 @@ void MathsFunctionsTest::testArrayInterpolator()
     vector<double> yVector2, xVector2;
     for (size_t i = 0; i < 6; ++i)
     {
-        double x = (double)i;
-        xVector2.push_back(x);
-        yVector2.push_back(m * x + c);
+        double point = (double)i;
+        xVector2.push_back(point);
+        yVector2.push_back(m * point + c);
     }
     interpWithExtrap.setYVector(yVector2);
     BOOST_CHECK(interpWithExtrap.isOk() == false);

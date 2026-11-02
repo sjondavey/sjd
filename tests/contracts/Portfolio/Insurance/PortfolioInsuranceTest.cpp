@@ -43,7 +43,7 @@ void PortfolioInsuranceTest::testSimpleInsurance()
     vector<Date> dates;
     for (size_t i = 0; i < years; ++i)
     {
-        Date d = calendar->advance(anchorDate, i, Years);
+        Date d = calendar->advance(anchorDate, static_cast<int>(i), Years);
         dates.push_back(d);
     }
     fwdFwdDF.push_back(baseCurve->getDiscountFactor(dates[0]));
@@ -96,7 +96,7 @@ void PortfolioInsuranceTest::testSimpleInsuranceWithTermStructure()
     std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
     std::shared_ptr<Calendar> calendar = std::shared_ptr<Calendar>(new NullCalendar());
     size_t years = 10;
-    Date policyMaturityDate = calendar->advance(policyStartDate, years - 1, Years);
+    Date policyMaturityDate = calendar->advance(policyStartDate, static_cast<int>(years - 1), Years);
     Date anchorDate = Date(27, Jan, 2013);
     double baseRate = 0.03;
     vector<Date> manditoryDates = vector<Date>();
@@ -113,8 +113,8 @@ void PortfolioInsuranceTest::testSimpleInsuranceWithTermStructure()
     vector<double> insuredAmounts;
     for (size_t i = 1; i < years; ++i)
     {
-        insuranceDates.push_back(calendar->advance(policyStartDate, i, Years));
-        insuredAmounts.push_back(100000 - i * 10000);
+        insuranceDates.push_back(calendar->advance(policyStartDate, static_cast<int>(i), Years));
+        insuredAmounts.push_back(100000 - static_cast<int>(i) * 10000);
     }
 
     std::shared_ptr<SimpleInsuranceWithTermStructure> siWT =
@@ -133,7 +133,7 @@ void PortfolioInsuranceTest::testSimpleInsuranceWithTermStructure()
     vector<Date> fwdDates;
     for (size_t i = 0; i < years; ++i)
     {
-        Date d = calendar->advance(anchorDate, i, Years);
+        Date d = calendar->advance(anchorDate, static_cast<int>(i), Years);
         fwdDates.push_back(d);
     }
     fwdFwdDF.push_back(baseCurve->getDiscountFactor(fwdDates[0]));

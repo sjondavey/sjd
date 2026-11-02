@@ -19,7 +19,7 @@ void ForwardCurveFXTest::getDefaultDatesAndDF(Date anchorDate,
     size_t i;
     for (i = 0; i <= 12; ++i)
     {
-        date = calendar.advance(anchorDate, i, Months);
+        date = calendar.advance(anchorDate, static_cast<int>(i), Months);
         domesticObservationDates.push_back(date);
         foreignObservationDates.push_back(date);
         double daysAhead = date - anchorDate;
@@ -27,7 +27,7 @@ void ForwardCurveFXTest::getDefaultDatesAndDF(Date anchorDate,
         foreignDF.push_back(exp(-0.03 * daysAhead / 360.0));
     }
     ++i;
-    date = calendar.advance(anchorDate, i, Months);
+    date = calendar.advance(anchorDate, static_cast<int>(i), Months);
     foreignObservationDates.push_back(date);
     double daysAhead = date - anchorDate;
     foreignDF.push_back(exp(-0.03 * daysAhead / 360.0));

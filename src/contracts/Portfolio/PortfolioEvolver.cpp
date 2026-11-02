@@ -288,7 +288,7 @@ namespace sjd
             set<Date> exposureDatesSet = set<Date>(dates.begin(), dates.end());
             set<Date> merged = exposureDatesSet;
             vector<Date> regCapMarginResetDates;
-            int numDays = holdingPeriod;
+            int numDays = static_cast<int>(holdingPeriod);
             set<Date>::iterator it;
             for (it = exposureDatesSet.begin(); it != exposureDatesSet.end(); ++it)
             {

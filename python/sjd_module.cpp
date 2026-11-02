@@ -63,7 +63,12 @@ namespace
     void report_debug_checks_to_stderr()
     {
 #if defined(_MSC_VER) && defined(_DEBUG)
-        if (!std::getenv("SJD_NO_DEBUG_DIALOGS"))
+        char* value = nullptr;
+        size_t length = 0;
+        _dupenv_s(&value, &length, "SJD_NO_DEBUG_DIALOGS");
+        const bool quiet = value != nullptr;
+        std::free(value);
+        if (!quiet)
             return;
         for (int type : {_CRT_WARN, _CRT_ERROR, _CRT_ASSERT})
         {

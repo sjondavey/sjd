@@ -26,7 +26,7 @@ void ForwardCurveTest::testForwardCurveConstruction()
     Calendar calendar = NullCalendar();
     for (i = 1; i <= 12; ++i)
     {
-        Date date = calendar.advance(anchorDate, i, Months);
+        Date date = calendar.advance(anchorDate, static_cast<int>(i), Months);
         observationDates.push_back(date);
         incorrectObservationDates.push_back(date);
         futures.push_back(110 - (double)i / 10.0);
@@ -40,14 +40,14 @@ void ForwardCurveTest::testForwardCurveConstruction()
     // Case 3 Input dates and times have different lengths
     futures.pop_back();
     incorrectObservationDates = observationDates;
-    incorrectObservationDates.push_back(calendar.advance(anchorDate, i + 1, Months));
+    incorrectObservationDates.push_back(calendar.advance(anchorDate, static_cast<int>(i + 1), Months));
     sfc = std::shared_ptr<ForwardCurveDeterministic>(new ForwardCurveDeterministic(
         anchorDate, incorrectObservationDates, futures, sjd::LINEAR, allowExtrapolation));
     BOOST_CHECK(sfc->isOK() == false);
 
     // Case 4 Anchor date > final curve date
     incorrectObservationDates = observationDates;
-    anchorDate = calendar.advance(anchorDate, i + 1, Months);
+    anchorDate = calendar.advance(anchorDate, static_cast<int>(i + 1), Months);
     sfc = std::shared_ptr<ForwardCurveDeterministic>(new ForwardCurveDeterministic(
         anchorDate, incorrectObservationDates, futures, sjd::LINEAR, allowExtrapolation));
     BOOST_CHECK(sfc->isOK() == false);
@@ -91,12 +91,12 @@ void ForwardCurveTest::testForwardCurveRollsAtForwardVolConstruction()
     vector<Date> observationDates;
     vector<double> forwards;
     size_t i;
-    bool allowExtrapolation = false;
+    [[maybe_unused]] bool allowExtrapolation = false;
 
     Calendar calendar = NullCalendar();
     for (i = 1; i <= 24; ++i)
     {
-        Date date = calendar.advance(anchorDate, i, Months);
+        Date date = calendar.advance(anchorDate, static_cast<int>(i), Months);
         observationDates.push_back(date);
         forwards.push_back(110 - (double)i / 10.0);
     }
@@ -132,7 +132,7 @@ void ForwardCurveTest::testConsistencyBetweenGetMethods()
     size_t i;
     for (i = 1; i <= 12; ++i)
     {
-        Date date = calendar.advance(anchorDate, i, Months);
+        Date date = calendar.advance(anchorDate, static_cast<int>(i), Months);
         observationDates.push_back(date);
         futures.push_back(110 - (double)i / 10.0);
     }
@@ -145,16 +145,16 @@ void ForwardCurveTest::testConsistencyBetweenGetMethods()
     Year year = 2012;
     Day day = 18;
     Date date1 = Date(day, month, year);
-    double fwd1 = fcd->getForward(date1);
+    [[maybe_unused]] double fwd1 = fcd->getForward(date1);
 
     vector<Date> dateVector;
     dateVector.push_back(date1);
     Date date2 = Date(day, November, year);
     dateVector.push_back(date2);
     vector<double> rates = fcd->getForward(dateVector);
-    for (size_t i = 0; i < dateVector.size(); ++i)
+    for (size_t step = 0; step < dateVector.size(); ++step)
     {
-        BOOST_CHECK(abs(rates[i] - fcd->getForward(dateVector[i])) < EPSILON_FOR_DOUBLES);
+        BOOST_CHECK(abs(rates[step] - fcd->getForward(dateVector[step])) < EPSILON_FOR_DOUBLES);
     }
 
     BOOST_CHECK(abs(fcd->getForwardForwardAdditive(date1, date2) -
@@ -168,16 +168,16 @@ void ForwardCurveTest::testConsistencyBetweenGetMethods()
     dateVector.push_back(date3);
     rates.clear();
     rates = fcd->getForwardForwardAdditive(date1, dateVector);
-    for (size_t i = 0; i < rates.size(); ++i)
+    for (size_t step = 0; step < rates.size(); ++step)
     {
-        BOOST_CHECK(abs(rates[i] - fcd->getForwardForwardAdditive(date1, dateVector[i])) <
+        BOOST_CHECK(abs(rates[step] - fcd->getForwardForwardAdditive(date1, dateVector[step])) <
                     EPSILON_FOR_DOUBLES);
     }
     rates.clear();
     rates = fcd->getForwardForwardMultiplicative(date1, dateVector);
-    for (size_t i = 0; i < rates.size(); ++i)
+    for (size_t step = 0; step < rates.size(); ++step)
     {
-        BOOST_CHECK(abs(rates[i] - fcd->getForwardForwardMultiplicative(date1, dateVector[i])) <
+        BOOST_CHECK(abs(rates[step] - fcd->getForwardForwardMultiplicative(date1, dateVector[step])) <
                     EPSILON_FOR_DOUBLES);
     }
     delete fcd;
@@ -197,7 +197,7 @@ void ForwardCurveTest::testValues()
     size_t i;
     for (i = 1; i <= 12; ++i)
     {
-        Date date = calendar.advance(anchorDate, i, Months);
+        Date date = calendar.advance(anchorDate, static_cast<int>(i), Months);
         observationDates.push_back(date);
         observationDatesSerialNumbers.push_back(date.serialNumber());
         futures.push_back(110 - (double)i / 10.0);
@@ -228,12 +228,12 @@ void ForwardCurveTest::testRoll()
     vector<Date> observationDates;
     vector<double> forwards;
     size_t i;
-    bool allowExtrapolation = false;
+    [[maybe_unused]] bool allowExtrapolation = false;
 
     Calendar calendar = NullCalendar();
     for (i = 1; i <= 24; ++i)
     {
-        Date date = calendar.advance(anchorDate, i, Months);
+        Date date = calendar.advance(anchorDate, static_cast<int>(i), Months);
         observationDates.push_back(date);
         forwards.push_back(110 - (double)i / 10.0);
     }
@@ -293,12 +293,12 @@ void ForwardCurveTest::testRollStochastic()
     vector<Date> observationDates;
     vector<double> forwards;
     size_t i;
-    bool allowExtrapolation = false;
+    [[maybe_unused]] bool allowExtrapolation = false;
 
     Calendar calendar = NullCalendar();
     for (i = 1; i <= 24; ++i)
     {
-        Date date = calendar.advance(anchorDate, i, Months);
+        Date date = calendar.advance(anchorDate, static_cast<int>(i), Months);
         observationDates.push_back(date);
         forwards.push_back(110 - (double)i / 10.0);
     }

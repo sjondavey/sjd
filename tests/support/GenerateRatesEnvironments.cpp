@@ -218,7 +218,7 @@ std::shared_ptr<ForwardCurveCMAStochasticFwdVol> GenerateRates::getCalendarMonth
     return fc;
 }
 
-std::shared_ptr<VolatilitySurfaceMoneyness> GenerateRates::getDefaultMoneynessSurface(Date anchorDate)
+std::shared_ptr<VolatilitySurfaceMoneyness> GenerateRates::getDefaultMoneynessSurface(Date /*anchorDate*/)
 {
     SurfaceInterpolatorType interpolatorType = BICUBIC;
     bool extrapolate = true;
@@ -300,7 +300,7 @@ vector<Date> GenerateRates::getDatesVector(std::shared_ptr<Calendar> calendar,
     observationDates.insert(anchorDate);
     for (size_t i = 1; i <= years; ++i)
     {
-        observationDates.insert(calendar->advance(anchorDate, i, Years));
+        observationDates.insert(calendar->advance(anchorDate, static_cast<int>(i), Years));
     }
     if (!manditoryDates.empty())
     {

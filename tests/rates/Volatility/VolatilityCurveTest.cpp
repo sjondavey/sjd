@@ -17,12 +17,12 @@ void VolatilityCurveTest::testVolatilityCurveConstruction()
     size_t i;
     for (i = 1; i <= 12; ++i)
     {
-        Date date = calendar.advance(anchorDate, i, Months);
+        Date date = calendar.advance(anchorDate, static_cast<int>(i), Months);
         observationDates.push_back(date);
         incorrectObservationDates.push_back(date);
         volatility.push_back(0.2);
     }
-    incorrectObservationDates.push_back(calendar.advance(anchorDate, i + 1, Months));
+    incorrectObservationDates.push_back(calendar.advance(anchorDate, static_cast<int>(i + 1), Months));
     std::shared_ptr<DayCounter> dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
     ArrayInterpolatorType type = LINEAR;
     bool allowExtrapolation = false;

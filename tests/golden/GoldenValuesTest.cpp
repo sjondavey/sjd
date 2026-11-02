@@ -26,7 +26,16 @@ namespace
 
     bool printMode()
     {
+#if defined(_MSC_VER)
+        char* value = nullptr;
+        size_t length = 0;
+        _dupenv_s(&value, &length, "SJD_PRINT_GOLDEN");
+        const bool set = value != nullptr;
+        std::free(value);
+        return set;
+#else
         return std::getenv("SJD_PRINT_GOLDEN") != nullptr;
+#endif
     }
 
     void print(const std::string& table, const Named& actual)

@@ -95,9 +95,9 @@ namespace sjd
         time.clear();
         for (size_t i = 0; i < observationDates.size(); ++i)
         {
-            Date beginningOfMonth = Date(1, observationDates[i].month(), observationDates[i].year());
+            Date monthStart = Date(1, observationDates[i].month(), observationDates[i].year());
             // observationDates.push_back(beginningOfMonth);
-            double yf = simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, beginningOfMonth);
+            double yf = simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, monthStart);
             int monthsAsInt = boost::math::iround(yf * 12);
             time.push_back((double)monthsAsInt); // Note that if there is more than one observation date per
                                                  // month the time vector will not be strictly increasing
@@ -115,7 +115,7 @@ namespace sjd
     double VolatilitySurfaceMoneynessCMA::getMonthsAheadOfAnchorDate(Date toDate) const
     {
         double t1 = dayCounter->yearFraction(beginningOfAnchorDateMonth, toDate);
-        int t2 = boost::math::iround(12 * t1);
+        [[maybe_unused]] int t2 = boost::math::iround(12 * t1);
         return (double)boost::math::iround(
             12 * simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, toDate));
     }
@@ -130,7 +130,9 @@ namespace sjd
         return ((beginningOfMonth >= beginningOfAnchorDateMonth) && (beginningOfMonth <= finalDate));
     };
 
-    bool VolatilitySurfaceMoneynessCMA::isInRange(QuantLib::Date date, double strike, double forward) const
+    bool VolatilitySurfaceMoneynessCMA::isInRange(QuantLib::Date date,
+                                                  double /*strike*/,
+                                                  double /*forward*/) const
     {
         return isInRange(date);
     };
@@ -277,10 +279,10 @@ namespace sjd
             for (size_t i = 0; i < observationDates.size(); ++i)
             {
                 double t1 = simpleDayCounter->yearFraction(beginningOfRollToDateMonth, observationDates[i]);
-                int t2 = boost::math::iround(12 * t1);
-                double time = (double)boost::math::iround(
+                [[maybe_unused]] int t2 = boost::math::iround(12 * t1);
+                double monthsFromAnchor = (double)boost::math::iround(
                     12 * simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, toDate));
-                if (time >= 0)
+                if (monthsFromAnchor >= 0)
                 {
                     newDates.push_back(observationDates[i]);
                 }

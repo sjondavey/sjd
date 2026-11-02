@@ -29,18 +29,18 @@ namespace sjd
         return utilisationDRS;
     }
 
-    void PortfolioInsurance::getInsurancePayments(vector<Date> dates,
+    void PortfolioInsurance::getInsurancePayments(vector<Date> paymentDates,
                                                   vector<double> mtm,
                                                   vector<double>& insurancePayments)
     {
-        checkSizesAndCalcuateSpreads(dates, mtm, insurancePayments);
+        checkSizesAndCalcuateSpreads(paymentDates, mtm, insurancePayments);
         if (errorTracking->getHasErrors())
         {
             return;
         }
-        for (size_t i = 0; i < dates.size(); ++i)
+        for (size_t i = 0; i < paymentDates.size(); ++i)
         {
-            double maxSumInsured = getSumInsured(dates[i]);
+            double maxSumInsured = getSumInsured(paymentDates[i]);
             double utilisation = min(mtm[i], maxSumInsured);
             utilisation = max(utilisation, 0.0);
             double standby = maxSumInsured - utilisation;
@@ -105,11 +105,11 @@ namespace sjd
         return "portfolio_insurance";
     }
 
-    void PortfolioInsurance::checkSizesAndCalcuateSpreads(vector<Date> dates,
+    void PortfolioInsurance::checkSizesAndCalcuateSpreads(vector<Date> paymentDates,
                                                           vector<double> mtm,
                                                           vector<double>& insurancePayments)
     {
-        if ((dates.size() != mtm.size()) || (dates.size() != insurancePayments.size()))
+        if ((paymentDates.size() != mtm.size()) || (paymentDates.size() != insurancePayments.size()))
         {
             insurancePayments = vector<double>(mtm.size(), 0);
             errorTracking->record("INSURANCE_INPUT_DIMENSION", "Input vectors do not have the same dimension",
@@ -117,14 +117,15 @@ namespace sjd
             return;
         }
         fwdFwdStandbyFactor.clear();
-        fwdFwdStandbyFactor.push_back(1 / standbyDRS->getDiscountFactor(dates[0]) - 1);
+        fwdFwdStandbyFactor.push_back(1 / standbyDRS->getDiscountFactor(paymentDates[0]) - 1);
         fwdFwdUtilisationFactor.clear();
-        fwdFwdUtilisationFactor.push_back(1 / utilisationDRS->getDiscountFactor(dates[0]) - 1);
-        for (size_t i = 1; i < dates.size(); ++i)
+        fwdFwdUtilisationFactor.push_back(1 / utilisationDRS->getDiscountFactor(paymentDates[0]) - 1);
+        for (size_t i = 1; i < paymentDates.size(); ++i)
         {
-            fwdFwdStandbyFactor.push_back(1 / standbyDRS->getDiscountFactor(dates[i - 1], dates[i]) - 1);
-            fwdFwdUtilisationFactor.push_back(1 / utilisationDRS->getDiscountFactor(dates[i - 1], dates[i]) -
-                                              1);
+            fwdFwdStandbyFactor.push_back(
+                1 / standbyDRS->getDiscountFactor(paymentDates[i - 1], paymentDates[i]) - 1);
+            fwdFwdUtilisationFactor.push_back(
+                1 / utilisationDRS->getDiscountFactor(paymentDates[i - 1], paymentDates[i]) - 1);
         }
     }
 
@@ -223,7 +224,7 @@ namespace sjd
             }
 
             int ilo = 0;
-            int ihi = dates.size() - 1;
+            int ihi = static_cast<int>(dates.size()) - 1;
             int i;
             while (ihi - ilo > 1)
             {

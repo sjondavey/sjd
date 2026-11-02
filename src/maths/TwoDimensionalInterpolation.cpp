@@ -42,11 +42,12 @@ namespace sjd
         return true;
     }
 
-    bool TwoDimensionalInterpolator::isInRange(double x, double y) const
+    bool TwoDimensionalInterpolator::isInRange(double xValue, double yValue) const
     {
         if (allowExtrapolation)
             return true;
-        else if ((x >= getXStart()) && (x <= getXEnd()) && (y >= getYStart()) && (y <= getYEnd()))
+        else if ((xValue >= getXStart()) && (xValue <= getXEnd()) && (yValue >= getYStart()) &&
+                 (yValue <= getYEnd()))
             return true;
         return false;
     }

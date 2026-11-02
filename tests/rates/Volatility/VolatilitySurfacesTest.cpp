@@ -36,7 +36,7 @@ void VolatilitySurfacesTest::testEuropeanMoneynessConstruction()
     Calendar calendar = SouthAfrica();
     for (size_t i = 0; i < 12; ++i)
     {
-        observationDates.push_back(calendar.advance(anchorDate, i, Months));
+        observationDates.push_back(calendar.advance(anchorDate, static_cast<int>(i), Months));
     }
     for (size_t i = 0; i < 5; ++i)
     {
@@ -55,7 +55,7 @@ void VolatilitySurfacesTest::testEuropeanMoneynessConstruction()
     observationDates.clear();
     for (size_t i = 0; i < 12; ++i)
     {
-        observationDates.push_back(calendar.advance(anchorDate, i, Months));
+        observationDates.push_back(calendar.advance(anchorDate, static_cast<int>(i), Months));
     }
     moneyness.clear();
     for (size_t i = 0; i < 5; ++i)
@@ -194,7 +194,7 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessConstruction()
     anchorDate = Date(27, January, 2012);
     Calendar calendar = SouthAfrica();
     for (size_t i = 0; i < 12; ++i)
-        observationDates.push_back(calendar.advance(anchorDate, i, Months));
+        observationDates.push_back(calendar.advance(anchorDate, static_cast<int>(i), Months));
     for (size_t i = 0; i < 5; ++i)
         moneyness.push_back(-0.5 + i * 0.25);
     volatility = Matrix(moneyness.size(), observationDates.size() + 1, 10);
@@ -225,7 +225,7 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessConstruction()
     anchorDate = Date(27, January, 2012);
     observationDates.clear();
     for (size_t i = 0; i < 12; ++i)
-        observationDates.push_back(calendar.advance(anchorDate, i, Months));
+        observationDates.push_back(calendar.advance(anchorDate, static_cast<int>(i), Months));
     moneyness.clear();
     for (size_t i = 0; i < 5; ++i)
         moneyness.push_back(-0.5 + i * 0.25);
@@ -391,7 +391,10 @@ void VolatilitySurfacesTest::testForwardDeltaVolatilitySurfaceConstruction()
     dayCounter = std::shared_ptr<DayCounter>(new Actual365Fixed());
     nullCalendar = std::shared_ptr<Calendar>(new NullCalendar());
     Date tPlus2 = nullCalendar->advance(anchorDate, 2, Days);
-    double spot = 100, naccRFR = 0.065, naccIRDiff = 0.045, vol = 0.2;
+    [[maybe_unused]] double spot = 100;
+    [[maybe_unused]] double naccRFR = 0.065;
+    [[maybe_unused]] double naccIRDiff = 0.045;
+    [[maybe_unused]] double vol = 0.2;
 
     BOOST_CHECK(abs(vs.getVolatility(d1) - vs.getVolatility(d1, frs->getForward(d1), frs->getForward(d1))) <
                 EPSILON_FOR_DOUBLES);

@@ -75,25 +75,26 @@ namespace sjd
         setBaseRates(re);
     }
 
-    void SingleFactorEconomicScenarioGenerator::setBaseRates(const std::shared_ptr<RatesEnvironment> re)
+    void SingleFactorEconomicScenarioGenerator::setBaseRates(const std::shared_ptr<RatesEnvironment> rates)
     {
-        EconomicScenarioGenerator::setBaseRates(re);
+        EconomicScenarioGenerator::setBaseRates(rates);
         frsDependsOnInterestRateDifferential = false;
-        if (re->hasDRS())
+        if (rates->hasDRS())
         {
-            drs = std::dynamic_pointer_cast<sjd::DeterministicDiscountRateSource>(re->getDRS());
+            drs = std::dynamic_pointer_cast<sjd::DeterministicDiscountRateSource>(rates->getDRS());
         }
-        if (re->hasForeignDRS())
+        if (rates->hasForeignDRS())
         {
-            foreigndrs = std::dynamic_pointer_cast<sjd::DeterministicDiscountRateSource>(re->getForeignDRS());
+            foreigndrs =
+                std::dynamic_pointer_cast<sjd::DeterministicDiscountRateSource>(rates->getForeignDRS());
         }
-        if (re->hasVRS())
+        if (rates->hasVRS())
         {
-            vrs = std::dynamic_pointer_cast<sjd::DeterministicVolatilityRateSource>(re->getVRS());
+            vrs = std::dynamic_pointer_cast<sjd::DeterministicVolatilityRateSource>(rates->getVRS());
         }
-        if (re->hasFRS())
+        if (rates->hasFRS())
         {
-            frs = std::dynamic_pointer_cast<sjd::ForwardRateSourceStochastic>(re->getFRS());
+            frs = std::dynamic_pointer_cast<sjd::ForwardRateSourceStochastic>(rates->getFRS());
             std::shared_ptr<sjd::UsesInterestRateDifferential> tmpFRS =
                 std::dynamic_pointer_cast<sjd::UsesInterestRateDifferential>(frs);
             if (tmpFRS != 0)
@@ -101,9 +102,9 @@ namespace sjd
                 frsDependsOnInterestRateDifferential = true;
             }
         }
-        if (re->hasFixingRS())
+        if (rates->hasFixingRS())
         {
-            fixingrs = std::dynamic_pointer_cast<sjd::RollingFixingRateSource>(re->getFixingRS());
+            fixingrs = std::dynamic_pointer_cast<sjd::RollingFixingRateSource>(rates->getFixingRS());
         }
     }
 
@@ -279,10 +280,9 @@ namespace sjd
         return getPathForRandomNumber(randomNumbers);
     }
 
-    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getPathForRandomNumber(
-        vector<double> randomNumbers)
+    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getPathForRandomNumber(vector<double> draws)
     {
-        frs->setRandomVariables(randomNumbers);
+        frs->setRandomVariables(draws);
         if (fixingrs == 0)
         {
             frss = frs->rollForward();

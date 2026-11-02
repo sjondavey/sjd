@@ -13,8 +13,8 @@ AsianOptionInputParameters
 AsianOptionInputParameters::AsianOptionInputParameters(vector<double> time,
                                                        vector<double> forwardRates,
                                                        double strikeInput,
-                                                       double yte,
-                                                       double yts,
+                                                       double /*yte*/,
+                                                       double /*yts*/,
                                                        vector<double> standardDeviation,
                                                        double discountFactorToSettlement)
 {
@@ -106,7 +106,7 @@ void AsianOptionTest::testValulationBeforeAveraging()
     }
     effectiveForward /= ip.N;
 
-    double NSquared = ip.N * ip.N;
+    double NSquared = static_cast<double>(ip.N) * static_cast<double>(ip.N);
     double effectiveStandardDeviation = 0;
     for (size_t j = 0; j < ip.N; ++j)
     {
@@ -150,7 +150,7 @@ void AsianOptionTest::testValulationDuringAveraging()
     }
     effectiveForward /= ip.N;
 
-    double NSquared = ip.N * ip.N;
+    double NSquared = static_cast<double>(ip.N) * static_cast<double>(ip.N);
     double effectiveStandardDeviation = 0;
     for (size_t j = 0; j < ip.N - ip.M; ++j)
     {
@@ -232,7 +232,7 @@ void AsianOptionTest::testValulationJustBeforeSettlementWithLowAverage()
     }
     effectiveForward /= ip.N;
 
-    double NSquared = ip.N * ip.N;
+    double NSquared = static_cast<double>(ip.N) * static_cast<double>(ip.N);
     double effectiveStandardDeviation = 0;
     for (size_t j = 0; j < ip.N - ip.M; ++j)
     {
@@ -295,7 +295,8 @@ AsianOptionInputParameters AsianOptionTest::getAsianInputsDuringAveraging()
 
     double spot = 21.13;
     strike = 22.0;
-    double rfr = 0.065, yield = 0.025;
+    [[maybe_unused]] double rfr = 0.065;
+    [[maybe_unused]] double yield = 0.025;
     double vol = 0.25;
     int i;
     for (i = -5; i < 15; ++i)
@@ -325,7 +326,8 @@ AsianOptionInputParameters AsianOptionTest::getAsianInputsJustBeforeSettlementWi
 
     double spot = 21.13;
     strike = 22.0;
-    double rfr = 0.065, yield = 0.025;
+    [[maybe_unused]] double rfr = 0.065;
+    [[maybe_unused]] double yield = 0.025;
     double vol = 0.25;
     int i;
     for (i = -18; i < 3; ++i)
@@ -356,7 +358,8 @@ AsianOptionInputParameters AsianOptionTest::getAsianInputsJustBeforeSettlementWi
 
     double spot = 21.13;
     strike = 22.0;
-    double rfr = 0.065, yield = 0.025;
+    [[maybe_unused]] double rfr = 0.065;
+    [[maybe_unused]] double yield = 0.025;
     double vol = 0.25;
     int i;
     for (i = -18; i < 3; ++i)

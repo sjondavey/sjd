@@ -24,15 +24,15 @@ namespace sjd
                                                      vector<double> forwardsInput,
                                                      ArrayInterpolatorType typeInput,
                                                      bool allowExtrapolationInput,
-                                                     std::shared_ptr<VolatilityRateSource> vrs)
+                                                     std::shared_ptr<VolatilityRateSource> volatility)
     {
         quotes.setInterpolated(anchorDateInput, observationDatesInput, forwardsInput, typeInput,
                                allowExtrapolationInput, ForwardAveraging::Point,
-                               ForwardRoll::ForwardVolatility, vrs);
+                               ForwardRoll::ForwardVolatility, volatility);
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
         finalDate = quotes.finalDate();
-        setVolatilityRateSource(vrs);
+        setVolatilityRateSource(volatility);
     }
 
     ForwardCurveStochasticFwdVol::~ForwardCurveStochasticFwdVol() {}

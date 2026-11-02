@@ -50,7 +50,9 @@ namespace sjd
         return timeInRange(dayCounter->yearFraction(anchorDate, date));
     }
 
-    bool VolatilitySurfaceMoneyness::isInRange(QuantLib::Date date, double strike, double forward) const
+    bool VolatilitySurfaceMoneyness::isInRange(QuantLib::Date date,
+                                               double /*strike*/,
+                                               double /*forward*/) const
     {
         return isInRange(date);
     }

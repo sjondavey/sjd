@@ -111,8 +111,8 @@ void PortfolioTest::testPortfolioB2CEM()
     std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
 
     int yearsToSettlement = 2;
-    double structureVolume = 10000;
-    double premiumRecievable = 2000;
+    [[maybe_unused]] double structureVolume = 10000;
+    [[maybe_unused]] double premiumRecievable = 2000;
     int numberOfAveragingDates = 20;
     double strike = 100;
     double volume = 5000;
@@ -149,7 +149,7 @@ void PortfolioTest::testPortfolioB2CEM()
     margin->updateBalanceForGivenMtM(unmarginedPortfolio->getValue(re));
 
     std::shared_ptr<Calendar> calendar = std::shared_ptr<Calendar>(new WeekendsOnly());
-    size_t holdingPeriodInBusinessDays = 10;
+    [[maybe_unused]] size_t holdingPeriodInBusinessDays = 10;
 
     std::shared_ptr<PortfolioB2CEM> marginedPortfolio = std::shared_ptr<PortfolioB2CEM>(
         new PortfolioB2CEM(contracts, regCapAssetFactors, regCapCreditParameters, optimise, margin));
@@ -161,7 +161,7 @@ void PortfolioTest::testPortfolioB2CEM()
     set<Date> exposureDates;
     for (size_t i = 1; i < 13; ++i)
     {
-        exposureDates.insert(calendar->advance(anchorDate, i, Months));
+        exposureDates.insert(calendar->advance(anchorDate, static_cast<int>(i), Months));
     }
     set<Date>::iterator exposureDateIt;
     set<Date> simulationDates;

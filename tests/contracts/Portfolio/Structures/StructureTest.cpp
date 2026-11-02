@@ -819,7 +819,7 @@ void StructureTest::testMixedStructures()
         GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BUY);
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
     std::shared_ptr<Structure> structure;
-    double premium = 3.4;
+    [[maybe_unused]] double premium = 3.4;
     double volume = 9087;
     std::shared_ptr<RegCapUnderlyingFactors> factors = getDefaultRegCapUnderlyingFactors();
 
@@ -850,7 +850,7 @@ void StructureTest::testSpecialCases()
     int yearsToSettlement = 2;
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
     std::shared_ptr<Structure> structure;
-    double premium = 0;
+    [[maybe_unused]] double premium = 0;
     double volume = 9087;
     std::shared_ptr<RegCapUnderlyingFactors> factors = getDefaultRegCapUnderlyingFactors();
 

@@ -19,12 +19,12 @@ void DiscountCurvesTest::testConstruction()
     size_t i;
     for (i = 1; i <= 12; ++i)
     {
-        Date date = calendar.advance(anchorDate, i, Months);
+        Date date = calendar.advance(anchorDate, static_cast<int>(i), Months);
         observationDates.push_back(date);
         incorrectObservationDates.push_back(date);
         df.push_back(exp(-0.065 * dayCounter->yearFraction(anchorDate, date)));
     }
-    incorrectObservationDates.push_back(calendar.advance(anchorDate, i + 1, Months));
+    incorrectObservationDates.push_back(calendar.advance(anchorDate, static_cast<int>(i + 1), Months));
 
     std::shared_ptr<DiscountCurve> dc = std::shared_ptr<DiscountCurve>(
         new DiscountCurve(anchorDate, incorrectObservationDates, df, LINEAR, allowExtrapolation));
@@ -79,7 +79,7 @@ void DiscountCurvesTest::testRatesEnvironmentValidationReport()
     vector<double> discountFactors;
     for (size_t i = 1; i <= 3; ++i)
     {
-        observationDates.push_back(calendar.advance(anchorDate, i, Months));
+        observationDates.push_back(calendar.advance(anchorDate, static_cast<int>(i), Months));
         discountFactors.push_back(0.99 - i * 0.01);
     }
     observationDates.push_back(calendar.advance(anchorDate, 4, Months));
@@ -111,7 +111,7 @@ void DiscountCurvesTest::testParallelBump()
     size_t i;
     for (i = 1; i <= 12; ++i)
     {
-        Date date = calendar.advance(anchorDate, i, Months);
+        Date date = calendar.advance(anchorDate, static_cast<int>(i), Months);
         observationDates.push_back(date);
         df.push_back(exp(-0.065 * dayCounter->yearFraction(anchorDate, date)));
     }

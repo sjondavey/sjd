@@ -142,7 +142,7 @@ namespace sjd
         }
         else if ((valueDate >= maturityDate) && (valueDate <= settlementDate))
         {
-            double averageFwd = 0;
+            [[maybe_unused]] double averageFwd = 0;
             premium = (averageRateSet - strike) * df;
             return premium * volume * buySellAsDouble;
         }

@@ -16,7 +16,7 @@ namespace sjd
         captureOriginalState();
     }
 
-    std::shared_ptr<RollingFixingRateSource> DailyFixingCurve::rollForward(Date toDate,
+    std::shared_ptr<RollingFixingRateSource> DailyFixingCurve::rollForward(Date /*toDate*/,
                                                                            vector<Date> newRateSetDates,
                                                                            vector<double> newRateSets)
     {
@@ -44,7 +44,7 @@ namespace sjd
 
     MonthlyFixingCurve::~MonthlyFixingCurve() {}
 
-    std::shared_ptr<RollingFixingRateSource> MonthlyFixingCurve::rollForward(Date toDate,
+    std::shared_ptr<RollingFixingRateSource> MonthlyFixingCurve::rollForward(Date /*toDate*/,
                                                                              vector<Date> newRateSetDates,
                                                                              vector<double> newRateSets)
     {

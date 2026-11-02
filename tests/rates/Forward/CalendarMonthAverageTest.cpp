@@ -33,12 +33,12 @@ void CalendarMonthAverageTest::testConstruction()
 
     for (i = 1; i <= 12; ++i)
     {
-        Date date = calendar.advance(anchorDate, i, Months);
+        Date date = calendar.advance(anchorDate, static_cast<int>(i), Months);
         observationDates.push_back(date);
         incorrectObservationDates.push_back(date);
         futures.push_back(110 - (double)i / 10.0);
     }
-    incorrectObservationDates.push_back(calendar.advance(anchorDate, i + 1, Months));
+    incorrectObservationDates.push_back(calendar.advance(anchorDate, static_cast<int>(i + 1), Months));
     fc = std::shared_ptr<ForwardCurveCMADeterministic>(new ForwardCurveCMADeterministic(
         anchorDate, incorrectObservationDates, futures, sjd::LINEAR, allowExtrapolation));
     BOOST_CHECK(fc->isOK() == false);
@@ -92,7 +92,7 @@ void CalendarMonthAverageTest::testValues()
     bool allowExtrapolation = false;
     for (i = 1; i <= 6; ++i)
     {
-        Date date = calendar.advance(anchorDate, 2 * i, Months);
+        Date date = calendar.advance(anchorDate, static_cast<int>(2 * i), Months);
         observationDates.push_back(date);
         futures.push_back(110 - ((double)i * 2) / 10.0);
     }

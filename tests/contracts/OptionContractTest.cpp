@@ -263,8 +263,8 @@ void OptionContractTest::testEuropeanOptionWithMoneynessVol()
     EuropeanOption deferredPremiumContract(optionMaturity, optionSettlement, strike, type, volume,
                                            optionSettlement, defPremium, BUY);
 
-    double yte = dayCounter->yearFraction(anchorDate, optionMaturity);
-    double yts = dayCounter->yearFraction(anchorDate, optionSettlement);
+    [[maybe_unused]] double yte = dayCounter->yearFraction(anchorDate, optionMaturity);
+    [[maybe_unused]] double yts = dayCounter->yearFraction(anchorDate, optionSettlement);
     double fwd = fc->getForward(optionSettlement);
     double df = dc->getDiscountFactor(optionSettlement);
     double sd = vs->getStandardDeviation(optionMaturity, strike, fwd);

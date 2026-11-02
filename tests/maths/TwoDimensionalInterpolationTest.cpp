@@ -60,8 +60,8 @@ void Maths2DInterpTest::testBilinearInterpolator()
 
     QuantLib::BilinearInterpolation qlInterp =
         QuantLib::BilinearInterpolation(time.begin(), time.end(), delta.begin(), delta.end(), M);
-    double me = interpolator.getRate(6, 50);
-    double ql = qlInterp(6, 50);
+    [[maybe_unused]] double me = interpolator.getRate(6, 50);
+    [[maybe_unused]] double ql = qlInterp(6, 50);
     BOOST_CHECK(interpolator.getRate(6, 50) == qlInterp(6, 50));
     BOOST_CHECK(interpolator.getRate(1, 10) == qlInterp(1, 10));
     BOOST_CHECK(interpolator.getRate(24, 90) == qlInterp(24, 90));
@@ -118,8 +118,8 @@ void Maths2DInterpTest::testBicubicInterpolator()
 
     QuantLib::BicubicSpline qlInterp =
         QuantLib::BicubicSpline(time.begin(), time.end(), delta.begin(), delta.end(), M);
-    double me = interpolator.getRate(6, 50);
-    double ql = qlInterp(6, 50);
+    [[maybe_unused]] double me = interpolator.getRate(6, 50);
+    [[maybe_unused]] double ql = qlInterp(6, 50);
     BOOST_CHECK(interpolator.getRate(6, 50) == qlInterp(6, 50));
     BOOST_CHECK(interpolator.getRate(1, 10) == qlInterp(1, 10));
     BOOST_CHECK(interpolator.getRate(24, 90) == qlInterp(24, 90));

@@ -24,6 +24,7 @@ namespace sjd
         void setParameters(double forward, double strike, double standardDeviation, double discountFactor);
 
         virtual bool isOK();
+        virtual ~Black76Option() = default;
         std::string getErrorMessage() { return errorMessage; };
 
         double getForward() { return F; };

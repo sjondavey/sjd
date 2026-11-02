@@ -596,7 +596,7 @@ namespace sjd
             {
                 bool isFlat = true;
                 set<double>::iterator it = strikes.begin();
-                double s1 = *it;
+                [[maybe_unused]] double s1 = *it;
                 ++it;
 
                 double tmpMaxExposure = 0;
@@ -833,7 +833,7 @@ namespace sjd
             cappedContracts.push_back(cloneInstrument(allContracts[i]));
         }
         double effectiveVolumeAtStrike;
-        int infiniteLoopBreaker = cappedContracts.size() + 1;
+        int infiniteLoopBreaker = static_cast<int>(cappedContracts.size()) + 1;
         int loopCounter = 0;
         while (isUncappedOnTheLeft(cappedContracts, effectiveVolumeAtStrike) &&
                (loopCounter < infiniteLoopBreaker))
@@ -871,7 +871,7 @@ namespace sjd
             successful = false;
             return;
         }
-        infiniteLoopBreaker = cappedContracts.size() + 1;
+        infiniteLoopBreaker = static_cast<int>(cappedContracts.size()) + 1;
         loopCounter = 0;
         while (isUncappedOnTheRight(cappedContracts, effectiveVolumeAtStrike) &&
                (loopCounter < infiniteLoopBreaker))

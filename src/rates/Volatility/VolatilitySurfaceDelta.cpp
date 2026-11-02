@@ -44,7 +44,7 @@ namespace sjd
         return !errorTracking->getHasErrors();
     }
 
-    bool VolatilitySurfaceDelta::isInRange(QuantLib::Date date, double strike, double forward) const
+    bool VolatilitySurfaceDelta::isInRange(QuantLib::Date date, double /*strike*/, double /*forward*/) const
     {
         return isInRange(date);
     }
@@ -266,9 +266,9 @@ namespace sjd
         return errorMessage;
     }
 
-    bool SimpleDeltaSurface::isInDeltaRange(double time, double delta)
+    bool SimpleDeltaSurface::isInDeltaRange(double time, double deltaPoint)
     {
-        if ((extrapolate) || interpolator->isInRange(time, delta))
+        if ((extrapolate) || interpolator->isInRange(time, deltaPoint))
         {
             return true;
         }
@@ -293,15 +293,15 @@ namespace sjd
 
     double SimpleDeltaSurface::getVolatility(double time) const
     {
-        double delta = calculateDeltaFromStrike(1, 1, time);
-        return getVolatilityForDelta(time, delta);
+        double putDelta = calculateDeltaFromStrike(1, 1, time);
+        return getVolatilityForDelta(time, putDelta);
     }
 
-    double SimpleDeltaSurface::getVolatilityForDelta(double time, double delta) const
+    double SimpleDeltaSurface::getVolatilityForDelta(double time, double deltaPoint) const
     {
-        if ((extrapolate) || (interpolator->isInRange(time, delta)))
+        if ((extrapolate) || (interpolator->isInRange(time, deltaPoint)))
         {
-            return (*interpolator)(time, delta, extrapolate);
+            return (*interpolator)(time, deltaPoint, extrapolate);
         }
         return numeric_limits<double>::quiet_NaN();
     }
@@ -314,8 +314,8 @@ namespace sjd
         }
         double fwd = 1;
         double strike = moneyness + fwd;
-        double delta = calculateDeltaFromStrike(fwd, strike, time);
-        return getVolatilityForDelta(time, delta);
+        double putDelta = calculateDeltaFromStrike(fwd, strike, time);
+        return getVolatilityForDelta(time, putDelta);
     }
 
     // will return 0 if outside the interpolation range

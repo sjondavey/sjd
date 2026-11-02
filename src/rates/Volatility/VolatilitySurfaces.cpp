@@ -193,8 +193,8 @@ namespace sjd
             size_t offset = 0;
             for (size_t i = 0; i < observationDates.size(); ++i)
             {
-                double time = dayCounter->yearFraction(toDate, observationDates[i]);
-                if (time >= 0)
+                double yearFraction = dayCounter->yearFraction(toDate, observationDates[i]);
+                if (yearFraction >= 0)
                 {
                     newDates.push_back(observationDates[i]);
                 }

@@ -95,7 +95,7 @@ namespace sjd
         return RateSource::isInRange(date);
     }
 
-    bool VolatilityCurve::isInRange(Date date, double strike, double forward) const
+    bool VolatilityCurve::isInRange(Date date, double /*strike*/, double /*forward*/) const
     {
         return RateSource::isInRange(date);
     }
@@ -114,7 +114,7 @@ namespace sjd
         return getStandardDeviation(toDate) / std::sqrt(yearFraction);
     }
 
-    double VolatilityCurve::getVolatility(Date toDate, double strike, double forward) const
+    double VolatilityCurve::getVolatility(Date toDate, double /*strike*/, double /*forward*/) const
     {
         return getVolatility(toDate);
     }
@@ -124,7 +124,7 @@ namespace sjd
         return datedCurve->getRate(toDate);
     }
 
-    double VolatilityCurve::getStandardDeviation(Date toDate, double strike, double forward) const
+    double VolatilityCurve::getStandardDeviation(Date toDate, double /*strike*/, double /*forward*/) const
     {
         return getStandardDeviation(toDate);
     }
@@ -137,7 +137,7 @@ namespace sjd
     }
 
     void VolatilityCurve::getVolAndSD(
-        Date toDate, double strike, double forward, double& vol, double& sd) const
+        Date toDate, double /*strike*/, double /*forward*/, double& vol, double& sd) const
     {
         return getVolAndSD(toDate, vol, sd);
     };
