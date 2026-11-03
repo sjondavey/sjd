@@ -34,7 +34,7 @@ namespace sjd
                                           std::vector<double> mtm,
                                           std::vector<double>& insurancePayments);
 
-        bool isOK();
+        void runChecks() override;
 
     protected:
         std::string validationRoot() const override;
@@ -49,7 +49,6 @@ namespace sjd
         QuantLib::Date policyMaturityDate;
         std::shared_ptr<DiscountRateSource> standbyDRS;
         std::shared_ptr<DiscountRateSource> utilisationDRS;
-        std::string className;
     };
 
     /*======================================================================================
@@ -87,7 +86,7 @@ namespace sjd
                                          std::shared_ptr<DiscountRateSource> utilisationDRS);
 
         virtual double getSumInsured(QuantLib::Date date);
-        virtual bool isOK();
+        void runChecks() override;
 
     private:
         std::vector<QuantLib::Date> dates;

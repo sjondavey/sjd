@@ -10,51 +10,52 @@ namespace sjd
    VolatiltiySurfaceRateSource
 
     =======================================================================================*/
-    bool VolatiltiySurfaceRateSource::isOK()
+    void VolatiltiySurfaceRateSource::runChecks()
     {
-        DeterministicVolatilityRateSource::isOK();
+        DeterministicVolatilityRateSource::runChecks();
 
         if ((observationDates.size() == 0) || (strikeDimension.size() == 0) || (volatility.empty()))
         {
-            recordIssue("VOLATILITY_SURFACE_INPUTS_EMPTY",
+            recordIssue(issues::VOLATILITY_SURFACE_INPUTS_EMPTY,
                         "One of observation dates, moneyness or volatility is empty", {"inputs"});
         }
         if ((observationDates.size() != volatility.columns()) ||
             (strikeDimension.size() != volatility.rows()))
         {
-            recordIssue("VOLATILITY_SURFACE_DIMENSION_MISMATCH",
+            recordIssue(issues::VOLATILITY_SURFACE_DIMENSION_MISMATCH,
                         "Input vectors and matricies have inconsistent dimension", {"inputs"});
         }
         if (!isStrictlyIncreasing<Date>(observationDates))
         {
-            recordIssue("VOLATILITY_SURFACE_DATES_NOT_INCREASING", "Input dates not strictly increasing",
-                        {"observation_dates"});
+            recordIssue(issues::VOLATILITY_SURFACE_DATES_NOT_INCREASING,
+                        "Input dates not strictly increasing", {"observation_dates"});
         }
         if (!isStrictlyIncreasing<double>(time))
         {
-            recordIssue("VOLATILITY_SURFACE_TIMES_NOT_INCREASING", "Input times not strictly increasing",
-                        {"times"});
+            recordIssue(issues::VOLATILITY_SURFACE_TIMES_NOT_INCREASING,
+                        "Input times not strictly increasing", {"times"});
         }
         if (!isStrictlyIncreasing<double>(strikeDimension))
         {
-            recordIssue("VOLATILITY_SURFACE_STRIKES_NOT_INCREASING",
+            recordIssue(issues::VOLATILITY_SURFACE_STRIKES_NOT_INCREASING,
                         "Strike dimension inputs are not strictly increasing", {"strikes"});
         }
         if ((interpolatorType != BILINEAR) && (interpolatorType != BICUBIC))
         {
-            recordIssue("VOLATILITY_SURFACE_INTERPOLATOR_TYPE",
+            recordIssue(issues::VOLATILITY_SURFACE_INTERPOLATOR_TYPE,
                         "Interpolator Type must be either Bilinear or Bicubic", {"interpolator"});
         }
         if (interpolator == NULL)
         {
-            recordIssue("VOLATILITY_SURFACE_INTERPOLATOR_MISSING", "Interpolator not set", {"interpolator"});
+            recordIssue(issues::VOLATILITY_SURFACE_INTERPOLATOR_MISSING, "Interpolator not set",
+                        {"interpolator"});
         }
         if (finalDate < anchorDate)
         {
-            recordIssue("VOLATILITY_SURFACE_FINAL_BEFORE_ANCHOR", "Final date before anchor date",
+            recordIssue(issues::VOLATILITY_SURFACE_FINAL_BEFORE_ANCHOR, "Final date before anchor date",
                         {"final_date"});
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     vector<Date> VolatiltiySurfaceRateSource::getObservationDates()

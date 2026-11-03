@@ -37,7 +37,7 @@ namespace sjd
                            bool allowExtrapolation,
                            std::shared_ptr<VolatilityRateSource> vrs);
 
-        virtual bool isOK();
+        void runChecks() override;
 
         virtual double getForward(QuantLib::Date toDate) const;
         using ForwardRateSource::getForward;

@@ -37,7 +37,7 @@ void PortfolioInsuranceTest::testSimpleInsurance()
 
     std::shared_ptr<SimpleInsurance> si = std::make_shared<SimpleInsurance>(
         policyStartDate, policyMaturityDate, sumInsured, standbyCurve, utilisationCurve);
-    BOOST_REQUIRE(si->isOK());
+    BOOST_REQUIRE(si->validate().isOK());
 
     vector<double> fwdFwdDF, standbyFwdFwd, utilisationFwdFwd, mtm, insurancePayments;
     vector<Date> dates;
@@ -121,7 +121,7 @@ void PortfolioInsuranceTest::testSimpleInsuranceWithTermStructure()
         std::make_shared<SimpleInsuranceWithTermStructure>(policyStartDate, policyMaturityDate,
                                                            insuranceDates, insuredAmounts, standbyCurve,
                                                            utilisationCurve);
-    BOOST_REQUIRE(siWT->isOK());
+    BOOST_REQUIRE(siWT->validate().isOK());
 
     int index = (anchorDate - policyStartDate) / 366;
     BOOST_CHECK(abs(siWT->getSumInsured(anchorDate) - insuredAmounts[index]) < 1e-10);

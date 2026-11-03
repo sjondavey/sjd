@@ -37,10 +37,10 @@ namespace sjd
                   interpolatorTypeInput, extrapolateInput);
     }
 
-    bool VolatilitySurfaceMoneyness::isOK()
+    void VolatilitySurfaceMoneyness::runChecks()
     {
-        VolatiltiySurfaceRateSource::isOK();
-        return !errorTracking->getHasErrors();
+        VolatiltiySurfaceRateSource::runChecks();
+        return;
     }
 
     bool VolatilitySurfaceMoneyness::isInRange(QuantLib::Date date) const

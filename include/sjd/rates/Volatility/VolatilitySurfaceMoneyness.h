@@ -30,7 +30,7 @@ namespace sjd
 
         virtual ~VolatilitySurfaceMoneyness() {};
 
-        virtual bool isOK();
+        void runChecks() override;
 
         virtual bool isInRange(QuantLib::Date date) const;
         virtual bool isInRange(QuantLib::Date date, double strike, double forward) const;

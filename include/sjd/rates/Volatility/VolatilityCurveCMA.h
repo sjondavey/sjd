@@ -26,7 +26,7 @@ namespace sjd
 
         virtual ~VolatilityCurveCMA();
 
-        virtual bool isOK();
+        void runChecks() override;
         virtual std::string validationRoot() const { return "volatility_curve_cma"; }
         virtual std::vector<QuantLib::Date> getObservationDates();
 

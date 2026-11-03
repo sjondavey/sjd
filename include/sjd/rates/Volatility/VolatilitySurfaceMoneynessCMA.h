@@ -39,7 +39,7 @@ namespace sjd
                                SurfaceInterpolatorType interpolatorType,
                                bool extraploate);
 
-        virtual bool isOK();
+        void runChecks() override;
 
         double getMonthsAheadOfAnchorDate(QuantLib::Date toDate) const;
 

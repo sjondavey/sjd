@@ -1,9 +1,11 @@
 #pragma once
 
-#include <string>
-#include <vector>
+#include <sjd/tools/IssueCodes.h>
 
 #include <memory>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace sjd
 {
@@ -33,8 +35,17 @@ namespace sjd
         ValidationReport();
         explicit ValidationReport(std::vector<ValidationIssue> issues);
 
+        // False when any issue has severity ERROR. Warnings and notes do not fail it.
         bool isOK() const;
         const std::vector<ValidationIssue>& getIssues() const;
+
+        ValidationReport merge(const ValidationReport& other) const;
+        ValidationReport errors() const;
+        ValidationReport warnings() const;
+
+        // One line per issue: path: code: message. Path elements are joined with '/'.
+        std::string toString() const;
+        std::string toJson() const;
 
         ValidationReport withIssue(const ValidationIssue& issue) const;
         ValidationReport withPrefixedPath(const std::string& pathElement) const;
@@ -56,7 +67,6 @@ namespace sjd
     };
 
     // One store per object. Issues are recorded at the failing check.
-    // isOK() and getErrorMessages() on domain objects are views of this log.
     class IssueTracker
     {
     public:
@@ -64,12 +74,20 @@ namespace sjd
 
         const std::string& getClassName() const;
         void clear();
-        void record(const std::string& code,
-                    const std::string& message,
-                    const std::vector<std::string>& path);
+        void record(std::string_view code,
+                    std::string_view message,
+                    const std::vector<std::string>& path,
+                    ValidationSeverity severity = ValidationSeverity::ERROR);
+        void recordWarning(std::string_view code,
+                           std::string_view message,
+                           const std::vector<std::string>& path);
+        void recordInfo(std::string_view code,
+                        std::string_view message,
+                        const std::vector<std::string>& path);
         void absorb(const ValidationReport& child, const std::vector<std::string>& prefix);
 
         bool getHasErrors() const;
+        // Deprecated. The old "className: message" text, errors only, until Step 10.
         std::vector<std::string> getErrorMessages() const;
         std::string getErrorMessagesAsString() const;
         ValidationReport snapshot() const;
@@ -79,25 +97,29 @@ namespace sjd
         ValidationLog log;
     };
 
-    // The issue store and its read-only views, for every class that validates itself.
-    // Checks record issues with recordIssue; the public methods here only read them.
-    // Each issue path starts with validationRoot().
+    // Checks live in runChecks(). validate() clears the tracker, runs them, and returns
+    // the report. isValid() and isOK() only read that report; neither one re-runs checks.
+    // isOK() is the deprecated name of isValid().
     //
-    // A constructor names the tracker by assigning errorTracking, e.g.
-    // errorTracking.reset(new IssueTracker("DiscountCurve")). The class name prefixes
-    // every message from getErrorMessages().
-    //
-    // isOK() is declared by each subclass and comes in two styles:
-    //  - Contracts: validate() runs the checks and isOK() only reads the result.
-    //  - Everything else (rate sources, generators, PortfolioEvolver, Margin, CVA,
-    //    insurance, ContractStressor, Path): isOK() clears and re-runs every check.
-    // hasErrors() never re-checks, so use it for a pure read in either style.
+    // A constructor names the tracker by assigning errorTracking, for example
+    // errorTracking = std::make_shared<IssueTracker>("DiscountCurve"). That name prefixes
+    // getErrorMessages(). New code should read validationReport().toString().
     class Validatable
     {
     public:
         virtual ~Validatable() = default;
 
+        ValidationReport validate();
+        // Deprecated wrapper. Calls validate().
+        ValidationReport validateReport();
+
+        bool isValid() const;
+        // Deprecated alias of isValid(). Does not run checks.
+        bool isOK() const;
+
         bool hasErrors() const;
+        // Deprecated. Prefer validationReport().toString(). Kept so existing tests and
+        // the Python bindings can keep searching the old "className: message" text.
         std::vector<std::string> getErrorMessages() const;
         std::string getErrorMessagesAsString() const;
         virtual ValidationReport validationReport() const;
@@ -106,10 +128,18 @@ namespace sjd
     protected:
         Validatable();
 
+        virtual void runChecks();
         virtual std::string validationRoot() const = 0;
-        void recordIssue(const std::string& code,
-                         const std::string& message,
+
+        void recordIssue(std::string_view code,
+                         std::string_view message,
                          const std::vector<std::string>& tail);
+        void recordWarning(std::string_view code,
+                           std::string_view message,
+                           const std::vector<std::string>& tail);
+        void recordInfo(std::string_view code,
+                        std::string_view message,
+                        const std::vector<std::string>& tail);
         void absorbChildReport(const ValidationReport& child, const std::vector<std::string>& extra);
 
         std::shared_ptr<IssueTracker> errorTracking;

@@ -36,19 +36,19 @@ namespace sjd
         return std::make_unique<FixedCashflow>(*this);
     }
 
-    void FixedCashflow::validate()
+    void FixedCashflow::runChecks()
     {
-        SingleInstrumentContract::validate();
+        SingleInstrumentContract::runChecks();
         if (getMaturityDate() != getSettlementDate())
         {
-            recordIssue("CASHFLOW_MATURITY_NOT_SETTLEMENT", "Maturity Date must equal Settlement Date",
+            recordIssue(issues::CASHFLOW_MATURITY_NOT_SETTLEMENT, "Maturity Date must equal Settlement Date",
                         {"maturity_date"});
         }
     }
 
-    void FixedCashflow::validate(std::shared_ptr<RatesEnvironment> re)
+    void FixedCashflow::runChecks(RatesEnvironment& re)
     {
-        SingleInstrumentContract::validate(re);
+        SingleInstrumentContract::runChecks(re);
     }
 
     void FixedCashflow::setMaturityDate(Date maturity)

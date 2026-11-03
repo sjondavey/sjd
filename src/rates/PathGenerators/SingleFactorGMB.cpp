@@ -14,31 +14,31 @@ namespace sjd
         return "path_generator";
     }
 
-    bool EconomicScenarioGenerator::isOK()
+    void EconomicScenarioGenerator::runChecks()
     {
         resetErrorMessages();
         if (re == 0)
         {
-            recordIssue("PATH_GENERATOR_RATES_MISSING", "Rates environment not set", {});
-            return false;
+            recordIssue(issues::PATH_GENERATOR_RATES_MISSING, "Rates environment not set", {});
+            return;
         }
-        if (!re->isOK())
+        if (!re->validate().isOK())
         {
             absorbChildReport(re->validationReport(), {});
         }
         if ((simulationDates.size() > 0) && (simulationDates.front() < anchorDate))
         {
-            recordIssue("PATH_GENERATOR_DATES_BEFORE_ANCHOR", "Simulation dates before anchor date",
+            recordIssue(issues::PATH_GENERATOR_DATES_BEFORE_ANCHOR, "Simulation dates before anchor date",
                         {"simulation_dates"});
-            return false;
+            return;
         }
         if ((simulationDates.size() > 0) && (!re->isInRange(simulationDates.back())))
         {
-            recordIssue("PATH_GENERATOR_DATES_AFTER_END", "Simulation dates after rate source end",
+            recordIssue(issues::PATH_GENERATOR_DATES_AFTER_END, "Simulation dates after rate source end",
                         {"simulation_dates"});
-            return false;
+            return;
         }
-        return !hasErrors();
+        return;
     }
 
     Date EconomicScenarioGenerator::getAnchorDate() const
@@ -110,22 +110,23 @@ namespace sjd
         }
     }
 
-    bool SingleFactorEconomicScenarioGenerator::isOK()
+    void SingleFactorEconomicScenarioGenerator::runChecks()
     {
-        if (!EconomicScenarioGenerator::isOK())
+        EconomicScenarioGenerator::runChecks();
+        if (hasErrors())
         {
-            return false;
+            return;
         }
         if (drs == 0)
         {
             recordIssue(
-                "PATH_GENERATOR_DISCOUNT_NOT_DETERMINISTIC",
+                issues::PATH_GENERATOR_DISCOUNT_NOT_DETERMINISTIC,
                 "Rates environment does not contain a discounting rate source that rolls deterministically",
                 {"discount_rate_source"});
         }
         if (foreigndrs == 0 && (re->hasForeignDRS())) // foreign DRS may not be required
         {
-            recordIssue("PATH_GENERATOR_FOREIGN_DISCOUNT_NOT_DETERMINISTIC",
+            recordIssue(issues::PATH_GENERATOR_FOREIGN_DISCOUNT_NOT_DETERMINISTIC,
                         "Rates environment does not contain a foreign discounting rate source that rolls "
                         "deterministically",
                         {"foreign_discount_rate_source"});
@@ -133,36 +134,36 @@ namespace sjd
         if (vrs == 0)
         {
             recordIssue(
-                "PATH_GENERATOR_VOLATILITY_NOT_DETERMINISTIC",
+                issues::PATH_GENERATOR_VOLATILITY_NOT_DETERMINISTIC,
                 "Rates environment does not contain a volatility rate source that rolls deterministically",
                 {"volatility_rate_source"});
         }
         if (frs == 0)
         {
-            recordIssue("PATH_GENERATOR_FORWARD_NOT_STOCHASTIC",
+            recordIssue(issues::PATH_GENERATOR_FORWARD_NOT_STOCHASTIC,
                         "Rates environment does not contain a forward rate source that rolls stochastically",
                         {"forward_rate_source"});
         }
         if (frsDependsOnInterestRateDifferential && foreigndrs == 0)
         {
-            recordIssue("PATH_GENERATOR_FOREIGN_DISCOUNT_REQUIRED",
+            recordIssue(issues::PATH_GENERATOR_FOREIGN_DISCOUNT_REQUIRED,
                         "FRS requires a foreign interest rate source but rates environment does not contain "
                         "one that rolls deterministically",
                         {"foreign_discount_rate_source"});
         }
         if (re->hasFixingRS() && (fixingrs == 0))
         {
-            recordIssue("PATH_GENERATOR_FIXING_NOT_ROLLING",
+            recordIssue(issues::PATH_GENERATOR_FIXING_NOT_ROLLING,
                         "Rates environment does not contain a fixing rate source that rolls",
                         {"fixing_rate_source"});
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     bool SingleFactorEconomicScenarioGenerator::setSimulationDates(set<Date> simulationDatesSet)
     {
         EconomicScenarioGenerator::setSimulationDates(simulationDatesSet);
-        if (isOK())
+        if (validate().isOK())
         {
             drs->setForwardValuationDates(simulationDatesSet);
             drss = drs->rollForward();

@@ -249,6 +249,14 @@ namespace
 
 } // namespace
 
+// is_ok on a Validatable used to re-run its checks. Keep that behaviour for the
+// deprecated Python alias. Contract::is_ok stays a pure read of the last report,
+// so validate(environment) is still what is_ok reports.
+template <typename T> bool isOkByValidating(T& object)
+{
+    return object.validate().isOK();
+}
+
 PYBIND11_MODULE(_core, m)
 {
     report_debug_checks_to_stderr();
@@ -404,7 +412,7 @@ PYBIND11_MODULE(_core, m)
     // where a volatility source is expected.
     py::class_<sjd::VolatilityRateSource, std::shared_ptr<sjd::VolatilityRateSource>>(m,
                                                                                       "VolatilityRateSource")
-        .def("is_ok", &sjd::VolatilityRateSource::isOK)
+        .def("is_ok", &isOkByValidating<sjd::VolatilityRateSource>)
         .def("error_messages", &sjd::VolatilityRateSource::getErrorMessagesAsString)
         .def("anchor_date",
              [](const sjd::VolatilityRateSource& source) { return from_ql_date(source.getAnchorDate()); });
@@ -439,7 +447,7 @@ PYBIND11_MODULE(_core, m)
              "roll=DETERMINISTIC ignores volatility. SPOT_VOLATILITY and FORWARD_VOLATILITY "
              "need a volatility curve or surface, and PortfolioEvolver needs one of them. "
              "Rolled curves interpolate linearly whatever the interpolation here.")
-        .def("is_ok", &sjd::ForwardRateSource::isOK)
+        .def("is_ok", &isOkByValidating<sjd::ForwardRateSource>)
         .def("error_messages", &sjd::ForwardRateSource::getErrorMessagesAsString)
         .def("validation_report", &sjd::ForwardRateSource::validationReport)
         .def("validate_report", &sjd::ForwardRateSource::validateReport)
@@ -461,7 +469,7 @@ PYBIND11_MODULE(_core, m)
                  }),
              py::arg("anchor_date"), py::arg("observation_dates"), py::arg("discount_factors"),
              py::arg("allow_extrapolation") = false)
-        .def("is_ok", &sjd::DiscountCurve::isOK)
+        .def("is_ok", &isOkByValidating<sjd::DiscountCurve>)
         .def("error_messages", &sjd::DiscountCurve::getErrorMessagesAsString)
         .def("get_discount_factor", [](const sjd::DiscountCurve& curve, const py::object& to)
              { return curve.getDiscountFactor(to_ql_date(to)); });
@@ -480,7 +488,7 @@ PYBIND11_MODULE(_core, m)
              py::arg("allow_extrapolation") = false,
              "Volatilities are interpolated in standard-deviation space. "
              "Year fractions use Actual/365 Fixed (not a QuantLib-Python type).")
-        .def("is_ok", &sjd::VolatilityCurve::isOK)
+        .def("is_ok", &isOkByValidating<sjd::VolatilityCurve>)
         .def("error_messages", &sjd::VolatilityCurve::getErrorMessagesAsString)
         .def("get_volatility", [](const sjd::VolatilityCurve& curve, const py::object& to)
              { return curve.getVolatility(to_ql_date(to)); });
@@ -498,7 +506,7 @@ PYBIND11_MODULE(_core, m)
              py::arg("anchor_date"), py::arg("observation_dates"), py::arg("volatilities"),
              py::arg("allow_extrapolation") = false,
              "Calendar-month-average volatility curve using Actual/365 Fixed.")
-        .def("is_ok", &sjd::VolatilityCurveCMA::isOK)
+        .def("is_ok", &isOkByValidating<sjd::VolatilityCurveCMA>)
         .def("error_messages", &sjd::VolatilityCurveCMA::getErrorMessagesAsString)
         .def("get_volatility", [](const sjd::VolatilityCurveCMA& curve, const py::object& to)
              { return curve.getVolatility(to_ql_date(to)); })
@@ -511,7 +519,7 @@ PYBIND11_MODULE(_core, m)
                      return std::make_shared<sjd::DailyFixingCurve>(to_ql_dates(fixing_dates), fixing_rates);
                  }),
              py::arg("fixing_dates"), py::arg("fixing_rates"))
-        .def("is_ok", &sjd::DailyFixingCurve::isOK)
+        .def("is_ok", &isOkByValidating<sjd::DailyFixingCurve>)
         .def("error_messages", &sjd::DailyFixingCurve::getErrorMessages)
         .def("get_rate", [](const sjd::DailyFixingCurve& curve, const py::object& on_date)
              { return curve.getRateSetOn(to_ql_date(on_date)); });
@@ -535,7 +543,7 @@ PYBIND11_MODULE(_core, m)
              py::arg("interpolator"), py::arg("extrapolate") = false,
              "Row of volatility is a put delta in percent. Column is an observation date. "
              "Deltas outside the grid read the nearest wing; extrapolate only extends time.")
-        .def("is_ok", &sjd::VolatilitySurfaceDelta::isOK)
+        .def("is_ok", &isOkByValidating<sjd::VolatilitySurfaceDelta>)
         .def("error_messages", &sjd::VolatilitySurfaceDelta::getErrorMessagesAsString)
         .def("get_volatility",
              [](const sjd::VolatilitySurfaceDelta& surface, const py::object& to, double strike,
@@ -556,7 +564,7 @@ PYBIND11_MODULE(_core, m)
              py::arg("volatility"), py::arg("interpolator"), py::arg("extrapolate") = true,
              "Row of volatility is moneyness. Column is an observation date. "
              "Moneyness outside the grid reads the nearest wing; extrapolate only extends time.")
-        .def("is_ok", &sjd::VolatilitySurfaceMoneynessCMA::isOK)
+        .def("is_ok", &isOkByValidating<sjd::VolatilitySurfaceMoneynessCMA>)
         .def("error_messages", &sjd::VolatilitySurfaceMoneynessCMA::getErrorMessagesAsString)
         .def("get_volatility",
              [](const sjd::VolatilitySurfaceMoneynessCMA& surface, const py::object& to, double strike,
@@ -566,7 +574,7 @@ PYBIND11_MODULE(_core, m)
         .def(py::init([](const py::object& anchor)
                       { return std::make_shared<sjd::RatesEnvironment>(to_ql_date(anchor)); }),
              py::arg("anchor_date"))
-        .def("is_ok", &sjd::RatesEnvironment::isOK)
+        .def("is_ok", &isOkByValidating<sjd::RatesEnvironment>)
         .def("error_messages", &sjd::RatesEnvironment::getErrorMessagesAsString)
         .def("validation_report", &sjd::RatesEnvironment::validationReport)
         .def("validate_report", &sjd::RatesEnvironment::validateReport)
@@ -744,7 +752,7 @@ PYBIND11_MODULE(_core, m)
                                                           loss_given_default);
                  }),
              py::arg("anchor"), py::arg("annual_probability"), py::arg("loss_given_default"))
-        .def("is_ok", &sjd::FlatPD::isOK)
+        .def("is_ok", &isOkByValidating<sjd::FlatPD>)
         .def("set_pd", &sjd::FlatPD::setPD, py::arg("annual_probability"))
         .def("set_lgd", &sjd::FlatPD::setLGD, py::arg("loss_given_default"));
 
@@ -760,7 +768,7 @@ PYBIND11_MODULE(_core, m)
                          to_ql_date(anchor), to_ql_dates(dates), cumulative_pd, loss_given_default);
                  }),
              py::arg("anchor"), py::arg("dates"), py::arg("cumulative_pd"), py::arg("loss_given_default"))
-        .def("is_ok", &sjd::CumulativeDefaultProbability::isOK);
+        .def("is_ok", &isOkByValidating<sjd::CumulativeDefaultProbability>);
 
     py::class_<sjd::RegulatoryCapital, std::shared_ptr<sjd::RegulatoryCapital>>(m, "RegulatoryCapital")
         .def("is_ok", &sjd::RegulatoryCapital::isOK)
@@ -771,7 +779,7 @@ PYBIND11_MODULE(_core, m)
             { return capital.getRegulatoryCapital(environment); }, py::arg("rates_environment"));
 
     py::class_<sjd::Margin, std::shared_ptr<sjd::Margin>>(m, "Margin")
-        .def("is_ok", &sjd::Margin::isOK)
+        .def("is_ok", &isOkByValidating<sjd::Margin>)
         .def("get_margin_balance", &sjd::Margin::getMarginBalance)
         .def("set_margin_balance", &sjd::Margin::setMarginBalance, py::arg("balance"));
 
@@ -867,7 +875,7 @@ PYBIND11_MODULE(_core, m)
         .def(py::init([](std::shared_ptr<sjd::RatesEnvironment> environment)
                       { return std::make_shared<sjd::SingleFactorEconomicScenarioGenerator>(environment); }),
              py::arg("rates_environment"))
-        .def("is_ok", &sjd::SingleFactorEconomicScenarioGenerator::isOK)
+        .def("is_ok", &isOkByValidating<sjd::SingleFactorEconomicScenarioGenerator>)
         .def("validation_report", &sjd::SingleFactorEconomicScenarioGenerator::validationReport)
         .def("set_random_seed", &sjd::SingleFactorEconomicScenarioGenerator::setRandomSeed, py::arg("seed"),
              "Reseed the generator. The next simulated paths repeat for the same seed.");
@@ -884,7 +892,7 @@ PYBIND11_MODULE(_core, m)
             "The requested dates plus any margin reset dates.")
         .def_property_readonly("exposure_dates", [](sjd::PortfolioEvolver& evolver)
                                { return py_dates(evolver.getExposureDates()); })
-        .def("is_ok", &sjd::PortfolioEvolver::isOK)
+        .def("is_ok", &isOkByValidating<sjd::PortfolioEvolver>)
         .def("error_messages", &sjd::PortfolioEvolver::getErrorMessagesAsString)
         .def("validation_report", &sjd::PortfolioEvolver::validationReport)
         .def("validate_report", &sjd::PortfolioEvolver::validateReport)
@@ -893,6 +901,8 @@ PYBIND11_MODULE(_core, m)
             [](sjd::PortfolioEvolver& evolver, const std::vector<double>& spots, bool by_trade,
                bool by_structure)
             {
+                if (!evolver.prepare())
+                    throw py::value_error("Cannot value spot path: " + evolver.getErrorMessagesAsString());
                 sjd::SimulatedPaths simulated = evolver.valueSpotPath(spots, by_trade, by_structure);
                 if (simulated.paths == 0)
                     throw py::value_error("Cannot value spot path: " + evolver.getErrorMessagesAsString());
@@ -918,8 +928,15 @@ PYBIND11_MODULE(_core, m)
                 sjd::SimulatedPaths simulated;
                 {
                     py::gil_scoped_release release;
-                    simulated =
-                        evolver.valueSpotPaths(flat, static_cast<size_t>(paths), by_trade, by_structure);
+                    if (!evolver.prepare())
+                    {
+                        simulated.paths = 0;
+                    }
+                    else
+                    {
+                        simulated =
+                            evolver.valueSpotPaths(flat, static_cast<size_t>(paths), by_trade, by_structure);
+                    }
                 }
                 if (simulated.paths == 0)
                     throw py::value_error("Cannot value spot paths: " + evolver.getErrorMessagesAsString());
@@ -980,7 +997,14 @@ PYBIND11_MODULE(_core, m)
             sjd::SimulatedPaths simulated;
             {
                 py::gil_scoped_release release;
-                simulated = evolver->simulatePaths(paths, antithetic, by_trade, by_structure);
+                if (!evolver->prepare())
+                {
+                    simulated.paths = 0;
+                }
+                else
+                {
+                    simulated = evolver->simulatePaths(paths, antithetic, by_trade, by_structure);
+                }
             }
             if (simulated.paths == 0)
                 throw py::value_error("Cannot simulate: " + evolver->getErrorMessagesAsString());

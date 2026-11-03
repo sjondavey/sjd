@@ -19,7 +19,7 @@ namespace sjd
     class DeterministicDiscountRateSource : public DiscountRateSource, public IHaveMarketRateStresses
     {
     public:
-        virtual bool isOK();
+        void runChecks() override;
 
         virtual std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> getMarketRateStresses();
         virtual std::shared_ptr<DiscountRateSource> parallelBump(

@@ -17,29 +17,35 @@ namespace sjd
         return "contract";
     }
 
-    void Contract::validate()
+    void Contract::runChecks()
     {
         errorTracking->clear();
     }
 
-    void Contract::validate(std::shared_ptr<RatesEnvironment> re)
+    void Contract::runChecks(RatesEnvironment& re)
     {
-        this->validate();
-        if (!re->isOK())
+        runChecks();
+        if (!re.validate().isOK())
         {
-            absorbChildReport(re->validationReport(), {});
+            absorbChildReport(re.validationReport(), {});
         }
     }
 
-    bool Contract::isOK()
+    ValidationReport Contract::validate(RatesEnvironment& re)
     {
-        return !hasErrors();
+        resetErrorMessages();
+        runChecks(re);
+        return validationReport();
     }
 
-    ValidationReport Contract::validateReport()
+    ValidationReport Contract::validate(const RatesEnvironment& re)
     {
-        validate();
-        return validationReport();
+        return validate(const_cast<RatesEnvironment&>(re));
+    }
+
+    ValidationReport Contract::validate(const std::shared_ptr<RatesEnvironment>& re)
+    {
+        return validate(*re);
     }
 
     ValidationReport Contract::validateReport(std::shared_ptr<RatesEnvironment> re)
@@ -89,43 +95,43 @@ namespace sjd
     SingleInstrumentContract
 
     =======================================================================================*/
-    void SingleInstrumentContract::validate()
+    void SingleInstrumentContract::runChecks()
     {
-        Contract::validate();
+        Contract::runChecks();
         if (maturityDate > settlementDate)
         {
-            recordIssue("CONTRACT_MATURITY_AFTER_SETTLEMENT", "Maturity date after settlement date",
+            recordIssue(issues::CONTRACT_MATURITY_AFTER_SETTLEMENT, "Maturity date after settlement date",
                         {"maturity_date"});
         }
         if (hasPremium && (getPremiumPaymentDate() > getSettlementDate()))
         {
-            recordIssue("CONTRACT_PREMIUM_DATE_AFTER_SETTLEMENT",
+            recordIssue(issues::CONTRACT_PREMIUM_DATE_AFTER_SETTLEMENT,
                         "Premium payment date after settlement date. Consider using a cash flow and an "
                         "option without premium",
                         {"premium_payment_date"});
         }
         if (hasPremium && (premiumAmount < -1e-14))
         {
-            recordIssue("CONTRACT_PREMIUM_NEGATIVE", "Premium Amount must be stored as a non-negative number",
-                        {"premium_amount"});
+            recordIssue(issues::CONTRACT_PREMIUM_NEGATIVE,
+                        "Premium Amount must be stored as a non-negative number", {"premium_amount"});
         }
     }
 
-    void SingleInstrumentContract::validate(std::shared_ptr<RatesEnvironment> re)
+    void SingleInstrumentContract::runChecks(RatesEnvironment& re)
     {
-        Contract::validate(re);
-        if (!re->hasDRS())
+        Contract::runChecks(re);
+        if (!re.hasDRS())
         {
-            recordIssue("MARKET_DISCOUNT_RATE_SOURCE_MISSING", "No discounting rate source",
+            recordIssue(issues::MARKET_DISCOUNT_RATE_SOURCE_MISSING, "No discounting rate source",
                         {"rates_environment", "discount_rate_source"});
         }
         else
         {
             // can't use if (!drs->isInRange(settlementDate))
             // because there are legitimate instances where we may value the option after settlement
-            if (!(re->getDRS())->extendsTo(settlementDate))
+            if (!(re.getDRS())->extendsTo(settlementDate))
             {
-                recordIssue("MARKET_DISCOUNT_RATE_SOURCE_RANGE",
+                recordIssue(issues::MARKET_DISCOUNT_RATE_SOURCE_RANGE,
                             "Discounting rate source does not extend to settlement",
                             {"rates_environment", "discount_rate_source"});
             }
@@ -256,30 +262,30 @@ namespace sjd
     SingleDerivativeContract
 
     =======================================================================================*/
-    void SingleDerivativeContract::validate()
+    void SingleDerivativeContract::runChecks()
     {
-        SingleInstrumentContract::validate();
+        SingleInstrumentContract::runChecks();
         if (strike < 0)
         {
-            recordIssue("CONTRACT_STRIKE_NEGATIVE", "Strike is negative", {"strike"});
+            recordIssue(issues::CONTRACT_STRIKE_NEGATIVE, "Strike is negative", {"strike"});
         }
     }
 
-    void SingleDerivativeContract::validate(std::shared_ptr<RatesEnvironment> re)
+    void SingleDerivativeContract::runChecks(RatesEnvironment& re)
     {
-        SingleInstrumentContract::validate(re);
-        if (!re->hasFRS())
+        SingleInstrumentContract::runChecks(re);
+        if (!re.hasFRS())
         {
-            recordIssue("MARKET_FORWARD_RATE_SOURCE_MISSING", "No forward rate source",
+            recordIssue(issues::MARKET_FORWARD_RATE_SOURCE_MISSING, "No forward rate source",
                         {"rates_environment", "forward_rate_source"});
         }
         else
         {
             // NB This will need to be overwritten for Asian derivaitves which only require fwds to the
             // averaging dates
-            if (!(re->getFRS())->extendsTo(getSettlementDate()))
+            if (!(re.getFRS())->extendsTo(getSettlementDate()))
             {
-                recordIssue("MARKET_FORWARD_RATE_SOURCE_RANGE",
+                recordIssue(issues::MARKET_FORWARD_RATE_SOURCE_RANGE,
                             "Contract settlement not in forward rate source range",
                             {"rates_environment", "forward_rate_source"});
             }
@@ -321,28 +327,28 @@ namespace sjd
     SingleOptionContract
 
     =======================================================================================*/
-    void SingleOptionContract::validate()
+    void SingleOptionContract::runChecks()
     {
-        SingleDerivativeContract::validate();
+        SingleDerivativeContract::runChecks();
         if ((type != PutCall::CALL) && (type != PutCall::PUT))
         {
-            recordIssue("OPTION_TYPE_INVALID", "Type must be either CALL or PUT", {"put_call"});
+            recordIssue(issues::OPTION_TYPE_INVALID, "Type must be either CALL or PUT", {"put_call"});
         }
     }
 
-    void SingleOptionContract::validate(std::shared_ptr<RatesEnvironment> re)
+    void SingleOptionContract::runChecks(RatesEnvironment& re)
     {
-        SingleDerivativeContract::validate(re);
-        if (!re->hasVRS())
+        SingleDerivativeContract::runChecks(re);
+        if (!re.hasVRS())
         {
-            recordIssue("MARKET_VOLATILITY_RATE_SOURCE_MISSING", "No volatiltiy rate source",
+            recordIssue(issues::MARKET_VOLATILITY_RATE_SOURCE_MISSING, "No volatiltiy rate source",
                         {"rates_environment", "volatility_rate_source"});
         }
         else
         {
-            if (!(re->getVRS())->extendsTo(getSettlementDate()))
+            if (!(re.getVRS())->extendsTo(getSettlementDate()))
             {
-                recordIssue("MARKET_VOLATILITY_RATE_SOURCE_RANGE",
+                recordIssue(issues::MARKET_VOLATILITY_RATE_SOURCE_RANGE,
                             "Contract settlement not in volatility rate source range",
                             {"rates_environment", "volatility_rate_source"});
             }
@@ -426,15 +432,16 @@ namespace sjd
     AsianContract
 
     =======================================================================================*/
-    void AsianContract::validate()
+    void AsianContract::checkAveraging()
     {
         if (orderedAveragingDates.size() < 1)
         {
-            recordAsianIssue("ASIAN_AVERAGING_DATES_MISSING", "Averaging Dates not set", {"averaging_dates"});
+            recordAsianIssue(issues::ASIAN_AVERAGING_DATES_MISSING, "Averaging Dates not set",
+                             {"averaging_dates"});
         }
     }
 
-    void AsianContract::validate(std::shared_ptr<RatesEnvironment> re)
+    void AsianContract::checkAveraging(RatesEnvironment& re)
     {
         // Averaging dates are checked by validate(), which the instrument's
         // validate(re) has already run. Recording them again would duplicate
@@ -443,34 +450,34 @@ namespace sjd
         {
             return;
         }
-        Date valueDate = (re->getAnchorDate());
-        if (!re->hasFixingRS())
+        Date valueDate = (re.getAnchorDate());
+        if (!re.hasFixingRS())
         {
-            recordAsianIssue("MARKET_FIXING_RATE_SOURCE_MISSING", "No Fixing rate source",
+            recordAsianIssue(issues::MARKET_FIXING_RATE_SOURCE_MISSING, "No Fixing rate source",
                              {"rates_environment", "fixing_rate_source"});
         }
-        else if (!(re->getFixingRS())->isOK())
+        else if (!(re.getFixingRS())->validate().isOK())
         {
-            absorbAsianReport(re->getFixingRS()->validationReport(),
+            absorbAsianReport(re.getFixingRS()->validationReport(),
                               {"rates_environment", "fixing_rate_source"});
         }
 
         vector<Date> fixingDates, forwardDates;
         getFixingAndForwardDates(valueDate, fixingDates, forwardDates);
 
-        if (!re->hasFixingRS())
+        if (!re.hasFixingRS())
         {
             return;
         }
         for (size_t i = 0; i < fixingDates.size(); ++i)
         {
             Date d = fixingDates[i];
-            if (!(re->getFixingRS())->containsARateSetOn(d))
+            if (!(re.getFixingRS())->containsARateSetOn(d))
             {
                 stringstream descriptionStream;
                 descriptionStream << "Fixing Rate Source does not contain a fixing rate on "
                                   << QuantLib::io::iso_date(d);
-                recordAsianIssue("ASIAN_FIXING_DATE_MISSING", descriptionStream.str(),
+                recordAsianIssue(issues::ASIAN_FIXING_DATE_MISSING, descriptionStream.str(),
                                  {"rates_environment", "fixing_rate_source", "fixing_dates"});
             }
         }
@@ -580,8 +587,8 @@ namespace sjd
         if (!isOK())
         {
             contracts = vector<std::shared_ptr<SingleInstrumentContract>>(0);
-            recordIssue("CONTRACT_EXTRACT_FAILED", "Cannot extract single instruments from input contracts",
-                        {});
+            recordIssue(issues::CONTRACT_EXTRACT_FAILED,
+                        "Cannot extract single instruments from input contracts", {});
         }
         else
         {
@@ -589,12 +596,12 @@ namespace sjd
         }
     };
 
-    void MultipleInstrumentContract::validate()
+    void MultipleInstrumentContract::runChecks()
     {
-        Contract::validate();
+        Contract::runChecks();
         if (contracts.size() == 0)
         {
-            recordIssue("PORTFOLIO_EMPTY", "contains no contracts", {});
+            recordIssue(issues::PORTFOLIO_EMPTY, "contains no contracts", {});
             return;
         }
 
@@ -608,12 +615,12 @@ namespace sjd
         }
     }
 
-    void MultipleInstrumentContract::validate(std::shared_ptr<RatesEnvironment> re)
+    void MultipleInstrumentContract::runChecks(RatesEnvironment& re)
     {
-        Contract::validate(re);
+        Contract::runChecks(re);
         if (contracts.size() == 0)
         {
-            recordIssue("PORTFOLIO_EMPTY", "contains no contracts", {});
+            recordIssue(issues::PORTFOLIO_EMPTY, "contains no contracts", {});
             return;
         }
         for (size_t i = 0; i < contracts.size(); ++i)

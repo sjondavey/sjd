@@ -62,8 +62,8 @@ namespace sjd
         std::unique_ptr<Contract> clone() override;
         virtual ~Structure() {};
 
-        virtual void validate();
-        virtual void validate(std::shared_ptr<RatesEnvironment> re);
+        void runChecks() override;
+        void runChecks(RatesEnvironment& re) override;
 
         virtual QuantLib::Date getSettlementDate();
         virtual bool isExposureCapped() const;

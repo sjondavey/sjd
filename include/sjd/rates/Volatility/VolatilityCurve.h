@@ -34,7 +34,7 @@ namespace sjd
 
         virtual ~VolatilityCurve();
 
-        virtual bool isOK();
+        void runChecks() override;
         virtual std::string validationRoot() const { return "volatility_curve"; }
         virtual std::vector<QuantLib::Date> getObservationDates();
 

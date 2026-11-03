@@ -28,14 +28,14 @@ void DiscountCurvesTest::testConstruction()
 
     std::shared_ptr<DiscountCurve> dc = std::make_shared<DiscountCurve>(
         anchorDate, incorrectObservationDates, df, ArrayInterpolatorType::LINEAR, allowExtrapolation);
-    BOOST_REQUIRE(dc->isOK() == false);
+    BOOST_REQUIRE(dc->validate().isOK() == false);
 
     vector<string> msgs = dc->getErrorMessages();
     BOOST_CHECK(msgs.size() == 1);
 
     std::shared_ptr<DiscountCurve> dc2 = std::make_shared<DiscountCurve>(
         anchorDate, observationDates, df, ArrayInterpolatorType::LINEAR, allowExtrapolation);
-    BOOST_CHECK(dc2->isOK() == true);
+    BOOST_CHECK(dc2->validate().isOK() == true);
     BOOST_CHECK(dc2->getAnchorDate() == anchorDate);
     Date d1 = calendar.advance(anchorDate, 5, Months);
     Date d2 = calendar.advance(anchorDate, 13, Months);
@@ -120,7 +120,7 @@ void DiscountCurvesTest::testParallelBump()
     std::shared_ptr<InterestRateConvention> irc =
         std::make_shared<InterestRateConvention>(dayCounter, Continuous, Annual);
     std::shared_ptr<DiscountRateSource> dc3 = dc2->parallelBump(0.01, irc);
-    BOOST_REQUIRE(dc3->isOK());
+    BOOST_REQUIRE(dc3->validate().isOK());
     double dfTest = dc2->getDiscountFactor(observationDates[2]);
     InterestRateConvention convention(dayCounter, Continuous, Annual);
     double tmp = convention.dfToRate(dfTest, anchorDate, observationDates[2]);
@@ -194,7 +194,7 @@ void DiscountCurvesTest::testRollForward()
     Date checkDate = defaultCalendar->advance(defaultAnchorDate, 2, Years);
 
     std::shared_ptr<DiscountRateSource> rolledCurve = testDiscountCurve->rollForward(rollDate);
-    BOOST_REQUIRE(rolledCurve->isOK());
+    BOOST_REQUIRE(rolledCurve->validate().isOK());
     BOOST_CHECK(rolledCurve->getAnchorDate() == rollDate);
 
     double manualDF = testDiscountCurve->getDiscountFactor(rollDate, checkDate);

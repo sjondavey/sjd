@@ -28,7 +28,7 @@ void FixingRateTest::testDailyFixingCurve()
 
     std::shared_ptr<DailyFixingCurve> fix = std::make_shared<DailyFixingCurve>(observationDates, rates);
 
-    BOOST_REQUIRE(fix->isOK());
+    BOOST_REQUIRE(fix->validate().isOK());
     BOOST_CHECK(startDate == fix->getEarliestDate());
     BOOST_CHECK(endDate == fix->getMostRecentDate());
     BOOST_CHECK(fix->containsARateSetOn(observationDates[2]));
@@ -37,16 +37,16 @@ void FixingRateTest::testDailyFixingCurve()
 
     rates.push_back(100);
     fix = std::make_shared<DailyFixingCurve>(observationDates, rates);
-    BOOST_CHECK(!fix->isOK());
+    BOOST_CHECK(!fix->validate().isOK());
 
     observationDates.push_back(anchorDate - 1);
     fix = std::make_shared<DailyFixingCurve>(observationDates, rates);
-    BOOST_CHECK(!fix->isOK());
+    BOOST_CHECK(!fix->validate().isOK());
 
     observationDates.pop_back();
     rates.pop_back();
     fix = std::make_shared<DailyFixingCurve>(observationDates, rates);
-    BOOST_REQUIRE(fix->isOK());
+    BOOST_REQUIRE(fix->validate().isOK());
 
     vector<Date> appendedDates;
     for (size_t i = 1; i <= 10; ++i)
@@ -55,12 +55,12 @@ void FixingRateTest::testDailyFixingCurve()
     }
     vector<double> appendedRates(arr, arr + sizeof(arr) / sizeof(arr[0]));
     fix->appendRateSets(appendedDates, appendedRates);
-    BOOST_CHECK(fix->isOK());
+    BOOST_CHECK(fix->validate().isOK());
     BOOST_CHECK(appendedDates.back() == fix->getMostRecentDate());
     BOOST_CHECK(fix->containsARateSetOn(appendedDates[2]));
 
     fix->reset();
-    BOOST_CHECK(fix->isOK());
+    BOOST_CHECK(fix->validate().isOK());
     BOOST_CHECK(endDate == fix->getMostRecentDate());
     BOOST_CHECK(!fix->containsARateSetOn(appendedDates[2]));
 }
@@ -87,7 +87,7 @@ void FixingRateTest::testMonthlyFixingCurve()
 
     std::shared_ptr<MonthlyFixingCurve> fix = std::make_shared<MonthlyFixingCurve>(observationDates, rates);
 
-    BOOST_REQUIRE(fix->isOK());
+    BOOST_REQUIRE(fix->validate().isOK());
     BOOST_CHECK(startDate == fix->getEarliestDate());
     BOOST_CHECK(endDate == fix->getMostRecentDate());
     BOOST_CHECK(fix->containsARateSetOn(observationDates[2]));
@@ -100,11 +100,11 @@ void FixingRateTest::testMonthlyFixingCurve()
 
     rates.push_back(100);
     fix = std::make_shared<MonthlyFixingCurve>(observationDates, rates);
-    BOOST_CHECK(!fix->isOK());
+    BOOST_CHECK(!fix->validate().isOK());
 
     observationDates.push_back(anchorDate - 1);
     fix = std::make_shared<MonthlyFixingCurve>(observationDates, rates);
-    BOOST_CHECK(!fix->isOK());
+    BOOST_CHECK(!fix->validate().isOK());
 
     observationDates.pop_back();
     rates.pop_back();
@@ -115,14 +115,14 @@ void FixingRateTest::testMonthlyFixingCurve()
     }
     vector<double> appendedRates(arr, arr + sizeof(arr) / sizeof(arr[0]));
     fix = std::make_shared<MonthlyFixingCurve>(observationDates, rates);
-    BOOST_CHECK(fix->isOK());
+    BOOST_CHECK(fix->validate().isOK());
     fix->appendRateSets(appendedDates, appendedRates);
-    BOOST_CHECK(fix->isOK());
+    BOOST_CHECK(fix->validate().isOK());
     BOOST_CHECK(appendedDates.back() == fix->getMostRecentDate());
     BOOST_CHECK(fix->containsARateSetOn(appendedDates[2]));
 
     fix->reset();
-    BOOST_CHECK(fix->isOK());
+    BOOST_CHECK(fix->validate().isOK());
     BOOST_CHECK(endDate == fix->getMostRecentDate());
     BOOST_CHECK(!fix->containsARateSetOn(appendedDates[2]));
 }
@@ -152,7 +152,7 @@ void FixingRateTest::testHistoricFedFundsCurve()
 
     HistoricFedFundsCurve fed = HistoricFedFundsCurve(observationDates, rates);
 
-    BOOST_REQUIRE(fed.isOK());
+    BOOST_REQUIRE(fed.validate().isOK());
 
     vector<Date> marginCallDates;
     marginCallDates.push_back(Date(06, Oct, 2014));

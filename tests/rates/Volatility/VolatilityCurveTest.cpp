@@ -29,11 +29,11 @@ void VolatilityCurveTest::testVolatilityCurveConstruction()
 
     VolatilityCurve vc(anchorDate, incorrectObservationDates, volatility, dayCounter, type,
                        allowExtrapolation);
-    BOOST_CHECK(vc.isOK() == false);
+    BOOST_CHECK(vc.validate().isOK() == false);
 
     VolatilityCurve* vc2 =
         new VolatilityCurve(anchorDate, observationDates, volatility, dayCounter, type, allowExtrapolation);
-    BOOST_CHECK(vc2->isOK() == true);
+    BOOST_CHECK(vc2->validate().isOK() == true);
     Date d1 = calendar.advance(anchorDate, 5, Months);
     Date d2 = calendar.advance(anchorDate, 13, Months);
     Date d3 = calendar.advance(anchorDate, -1, Months);
@@ -117,7 +117,7 @@ void VolatilityCurveTest::testVolatilityCurveRoll()
 
     std::shared_ptr<VolatilityRateSource> rolledCurve = vc->rollForward(rollDate);
 
-    BOOST_REQUIRE(rolledCurve->isOK());
+    BOOST_REQUIRE(rolledCurve->validate().isOK());
 
     double v1 = vc->getStandardDeviation(rollDate);
     double v2 = vc->getStandardDeviation(checkDate);

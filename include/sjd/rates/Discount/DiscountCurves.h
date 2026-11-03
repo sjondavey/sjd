@@ -27,7 +27,7 @@ namespace sjd
 
         virtual ~DiscountCurve() {};
 
-        virtual bool isOK();
+        void runChecks() override;
         virtual std::string validationRoot() const { return "discount_curve"; }
 
         virtual double getDiscountFactor(QuantLib::Date toDate) const;

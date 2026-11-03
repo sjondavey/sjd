@@ -33,31 +33,33 @@ namespace sjd
         if (datedCurve->isOK(tmp) && (!datedCurve->containsRateOnAnchorDate()))
         {
             datedCurve->addPointOnAnchorDate(1.0);
+            flatBackFilled = true;
         }
     }
 
-    bool DiscountCurve::isOK()
+    void DiscountCurve::runChecks()
     {
-        DeterministicDiscountRateSource::isOK();
+        DeterministicDiscountRateSource::runChecks();
         string errorMessage = "";
         if (!datedCurve->isOK(errorMessage))
         {
-            const std::string code = errorMessage.find("same dimension") != std::string::npos
-                                         ? "DISCOUNT_CURVE_DIMENSION_MISMATCH"
-                                         : "DISCOUNT_CURVE_INVALID";
+            const std::string_view code = errorMessage.find("same dimension") != std::string::npos
+                                              ? issues::DISCOUNT_CURVE_DIMENSION_MISMATCH
+                                              : issues::DISCOUNT_CURVE_INVALID;
             recordIssue(code, errorMessage, {"inputs"});
-            return false;
+            return;
         }
         for (size_t i = 0; i < datedCurve->getObservationDates().size(); ++i)
         {
             bool hasNegativeInputs = false;
             if ((!hasNegativeInputs) && (datedCurve->getRates()[i] <= 0))
             {
-                recordIssue("DISCOUNT_CURVE_NEGATIVE_FACTOR", "has negative inputs", {"discount_factors"});
+                recordIssue(issues::DISCOUNT_CURVE_NEGATIVE_FACTOR, "has negative inputs",
+                            {"discount_factors"});
                 hasNegativeInputs = true;
             }
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     double DiscountCurve::getDiscountFactor(Date toDate) const

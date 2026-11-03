@@ -44,9 +44,9 @@ namespace sjd
 
         virtual ~AsianOption() {};
 
-        virtual void validate();
+        void runChecks() override;
         virtual std::string validationRoot() const { return "asian_option"; }
-        virtual void validate(std::shared_ptr<RatesEnvironment> re);
+        void runChecks(RatesEnvironment& re) override;
 
         virtual void setAveragingDates(std::set<QuantLib::Date> averagingDates);
         virtual void setType(PutCall pc);
@@ -72,8 +72,8 @@ namespace sjd
                                QuantLib::Date premiumPaymentDate,
                                double premiumAmount,
                                BuySell buySell);
-        void recordAsianIssue(const std::string& code,
-                              const std::string& message,
+        void recordAsianIssue(std::string_view code,
+                              std::string_view message,
                               const std::vector<std::string>& path) override;
         void absorbAsianReport(const ValidationReport& child,
                                const std::vector<std::string>& prefix) override;

@@ -47,7 +47,7 @@ namespace sjd
         virtual void setRateSources(std::shared_ptr<DiscountRateSource> domesticDRS,
                                     std::shared_ptr<DiscountRateSource> foreignDRS);
 
-        virtual bool isOK();
+        void runChecks() override;
 
         virtual double getForward(QuantLib::Date toDate) const;
         using ForwardRateSource::getForward;

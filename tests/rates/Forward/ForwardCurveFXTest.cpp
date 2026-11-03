@@ -58,7 +58,7 @@ void ForwardCurveFXTest::testForwardCurveConstruction()
     Date spotDate = calendar.advance(anchorDate, 2, Days);
     std::shared_ptr<ForwardCurveFX> fxCurve =
         std::make_shared<ForwardCurveFX>(anchorDate, spot, spotDate, domesticDRS, foreignDRS);
-    BOOST_REQUIRE(fxCurve->isOK());
+    BOOST_REQUIRE(fxCurve->validate().isOK());
     double manualSpotAtT0 =
         spot * domesticDRS->getDiscountFactor(spotDate) / foreignDRS->getDiscountFactor(spotDate);
     BOOST_CHECK(abs(fxCurve->getSpotAtT0() - manualSpotAtT0) < EPSILON_FOR_DOUBLES);
@@ -69,13 +69,13 @@ void ForwardCurveFXTest::testForwardCurveConstruction()
 
     std::shared_ptr<ForwardCurveStochasticFX> stochasticFXCurve =
         std::make_shared<ForwardCurveStochasticFX>(anchorDate, spot, spotDate, domesticDRS, foreignDRS, vrs);
-    BOOST_REQUIRE(stochasticFXCurve->isOK());
+    BOOST_REQUIRE(stochasticFXCurve->validate().isOK());
     BOOST_CHECK(abs(fxCurve->getSpotAtT0() - stochasticFXCurve->getSpotAtT0()) < EPSILON_FOR_DOUBLES);
     BOOST_CHECK(abs(stochasticFXCurve->getForward(fwdDate) - manualFwd) < EPSILON_FOR_DOUBLES);
 
     std::shared_ptr<ForwardCurveDeterministicFX> fxCurveDeterminstic =
         std::make_shared<ForwardCurveDeterministicFX>(anchorDate, spot, spotDate, domesticDRS, foreignDRS);
-    BOOST_REQUIRE(fxCurveDeterminstic->isOK());
+    BOOST_REQUIRE(fxCurveDeterminstic->validate().isOK());
     BOOST_CHECK(abs(fxCurve->getSpotAtT0() - fxCurveDeterminstic->getSpotAtT0()) < EPSILON_FOR_DOUBLES);
     BOOST_CHECK(abs(fxCurveDeterminstic->getForward(fwdDate) - manualFwd) < EPSILON_FOR_DOUBLES);
 }
@@ -97,14 +97,14 @@ void ForwardCurveFXTest::testDeterministicCurve()
 
     double bump = 1.0;
     std::shared_ptr<ForwardRateSource> bumpedCurve = fxCurveDeterminstic->parallelBump(bump);
-    BOOST_REQUIRE(bumpedCurve->isOK());
+    BOOST_REQUIRE(bumpedCurve->validate().isOK());
     BOOST_CHECK(abs(bumpedCurve->getForward(anchorDate) - (fxCurveDeterminstic->getSpotAtT0() + bump)) <
                 EPSILON_FOR_DOUBLES * 100);
 
     Date fwdDate = calendar.advance(anchorDate, 173, Days);
     double manualFwd = fxCurveDeterminstic->getForward(fwdDate);
     std::shared_ptr<ForwardRateSource> rolledCurve = fxCurveDeterminstic->rollForward(fwdDate);
-    BOOST_REQUIRE(rolledCurve->isOK());
+    BOOST_REQUIRE(rolledCurve->validate().isOK());
     BOOST_CHECK(abs(rolledCurve->getForward(fwdDate) - manualFwd) < EPSILON_FOR_DOUBLES * 100);
 }
 
@@ -126,7 +126,7 @@ void ForwardCurveFXTest::testStochasticCurve()
     Date fwdDate = calendar.advance(anchorDate, 173, Days);
     double normalRV = 1.64;
     std::shared_ptr<ForwardRateSource> rolledCurve = stochasticFXCurve->rollForward(fwdDate, normalRV);
-    BOOST_REQUIRE(rolledCurve->isOK());
+    BOOST_REQUIRE(rolledCurve->validate().isOK());
     double manualFwd = stochasticFXCurve->getForward(fwdDate);
     double sd = vrs->getStandardDeviation(fwdDate);
     manualFwd *= exp(-sd * sd / 2.0 + normalRV * sd);

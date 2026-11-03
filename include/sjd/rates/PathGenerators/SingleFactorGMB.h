@@ -23,7 +23,7 @@ namespace sjd
     class EconomicScenarioGenerator : public Validatable
     {
     public:
-        bool isOK();
+        void runChecks() override;
         QuantLib::Date getAnchorDate() const;
 
         virtual void setBaseRates(const std::shared_ptr<RatesEnvironment> re);
@@ -66,7 +66,7 @@ namespace sjd
         SingleFactorEconomicScenarioGenerator(const std::shared_ptr<RatesEnvironment> re);
 
         virtual void setBaseRates(const std::shared_ptr<RatesEnvironment> re);
-        bool isOK();
+        void runChecks() override;
 
         // returns a false if there was any problem setting the dates and calculating the values used in the
         // simulation

@@ -20,23 +20,25 @@ namespace sjd
                                ForwardRoll::ForwardVolatility, vrs);
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
+        flatBackFilled = quotes.anchorWasFlatFilled();
         finalDate = quotes.finalDate();
         setVolatilityRateSource(vrs);
     }
 
-    bool ForwardCurveCMAStochasticFwdVol::isOK()
+    void ForwardCurveCMAStochasticFwdVol::runChecks()
     {
-        if (!ForwardRateSourceStochastic::isOK())
+        ForwardRateSourceStochastic::runChecks();
+        if (hasErrors())
         {
-            return false;
+            return;
         }
         string errorMessage = "";
         if (!quotes.quotesAreOk(errorMessage))
         {
-            recordIssue("FORWARD_CURVE_INVALID", errorMessage, {"forward_curve"});
-            return false;
+            recordIssue(issues::FORWARD_CURVE_INVALID, errorMessage, {"forward_curve"});
+            return;
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     bool ForwardCurveCMAStochasticFwdVol::isInRange(Date d) const

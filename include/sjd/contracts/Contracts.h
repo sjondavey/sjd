@@ -38,14 +38,18 @@ namespace sjd
         virtual ~Contract() {};
         virtual std::unique_ptr<Contract> clone() = 0;
 
-        // Call validate before checking for errors
-        virtual bool isOK();
-        ValidationReport validateReport();
+        // validate() clears the tracker, runs the checks, and returns the report.
+        // isOK() only reads that report.
+        using Validatable::validate;
+        using Validatable::validateReport;
+        ValidationReport validate(RatesEnvironment& re);
+        ValidationReport validate(const RatesEnvironment& re);
+        ValidationReport validate(const std::shared_ptr<RatesEnvironment>& re);
         ValidationReport validateReport(std::shared_ptr<RatesEnvironment> re);
         std::string validationRoot() const override;
 
-        virtual void validate();
-        virtual void validate(std::shared_ptr<RatesEnvironment> re);
+        void runChecks() override;
+        virtual void runChecks(RatesEnvironment& re);
         virtual double getValue(std::shared_ptr<RatesEnvironment> re) = 0;
 
         virtual std::string toString();
@@ -79,8 +83,8 @@ namespace sjd
         virtual ~SingleInstrumentContract() {};
         std::unique_ptr<Contract> clone() override = 0;
 
-        virtual void validate();
-        virtual void validate(std::shared_ptr<RatesEnvironment> re);
+        void runChecks() override;
+        void runChecks(RatesEnvironment& re) override;
 
         bool getHasPremium() const;
         virtual void setPremiumPaymentDate(QuantLib::Date premiumPaymentDate);
@@ -132,8 +136,8 @@ namespace sjd
         std::unique_ptr<Contract> clone() override = 0;
         virtual ~SingleDerivativeContract() {};
 
-        virtual void validate();
-        virtual void validate(std::shared_ptr<RatesEnvironment> re);
+        void runChecks() override;
+        void runChecks(RatesEnvironment& re) override;
 
         virtual void setStrike(double strike);
         double getStrike() const;
@@ -157,8 +161,8 @@ namespace sjd
     public:
         virtual ~SingleOptionContract() {};
 
-        virtual void validate();
-        virtual void validate(std::shared_ptr<RatesEnvironment> re);
+        void runChecks() override;
+        void runChecks(RatesEnvironment& re) override;
 
         virtual double getPayoff(double forSpot);
         virtual double getOptionValue(std::shared_ptr<RatesEnvironment> re) = 0;
@@ -188,8 +192,8 @@ namespace sjd
     public:
         virtual ~AsianContract() {};
 
-        virtual void validate();
-        virtual void validate(std::shared_ptr<RatesEnvironment> re);
+        virtual void checkAveraging();
+        virtual void checkAveraging(RatesEnvironment& re);
 
         virtual void setAveragingDates(std::set<QuantLib::Date> averagingDates);
         std::vector<QuantLib::Date> getAveragingDates() const;
@@ -211,8 +215,8 @@ namespace sjd
 
     protected:
         // The instrument writes these onto its own tracker, prefixed once.
-        virtual void recordAsianIssue(const std::string& code,
-                                      const std::string& message,
+        virtual void recordAsianIssue(std::string_view code,
+                                      std::string_view message,
                                       const std::vector<std::string>& path) = 0;
         virtual void absorbAsianReport(const ValidationReport& child,
                                        const std::vector<std::string>& prefix) = 0;
@@ -239,8 +243,8 @@ namespace sjd
         std::unique_ptr<Contract> clone() override;
         virtual ~MultipleInstrumentContract() {};
 
-        virtual void validate();
-        virtual void validate(std::shared_ptr<RatesEnvironment> re);
+        void runChecks() override;
+        void runChecks(RatesEnvironment& re) override;
 
         virtual double getValue(std::shared_ptr<RatesEnvironment> re);
 

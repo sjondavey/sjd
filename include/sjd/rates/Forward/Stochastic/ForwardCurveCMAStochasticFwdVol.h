@@ -23,7 +23,7 @@ namespace sjd
                                         bool allowExtrapolation,
                                         std::shared_ptr<VolatilityRateSource> vrs);
 
-        bool isOK();
+        void runChecks() override;
 
         virtual bool isInRange(QuantLib::Date date) const;
         virtual bool extendsTo(QuantLib::Date date) const;

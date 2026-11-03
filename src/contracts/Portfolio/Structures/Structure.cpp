@@ -57,7 +57,8 @@ namespace sjd
         commonConstructor(underlyingContracts, regCapAssetFactors);
         if (couldNotConvert)
         {
-            recordIssue("STRUCTURE_CONTRACT_CONVERSION", "Cound not convert Contract into a Structure", {});
+            recordIssue(issues::STRUCTURE_CONTRACT_CONVERSION, "Cound not convert Contract into a Structure",
+                        {});
         }
     }
 
@@ -81,7 +82,7 @@ namespace sjd
         regCapAssetFactors = inputFactors;
         if (contracts.empty())
         {
-            recordIssue("STRUCTURE_EMPTY", "Structure contains no contracts", {});
+            recordIssue(issues::STRUCTURE_EMPTY, "Structure contains no contracts", {});
             cappedExposure = false;
             hasPriceExposure = false;
             volume = 0;
@@ -91,22 +92,22 @@ namespace sjd
         volume = getEffectiveVolume(contracts);
     }
 
-    void Structure::validate()
+    void Structure::runChecks()
     {
-        MultipleInstrumentContract::validate();
+        MultipleInstrumentContract::runChecks();
         if (contracts.empty())
         {
-            recordIssue("STRUCTURE_EMPTY", "Structure contains no contracts", {});
+            recordIssue(issues::STRUCTURE_EMPTY, "Structure contains no contracts", {});
             return;
         }
         if (!isPiecewiseLinear(contracts))
         {
-            recordIssue("STRUCTURE_NOT_PIECEWISE_LINEAR",
+            recordIssue(issues::STRUCTURE_NOT_PIECEWISE_LINEAR,
                         "Structure Design Error, Payoff function is not piecewise linear", {});
         }
         if (volume < 1e-14 && hasPriceExposure)
         {
-            recordIssue("STRUCTURE_VOLUME_WITHOUT_EXPOSURE",
+            recordIssue(issues::STRUCTURE_VOLUME_WITHOUT_EXPOSURE,
                         "Structure Design Error, the structure has no volume but it does have price exposure",
                         {});
         }
@@ -120,7 +121,7 @@ namespace sjd
                 std::shared_ptr<SingleInstrumentContract> contract2 = contracts[i];
                 if (!qualifyForRegulatoryCapitalOffset(contract1, contract2, reasonIfNot))
                 {
-                    recordIssue("STRUCTURE_REGCAP_OFFSET",
+                    recordIssue(issues::STRUCTURE_REGCAP_OFFSET,
                                 "not all the contracts quality for regulatory capital offset, " + reasonIfNot,
                                 {"contracts", std::to_string(i)});
                 }
@@ -130,20 +131,20 @@ namespace sjd
         {
             if (!isMaximumVolumeInUncappedWing(contracts))
             {
-                recordIssue("STRUCTURE_UNCAPPED_WING",
+                recordIssue(issues::STRUCTURE_UNCAPPED_WING,
                             "has uncapped exposure but maximum volume is not in the (uncapped) wings", {});
                 return;
             }
         }
     }
 
-    void Structure::validate(std::shared_ptr<RatesEnvironment> re)
+    void Structure::runChecks(RatesEnvironment& re)
     {
-        MultipleInstrumentContract::validate(re);
+        MultipleInstrumentContract::runChecks(re);
 
         if (!isPiecewiseLinear(contracts))
         {
-            recordIssue("STRUCTURE_NOT_PIECEWISE_LINEAR",
+            recordIssue(issues::STRUCTURE_NOT_PIECEWISE_LINEAR,
                         "Structure Design Error, Payoff function is not piecewise linear", {});
         }
 
@@ -151,7 +152,7 @@ namespace sjd
         {
             if (!isMaximumVolumeInUncappedWing(contracts))
             {
-                recordIssue("STRUCTURE_UNCAPPED_WING",
+                recordIssue(issues::STRUCTURE_UNCAPPED_WING,
                             "has uncapped exposure but maximum volume is not in the (uncapped) wings", {});
             }
         }

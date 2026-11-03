@@ -71,7 +71,7 @@ namespace
                          std::shared_ptr<RatesEnvironment> re)
     {
         ContractStressor stressor(contract, re);
-        BOOST_REQUIRE_MESSAGE(stressor.isOK(), stressor.getErrorMessagesAsString());
+        BOOST_REQUIRE_MESSAGE(stressor.validate().isOK(), stressor.getErrorMessagesAsString());
         Named values;
         for (const auto& stressed : stressor.getStressedValues())
         {
@@ -308,7 +308,7 @@ void GoldenValuesTest::testSimpleInsurance()
 
     SimpleInsurance insurance(Date(27, Jan, 2010), Date(27, Jan, 2020), 50000.0, standbyCurve,
                               utilisationCurve);
-    BOOST_REQUIRE(insurance.isOK());
+    BOOST_REQUIRE(insurance.validate().isOK());
 
     std::vector<Date> dates;
     std::vector<double> mtm;

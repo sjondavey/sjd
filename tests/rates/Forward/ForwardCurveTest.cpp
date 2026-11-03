@@ -20,7 +20,7 @@ void ForwardCurveTest::testForwardCurveConstruction()
     std::shared_ptr<ForwardCurveDeterministic> sfc =
         std::make_shared<ForwardCurveDeterministic>(anchorDate, incorrectObservationDates, futures,
                                                     sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
-    BOOST_CHECK(sfc->isOK() == false);
+    BOOST_CHECK(sfc->validate().isOK() == false);
 
     // Case 2 Inputs dates not strictly monotonic
     Calendar calendar = NullCalendar();
@@ -35,7 +35,7 @@ void ForwardCurveTest::testForwardCurveConstruction()
     futures.push_back(110);
     sfc = std::make_shared<ForwardCurveDeterministic>(anchorDate, incorrectObservationDates, futures,
                                                       sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
-    BOOST_CHECK(sfc->isOK() == false);
+    BOOST_CHECK(sfc->validate().isOK() == false);
 
     // Case 3 Input dates and times have different lengths
     futures.pop_back();
@@ -43,25 +43,25 @@ void ForwardCurveTest::testForwardCurveConstruction()
     incorrectObservationDates.push_back(calendar.advance(anchorDate, static_cast<int>(i + 1), Months));
     sfc = std::make_shared<ForwardCurveDeterministic>(anchorDate, incorrectObservationDates, futures,
                                                       sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
-    BOOST_CHECK(sfc->isOK() == false);
+    BOOST_CHECK(sfc->validate().isOK() == false);
 
     // Case 4 Anchor date > final curve date
     incorrectObservationDates = observationDates;
     anchorDate = calendar.advance(anchorDate, static_cast<int>(i + 1), Months);
     sfc = std::make_shared<ForwardCurveDeterministic>(anchorDate, incorrectObservationDates, futures,
                                                       sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
-    BOOST_CHECK(sfc->isOK() == false);
+    BOOST_CHECK(sfc->validate().isOK() == false);
 
     // Case 5 We do not supply a point at the anchor date and we specify no extrapolation
     anchorDate = Date(27, Jan, 2012);
     sfc = std::make_shared<ForwardCurveDeterministic>(anchorDate, observationDates, futures,
                                                       sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
-    BOOST_CHECK(sfc->isOK() == true);
+    BOOST_CHECK(sfc->validate().isOK() == true);
     BOOST_CHECK(sfc->getForward(anchorDate) == 109.9);
 
     sfc = std::make_shared<ForwardCurveDeterministic>(anchorDate, observationDates, futures,
                                                       sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
-    BOOST_CHECK(sfc->isOK() == true);
+    BOOST_CHECK(sfc->validate().isOK() == true);
     Date d1 = calendar.advance(anchorDate, 5, Months);
     Date d2 = calendar.advance(anchorDate, 13, Months);
     Date d3 = calendar.advance(anchorDate, -1, Months);
@@ -105,20 +105,20 @@ void ForwardCurveTest::testForwardCurveRollsAtForwardVolConstruction()
     std::shared_ptr<ForwardCurveStochasticFwdVol> frs = std::make_shared<ForwardCurveStochasticFwdVol>(
         anchorDate, observationDates, forwards, ArrayInterpolatorType::LINEAR, false, vrs);
 
-    BOOST_CHECK(frs->isOK() == false);
+    BOOST_CHECK(frs->validate().isOK() == false);
 
     // Case 2: VRS has different anchor date
     vrs = gr.getVolatilityCurve(gr.defaultDayCounter, gr.defaultCalendar,
                                 calendar.advance(anchorDate, 1, Months), 4, 0.2);
     frs = std::make_shared<ForwardCurveStochasticFwdVol>(anchorDate, observationDates, forwards,
                                                          ArrayInterpolatorType::LINEAR, false, vrs);
-    BOOST_CHECK(frs->isOK() == false);
+    BOOST_CHECK(frs->validate().isOK() == false);
 
     // Case 3, all ok
     vrs = gr.getVolatilityCurve(gr.defaultDayCounter, gr.defaultCalendar, anchorDate, 4, 0.2);
     frs = std::make_shared<ForwardCurveStochasticFwdVol>(anchorDate, observationDates, forwards,
                                                          ArrayInterpolatorType::LINEAR, false, vrs);
-    BOOST_CHECK(frs->isOK() == true);
+    BOOST_CHECK(frs->validate().isOK() == true);
 }
 
 void ForwardCurveTest::testConsistencyBetweenGetMethods()
@@ -242,7 +242,7 @@ void ForwardCurveTest::testRoll()
     std::shared_ptr<ForwardCurveDeterministic> frs = std::make_shared<ForwardCurveDeterministic>(
         anchorDate, observationDates, forwards, ArrayInterpolatorType::LINEAR, false);
 
-    BOOST_CHECK(frs->isOK() == true);
+    BOOST_CHECK(frs->validate().isOK() == true);
 
     Date rollDate = observationDates[0];
     vector<Date> intermedateDates;
@@ -251,7 +251,7 @@ void ForwardCurveTest::testRoll()
     vector<double> rateSetForwards;
     std::shared_ptr<ForwardRateSource> rolledCurve =
         frs->rollForward(rollDate, intermedateDates, rateSetForwards);
-    BOOST_REQUIRE(rolledCurve->isOK() == true);
+    BOOST_REQUIRE(rolledCurve->validate().isOK() == true);
     BOOST_REQUIRE(rateSetForwards.size() == 2);
     BOOST_CHECK(abs(frs->getForward(observationDates[5]) - rolledCurve->getForward(observationDates[5])) <
                 EPSILON_FOR_DOUBLES);
@@ -267,8 +267,8 @@ void ForwardCurveTest::testRoll()
     intermedateDates.push_back(calendar.advance(observationDates[0], 20, Days));
     vector<std::shared_ptr<ForwardRateSource>> frss = frs->rollForward(intermedateDates, rateSetForwards);
     BOOST_REQUIRE(frss.size() == 2);
-    BOOST_REQUIRE(frss[0]->isOK());
-    BOOST_REQUIRE(frss[1]->isOK());
+    BOOST_REQUIRE(frss[0]->validate().isOK());
+    BOOST_REQUIRE(frss[1]->validate().isOK());
     BOOST_CHECK(abs(frs->getForward(observationDates[5]) - frss[0]->getForward(observationDates[5])) <
                 EPSILON_FOR_DOUBLES);
     BOOST_CHECK(abs(frs->getForward(observationDates[5]) - frss[1]->getForward(observationDates[5])) <
@@ -312,12 +312,12 @@ void ForwardCurveTest::testRollStochastic()
     intermedateDates.push_back(calendar.advance(anchorDate, 20, Days));
     vector<double> rateSetForwards;
 
-    BOOST_CHECK(frs->isOK() == true);
+    BOOST_CHECK(frs->validate().isOK() == true);
     double normalRV = 0.1234;
     Date rollToDate = observationDates[0];
     std::shared_ptr<ForwardRateSource> rolledCurve =
         frs->rollForward(rollToDate, normalRV, intermedateDates, rateSetForwards);
-    BOOST_CHECK(rolledCurve->isOK() == true);
+    BOOST_CHECK(rolledCurve->validate().isOK() == true);
     BOOST_REQUIRE(rateSetForwards.size() == 2);
 
     double manualCheck = frs->getForward(observationDates[1]);
@@ -351,8 +351,8 @@ void ForwardCurveTest::testRollStochastic()
 
     vector<std::shared_ptr<ForwardRateSource>> frss = frs->rollForward(intermedateDates, rateSetForwards);
     BOOST_REQUIRE(frss.size() == 2);
-    BOOST_REQUIRE(frss[0]->isOK());
-    BOOST_REQUIRE(frss[1]->isOK());
+    BOOST_REQUIRE(frss[0]->validate().isOK());
+    BOOST_REQUIRE(frss[1]->validate().isOK());
     BOOST_REQUIRE(rateSetForwards.size() == 4);
     BOOST_CHECK(abs(frss[0]->getForward(observationDates[1]) - manualCheck) < EPSILON_FOR_DOUBLES * 10);
 
@@ -390,7 +390,7 @@ void ForwardCurveTest::testSpotVolPathVariance()
     }
     std::shared_ptr<ForwardCurveStochasticSpotVol> frs(std::make_shared<ForwardCurveStochasticSpotVol>(
         anchorDate, observationDates, forwards, ArrayInterpolatorType::LINEAR, false, vrs));
-    BOOST_REQUIRE_MESSAGE(frs->isOK(), frs->getErrorMessagesAsString());
+    BOOST_REQUIRE_MESSAGE(frs->validate().isOK(), frs->getErrorMessagesAsString());
 
     vector<Date> simulationDates;
     simulationDates.push_back(observationDates[0]);

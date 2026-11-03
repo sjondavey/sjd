@@ -44,6 +44,7 @@ namespace sjd
                                        ForwardRoll::Deterministic, std::shared_ptr<VolatilityRateSource>());
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
+        flatBackFilled = quotes.anchorWasFlatFilled();
         finalDate = quotes.finalDate();
     }
 
@@ -62,41 +63,45 @@ namespace sjd
     {
         quotes.setRateSources(domesticDRSInput, foreignDRSInput);
         allowExtrapolation = quotes.allowsExtrapolation();
+        flatBackFilled = quotes.anchorWasFlatFilled();
         finalDate = quotes.finalDate();
     }
 
     ForwardCurveFX::~ForwardCurveFX() {}
 
-    bool ForwardCurveFX::isOK()
+    void ForwardCurveFX::runChecks()
     {
-        if (!ForwardRateSource::isOK())
+        ForwardRateSource::runChecks();
+        if (hasErrors())
         {
-            return false;
+            return;
         }
-        if (!quotes.domesticRateSource()->isOK())
+        if (!quotes.domesticRateSource()->validate().isOK())
         {
             absorbChildReport(quotes.domesticRateSource()->validationReport(),
                               "domestic_discount_rate_source");
-            return false;
+            return;
         }
         if (quotes.domesticRateSource()->getAnchorDate() != anchorDate)
         {
-            recordIssue("FX_DOMESTIC_ANCHOR_MISMATCH", "Domestic DRS does not have the correct anchor date",
+            recordIssue(issues::FX_DOMESTIC_ANCHOR_MISMATCH,
+                        "Domestic DRS does not have the correct anchor date",
                         {"domestic_discount_rate_source"});
-            return false;
+            return;
         }
-        if (!quotes.foreignRateSource()->isOK())
+        if (!quotes.foreignRateSource()->validate().isOK())
         {
             absorbChildReport(quotes.foreignRateSource()->validationReport(), "foreign_discount_rate_source");
-            return false;
+            return;
         }
         if (quotes.foreignRateSource()->getAnchorDate() != anchorDate)
         {
-            recordIssue("FX_FOREIGN_ANCHOR_MISMATCH", "Foreign DRS does not have the correct anchor date",
+            recordIssue(issues::FX_FOREIGN_ANCHOR_MISMATCH,
+                        "Foreign DRS does not have the correct anchor date",
                         {"foreign_discount_rate_source"});
-            return false;
+            return;
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     double ForwardCurveFX::getForward(Date toDate) const

@@ -19,7 +19,7 @@ namespace sjd
     public:
         ForwardRateSourceStochastic() {};
 
-        virtual bool isOK();
+        void runChecks() override;
 
         void setVolatilityRateSource(std::shared_ptr<VolatilityRateSource> vrs);
 

@@ -153,20 +153,20 @@ namespace sjd
 
     HistoricFedFundsCurve::~HistoricFedFundsCurve() {}
 
-    bool HistoricFedFundsCurve::isOK()
+    void HistoricFedFundsCurve::runChecks()
     {
-        DailyFixingCurve::isOK();
+        DailyFixingCurve::runChecks();
 
         for (size_t i = 0; i < fixingRates.size(); ++i)
         {
             if ((fixingRates[i] < 0) || (fixingRates[i] > 1))
             {
-                recordIssue("FIXING_RATE_OUT_OF_RANGE",
+                recordIssue(issues::FIXING_RATE_OUT_OF_RANGE,
                             std::to_string(i) + "-th interest rate outside the range [0,1]",
                             {"fixing_rates"});
             }
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     bool HistoricFedFundsCurve::canCalculateInterestFor(Date startDate,
@@ -174,7 +174,7 @@ namespace sjd
                                                         vector<Date> marginCallDates,
                                                         vector<double> marginCallAmounts)
     {
-        if (!isOK())
+        if (!validate().isOK())
         {
             return false;
         }

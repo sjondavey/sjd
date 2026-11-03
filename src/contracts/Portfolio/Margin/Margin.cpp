@@ -34,43 +34,44 @@ namespace sjd
         setMarginBalance(0);
     }
 
-    bool Margin::isOK()
+    void Margin::runChecks()
     {
         errorTracking->clear();
         if (iRequireInitialMargin && (myRequiredInitialMargin < 0))
         {
-            errorTracking->record("MARGIN_INITIAL_NEGATIVE", "My Required Initial Margin cannot be negative",
+            errorTracking->record(issues::MARGIN_INITIAL_NEGATIVE,
+                                  "My Required Initial Margin cannot be negative",
                                   {"margin", "initial_margin"});
         }
         if (useMyThreshold && (myThreshold < 0))
         {
-            errorTracking->record("MARGIN_THRESHOLD_NEGATIVE", "My Threshold cannot be negative",
+            errorTracking->record(issues::MARGIN_THRESHOLD_NEGATIVE, "My Threshold cannot be negative",
                                   {"margin", "threshold"});
         }
         if (useCptyThreshold && (cptyThreshold < 0))
         {
-            errorTracking->record("MARGIN_COUNTERPARTY_THRESHOLD_NEGATIVE",
+            errorTracking->record(issues::MARGIN_COUNTERPARTY_THRESHOLD_NEGATIVE,
                                   "Counterparty Threshold cannot be negative",
                                   {"margin", "counterparty_threshold"});
         }
         if (cptyRequiresInitialMargin && (cptyRequiredInitialMargin < 0))
         {
-            errorTracking->record("MARGIN_COUNTERPARTY_INITIAL_NEGATIVE",
+            errorTracking->record(issues::MARGIN_COUNTERPARTY_INITIAL_NEGATIVE,
                                   "Counterparty Required Initial Margin cannot be negative",
                                   {"margin", "counterparty_initial_margin"});
         }
         if (mta < 0)
         {
-            errorTracking->record("MARGIN_MINIMUM_TRANSFER_NEGATIVE",
+            errorTracking->record(issues::MARGIN_MINIMUM_TRANSFER_NEGATIVE,
                                   "Minimum transfer amount cannot be negative",
                                   {"margin", "minimum_transfer"});
         }
         if (rounding <= 0)
         {
-            errorTracking->record("MARGIN_ROUNDING_NOT_POSITIVE", "Rounding must be strictly positive",
+            errorTracking->record(issues::MARGIN_ROUNDING_NOT_POSITIVE, "Rounding must be strictly positive",
                                   {"margin", "rounding"});
         }
-        return !hasErrors();
+        return;
     }
 
     std::string Margin::validationRoot() const

@@ -9,14 +9,14 @@ namespace sjd
     VolatlityRateSource
 
      =======================================================================================*/
-    bool VolatilityRateSource::isOK()
+    void VolatilityRateSource::runChecks()
     {
-        RateSource::isOK();
+        RateSource::runChecks();
         if (dayCounter == NULL)
         {
-            recordIssue("VOLATILITY_DAY_COUNTER_MISSING", "Day counter not set", {"day_counter"});
+            recordIssue(issues::VOLATILITY_DAY_COUNTER_MISSING, "Day counter not set", {"day_counter"});
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     std::shared_ptr<QuantLib::DayCounter> VolatilityRateSource::getDayCounter() const

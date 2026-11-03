@@ -26,7 +26,7 @@ namespace sjd
                                   ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
                                   bool allowExtrapolation = false);
 
-        virtual bool isOK();
+        void runChecks() override;
         virtual std::string validationRoot() const { return "forward_curve"; }
 
         void setParameters(QuantLib::Date anchorDate,

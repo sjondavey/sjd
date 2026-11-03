@@ -29,34 +29,36 @@ namespace sjd
         if (curve->isOK(tmp) && (!curve->containsRateOnAnchorDate()))
         {
             curve->addPointOnAnchorDate(volatilityInput[0]);
+            flatBackFilled = true;
         }
         dayCounter = dayCounterInput;
     }
 
     VolatilityCurveCMA::~VolatilityCurveCMA() {}
 
-    bool VolatilityCurveCMA::isOK()
+    void VolatilityCurveCMA::runChecks()
     {
-        DeterministicVolatilityRateSource::isOK();
+        DeterministicVolatilityRateSource::runChecks();
         string errorMessage = "";
         if (!curve->isOK(errorMessage))
         {
-            const std::string code = errorMessage.find("same dimension") != std::string::npos
-                                         ? "VOLATILITY_CURVE_CMA_DIMENSION_MISMATCH"
-                                         : "VOLATILITY_CURVE_CMA_INVALID";
+            const std::string_view code = errorMessage.find("same dimension") != std::string::npos
+                                              ? issues::VOLATILITY_CURVE_CMA_DIMENSION_MISMATCH
+                                              : issues::VOLATILITY_CURVE_CMA_INVALID;
             recordIssue(code, errorMessage, {"inputs"});
-            return false;
+            return;
         }
         for (size_t i = 0; i < curve->getObservationDates().size(); ++i)
         {
             bool hasNegativeInputs = false;
             if ((!hasNegativeInputs) && (curve->getRates()[i] <= 0))
             {
-                recordIssue("VOLATILITY_CURVE_CMA_NEGATIVE_INPUT", "has negative inputs", {"volatilities"});
+                recordIssue(issues::VOLATILITY_CURVE_CMA_NEGATIVE_INPUT, "has negative inputs",
+                            {"volatilities"});
                 hasNegativeInputs = true;
             }
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     vector<Date> VolatilityCurveCMA::getObservationDates()

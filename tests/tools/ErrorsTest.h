@@ -9,6 +9,7 @@ public:
     static void testValidationErrorCarriesTheReport();
     static void testRequireAndAssert();
     static void testConfigurationSites();
+    static void testReportHelpers();
 
     static boost::unit_test_framework::test_suite* suite();
 };

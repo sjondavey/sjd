@@ -22,6 +22,30 @@ namespace
         SJD_ASSERT(false);
     }
 
+    class Probe : public Validatable
+    {
+    public:
+        int runs = 0;
+        bool fail = false;
+        bool warn = false;
+
+    protected:
+        std::string validationRoot() const override { return "probe"; }
+
+        void runChecks() override
+        {
+            ++runs;
+            if (fail)
+            {
+                recordIssue("PROBE_BAD", "bad", {});
+            }
+            if (warn)
+            {
+                recordWarning("PROBE_NOTE", "note", {"anchor_date"});
+            }
+        }
+    };
+
 }
 
 void ErrorsTest::testErrorCodes()
@@ -116,6 +140,52 @@ void ErrorsTest::testConfigurationSites()
                       ConfigurationError);
 }
 
+void ErrorsTest::testReportHelpers()
+{
+    BOOST_TEST_MESSAGE("Testing the validation report helpers");
+
+    Probe probe;
+    BOOST_CHECK(probe.isValid());
+    BOOST_CHECK(probe.isOK());
+    BOOST_CHECK_EQUAL(probe.runs, 0);
+
+    ValidationReport report = probe.validate();
+    BOOST_CHECK(report.isOK());
+    BOOST_CHECK(report.toString().empty());
+    BOOST_CHECK_EQUAL(report.toJson(), "[]");
+    BOOST_CHECK_EQUAL(probe.runs, 1);
+    BOOST_CHECK(probe.isOK());
+    BOOST_CHECK_EQUAL(probe.runs, 1);
+
+    probe.fail = true;
+    BOOST_CHECK(probe.isValid());
+    report = probe.validate();
+    BOOST_CHECK(!probe.isValid());
+    BOOST_CHECK(!report.isOK());
+    BOOST_CHECK_EQUAL(probe.runs, 2);
+    BOOST_CHECK(report.toString() == "probe: PROBE_BAD: bad");
+    BOOST_CHECK(report.toJson().find("\"severity\":\"ERROR\"") != string::npos);
+    BOOST_CHECK(report.errors().getIssues().size() == 1);
+    BOOST_CHECK(report.warnings().getIssues().empty());
+    BOOST_CHECK(!probe.isOK());
+    BOOST_CHECK_EQUAL(probe.runs, 2);
+
+    ValidationIssue warning("PROBE_NOTE", "note", ValidationSeverity::WARNING, {"probe", "anchor_date"});
+    ValidationReport merged = report.merge(ValidationReport({warning}));
+    BOOST_CHECK(!merged.isOK());
+    BOOST_CHECK(merged.warnings().getIssues().size() == 1);
+    BOOST_CHECK(merged.toString().find("probe/anchor_date: PROBE_NOTE: note") != string::npos);
+
+    probe.fail = false;
+    probe.warn = true;
+    report = probe.validate();
+    BOOST_CHECK(report.isOK());
+    BOOST_CHECK(report.errors().getIssues().empty());
+    BOOST_CHECK(report.warnings().getIssues().size() == 1);
+    BOOST_CHECK(probe.getErrorMessages().empty());
+    BOOST_CHECK(report.toString() == "probe/anchor_date: PROBE_NOTE: note");
+}
+
 test_suite* ErrorsTest::suite()
 {
     test_suite* suite = BOOST_TEST_SUITE("Errors");
@@ -123,5 +193,6 @@ test_suite* ErrorsTest::suite()
     suite->add(BOOST_TEST_CASE(&ErrorsTest::testValidationErrorCarriesTheReport));
     suite->add(BOOST_TEST_CASE(&ErrorsTest::testRequireAndAssert));
     suite->add(BOOST_TEST_CASE(&ErrorsTest::testConfigurationSites));
+    suite->add(BOOST_TEST_CASE(&ErrorsTest::testReportHelpers));
     return suite;
 }

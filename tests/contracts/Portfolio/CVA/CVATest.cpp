@@ -15,25 +15,25 @@ void CVATest::testFlatPD()
     double pd = .1;
     double lgd = .45;
     FlatPD cva(anchorDate, pd, lgd);
-    BOOST_REQUIRE(cva.isOK());
+    BOOST_REQUIRE(cva.validate().isOK());
 
     cva.setLGD(0);
-    BOOST_CHECK(cva.isOK());
+    BOOST_CHECK(cva.validate().isOK());
     cva.setLGD(1);
-    BOOST_CHECK(cva.isOK());
+    BOOST_CHECK(cva.validate().isOK());
     cva.setPD(0);
-    BOOST_CHECK(cva.isOK());
+    BOOST_CHECK(cva.validate().isOK());
     cva.setPD(1);
-    BOOST_CHECK(cva.isOK());
+    BOOST_CHECK(cva.validate().isOK());
     cva.setPD(1.5);
-    BOOST_CHECK(!cva.isOK());
+    BOOST_CHECK(!cva.validate().isOK());
     cva.setPD(-1.5);
-    BOOST_CHECK(!cva.isOK());
+    BOOST_CHECK(!cva.validate().isOK());
     cva.setPD(0.5);
     cva.setLGD(-1);
-    BOOST_CHECK(!cva.isOK());
+    BOOST_CHECK(!cva.validate().isOK());
     cva.setLGD(1.5);
-    BOOST_CHECK(!cva.isOK());
+    BOOST_CHECK(!cva.validate().isOK());
 
     cva.setLGD(lgd);
     cva.setPD(.1);
@@ -65,8 +65,8 @@ void CVATest::testCumulativeDefaultProbability()
     }
 
     CumulativeDefaultProbability cva(anchorDate, dates, cdp, lgd);
-    cva.isOK();
-    BOOST_REQUIRE(cva.isOK());
+    cva.validate().isOK();
+    BOOST_REQUIRE(cva.validate().isOK());
     BOOST_CHECK(abs(cva.getPD(anchorDate)) < EPSILON_FOR_DOUBLES);
     BOOST_CHECK(abs(cva.getLGD(anchorDate) - 0.4) < EPSILON_FOR_DOUBLES);
     Date beforeFirstPillar = anchorDate + 180;
@@ -83,7 +83,7 @@ void CVATest::testCumulativeDefaultProbability()
     decreasing.push_back(0.02);
     decreasing.push_back(0.01);
     CumulativeDefaultProbability falling(anchorDate, dates, decreasing, lgd);
-    BOOST_CHECK(!falling.isOK());
+    BOOST_CHECK(!falling.validate().isOK());
 }
 
 test_suite* CVATest::suite()

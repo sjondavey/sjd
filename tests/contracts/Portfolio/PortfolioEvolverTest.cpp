@@ -27,7 +27,7 @@ namespace
                 anchor, deterministic->getObservationDates(), deterministic->getForwards(),
                 ArrayInterpolatorType::LINEAR, false, re->getVRS()));
         re->setFRS(stochastic);
-        BOOST_REQUIRE_MESSAGE(re->isOK(), re->getErrorMessagesAsString());
+        BOOST_REQUIRE_MESSAGE(re->validate().isOK(), re->getErrorMessagesAsString());
         return re;
     }
 
@@ -89,7 +89,8 @@ void PortfolioEvolverTest::testPortfolioEvovler()
     contracts.push_back(option);
     std::shared_ptr<Portfolio> portfolio(std::make_shared<Portfolio>(contracts));
     std::shared_ptr<PortfolioEvolver> evolver = evolverFor(portfolio, re, simulationDates);
-    BOOST_REQUIRE_MESSAGE(evolver->isOK(), evolver->getErrorMessagesAsString());
+    BOOST_REQUIRE_MESSAGE(evolver->validate().isOK(), evolver->getErrorMessagesAsString());
+    BOOST_REQUIRE_MESSAGE(evolver->prepare(), evolver->getErrorMessagesAsString());
 
     SimulatedPaths forwardPath = evolver->valueSpotPath(forwardSpots, false);
     BOOST_REQUIRE_EQUAL(forwardPath.paths, 1u);
@@ -106,7 +107,8 @@ void PortfolioEvolverTest::testPortfolioEvovler()
     std::shared_ptr<Portfolio> shockedPortfolio(std::make_shared<Portfolio>(shockedContracts));
     std::shared_ptr<PortfolioEvolver> shockedEvolver =
         evolverFor(shockedPortfolio, shockedMarket, simulationDates);
-    BOOST_REQUIRE_MESSAGE(shockedEvolver->isOK(), shockedEvolver->getErrorMessagesAsString());
+    BOOST_REQUIRE_MESSAGE(shockedEvolver->validate().isOK(), shockedEvolver->getErrorMessagesAsString());
+    BOOST_REQUIRE_MESSAGE(shockedEvolver->prepare(), shockedEvolver->getErrorMessagesAsString());
     SimulatedPaths shockedPath = shockedEvolver->valueSpotPath(shockedSpots, false);
     BOOST_REQUIRE_EQUAL(shockedPath.steps, forwardPath.steps);
     BOOST_CHECK(shockedPath.mtm[1] < forwardPath.mtm[1]);
@@ -127,7 +129,8 @@ void PortfolioEvolverTest::testPortfolioEvovler()
     std::shared_ptr<Portfolio> marginedPortfolio(std::make_shared<Portfolio>(marginContracts, margin));
     std::shared_ptr<PortfolioEvolver> marginEvolver =
         evolverFor(marginedPortfolio, marginMarket, simulationDates);
-    BOOST_REQUIRE_MESSAGE(marginEvolver->isOK(), marginEvolver->getErrorMessagesAsString());
+    BOOST_REQUIRE_MESSAGE(marginEvolver->validate().isOK(), marginEvolver->getErrorMessagesAsString());
+    BOOST_REQUIRE_MESSAGE(marginEvolver->prepare(), marginEvolver->getErrorMessagesAsString());
     SimulatedPaths marginPath = marginEvolver->valueSpotPath(forwardSpots, false);
     BOOST_REQUIRE_EQUAL(marginPath.margin.size(), marginPath.mtm.size());
     vector<double> mtmPath = marginPath.mtm;
@@ -151,8 +154,9 @@ void PortfolioEvolverTest::testPortfolioEvovler()
         std::make_shared<SingleFactorEconomicScenarioGenerator>(monteCarloMarket));
     std::shared_ptr<PortfolioEvolver> monteCarloEvolver(
         std::make_shared<PortfolioEvolver>(monteCarloPortfolio, monteCarloGenerator, simulationDates));
-    BOOST_REQUIRE_MESSAGE(monteCarloEvolver->isOK(), monteCarloEvolver->getErrorMessagesAsString());
-    // isOK() only checks the portfolio and the generator. Sampling a path needs prepare(),
+    BOOST_REQUIRE_MESSAGE(monteCarloEvolver->validate().isOK(),
+                          monteCarloEvolver->getErrorMessagesAsString());
+    // validate() only checks the portfolio and the generator. Sampling a path needs prepare(),
     // which is what sets the generator's simulation dates.
     BOOST_REQUIRE_MESSAGE(monteCarloEvolver->prepare(), monteCarloEvolver->getErrorMessagesAsString());
 

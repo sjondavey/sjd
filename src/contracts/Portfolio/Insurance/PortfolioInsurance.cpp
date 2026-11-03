@@ -49,23 +49,23 @@ namespace sjd
         }
     }
 
-    bool PortfolioInsurance::isOK()
+    void PortfolioInsurance::runChecks()
     {
         errorTracking->clear();
         if (policyStartDate > policyMaturityDate)
         {
-            errorTracking->record("INSURANCE_MATURITY_BEFORE_START",
+            errorTracking->record(issues::INSURANCE_MATURITY_BEFORE_START,
                                   "Policy maturity is before policy start date",
                                   {"portfolio_insurance", "policy_maturity_date"});
         }
 
         if ((getSumInsured(policyStartDate) < -1e-14) || (getSumInsured(policyMaturityDate) < -1e-14))
         {
-            errorTracking->record("INSURANCE_SUM_NEGATIVE", "Sum insured is negative",
+            errorTracking->record(issues::INSURANCE_SUM_NEGATIVE, "Sum insured is negative",
                                   {"portfolio_insurance", "sum_insured"});
         }
 
-        if (!standbyDRS->isOK())
+        if (!standbyDRS->validate().isOK())
         {
             errorTracking->absorb(standbyDRS->validationReport(),
                                   {"portfolio_insurance", "standby_discount_rate_source"});
@@ -73,12 +73,12 @@ namespace sjd
 
         if (!standbyDRS->extendsTo(policyMaturityDate))
         {
-            errorTracking->record("INSURANCE_STANDBY_RANGE",
+            errorTracking->record(issues::INSURANCE_STANDBY_RANGE,
                                   "StandbyDRS does not extend to the policy maturity date",
                                   {"portfolio_insurance", "standby_discount_rate_source"});
         }
 
-        if (!utilisationDRS->isOK())
+        if (!utilisationDRS->validate().isOK())
         {
             errorTracking->absorb(utilisationDRS->validationReport(),
                                   {"portfolio_insurance", "utilisation_discount_rate_source"});
@@ -86,18 +86,18 @@ namespace sjd
 
         if (!utilisationDRS->extendsTo(policyMaturityDate))
         {
-            errorTracking->record("INSURANCE_UTILISATION_RANGE",
+            errorTracking->record(issues::INSURANCE_UTILISATION_RANGE,
                                   "UtilisationDRS does not extend to the policy maturity date",
                                   {"portfolio_insurance", "utilisation_discount_rate_source"});
         }
 
         if (standbyDRS->getAnchorDate() != utilisationDRS->getAnchorDate())
         {
-            errorTracking->record("INSURANCE_ANCHOR_MISMATCH",
+            errorTracking->record(issues::INSURANCE_ANCHOR_MISMATCH,
                                   "UtilisationDRS and StandbyDRS do not have the same anchor date",
                                   {"portfolio_insurance"});
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     std::string PortfolioInsurance::validationRoot() const
@@ -112,7 +112,8 @@ namespace sjd
         if ((paymentDates.size() != mtm.size()) || (paymentDates.size() != insurancePayments.size()))
         {
             insurancePayments = vector<double>(mtm.size(), 0);
-            errorTracking->record("INSURANCE_INPUT_DIMENSION", "Input vectors do not have the same dimension",
+            errorTracking->record(issues::INSURANCE_INPUT_DIMENSION,
+                                  "Input vectors do not have the same dimension",
                                   {"portfolio_insurance", "inputs"});
             return;
         }
@@ -139,7 +140,6 @@ namespace sjd
                                      std::shared_ptr<DiscountRateSource> standbyDRS,
                                      std::shared_ptr<DiscountRateSource> utilisationDRS)
     {
-        className = "SimpleInsurance";
         sumInsured = sumInsuredInput;
         setParameters(policyStartDate, policyMaturityDate, standbyDRS, utilisationDRS);
     }
@@ -174,31 +174,33 @@ namespace sjd
         setParameters(policyStartDate, policyMaturityDate, standbyDRS, utilisationDRS);
     }
 
-    bool SimpleInsuranceWithTermStructure::isOK()
+    void SimpleInsuranceWithTermStructure::runChecks()
     {
-        PortfolioInsurance::isOK();
+        PortfolioInsurance::runChecks();
         if (dates.size() != insuredAmounts.size())
         {
-            errorTracking->record("INSURANCE_DATES_AMOUNTS_DIMENSION",
+            errorTracking->record(issues::INSURANCE_DATES_AMOUNTS_DIMENSION,
                                   "Dates and insured amounts do not have the same dimension",
                                   {"portfolio_insurance", "insured_amounts"});
         }
 
         if (dates[0] < policyStartDate)
         {
-            errorTracking->record("INSURANCE_FIRST_DATE", "First insured date preceeds policy start date",
+            errorTracking->record(issues::INSURANCE_FIRST_DATE,
+                                  "First insured date preceeds policy start date",
                                   {"portfolio_insurance", "dates"});
         }
 
         if (dates[dates.size() - 1] != policyMaturityDate)
         {
-            errorTracking->record("INSURANCE_LAST_DATE", "Last insured date must equal policy maturity date",
+            errorTracking->record(issues::INSURANCE_LAST_DATE,
+                                  "Last insured date must equal policy maturity date",
                                   {"portfolio_insurance", "dates"});
         }
 
         if (!isStrictlyIncreasing(dates))
         {
-            errorTracking->record("INSURANCE_DATES_NOT_INCREASING", "Dates not strictly increasing",
+            errorTracking->record(issues::INSURANCE_DATES_NOT_INCREASING, "Dates not strictly increasing",
                                   {"portfolio_insurance", "dates"});
         }
 
@@ -206,11 +208,12 @@ namespace sjd
         {
             if (insuredAmounts[i] < -1e14)
             {
-                errorTracking->record("INSURANCE_AMOUNT_NEGATIVE", "At least one insured amount is negative",
+                errorTracking->record(issues::INSURANCE_AMOUNT_NEGATIVE,
+                                      "At least one insured amount is negative",
                                       {"portfolio_insurance", "insured_amounts"});
             }
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     double SimpleInsuranceWithTermStructure::getSumInsured(Date date)

@@ -13,21 +13,21 @@ namespace sjd
         baseRates = rates;
     }
 
-    bool ContractStressor::isOK()
+    void ContractStressor::runChecks()
     {
         errorTracking->clear();
-        if (!baseRates->isOK())
+        if (!baseRates->validate().isOK())
         {
             errorTracking->absorb(baseRates->validationReport(), {"contract_stressor", "rates_environment"});
-            return false;
+            return;
         }
         contract->validate(baseRates);
         if (!contract->isOK())
         {
             errorTracking->absorb(contract->validationReport(), {"contract_stressor", "contract"});
-            return false;
+            return;
         }
-        return true;
+        return;
     }
 
     std::string ContractStressor::validationRoot() const

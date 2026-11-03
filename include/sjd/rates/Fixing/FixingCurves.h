@@ -66,7 +66,7 @@ namespace sjd
         HistoricFedFundsCurve(std::vector<QuantLib::Date> fixingDates, std::vector<double> fixingRates);
         virtual ~HistoricFedFundsCurve();
 
-        virtual bool isOK();
+        void runChecks() override;
 
         bool canCalculateInterestFor(QuantLib::Date startDate,
                                      QuantLib::Date endDate,

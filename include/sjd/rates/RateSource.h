@@ -29,7 +29,7 @@ namespace sjd
     public:
         virtual ~RateSource() {};
 
-        virtual bool isOK();
+        void runChecks() override;
 
         QuantLib::Date getAnchorDate() const;
         QuantLib::Date getFinalDate() const;
@@ -43,8 +43,6 @@ namespace sjd
 
         bool getAllowsExtrapolation() const;
 
-        virtual ValidationReport validateReport();
-
     protected:
         std::string validationRoot() const override;
         using Validatable::absorbChildReport;
@@ -54,5 +52,7 @@ namespace sjd
         QuantLib::Date finalDate;
 
         bool allowExtrapolation;
+        // Set when a constructor flat-fills the anchor from the first observation.
+        bool flatBackFilled = false;
     };
 }

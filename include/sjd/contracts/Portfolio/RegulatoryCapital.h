@@ -31,9 +31,13 @@ namespace sjd
     public:
         virtual ~RegulatoryCapital() {}
 
-        virtual bool isOK();
-        virtual void validate();
-        virtual void validate(std::shared_ptr<RatesEnvironment> re);
+        using Validatable::validate;
+        ValidationReport validate(RatesEnvironment& re);
+        ValidationReport validate(const RatesEnvironment& re);
+        ValidationReport validate(const std::shared_ptr<RatesEnvironment>& re);
+
+        void runChecks() override;
+        virtual void runChecks(RatesEnvironment& re);
 
         virtual double getRegulatoryCapital(std::shared_ptr<RatesEnvironment> re) = 0;
 
@@ -59,9 +63,8 @@ namespace sjd
 
         CurrentExposureMethod(const CurrentExposureMethod& other);
 
-        bool isOK() override;
-        void validate() override;
-        void validate(std::shared_ptr<RatesEnvironment> re) override;
+        void runChecks() override;
+        void runChecks(RatesEnvironment& re) override;
         double getRegulatoryCapital(std::shared_ptr<RatesEnvironment> re) override;
 
         bool hasStructureConversionError() const;
@@ -114,8 +117,8 @@ namespace sjd
         PortfolioB2CEM(PortfolioB2CEM& portfolio);
         std::unique_ptr<Contract> clone() override;
 
-        void validate() override;
-        void validate(std::shared_ptr<RatesEnvironment> re) override;
+        void runChecks() override;
+        void runChecks(RatesEnvironment& re) override;
 
         std::shared_ptr<RegulatoryCapital> regulatoryCapital() const;
         double getRegulatoryCapital(std::shared_ptr<RatesEnvironment> re);

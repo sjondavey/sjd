@@ -443,39 +443,44 @@ effects.
 
 **Tasks**
 
-- [ ] Give `Validatable` one public entry point:
-      `ValidationReport validate()` (and, for contracts and anything else that
-      depends on a market, `ValidationReport validate(const RatesEnvironment&)`).
-      It clears the tracker, runs every check, and returns the report.
-- [ ] Make `isOK()` a non-virtual, `const` read of the last report, and rename
-      it `isValid()` if you want to make the change in meaning obvious. Keep
-      `isOK()` as a deprecated alias for one release.
-- [ ] Remove the "everything else re-runs on `isOK()`" style from rate sources,
+- [x] Give `Validatable` one public entry point:
+      `ValidationReport validate()` (and, for contracts and regulatory capital,
+      `ValidationReport validate(RatesEnvironment&)` plus a const overload and a
+      `shared_ptr` overload). It clears the tracker, runs every check, and
+      returns the report. Subclasses override `runChecks()`.
+- [x] `isValid()` and `isOK()` are non-virtual `const` reads of the last
+      report. `isOK()` stays as a comment-only deprecated alias (`[[deprecated]]`
+      is not used: MSVC `/W4` treats C4996 as an error).
+- [x] Removed the "everything else re-runs on `isOK()`" style from rate sources,
       generators, `PortfolioEvolver`, `Margin`, `CVA`, `PortfolioInsurance`,
       `ContractStressor` and `Path`. Callers that relied on `isOK()` re-running
-      must now call `validate()`.
-- [ ] Actually use severities. `IssueTracker::record` always writes `ERROR`; add
-      `recordWarning` / `recordInfo` and use them for things like extrapolation
-      past the last pillar and flat back-fill before the first observation.
-- [ ] Add to `ValidationReport`: `merge`, `errors()`, `warnings()`, a readable
-      `toString()` (one line per issue, `path: code: message`), and `toJson()`.
-- [ ] Replace `getErrorMessages()` / `getErrorMessagesAsString()` with
-      `validationReport().toString()`. Keep the old functions as deprecated
-      wrappers until the bindings are updated (Step 10).
-- [ ] Remove the duplicate `className` members in `Margin`, `CVA` and
+      now call `validate()`.
+- [x] `IssueTracker::record` takes a severity (default `ERROR`). `recordWarning`
+      / `recordInfo` cover extrapolation past the last pillar and flat back-fill
+      before the first observation. Warnings are recorded in `RateSource::runChecks`
+      only when the curve has no errors, and they do not fail `isOK()`.
+- [x] `ValidationReport` has `merge`, `errors()`, `warnings()`, `toString()`
+      (`path: code: message`) and a hand-rolled `toJson()`.
+- [x] `getErrorMessages()` / `getErrorMessagesAsString()` stay as comment-only
+      deprecated wrappers until the bindings are updated (Step 10). New code
+      uses `validationReport().toString()`.
+- [x] Removed the duplicate `className` members in `Margin`, `CVA` and
       `PortfolioInsurance`; the tracker already holds the class name.
-- [ ] Collect every issue code in one place — either an `enum class IssueCode`
-      with a `toString`, or `constexpr std::string_view` constants in
-      `include/sjd/tools/IssueCodes.h` — and generate a table of codes and
-      meanings for the docs. Today the codes are string literals scattered
-      across about 34 files.
-- [ ] Make `PortfolioEvolver` split cleanly into `validate()` (no side effects),
-      `prepare()` (sets generator dates and builds the path template once), and
-      `simulatePaths()` (asserts that `prepare()` succeeded).
+- [x] Issue codes are `constexpr std::string_view` constants in
+      `include/sjd/tools/IssueCodes.h`. The table of codes and meanings is
+      `docs/issue-codes.md`.
+- [x] `PortfolioEvolver` splits into `validate()` (no side effects), `prepare()`
+      (sets generator dates and builds the path template once), and
+      `simulatePaths()` (asserts that `prepare()` succeeded; a Release build
+      returns an empty result if it did not).
 
 **Done when** no `isOK()` implementation modifies state, every validatable
 class exposes `validate()` returning a report, and the Python tests pass
 through the deprecated aliases.
+
+**Status.** Done. Python `.is_ok` on types that used to re-run checks calls
+`validate()` first. Contract, regulatory-capital and formula `.is_ok` stay a
+pure read of the last report.
 
 ---
 

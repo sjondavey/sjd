@@ -21,29 +21,30 @@ namespace sjd
         return "path";
     }
 
-    bool Path::isOK()
+    void Path::runChecks()
     {
         resetErrorMessages();
         if (ratesPath.size() != pathDates.size())
         {
-            errorTracking->record("PATH_LENGTH_MISMATCH",
+            errorTracking->record(issues::PATH_LENGTH_MISMATCH,
                                   "number of rates does not match the number of dates", {"path"});
-            return false;
+            return;
         }
         for (size_t i = 0; i < ratesPath.size(); i++)
         {
             if (ratesPath[i]->getAnchorDate() != pathDates[i])
             {
-                errorTracking->record("PATH_ANCHOR_MISMATCH", "Rates anchor dates do not match path dates",
+                errorTracking->record(issues::PATH_ANCHOR_MISMATCH,
+                                      "Rates anchor dates do not match path dates",
                                       {"path", "rates", std::to_string(i)});
-                return false;
+                return;
             }
-            if (!ratesPath[i]->isOK())
+            if (!ratesPath[i]->validate().isOK())
             {
                 errorTracking->absorb(ratesPath[i]->validationReport(), {"path", "rates", std::to_string(i)});
             }
         }
-        return !hasErrors();
+        return;
     }
 
     vector<Date> Path::getPathDates() const

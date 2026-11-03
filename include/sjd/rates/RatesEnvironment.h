@@ -25,7 +25,7 @@ namespace sjd
     public:
         RatesEnvironment(QuantLib::Date anchorDate);
 
-        virtual bool isOK();
+        void runChecks() override;
         virtual std::string validationRoot() const;
 
         void setFRS(std::shared_ptr<ForwardRateSource> frs);

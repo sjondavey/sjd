@@ -24,7 +24,7 @@ namespace sjd
     public:
         virtual ~CVA() {};
 
-        virtual bool isOK();
+        void runChecks() override;
 
         virtual double getLGD(QuantLib::Date d) = 0;
         // return 0 if t2 <= t1.
@@ -37,7 +37,6 @@ namespace sjd
         std::string validationRoot() const override;
 
         QuantLib::Date anchorDate;
-        std::string className;
     };
 
     /*======================================================================================
@@ -56,7 +55,7 @@ namespace sjd
         FlatPD(QuantLib::Date anchorDate, double pd, double lgd);
         virtual ~FlatPD() {};
 
-        bool isOK();
+        void runChecks() override;
 
         virtual void setLGD(double lgdInput);
         virtual double getLGD(QuantLib::Date d);
@@ -84,7 +83,7 @@ namespace sjd
                                      std::vector<double> lgd);
         virtual ~CumulativeDefaultProbability() {};
 
-        bool isOK();
+        void runChecks() override;
         virtual double getPD(QuantLib::Date d);
         virtual double getLGD(QuantLib::Date d);
 

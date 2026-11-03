@@ -37,7 +37,7 @@ namespace sjd
 
         virtual ~ForwardCurveStochasticFX();
 
-        virtual bool isOK();
+        void runChecks() override;
 
         void setParameters(QuantLib::Date anchorDate,
                            double spot,

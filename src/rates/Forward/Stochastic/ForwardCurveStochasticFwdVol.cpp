@@ -30,25 +30,27 @@ namespace sjd
                                ForwardRoll::ForwardVolatility, volatility);
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
+        flatBackFilled = quotes.anchorWasFlatFilled();
         finalDate = quotes.finalDate();
         setVolatilityRateSource(volatility);
     }
 
     ForwardCurveStochasticFwdVol::~ForwardCurveStochasticFwdVol() {}
 
-    bool ForwardCurveStochasticFwdVol::isOK()
+    void ForwardCurveStochasticFwdVol::runChecks()
     {
-        if (!ForwardRateSourceStochastic::isOK())
+        ForwardRateSourceStochastic::runChecks();
+        if (hasErrors())
         {
-            return false;
+            return;
         }
         string errorMessage = "";
         if (!quotes.quotesAreOk(errorMessage))
         {
-            recordIssue("FORWARD_CURVE_INVALID", errorMessage, {"forward_curve"});
-            return false;
+            recordIssue(issues::FORWARD_CURVE_INVALID, errorMessage, {"forward_curve"});
+            return;
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     double ForwardCurveStochasticFwdVol::getForward(Date toDate) const

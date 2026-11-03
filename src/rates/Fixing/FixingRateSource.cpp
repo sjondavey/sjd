@@ -22,33 +22,33 @@ namespace sjd
         return "fixing_rate_source";
     }
 
-    bool FixingRateSource::isOK()
+    void FixingRateSource::runChecks()
     {
         errorTracking->clear();
         if (fixingDates.size() != fixingRates.size())
         {
-            recordIssue("FIXING_DATES_AND_RATES_LENGTH", "Number of Dates and Rates inputs are not equal",
-                        {"fixing_dates"});
+            recordIssue(issues::FIXING_DATES_AND_RATES_LENGTH,
+                        "Number of Dates and Rates inputs are not equal", {"fixing_dates"});
         }
         if (fixingDates.size() == 0)
         {
-            recordIssue("FIXING_DATES_EMPTY", "No fixing dates entered", {"fixing_dates"});
+            recordIssue(issues::FIXING_DATES_EMPTY, "No fixing dates entered", {"fixing_dates"});
         }
         else
         {
             if (!isStrictlyIncreasing<Date>(fixingDates))
             {
-                recordIssue("FIXING_DATES_NOT_INCREASING", "Input Dates are not strictly increasing",
+                recordIssue(issues::FIXING_DATES_NOT_INCREASING, "Input Dates are not strictly increasing",
                             {"fixing_dates"});
             }
             if (firstDate != fixingDates.front())
             {
-                recordIssue("FIXING_FIRST_DATE_MISMATCH",
+                recordIssue(issues::FIXING_FIRST_DATE_MISMATCH,
                             "First Fixing Date does not match the first date in the fixing vector",
                             {"fixing_dates"});
             }
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     bool FixingRateSource::containsARateSetOn(Date date) const

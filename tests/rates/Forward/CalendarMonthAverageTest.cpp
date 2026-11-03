@@ -21,7 +21,7 @@ void CalendarMonthAverageTest::testConstruction()
     std::shared_ptr<ForwardCurveCMADeterministic> fc = std::make_shared<ForwardCurveCMADeterministic>(
         anchorDate, incorrectObservationDates, futures, sjd::ArrayInterpolatorType::LINEAR,
         allowExtrapolation);
-    BOOST_CHECK(fc->isOK() == false);
+    BOOST_CHECK(fc->validate().isOK() == false);
 
     GenerateRates gr = GenerateRates();
     std::shared_ptr<VolatilitySurfaceMoneynessCMA> vc =
@@ -29,7 +29,7 @@ void CalendarMonthAverageTest::testConstruction()
     std::shared_ptr<ForwardCurveCMAStochasticFwdVol> sfc = std::make_shared<ForwardCurveCMAStochasticFwdVol>(
         anchorDate, incorrectObservationDates, futures, sjd::ArrayInterpolatorType::LINEAR,
         allowExtrapolation, vc);
-    BOOST_CHECK(sfc->isOK() == false);
+    BOOST_CHECK(sfc->validate().isOK() == false);
 
     for (i = 1; i <= 12; ++i)
     {
@@ -42,18 +42,18 @@ void CalendarMonthAverageTest::testConstruction()
     fc = std::make_shared<ForwardCurveCMADeterministic>(anchorDate, incorrectObservationDates, futures,
                                                         sjd::ArrayInterpolatorType::LINEAR,
                                                         allowExtrapolation);
-    BOOST_CHECK(fc->isOK() == false);
+    BOOST_CHECK(fc->validate().isOK() == false);
     sfc = std::make_shared<ForwardCurveCMAStochasticFwdVol>(anchorDate, incorrectObservationDates, futures,
                                                             sjd::ArrayInterpolatorType::LINEAR,
                                                             allowExtrapolation, vc);
-    BOOST_CHECK(sfc->isOK() == false);
+    BOOST_CHECK(sfc->validate().isOK() == false);
 
     std::shared_ptr<ForwardCurveCMADeterministic> fc2 = std::make_shared<ForwardCurveCMADeterministic>(
         anchorDate, observationDates, futures, sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
-    BOOST_CHECK(fc2->isOK() == true);
+    BOOST_CHECK(fc2->validate().isOK() == true);
     std::shared_ptr<ForwardCurveCMAStochasticFwdVol> sfc2 = std::make_shared<ForwardCurveCMAStochasticFwdVol>(
         anchorDate, observationDates, futures, sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation, vc);
-    BOOST_CHECK(sfc2->isOK() == true);
+    BOOST_CHECK(sfc2->validate().isOK() == true);
 
     Date d1 = calendar.advance(anchorDate, 5, Months);
     Date d2 = calendar.advance(anchorDate, 13, Months);
@@ -99,7 +99,7 @@ void CalendarMonthAverageTest::testValues()
 
     ForwardCurveCMADeterministic* fc = new ForwardCurveCMADeterministic(
         anchorDate, observationDates, futures, sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
-    BOOST_REQUIRE(fc->isOK() == true);
+    BOOST_REQUIRE(fc->validate().isOK() == true);
     BOOST_CHECK(abs(fc->getForward(anchorDate) - futures[0]) < EPSILON_FOR_DOUBLES);
 
     GenerateRates gr = GenerateRates();
@@ -107,7 +107,7 @@ void CalendarMonthAverageTest::testValues()
         gr.getDefaultCalendarMonthAverageMoneynessSurface(anchorDate);
     std::shared_ptr<ForwardCurveCMAStochasticFwdVol> sfc = std::make_shared<ForwardCurveCMAStochasticFwdVol>(
         anchorDate, observationDates, futures, sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation, vc);
-    BOOST_REQUIRE(sfc->isOK() == true);
+    BOOST_REQUIRE(sfc->validate().isOK() == true);
     BOOST_CHECK(abs(sfc->getForward(anchorDate) - futures[0]) < EPSILON_FOR_DOUBLES);
 
     Date d1 = calendar.advance(anchorDate, 3, Months);
@@ -146,7 +146,7 @@ void CalendarMonthAverageTest::testRoll_CMA()
     double rn = 0.12354;
 
     std::shared_ptr<ForwardRateSource> rolledFwd = fc->rollForward(observationDates[1], rn);
-    BOOST_CHECK(rolledFwd->isOK());
+    BOOST_CHECK(rolledFwd->validate().isOK());
 
     double sqrtDt = sqrt((observationDates[1] - anchorDate) / 365.0);
     // std::shared_ptr<ForwardRateSource> bumpedCurve = rolledFwd->bumpStochastically(sqrtDt, vrs, rn);

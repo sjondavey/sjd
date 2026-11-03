@@ -59,8 +59,8 @@ namespace sjd
         return std::make_unique<AsianForward>(*this);
     }
 
-    void AsianForward::recordAsianIssue(const std::string& code,
-                                        const std::string& message,
+    void AsianForward::recordAsianIssue(std::string_view code,
+                                        std::string_view message,
                                         const std::vector<std::string>& path)
     {
         recordIssue(code, message, path);
@@ -72,26 +72,26 @@ namespace sjd
         absorbChildReport(child, prefix);
     }
 
-    void AsianForward::validate()
+    void AsianForward::runChecks()
     {
-        ForwardContract::validate();
-        AsianContract::validate();
+        ForwardContract::runChecks();
+        AsianContract::checkAveraging();
         if (!orderedAveragingDates.empty() && orderedAveragingDates.back() != getMaturityDate())
         {
-            recordIssue("ASIAN_MATURITY_NOT_FINAL_AVERAGE",
+            recordIssue(issues::ASIAN_MATURITY_NOT_FINAL_AVERAGE,
                         "Maturity date does not equal the final averaging date", {"maturity_date"});
         }
         if (!orderedAveragingDates.empty() && orderedAveragingDates.back() > getSettlementDate())
         {
-            recordIssue("ASIAN_SETTLEMENT_BEFORE_FINAL_AVERAGE",
+            recordIssue(issues::ASIAN_SETTLEMENT_BEFORE_FINAL_AVERAGE,
                         "Settlement date before the final averaging date", {"settlement_date"});
         }
     }
 
-    void AsianForward::validate(std::shared_ptr<RatesEnvironment> re)
+    void AsianForward::runChecks(RatesEnvironment& re)
     {
-        ForwardContract::validate(re);
-        AsianContract::validate(re);
+        ForwardContract::runChecks(re);
+        AsianContract::checkAveraging(re);
     }
 
     void AsianForward::setAveragingDates(set<Date> averagingDatesInput)
@@ -175,7 +175,7 @@ namespace sjd
         stringstream descriptionStream;
         descriptionStream << SingleInstrumentContract::toStringRates(re);
 
-        validate();
+        Contract::validate();
         if (ForwardContract::isOK())
         {
             descriptionStream << ",Fwd(Set)," << fixed << setprecision(4)

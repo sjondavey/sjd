@@ -36,7 +36,7 @@ namespace sjd
     public:
         virtual ~VolatiltiySurfaceRateSource() {};
 
-        virtual bool isOK();
+        void runChecks() override;
         virtual std::vector<QuantLib::Date> getObservationDates();
 
         void setInputs(QuantLib::Date anchorDate,

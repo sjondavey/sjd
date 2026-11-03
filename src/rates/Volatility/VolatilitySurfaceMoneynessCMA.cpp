@@ -104,10 +104,10 @@ namespace sjd
         setInterpolatorType(interpolatorTypeInput);
     }
 
-    bool VolatilitySurfaceMoneynessCMA::isOK()
+    void VolatilitySurfaceMoneynessCMA::runChecks()
     {
-        VolatiltiySurfaceRateSource::isOK();
-        return !errorTracking->getHasErrors();
+        VolatiltiySurfaceRateSource::runChecks();
+        return;
     }
 
     double VolatilitySurfaceMoneynessCMA::getMonthsAheadOfAnchorDate(Date toDate) const

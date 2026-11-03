@@ -18,25 +18,27 @@ namespace sjd
                                ForwardRoll::Deterministic, std::shared_ptr<VolatilityRateSource>());
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
+        flatBackFilled = quotes.anchorWasFlatFilled();
         finalDate = quotes.finalDate();
     }
 
-    bool ForwardCurveCMADeterministic::isOK()
+    void ForwardCurveCMADeterministic::runChecks()
     {
-        if (!ForwardRateSourceDeterministic::isOK())
+        ForwardRateSourceDeterministic::runChecks();
+        if (hasErrors())
         {
-            return false;
+            return;
         }
         string errorMessage = "";
         if (!quotes.quotesAreOk(errorMessage))
         {
-            const std::string code = errorMessage.find("same dimension") != std::string::npos
-                                         ? "FORWARD_CURVE_CMA_DIMENSION_MISMATCH"
-                                         : "FORWARD_CURVE_CMA_INVALID";
+            const std::string_view code = errorMessage.find("same dimension") != std::string::npos
+                                              ? issues::FORWARD_CURVE_CMA_DIMENSION_MISMATCH
+                                              : issues::FORWARD_CURVE_CMA_INVALID;
             recordIssue(code, errorMessage, {"inputs"});
-            return false;
+            return;
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     bool ForwardCurveCMADeterministic::isInRange(Date d) const

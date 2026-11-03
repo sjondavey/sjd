@@ -19,84 +19,84 @@ namespace sjd
         marketRevision_ = 0;
     }
 
-    bool RatesEnvironment::isOK()
+    void RatesEnvironment::runChecks()
     {
         resetErrorMessages();
         if (frsSet == false && vrsSet == false && drsSet == false && foreignDrsSet == false &&
             fixingrsSet == false)
         {
-            recordIssue("RATES_ENVIRONMENT_NO_RATES", "No rates set", {});
-            return false;
+            recordIssue(issues::RATES_ENVIRONMENT_NO_RATES, "No rates set", {});
+            return;
         }
         if (drsSet)
         {
             if (drs->getAnchorDate() != anchorDate)
             {
-                recordIssue("DISCOUNT_RATE_SOURCE_ANCHOR_MISMATCH",
+                recordIssue(issues::DISCOUNT_RATE_SOURCE_ANCHOR_MISMATCH,
                             "Discount rate source does not have the correct anchor date",
                             {"discount_rate_source"});
-                return false;
+                return;
             }
-            if (!drs->isOK())
+            if (!drs->validate().isOK())
             {
                 absorbChildReport(drs->validationReport(), "discount_rate_source");
-                return false;
+                return;
             }
         }
         if (foreignDrsSet)
         {
             if (foreigndrs->getAnchorDate() != anchorDate)
             {
-                recordIssue("FOREIGN_DISCOUNT_RATE_SOURCE_ANCHOR_MISMATCH",
+                recordIssue(issues::FOREIGN_DISCOUNT_RATE_SOURCE_ANCHOR_MISMATCH,
                             "Foreign discount rate source does not have the correct anchor date",
                             {"foreign_discount_rate_source"});
-                return false;
+                return;
             }
-            if (!foreigndrs->isOK())
+            if (!foreigndrs->validate().isOK())
             {
                 absorbChildReport(foreigndrs->validationReport(), "foreign_discount_rate_source");
-                return false;
+                return;
             }
         }
         if (frsSet)
         {
             if (frs->getAnchorDate() != anchorDate)
             {
-                recordIssue("FORWARD_RATE_SOURCE_ANCHOR_MISMATCH",
+                recordIssue(issues::FORWARD_RATE_SOURCE_ANCHOR_MISMATCH,
                             "Forward rate source does not have the correct anchor date",
                             {"forward_rate_source"});
-                return false;
+                return;
             }
-            if (!frs->isOK())
+            if (!frs->validate().isOK())
             {
                 absorbChildReport(frs->validationReport(), "forward_rate_source");
-                return false;
+                return;
             }
         }
         if (vrsSet)
         {
             if (vrs->getAnchorDate() != anchorDate)
             {
-                recordIssue("VOLATILITY_RATE_SOURCE_ANCHOR_MISMATCH",
+                recordIssue(issues::VOLATILITY_RATE_SOURCE_ANCHOR_MISMATCH,
                             "Volatility rate source does not have the correct anchor date",
                             {"volatility_rate_source"});
-                return false;
+                return;
             }
-            if (!vrs->isOK())
+            if (!vrs->validate().isOK())
             {
                 absorbChildReport(vrs->validationReport(), "volatility_rate_source");
-                return false;
+                return;
             }
         }
         if (fixingrsSet)
         {
-            if (!fixingrs->isOK())
+            if (!fixingrs->validate().isOK())
             {
                 absorbChildReport(fixingrs->validationReport(), "fixing_rate_source");
-                return false;
+                return;
             }
         }
-        return !(errorTracking->getHasErrors());
+        return;
     }
 
     std::string RatesEnvironment::validationRoot() const

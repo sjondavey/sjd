@@ -48,11 +48,10 @@ namespace sjd
                          std::shared_ptr<QuantLib::Calendar> calendarForHoldingPeriodCalcuation,
                          size_t holdingPeriodInBusinessDays);
 
-        bool isOK();
+        void runChecks() override;
         // Sets the simulation dates on the path generator and checks that the portfolio
-        // can be valued on those dates. isOK() does not do this.
+        // can be valued on those dates. validate() does not do this.
         bool prepare();
-        ValidationReport validateReport();
 
         std::vector<QuantLib::Date> getSimulationDates();
         std::vector<QuantLib::Date> getExposureDates();
@@ -98,6 +97,7 @@ namespace sjd
         std::string validationRoot() const override;
 
         bool portfolioIsMargined;
+        bool prepared = false;
 
         std::shared_ptr<Portfolio> portfolio;
 

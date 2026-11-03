@@ -26,8 +26,8 @@ namespace sjd
 
         virtual ~FixedCashflow() {};
 
-        virtual void validate();
-        virtual void validate(std::shared_ptr<RatesEnvironment> re);
+        void runChecks() override;
+        void runChecks(RatesEnvironment& re) override;
 
         // Cash flows have no premium so these will std::set and return 0;
         virtual void setPremiumAmount(double premium);

@@ -36,6 +36,7 @@ namespace sjd
         vol = volatility;
         datedCurve.reset();
         monthCurve.reset();
+        flatFilledAnchor = false;
 
         if (averaging == ForwardAveraging::CalendarMonth)
         {
@@ -48,6 +49,7 @@ namespace sjd
             if (monthCurve->isOK(errorMessage) && !extrapolation && !monthCurve->containsRateOnAnchorDate())
             {
                 monthCurve->addPointOnAnchorDate(forwards.front());
+                flatFilledAnchor = true;
             }
             originalObservationDates = monthCurve->getObservationDates();
             originalObservationRates = monthCurve->getRates();
@@ -63,6 +65,7 @@ namespace sjd
         if (datedCurve->isOK(errorMessage) && !extrapolation && !datedCurve->containsRateOnAnchorDate())
         {
             datedCurve->addPointOnAnchorDate(forwards.front());
+            flatFilledAnchor = true;
         }
     }
 
@@ -79,6 +82,7 @@ namespace sjd
         vol = volatility;
         datedCurve.reset();
         monthCurve.reset();
+        flatFilledAnchor = false;
         setSpotAtT0(spotAtT0);
         setRateSources(domesticCurve, foreignCurve);
         anchor = anchorDate;
@@ -95,6 +99,10 @@ namespace sjd
     bool ForwardCurve::allowsExtrapolation() const
     {
         return extrapolation;
+    }
+    bool ForwardCurve::anchorWasFlatFilled() const
+    {
+        return flatFilledAnchor;
     }
     ForwardAveraging ForwardCurve::averaging() const
     {

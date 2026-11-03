@@ -1,5 +1,7 @@
 #include <sjd/contracts/Portfolio/PortfolioEvolver.h>
 
+#include <sjd/tools/Errors.h>
+
 #include <sstream>
 
 using namespace std;
@@ -41,54 +43,49 @@ namespace sjd
         return "portfolio_evolver";
     }
 
-    ValidationReport PortfolioEvolver::validateReport()
-    {
-        isOK();
-        return validationReport();
-    }
-
-    bool PortfolioEvolver::isOK()
+    void PortfolioEvolver::runChecks()
     {
         errorTracking->clear();
         if ((holdingPeriod > 0) && !calendarForHoldingPeriod)
         {
-            recordIssue("HOLDING_PERIOD_CALENDAR_MISSING",
+            recordIssue(issues::HOLDING_PERIOD_CALENDAR_MISSING,
                         "A holding period needs a calendar to count its business days", {"holding_period"});
-            return false;
+            return;
         }
         if (simulationDates.size() == 0)
         {
-            recordIssue("SIMULATION_DATES_EMPTY", "Simulation Dates are empty", {"simulation_dates"});
-            return false;
+            recordIssue(issues::SIMULATION_DATES_EMPTY, "Simulation Dates are empty", {"simulation_dates"});
+            return;
         }
         if (simulationDates.front() != pathGenerator->getAnchorDate())
         {
-            recordIssue("SIMULATION_ANCHOR_MISMATCH", "First simulation date must be the anchor date",
+            recordIssue(issues::SIMULATION_ANCHOR_MISMATCH, "First simulation date must be the anchor date",
                         {"simulation_dates"});
-            return false;
+            return;
         }
         portfolio->validate();
         if (!portfolio->isOK())
         {
             absorbChildReport(portfolio->validationReport(), {});
-            return false;
+            return;
         }
-        if (!pathGenerator->isOK())
+        if (!pathGenerator->validate().isOK())
         {
             absorbChildReport(pathGenerator->validationReport(), {});
-            return false;
+            return;
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     bool PortfolioEvolver::prepare()
     {
-        if (!isOK())
+        prepared = false;
+        if (!validate().isOK())
         {
             return false;
         }
         set<Date> valuationDatesSet(simulationDates.begin(), simulationDates.end());
-        if (!pathGenerator->setSimulationDates(valuationDatesSet) || !pathGenerator->isOK())
+        if (!pathGenerator->setSimulationDates(valuationDatesSet) || !pathGenerator->validate().isOK())
         {
             absorbChildReport(pathGenerator->validationReport(), {});
             return false;
@@ -102,13 +99,14 @@ namespace sjd
                 stringstream descriptionStream;
                 descriptionStream << "Portfolio cannot value against Rate Environment ";
                 descriptionStream << i << ": " << portfolio->getErrorMessagesAsString();
-                recordIssue("SIMULATION_MARKET_INVALID", descriptionStream.str(),
+                recordIssue(issues::SIMULATION_MARKET_INVALID, descriptionStream.str(),
                             {"simulation_steps", std::to_string(i)});
                 absorbChildReport(portfolio->validationReport(), {"simulation_steps", std::to_string(i)});
                 return false;
             }
         }
-        return !errorTracking->getHasErrors();
+        prepared = !errorTracking->getHasErrors();
+        return prepared;
     }
 
     vector<Date> PortfolioEvolver::getSimulationDates()
@@ -172,14 +170,16 @@ namespace sjd
                                                    bool byTrade,
                                                    bool byStructure)
     {
+        SJD_ASSERT(prepared);
         SimulatedPaths result;
-        if (!prepare())
+        if (!prepared)
         {
             return result;
         }
         if (N == 0)
         {
-            recordIssue("MONTE_CARLO_NO_PATHS", "Number of paths must be at least 1", {"number_of_paths"});
+            recordIssue(issues::MONTE_CARLO_NO_PATHS, "Number of paths must be at least 1",
+                        {"number_of_paths"});
             return result;
         }
         if (antithetic)
@@ -214,20 +214,21 @@ namespace sjd
                                                     bool byTrade,
                                                     bool byStructure)
     {
+        SJD_ASSERT(prepared);
         SimulatedPaths result;
-        if (!prepare())
+        if (!prepared)
         {
             return result;
         }
         if (numberOfPaths == 0)
         {
-            recordIssue("SPOT_PATHS_EMPTY", "Number of spot paths must be at least 1", {"spot_paths"});
+            recordIssue(issues::SPOT_PATHS_EMPTY, "Number of spot paths must be at least 1", {"spot_paths"});
             return result;
         }
         if (spots.size() != numberOfPaths * simulationSteps)
         {
-            recordIssue("SPOT_PATHS_LENGTH", "Spot paths must be number_of_paths times simulation dates",
-                        {"spot_paths"});
+            recordIssue(issues::SPOT_PATHS_LENGTH,
+                        "Spot paths must be number_of_paths times simulation dates", {"spot_paths"});
             return result;
         }
         vector<std::shared_ptr<SingleInstrumentContract>> trades;

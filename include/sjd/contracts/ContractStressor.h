@@ -18,7 +18,7 @@ namespace sjd
         // calculations
         ContractStressor(std::shared_ptr<Contract> contract, std::shared_ptr<RatesEnvironment> rates);
 
-        bool isOK();
+        void runChecks() override;
 
         std::vector<std::pair<std::string, double>> getStressedValues();
 

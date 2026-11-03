@@ -21,7 +21,7 @@ namespace sjd
 
         void setDatesAndRates(std::vector<QuantLib::Date> fixingDates, std::vector<double> fixingRates);
 
-        virtual bool isOK();
+        void runChecks() override;
 
         // The earliest date which this Rate Source can return a rate
         QuantLib::Date getEarliestDate() const;

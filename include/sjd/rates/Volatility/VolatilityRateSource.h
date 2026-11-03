@@ -17,7 +17,7 @@ namespace sjd
     public:
         virtual ~VolatilityRateSource() {};
 
-        virtual bool isOK();
+        void runChecks() override;
 
         std::shared_ptr<QuantLib::DayCounter> getDayCounter() const;
 

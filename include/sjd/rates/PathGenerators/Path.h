@@ -16,7 +16,7 @@ namespace sjd
 
         Path(std::vector<std::shared_ptr<RatesEnvironment>> ratesPath);
 
-        bool isOK();
+        void runChecks() override;
 
         std::shared_ptr<RatesEnvironment> getRatesEnvironment(size_t i);
         std::vector<QuantLib::Date> getPathDates() const;

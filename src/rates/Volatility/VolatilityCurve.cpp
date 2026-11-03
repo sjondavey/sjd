@@ -59,31 +59,32 @@ namespace sjd
         if (datedCurve->isOK(tmp) && (!datedCurve->containsRateOnAnchorDate()))
         {
             datedCurve->addPointOnAnchorDate(0.0);
+            flatBackFilled = true;
         }
     }
 
     VolatilityCurve::~VolatilityCurve() {}
 
-    bool VolatilityCurve::isOK()
+    void VolatilityCurve::runChecks()
     {
-        DeterministicVolatilityRateSource::isOK();
+        DeterministicVolatilityRateSource::runChecks();
         string errorMessage = "";
         if (!datedCurve->isOK(errorMessage))
         {
-            const std::string code = errorMessage.find("same dimension") != std::string::npos
-                                         ? "VOLATILITY_CURVE_DIMENSION_MISMATCH"
-                                         : "VOLATILITY_CURVE_INVALID";
+            const std::string_view code = errorMessage.find("same dimension") != std::string::npos
+                                              ? issues::VOLATILITY_CURVE_DIMENSION_MISMATCH
+                                              : issues::VOLATILITY_CURVE_INVALID;
             recordIssue(code, errorMessage, {"inputs"});
-            return false;
+            return;
         }
         for (size_t i = 0; i < inputVolatilities.size(); ++i)
         {
             if (inputVolatilities[i] <= 0)
             {
-                recordIssue("VOLATILITY_CURVE_NEGATIVE_INPUT", "has negative inputs", {"volatilities"});
+                recordIssue(issues::VOLATILITY_CURVE_NEGATIVE_INPUT, "has negative inputs", {"volatilities"});
             }
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     vector<Date> VolatilityCurve::getObservationDates()

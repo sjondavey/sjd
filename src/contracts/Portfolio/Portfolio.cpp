@@ -41,8 +41,8 @@ namespace sjd
         if (errorTracking->getHasErrors())
         {
             contracts = vector<std::shared_ptr<SingleInstrumentContract>>(0);
-            recordIssue("CONTRACT_EXTRACT_FAILED", "Cannot extract single instruments from input contracts",
-                        {});
+            recordIssue(issues::CONTRACT_EXTRACT_FAILED,
+                        "Cannot extract single instruments from input contracts", {});
         }
         else
         {
@@ -60,8 +60,8 @@ namespace sjd
         if (errorTracking->getHasErrors())
         {
             contracts = vector<std::shared_ptr<SingleInstrumentContract>>(0);
-            recordIssue("CONTRACT_EXTRACT_FAILED", "Cannot extract single instruments from input contracts",
-                        {});
+            recordIssue(issues::CONTRACT_EXTRACT_FAILED,
+                        "Cannot extract single instruments from input contracts", {});
         }
         else
         {
@@ -92,14 +92,14 @@ namespace sjd
         return std::make_unique<Portfolio>(*this);
     }
 
-    void Portfolio::validate()
+    void Portfolio::runChecks()
     {
-        MultipleInstrumentContract::validate();
+        MultipleInstrumentContract::runChecks();
     }
 
-    void Portfolio::validate(std::shared_ptr<RatesEnvironment> re)
+    void Portfolio::runChecks(RatesEnvironment& re)
     {
-        return MultipleInstrumentContract::validate(re);
+        return MultipleInstrumentContract::runChecks(re);
     }
 
     bool Portfolio::isMargined() const

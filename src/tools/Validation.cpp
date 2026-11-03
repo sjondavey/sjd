@@ -1,11 +1,90 @@
 #include <sjd/tools/Validation.h>
 
+#include <sstream>
 #include <utility>
 
 using namespace std;
 
 namespace sjd
 {
+    namespace
+    {
+
+        std::string joinPath(const std::vector<std::string>& path)
+        {
+            std::string joined;
+            for (size_t i = 0; i < path.size(); ++i)
+            {
+                if (i > 0)
+                {
+                    joined += '/';
+                }
+                joined += path[i];
+            }
+            return joined;
+        }
+
+        std::string jsonEscape(const std::string& text)
+        {
+            std::string escaped;
+            escaped.reserve(text.size());
+            for (char character : text)
+            {
+                switch (character)
+                {
+                case '\\':
+                    escaped += "\\\\";
+                    break;
+                case '"':
+                    escaped += "\\\"";
+                    break;
+                case '\n':
+                    escaped += "\\n";
+                    break;
+                case '\r':
+                    escaped += "\\r";
+                    break;
+                case '\t':
+                    escaped += "\\t";
+                    break;
+                default:
+                    escaped += character;
+                    break;
+                }
+            }
+            return escaped;
+        }
+
+        const char* severityName(ValidationSeverity severity)
+        {
+            switch (severity)
+            {
+            case ValidationSeverity::INFO:
+                return "INFO";
+            case ValidationSeverity::WARNING:
+                return "WARNING";
+            case ValidationSeverity::ERROR:
+                return "ERROR";
+            }
+            return "ERROR";
+        }
+
+        ValidationReport filterSeverity(const std::vector<ValidationIssue>& issues,
+                                        ValidationSeverity severity)
+        {
+            std::vector<ValidationIssue> selected;
+            for (const ValidationIssue& issue : issues)
+            {
+                if (issue.severity == severity)
+                {
+                    selected.push_back(issue);
+                }
+            }
+            return ValidationReport(selected);
+        }
+
+    }
+
     ValidationIssue::ValidationIssue(std::string codeInput,
                                      std::string messageInput,
                                      ValidationSeverity severityInput,
@@ -37,6 +116,65 @@ namespace sjd
     const std::vector<ValidationIssue>& ValidationReport::getIssues() const
     {
         return issues;
+    }
+
+    ValidationReport ValidationReport::merge(const ValidationReport& other) const
+    {
+        std::vector<ValidationIssue> combined = issues;
+        combined.insert(combined.end(), other.issues.begin(), other.issues.end());
+        return ValidationReport(std::move(combined));
+    }
+
+    ValidationReport ValidationReport::errors() const
+    {
+        return filterSeverity(issues, ValidationSeverity::ERROR);
+    }
+
+    ValidationReport ValidationReport::warnings() const
+    {
+        return filterSeverity(issues, ValidationSeverity::WARNING);
+    }
+
+    std::string ValidationReport::toString() const
+    {
+        std::ostringstream stream;
+        for (size_t i = 0; i < issues.size(); ++i)
+        {
+            if (i > 0)
+            {
+                stream << '\n';
+            }
+            stream << joinPath(issues[i].path) << ": " << issues[i].code << ": " << issues[i].message;
+        }
+        return stream.str();
+    }
+
+    std::string ValidationReport::toJson() const
+    {
+        std::ostringstream stream;
+        stream << '[';
+        for (size_t i = 0; i < issues.size(); ++i)
+        {
+            if (i > 0)
+            {
+                stream << ',';
+            }
+            const ValidationIssue& issue = issues[i];
+            stream << "{\"code\":\"" << jsonEscape(issue.code) << "\",\"message\":\""
+                   << jsonEscape(issue.message) << "\",\"severity\":\"" << severityName(issue.severity)
+                   << "\",\"path\":[";
+            for (size_t element = 0; element < issue.path.size(); ++element)
+            {
+                if (element > 0)
+                {
+                    stream << ',';
+                }
+                stream << '"' << jsonEscape(issue.path[element]) << '"';
+            }
+            stream << "]}";
+        }
+        stream << ']';
+        return stream.str();
     }
 
     ValidationReport ValidationReport::withIssue(const ValidationIssue& issue) const
@@ -88,11 +226,26 @@ namespace sjd
         log.clear();
     }
 
-    void IssueTracker::record(const std::string& code,
-                              const std::string& message,
-                              const std::vector<std::string>& path)
+    void IssueTracker::record(std::string_view code,
+                              std::string_view message,
+                              const std::vector<std::string>& path,
+                              ValidationSeverity severity)
     {
-        log.add(ValidationIssue(code, message, ValidationSeverity::ERROR, path));
+        log.add(ValidationIssue(std::string(code), std::string(message), severity, path));
+    }
+
+    void IssueTracker::recordWarning(std::string_view code,
+                                     std::string_view message,
+                                     const std::vector<std::string>& path)
+    {
+        record(code, message, path, ValidationSeverity::WARNING);
+    }
+
+    void IssueTracker::recordInfo(std::string_view code,
+                                  std::string_view message,
+                                  const std::vector<std::string>& path)
+    {
+        record(code, message, path, ValidationSeverity::INFO);
     }
 
     void IssueTracker::absorb(const ValidationReport& child, const std::vector<std::string>& prefix)
@@ -151,6 +304,30 @@ namespace sjd
 
     Validatable::Validatable() : errorTracking(std::make_shared<IssueTracker>("")) {}
 
+    ValidationReport Validatable::validate()
+    {
+        resetErrorMessages();
+        runChecks();
+        return validationReport();
+    }
+
+    ValidationReport Validatable::validateReport()
+    {
+        return validate();
+    }
+
+    void Validatable::runChecks() {}
+
+    bool Validatable::isValid() const
+    {
+        return !hasErrors();
+    }
+
+    bool Validatable::isOK() const
+    {
+        return isValid();
+    }
+
     bool Validatable::hasErrors() const
     {
         return errorTracking->getHasErrors();
@@ -176,13 +353,31 @@ namespace sjd
         errorTracking->clear();
     }
 
-    void Validatable::recordIssue(const std::string& code,
-                                  const std::string& message,
+    void Validatable::recordIssue(std::string_view code,
+                                  std::string_view message,
                                   const std::vector<std::string>& tail)
     {
         std::vector<std::string> path(1, validationRoot());
         path.insert(path.end(), tail.begin(), tail.end());
-        errorTracking->record(code, message, path);
+        errorTracking->record(code, message, path, ValidationSeverity::ERROR);
+    }
+
+    void Validatable::recordWarning(std::string_view code,
+                                    std::string_view message,
+                                    const std::vector<std::string>& tail)
+    {
+        std::vector<std::string> path(1, validationRoot());
+        path.insert(path.end(), tail.begin(), tail.end());
+        errorTracking->recordWarning(code, message, path);
+    }
+
+    void Validatable::recordInfo(std::string_view code,
+                                 std::string_view message,
+                                 const std::vector<std::string>& tail)
+    {
+        std::vector<std::string> path(1, validationRoot());
+        path.insert(path.end(), tail.begin(), tail.end());
+        errorTracking->recordInfo(code, message, path);
     }
 
     void Validatable::absorbChildReport(const ValidationReport& child, const std::vector<std::string>& extra)

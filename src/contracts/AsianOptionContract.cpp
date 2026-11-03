@@ -98,8 +98,8 @@ namespace sjd
         }
     }
 
-    void AsianOption::recordAsianIssue(const std::string& code,
-                                       const std::string& message,
+    void AsianOption::recordAsianIssue(std::string_view code,
+                                       std::string_view message,
                                        const std::vector<std::string>& path)
     {
         recordIssue(code, message, path);
@@ -110,35 +110,35 @@ namespace sjd
         absorbChildReport(child, prefix);
     }
 
-    void AsianOption::validate()
+    void AsianOption::runChecks()
     {
-        SingleOptionContract::validate();
-        AsianContract::validate();
+        SingleOptionContract::runChecks();
+        AsianContract::checkAveraging();
         if (!orderedAveragingDates.empty() && orderedAveragingDates.back() != getMaturityDate())
         {
-            recordIssue("ASIAN_MATURITY_NOT_FINAL_AVERAGE",
+            recordIssue(issues::ASIAN_MATURITY_NOT_FINAL_AVERAGE,
                         "Maturity date does not equal the final averaging date", {"maturity_date"});
         }
         if (!orderedAveragingDates.empty() && orderedAveragingDates.back() > getSettlementDate())
         {
-            recordIssue("ASIAN_SETTLEMENT_BEFORE_FINAL_AVERAGE",
+            recordIssue(issues::ASIAN_SETTLEMENT_BEFORE_FINAL_AVERAGE,
                         "Settlement date before the final averaging date", {"settlement_date"});
         }
     }
 
-    void AsianOption::validate(std::shared_ptr<RatesEnvironment> re)
+    void AsianOption::runChecks(RatesEnvironment& re)
     {
-        SingleOptionContract::validate(re);
-        AsianContract::validate(re);
-        if (re->hasFRS() && !(re->getFRS())->extendsTo(getMaturityDate()))
+        SingleOptionContract::runChecks(re);
+        AsianContract::checkAveraging(re);
+        if (re.hasFRS() && !(re.getFRS())->extendsTo(getMaturityDate()))
         {
-            recordIssue("MARKET_FORWARD_RATE_SOURCE_RANGE",
+            recordIssue(issues::MARKET_FORWARD_RATE_SOURCE_RANGE,
                         "Contract settlement not in forward rate source range",
                         {"rates_environment", "forward_rate_source"});
         }
-        if (re->hasVRS() && !(re->getVRS())->extendsTo(getSettlementDate()))
+        if (re.hasVRS() && !(re.getVRS())->extendsTo(getSettlementDate()))
         {
-            recordIssue("MARKET_VOLATILITY_RATE_SOURCE_RANGE",
+            recordIssue(issues::MARKET_VOLATILITY_RATE_SOURCE_RANGE,
                         "Contract settlement not in volatility rate source range",
                         {"rates_environment", "volatility_rate_source"});
         }
@@ -217,7 +217,7 @@ namespace sjd
     {
         stringstream ratesDescriptionStream;
         ratesDescriptionStream << SingleInstrumentContract::toStringRates(re);
-        validate();
+        Contract::validate();
         if (SingleOptionContract::isOK())
         {
             vector<double> forwards, fixes;

@@ -10,49 +10,50 @@ namespace sjd
         vrs = vrsInput;
     }
 
-    bool ForwardRateSourceStochastic::isOK()
+    void ForwardRateSourceStochastic::runChecks()
     {
-        if (!ForwardRateSource::isOK())
+        ForwardRateSource::runChecks();
+        if (hasErrors())
         {
-            return false;
+            return;
         }
         if (forwardSimulationDates.size() > 0)
         {
             if (!isInRange(forwardSimulationDates.front()))
             {
-                recordIssue("FORWARD_SIMULATION_DATE_BEFORE_RANGE",
+                recordIssue(issues::FORWARD_SIMULATION_DATE_BEFORE_RANGE,
                             "First forward date is outside the rate source range",
                             {"forward_simulation_dates"});
-                return false;
+                return;
             }
             if (!isInRange(forwardSimulationDates.back()))
             {
-                recordIssue("FORWARD_SIMULATION_DATE_AFTER_RANGE",
+                recordIssue(issues::FORWARD_SIMULATION_DATE_AFTER_RANGE,
                             "Last forward date is outside the rate source range",
                             {"forward_simulation_dates"});
-                return false;
+                return;
             }
         }
         if (vrs == NULL)
         {
-            recordIssue("FORWARD_VOLATILITY_RATE_SOURCE_MISSING", "Volatility Rate Source has not been set",
-                        {"volatility_rate_source"});
-            return false;
+            recordIssue(issues::FORWARD_VOLATILITY_RATE_SOURCE_MISSING,
+                        "Volatility Rate Source has not been set", {"volatility_rate_source"});
+            return;
         }
         if (!vrs->extendsTo(finalDate))
         {
-            recordIssue("FORWARD_VOLATILITY_RATE_SOURCE_RANGE",
+            recordIssue(issues::FORWARD_VOLATILITY_RATE_SOURCE_RANGE,
                         "Volatility Rate Source does not extend to the end of the Forward Rate Source",
                         {"volatility_rate_source"});
         }
         if (vrs->getAnchorDate() != anchorDate)
         {
             recordIssue(
-                "FORWARD_VOLATILITY_ANCHOR_MISMATCH",
+                issues::FORWARD_VOLATILITY_ANCHOR_MISMATCH,
                 "Volatility Rate Source does not have the same anchor date as the Forward Rate Source",
                 {"volatility_rate_source"});
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     void ForwardRateSourceStochastic::setForwardValuationDates(set<Date> datesSet)

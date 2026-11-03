@@ -66,6 +66,7 @@ namespace sjd
         QuantLib::Date anchorDate() const;
         QuantLib::Date finalDate() const;
         bool allowsExtrapolation() const;
+        bool anchorWasFlatFilled() const;
         ForwardAveraging averaging() const;
         ForwardRoll roll() const;
         ForwardQuote quote() const;
@@ -118,6 +119,7 @@ namespace sjd
         QuantLib::Date anchor;
         QuantLib::Date final;
         bool extrapolation;
+        bool flatFilledAnchor = false;
 
         std::shared_ptr<DatedCurve> datedCurve;
         std::shared_ptr<CalendarMonthAverageCurve> monthCurve;

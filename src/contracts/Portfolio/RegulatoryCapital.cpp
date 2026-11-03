@@ -12,19 +12,31 @@ using namespace QuantLib;
 namespace sjd
 {
 
-    bool RegulatoryCapital::isOK()
-    {
-        return !hasErrors();
-    }
-
     std::string RegulatoryCapital::validationRoot() const
     {
         return "regulatory_capital";
     }
 
-    void RegulatoryCapital::validate() {}
+    ValidationReport RegulatoryCapital::validate(RatesEnvironment& re)
+    {
+        resetErrorMessages();
+        runChecks(re);
+        return validationReport();
+    }
 
-    void RegulatoryCapital::validate(std::shared_ptr<RatesEnvironment> /*re*/) {}
+    ValidationReport RegulatoryCapital::validate(const RatesEnvironment& re)
+    {
+        return validate(const_cast<RatesEnvironment&>(re));
+    }
+
+    ValidationReport RegulatoryCapital::validate(const std::shared_ptr<RatesEnvironment>& re)
+    {
+        return validate(*re);
+    }
+
+    void RegulatoryCapital::runChecks() {}
+
+    void RegulatoryCapital::runChecks(RatesEnvironment& /*re*/) {}
 
     CurrentExposureMethod::CurrentExposureMethod(
         vector<std::shared_ptr<Contract>> inputs,
@@ -58,7 +70,7 @@ namespace sjd
             structureConversionError = !successful;
             if (!successful)
             {
-                errorTracking->record("PORTFOLIO_STRUCTURE_CONVERSION", structureErrorMessage,
+                errorTracking->record(issues::PORTFOLIO_STRUCTURE_CONVERSION, structureErrorMessage,
                                       {"regulatory_capital", "structures"});
             }
         }
@@ -105,17 +117,12 @@ namespace sjd
         }
     }
 
-    bool CurrentExposureMethod::isOK()
-    {
-        return RegulatoryCapital::isOK();
-    }
-
-    void CurrentExposureMethod::validate()
+    void CurrentExposureMethod::runChecks()
     {
         resetErrorMessages();
         if (structureConversionError)
         {
-            errorTracking->record("PORTFOLIO_STRUCTURE_CONVERSION", structureErrorMessage,
+            errorTracking->record(issues::PORTFOLIO_STRUCTURE_CONVERSION, structureErrorMessage,
                                   {"regulatory_capital", "structures"});
             return;
         }
@@ -130,12 +137,12 @@ namespace sjd
         }
     }
 
-    void CurrentExposureMethod::validate(std::shared_ptr<RatesEnvironment> re)
+    void CurrentExposureMethod::runChecks(RatesEnvironment& re)
     {
         resetErrorMessages();
         if (structureConversionError)
         {
-            errorTracking->record("PORTFOLIO_STRUCTURE_CONVERSION", structureErrorMessage,
+            errorTracking->record(issues::PORTFOLIO_STRUCTURE_CONVERSION, structureErrorMessage,
                                   {"regulatory_capital", "structures"});
             return;
         }
@@ -377,13 +384,13 @@ namespace sjd
         }
     }
 
-    void PortfolioB2CEM::validate()
+    void PortfolioB2CEM::runChecks()
     {
         // Portfolio::validate clears the tracker, so it must run before the structure checks.
-        Portfolio::validate();
+        Portfolio::runChecks();
         if (capital && capital->hasStructureConversionError())
         {
-            recordIssue("PORTFOLIO_STRUCTURE_CONVERSION", capital->structureConversionErrorMessage(),
+            recordIssue(issues::PORTFOLIO_STRUCTURE_CONVERSION, capital->structureConversionErrorMessage(),
                         {"structures"});
             return;
         }
@@ -402,12 +409,12 @@ namespace sjd
         }
     }
 
-    void PortfolioB2CEM::validate(std::shared_ptr<RatesEnvironment> re)
+    void PortfolioB2CEM::runChecks(RatesEnvironment& re)
     {
-        Portfolio::validate(re);
+        Portfolio::runChecks(re);
         if (capital && capital->hasStructureConversionError())
         {
-            recordIssue("PORTFOLIO_STRUCTURE_CONVERSION", capital->structureConversionErrorMessage(),
+            recordIssue(issues::PORTFOLIO_STRUCTURE_CONVERSION, capital->structureConversionErrorMessage(),
                         {"structures"});
             return;
         }

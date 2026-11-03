@@ -17,20 +17,26 @@ namespace sjd
                           role.empty() ? std::vector<std::string>() : std::vector<std::string>(1, role));
     }
 
-    ValidationReport RateSource::validateReport()
-    {
-        isOK();
-        return validationReport();
-    }
-
-    bool RateSource::isOK()
+    void RateSource::runChecks()
     {
         resetErrorMessages();
         if (finalDate < anchorDate)
         {
-            recordIssue("RATE_SOURCE_ANCHOR_AFTER_FINAL", "Anchor date after final date", {"anchor_date"});
+            recordIssue(issues::RATE_SOURCE_ANCHOR_AFTER_FINAL, "Anchor date after final date",
+                        {"anchor_date"});
         }
-        return !hasErrors();
+        if (!hasErrors() && flatBackFilled)
+        {
+            recordWarning(issues::RATE_SOURCE_FLAT_BACKFILL,
+                          "Anchor has no observation; values are flat through the first observation",
+                          {"anchor_date"});
+        }
+        if (!hasErrors() && allowExtrapolation)
+        {
+            recordWarning(issues::RATE_SOURCE_EXTRAPOLATION, "Extrapolation past the last pillar is allowed",
+                          {"final_date"});
+        }
+        return;
     }
 
     QuantLib::Date RateSource::getAnchorDate() const

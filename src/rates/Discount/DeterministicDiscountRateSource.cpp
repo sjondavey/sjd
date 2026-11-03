@@ -5,28 +5,29 @@ using namespace QuantLib;
 
 namespace sjd
 {
-    bool DeterministicDiscountRateSource::isOK()
+    void DeterministicDiscountRateSource::runChecks()
     {
-        if (!RateSource::isOK())
+        RateSource::runChecks();
+        if (hasErrors())
         {
-            return false;
+            return;
         }
         if (orderedForwardDates.size() > 0)
         {
             if (!isInRange(orderedForwardDates.front()))
             {
-                recordIssue("DISCOUNT_RATE_SOURCE_RANGE",
+                recordIssue(issues::DISCOUNT_RATE_SOURCE_RANGE,
                             "First forward date is outside the rate source range", {"observation_dates"});
-                return false;
+                return;
             }
             if (!isInRange(orderedForwardDates.back()))
             {
-                recordIssue("DISCOUNT_RATE_SOURCE_RANGE",
+                recordIssue(issues::DISCOUNT_RATE_SOURCE_RANGE,
                             "Last forward date is outside the rate source range", {"observation_dates"});
-                return false;
+                return;
             }
         }
-        return true;
+        return;
     }
 
     vector<pair<string, std::shared_ptr<RateSource>>> DeterministicDiscountRateSource::getMarketRateStresses()

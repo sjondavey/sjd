@@ -30,7 +30,7 @@ void VolatilitySurfacesTest::testEuropeanMoneynessConstruction()
 
     std::shared_ptr<VolatilitySurfaceMoneyness> volSurface = std::make_shared<VolatilitySurfaceMoneyness>(
         anchorDate, observationDates, moneyness, volatility, BICUBIC, false);
-    BOOST_CHECK(volSurface->isOK() == false);
+    BOOST_CHECK(volSurface->validate().isOK() == false);
 
     // initialise with inconsistent dimensions
     anchorDate = Date(27, January, 2012);
@@ -47,7 +47,7 @@ void VolatilitySurfacesTest::testEuropeanMoneynessConstruction()
 
     volSurface = std::make_shared<VolatilitySurfaceMoneyness>(anchorDate, observationDates, moneyness,
                                                               volatility, BICUBIC, false);
-    BOOST_CHECK(volSurface->isOK() == false);
+    BOOST_CHECK(volSurface->validate().isOK() == false);
 
     Date lastObservationDate = observationDates.back();
     Date laterDateInSameMonth = calendar.endOfMonth(lastObservationDate);
@@ -66,7 +66,7 @@ void VolatilitySurfacesTest::testEuropeanMoneynessConstruction()
     volatility = Matrix(moneyness.size(), observationDates.size(), 10);
     volSurface = std::make_shared<VolatilitySurfaceMoneyness>(anchorDate, observationDates, moneyness,
                                                               volatility, BICUBIC, false);
-    BOOST_CHECK(volSurface->isOK() == true);
+    BOOST_CHECK(volSurface->validate().isOK() == true);
 }
 
 void VolatilitySurfacesTest::testEuropeanMoneynessConsistencyBetweenVolAndSD()
@@ -113,7 +113,7 @@ void VolatilitySurfacesTest::testEuropeanMoneynessRoll()
     double fwd = 1.0;
 
     std::shared_ptr<VolatilityRateSource> rolledSurface = volSurface->rollForward(d1);
-    BOOST_REQUIRE(rolledSurface->isOK());
+    BOOST_REQUIRE(rolledSurface->validate().isOK());
 
     double originalVol = volSurface->getVolatility(d2, fwd, fwd);
     double rolledVol = rolledSurface->getVolatility(d2, fwd, fwd);
@@ -141,7 +141,7 @@ void VolatilitySurfacesTest::testEuropeanMoneynessRoll()
     std::shared_ptr<VolatilitySurfaceMoneyness> baseCurve = std::make_shared<VolatilitySurfaceMoneyness>(
         anchorDate, surfaceDates, moneyness, surfaceData, interpolatorType, false);
     std::shared_ptr<VolatilityRateSource> rolledCurve = baseCurve->rollForward(surfaceDates[1]);
-    BOOST_CHECK(rolledCurve->isOK());
+    BOOST_CHECK(rolledCurve->validate().isOK());
     BOOST_CHECK(!rolledCurve->isInRange(anchorDate));
 
     surfaceDates.erase(surfaceDates.begin());
@@ -187,7 +187,7 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessConstruction()
     std::shared_ptr<VolatilitySurfaceMoneynessCMA> volSurface =
         std::make_shared<VolatilitySurfaceMoneynessCMA>(anchorDate, observationDates, moneyness, volatility,
                                                         BICUBIC, false);
-    BOOST_CHECK(volSurface->isOK() == false);
+    BOOST_CHECK(volSurface->validate().isOK() == false);
 
     // initialise with inconsistent dimensions
     anchorDate = Date(27, January, 2012);
@@ -200,7 +200,7 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessConstruction()
 
     volSurface = std::make_shared<VolatilitySurfaceMoneynessCMA>(anchorDate, observationDates, moneyness,
                                                                  volatility, BICUBIC, false);
-    BOOST_CHECK(volSurface->isOK() == false);
+    BOOST_CHECK(volSurface->validate().isOK() == false);
 
     // Add a second date in the same observation month
     Date lastObservationDate = observationDates.back();
@@ -209,17 +209,17 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessConstruction()
     volatility = Matrix(moneyness.size(), observationDates.size(), 10);
     volSurface = std::make_shared<VolatilitySurfaceMoneynessCMA>(anchorDate, observationDates, moneyness,
                                                                  volatility, BICUBIC, false);
-    BOOST_CHECK(volSurface->isOK() == false);
+    BOOST_CHECK(volSurface->validate().isOK() == false);
     observationDates.pop_back();
     volatility = Matrix(moneyness.size(), observationDates.size(), 10);
     volSurface = std::make_shared<VolatilitySurfaceMoneynessCMA>(anchorDate, observationDates, moneyness,
                                                                  volatility, BICUBIC, false);
-    BOOST_CHECK(volSurface->isOK() == true);
+    BOOST_CHECK(volSurface->validate().isOK() == true);
 
     // set anchor date after the last ovservation date
     volSurface = std::make_shared<VolatilitySurfaceMoneynessCMA>(laterDateInSameMonth, observationDates,
                                                                  moneyness, volatility, BICUBIC, false);
-    BOOST_CHECK(volSurface->isOK() == false);
+    BOOST_CHECK(volSurface->validate().isOK() == false);
 
     anchorDate = Date(27, January, 2012);
     observationDates.clear();
@@ -231,7 +231,7 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessConstruction()
     volatility = Matrix(moneyness.size(), observationDates.size(), 10);
     volSurface = std::make_shared<VolatilitySurfaceMoneynessCMA>(anchorDate, observationDates, moneyness,
                                                                  volatility, BICUBIC, false);
-    BOOST_CHECK(volSurface->isOK() == true);
+    BOOST_CHECK(volSurface->validate().isOK() == true);
 }
 
 void VolatilitySurfacesTest::testCalendarMonthMoneynessConsistencyBetweenVolAndSD()
@@ -282,7 +282,7 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessRoll()
     double fwd = 1.0;
 
     std::shared_ptr<VolatilityRateSource> rolledSurface = volSurface->rollForward(d1);
-    BOOST_REQUIRE(rolledSurface->isOK());
+    BOOST_REQUIRE(rolledSurface->validate().isOK());
 
     double originalVol = volSurface->getVolatility(d2, fwd, fwd);
     double rolledVol = rolledSurface->getVolatility(d2, fwd, fwd);
@@ -313,7 +313,7 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessRoll()
         std::make_shared<VolatilitySurfaceMoneynessCMA>(anchorDate, surfaceDates, moneyness, surfaceData,
                                                         interpolatorType, false);
     std::shared_ptr<VolatilityRateSource> rolledCurve = baseCurve->rollForward(surfaceDates[1]);
-    BOOST_CHECK(rolledCurve->isOK());
+    BOOST_CHECK(rolledCurve->validate().isOK());
     BOOST_CHECK(!rolledCurve->isInRange(anchorDate));
 
     surfaceDates.erase(surfaceDates.begin());
@@ -376,7 +376,7 @@ void VolatilitySurfacesTest::testForwardDeltaVolatilitySurfaceConstruction()
         gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, 100, .01, vector<Date>(0));
 
     VolatilitySurfaceDelta vs(anchorDate, observationDates, delta, volatility, BICUBIC, false);
-    BOOST_REQUIRE(vs.isOK());
+    BOOST_REQUIRE(vs.validate().isOK());
 
     Date d1 = calendar->advance(anchorDate, 1, Years);
     double fwd = frs->getForward(d1);
@@ -429,7 +429,7 @@ void VolatilitySurfacesTest::testFlatWings()
     for (size_t t = 0; t < 2; ++t)
     {
         VolatilitySurfaceDelta vs(anchorDate, observationDates, delta, deltaVols, types[t], false);
-        BOOST_REQUIRE(vs.isOK());
+        BOOST_REQUIRE(vs.validate().isOK());
 
         // A low strike has a put delta below 10 and a high strike a put delta above 90.
         BOOST_CHECK(vs.isInRange(d1, 20, fwd));
@@ -455,7 +455,7 @@ void VolatilitySurfacesTest::testFlatWings()
         }
     }
     VolatilitySurfaceMoneyness ms(anchorDate, observationDates, moneyness, moneynessVols, BILINEAR, false);
-    BOOST_REQUIRE(ms.isOK());
+    BOOST_REQUIRE(ms.validate().isOK());
     BOOST_CHECK(ms.isInRange(d1, 10, fwd));
     BOOST_CHECK(ms.isInRange(d1, 300, fwd));
     BOOST_CHECK(abs(ms.getVolatility(d1, 10, fwd) - 0.20) < 1e-10);
@@ -464,7 +464,7 @@ void VolatilitySurfacesTest::testFlatWings()
 
     VolatilitySurfaceMoneynessCMA cma(anchorDate, observationDates, moneyness, moneynessVols, BILINEAR,
                                       false);
-    BOOST_REQUIRE(cma.isOK());
+    BOOST_REQUIRE(cma.validate().isOK());
     BOOST_CHECK(cma.isInRange(d1, 10, fwd));
     BOOST_CHECK(abs(cma.getVolatility(d1, 10, fwd) - 0.20) < 1e-10);
     BOOST_CHECK(abs(cma.getVolatility(d1, 300, fwd) - 0.30) < 1e-10);

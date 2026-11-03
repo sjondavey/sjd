@@ -22,7 +22,7 @@ namespace sjd
                                      ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
                                      bool allowExtrapolation = false);
 
-        bool isOK();
+        void runChecks() override;
         virtual std::string validationRoot() const { return "forward_curve_cma"; }
 
         virtual bool isInRange(QuantLib::Date date) const;

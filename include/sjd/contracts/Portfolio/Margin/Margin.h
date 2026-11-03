@@ -35,7 +35,7 @@ namespace sjd
                                          double minimumTransferAmount,
                                          double rounding);
 
-        virtual bool isOK();
+        void runChecks() override;
 
         void setAnchorDate(QuantLib::Date anchorDate);
         QuantLib::Date getAnchorDate() const;
@@ -70,8 +70,6 @@ namespace sjd
         double balance;
 
         QuantLib::Date anchorDate;
-
-        std::string className;
     };
 
     /*======================================================================================

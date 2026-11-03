@@ -39,10 +39,10 @@ namespace sjd
                   extrapolateInput);
     }
 
-    bool VolatilitySurfaceDelta::isOK()
+    void VolatilitySurfaceDelta::runChecks()
     {
-        VolatiltiySurfaceRateSource::isOK();
-        return !errorTracking->getHasErrors();
+        VolatiltiySurfaceRateSource::runChecks();
+        return;
     }
 
     bool VolatilitySurfaceDelta::isInRange(QuantLib::Date date, double /*strike*/, double /*forward*/) const

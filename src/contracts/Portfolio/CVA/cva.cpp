@@ -11,10 +11,10 @@ namespace sjd
     CVA
 
      =======================================================================================*/
-    bool CVA::isOK()
+    void CVA::runChecks()
     {
         errorTracking->clear();
-        return !hasErrors();
+        return;
     }
 
     std::string CVA::validationRoot() const
@@ -62,18 +62,18 @@ namespace sjd
         setAnchorDate(anchorDateInput);
     }
 
-    bool FlatPD::isOK()
+    void FlatPD::runChecks()
     {
-        CVA::isOK();
+        CVA::runChecks();
         if ((pd < 0) || (pd > 1))
         {
-            errorTracking->record("CVA_PD_RANGE", "PD is not in the range [0,1]", {"cva", "pd"});
+            errorTracking->record(issues::CVA_PD_RANGE, "PD is not in the range [0,1]", {"cva", "pd"});
         }
         if ((lgd < 0) || (lgd > 1))
         {
-            errorTracking->record("CVA_LGD_RANGE", "LDG is not in the range [0,1]", {"cva", "lgd"});
+            errorTracking->record(issues::CVA_LGD_RANGE, "LDG is not in the range [0,1]", {"cva", "lgd"});
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     void FlatPD::setLGD(double lgdInput)
@@ -147,50 +147,51 @@ namespace sjd
         lossInterpolator = std::make_shared<LinearArrayInterpolator>(time, lgd, false);
     }
 
-    bool CumulativeDefaultProbability::isOK()
+    void CumulativeDefaultProbability::runChecks()
     {
-        CVA::isOK();
+        CVA::runChecks();
         if (observationDates[0] < anchorDate)
         {
-            errorTracking->record("CVA_DATES_BEFORE_ANCHOR", "Observation dates before anchor date",
+            errorTracking->record(issues::CVA_DATES_BEFORE_ANCHOR, "Observation dates before anchor date",
                                   {"cva", "observation_dates"});
         }
         if (!isStrictlyIncreasing<double>(cumulativeDefaultProbability))
         {
-            errorTracking->record("CVA_PD_NOT_INCREASING",
+            errorTracking->record(issues::CVA_PD_NOT_INCREASING,
                                   "Cumulative default probabilities are not strictly increasing",
                                   {"cva", "cumulative_pd"});
         }
         if ((cumulativeDefaultProbability.back() > 1) || (cumulativeDefaultProbability.front() < 0))
         {
-            errorTracking->record("CVA_PD_RANGE", "Cumulative default probability not in the range [0, 1]",
+            errorTracking->record(issues::CVA_PD_RANGE,
+                                  "Cumulative default probability not in the range [0, 1]",
                                   {"cva", "cumulative_pd"});
         }
         if (std::abs(cumulativeDefaultProbability.front()) > 1e-14)
         {
-            errorTracking->record("CVA_PD_ANCHOR_NOT_ZERO",
+            errorTracking->record(issues::CVA_PD_ANCHOR_NOT_ZERO,
                                   "Cumulative default probability on the anchor date is not 0",
                                   {"cva", "cumulative_pd"});
         }
         if (!defaultInterpolator->isOk())
         {
-            errorTracking->record("CVA_PD_INTERPOLATOR", defaultInterpolator->getErrorMessage(),
+            errorTracking->record(issues::CVA_PD_INTERPOLATOR, defaultInterpolator->getErrorMessage(),
                                   {"cva", "cumulative_pd"});
         }
         for (size_t i = 0; i < lossGivenDefault.size(); ++i)
         {
             if ((lossGivenDefault[i] < 0) || (lossGivenDefault[i] > 1))
             {
-                errorTracking->record("CVA_LGD_RANGE", "Loss given default must be between 0 and 1",
+                errorTracking->record(issues::CVA_LGD_RANGE, "Loss given default must be between 0 and 1",
                                       {"cva", "lgd"});
             }
         }
         if (!lossInterpolator->isOk())
         {
-            errorTracking->record("CVA_LGD_INTERPOLATOR", lossInterpolator->getErrorMessage(),
+            errorTracking->record(issues::CVA_LGD_INTERPOLATOR, lossInterpolator->getErrorMessage(),
                                   {"cva", "lgd"});
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     double CumulativeDefaultProbability::getPD(Date d)

@@ -30,23 +30,25 @@ namespace sjd
                                volatility);
         anchorDate = quotes.anchorDate();
         allowExtrapolation = quotes.allowsExtrapolation();
+        flatBackFilled = quotes.anchorWasFlatFilled();
         finalDate = quotes.finalDate();
         setVolatilityRateSource(volatility);
     }
 
     ForwardCurveStochasticSpotVol::~ForwardCurveStochasticSpotVol() {}
 
-    bool ForwardCurveStochasticSpotVol::isOK()
+    void ForwardCurveStochasticSpotVol::runChecks()
     {
-        if (!ForwardRateSourceStochastic::isOK())
+        ForwardRateSourceStochastic::runChecks();
+        if (hasErrors())
         {
-            return false;
+            return;
         }
         string errorMessage = "";
         if (!quotes.quotesAreOk(errorMessage))
         {
-            recordIssue("FORWARD_CURVE_INVALID", errorMessage, {"forward_curve"});
-            return false;
+            recordIssue(issues::FORWARD_CURVE_INVALID, errorMessage, {"forward_curve"});
+            return;
         }
         Date d1, d2;
         if (vrs->hasNegativeATMFwdFwdVariances(d1, d2))
@@ -54,10 +56,10 @@ namespace sjd
             stringstream errorDescription;
             errorDescription << "Negative fwd fwd variance between " << QuantLib::io::iso_date(d1) << " and "
                              << QuantLib::io::iso_date(d2);
-            recordIssue("FORWARD_NEGATIVE_FWD_FWD_VARIANCE", errorDescription.str(),
+            recordIssue(issues::FORWARD_NEGATIVE_FWD_FWD_VARIANCE, errorDescription.str(),
                         {"volatility_rate_source"});
         }
-        return !errorTracking->getHasErrors();
+        return;
     }
 
     double ForwardCurveStochasticSpotVol::getForward(Date toDate) const
