@@ -1,5 +1,7 @@
 #include <sjd/tools/CalendarMonthAverageCurve.h>
 
+#include <cmath>
+
 using namespace std;
 using namespace QuantLib;
 
@@ -182,7 +184,7 @@ namespace sjd
         Date beginningOfToMonth = Date(1, toDate.month(), toDate.year());
         std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
         double yf = dayCounter->yearFraction(beginningOfFromMonth, beginningOfToMonth);
-        int monthsAsInt = boost::math::iround(yf * 12); // need to keep whole number of months ahead
+        int monthsAsInt = static_cast<int>(std::lround(yf * 12)); // need to keep whole number of months ahead
         return monthsAsInt;
     }
 
@@ -190,7 +192,7 @@ namespace sjd
     {
         Date beginningOfMonth = Date(1, date.month(), date.year());
         double yf = a365DayCounter->yearFraction(beginningOfAnchorDateMonth, beginningOfMonth);
-        int monthsAsInt = boost::math::iround(yf * 12); // need to keep whole number of months ahead
+        int monthsAsInt = static_cast<int>(std::lround(yf * 12)); // need to keep whole number of months ahead
         return monthsAsInt;
     }
 }

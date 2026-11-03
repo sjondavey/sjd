@@ -94,9 +94,11 @@ namespace sjd
         std::vector<QuantLib::Date> allFixingDates;
         std::vector<double> allFixingRates;
 
+        // One implementation on every platform. std::normal_distribution is not.
+        double drawStandardNormal();
+
         long seed = 0;
         std::mt19937 rng;
-        std::normal_distribution<double> nd{0.0, 1.0};
         std::vector<double> randomNumbers;
     };
 

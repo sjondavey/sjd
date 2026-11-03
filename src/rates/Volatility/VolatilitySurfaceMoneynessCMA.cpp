@@ -2,6 +2,8 @@
 
 #include <sjd/tools/Errors.h>
 
+#include <cmath>
+
 using namespace std;
 using namespace QuantLib;
 
@@ -98,7 +100,7 @@ namespace sjd
             Date monthStart = Date(1, observationDates[i].month(), observationDates[i].year());
             // observationDates.push_back(beginningOfMonth);
             double yf = simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, monthStart);
-            int monthsAsInt = boost::math::iround(yf * 12);
+            int monthsAsInt = static_cast<int>(std::lround(yf * 12));
             time.push_back((double)monthsAsInt); // Note that if there is more than one observation date per
                                                  // month the time vector will not be strictly increasing
         }
@@ -115,9 +117,8 @@ namespace sjd
     double VolatilitySurfaceMoneynessCMA::getMonthsAheadOfAnchorDate(Date toDate) const
     {
         double t1 = dayCounter->yearFraction(beginningOfAnchorDateMonth, toDate);
-        [[maybe_unused]] int t2 = boost::math::iround(12 * t1);
-        return (double)boost::math::iround(
-            12 * simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, toDate));
+        [[maybe_unused]] int t2 = static_cast<int>(std::lround(12 * t1));
+        return (double)std::lround(12 * simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, toDate));
     }
 
     bool VolatilitySurfaceMoneynessCMA::isInRange(QuantLib::Date date) const
@@ -149,7 +150,7 @@ namespace sjd
 
         Date beginningOfMonth = Date(1, toDate.month(), toDate.year());
         double yf = simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, beginningOfMonth);
-        int monthsAsInt = boost::math::iround(yf * 12); // need to keep whole number of months ahead
+        int monthsAsInt = static_cast<int>(std::lround(yf * 12)); // need to keep whole number of months ahead
         double monthAsDouble = ((double)monthsAsInt);
 
         return surfaceVolatility(monthAsDouble, 0.0);
@@ -161,7 +162,7 @@ namespace sjd
 
         Date beginningOfMonth = Date(1, toDate.month(), toDate.year());
         double yf = simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, beginningOfMonth);
-        int monthsAsInt = boost::math::iround(yf * 12); // need to keep whole number of months ahead
+        int monthsAsInt = static_cast<int>(std::lround(yf * 12)); // need to keep whole number of months ahead
         double monthAsDouble = ((double)monthsAsInt);
 
         double moneyness = (strike - forward) / forward;
@@ -273,8 +274,8 @@ namespace sjd
             for (size_t i = 0; i < observationDates.size(); ++i)
             {
                 double t1 = simpleDayCounter->yearFraction(beginningOfRollToDateMonth, observationDates[i]);
-                [[maybe_unused]] int t2 = boost::math::iround(12 * t1);
-                double monthsFromAnchor = (double)boost::math::iround(
+                [[maybe_unused]] int t2 = static_cast<int>(std::lround(12 * t1));
+                double monthsFromAnchor = (double)std::lround(
                     12 * simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, toDate));
                 if (monthsFromAnchor >= 0)
                 {

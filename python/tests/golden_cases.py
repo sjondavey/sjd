@@ -54,7 +54,7 @@ def _black76():
 def _lookup_dates(market):
     curve_dates = market["curve_dates"]
     days = list(curve_dates)
-    for first, second in zip(curve_dates, curve_dates[1:]):
+    for first, second in zip(curve_dates, curve_dates[1:], strict=False):
         days.append(first + (second - first) / 2)
     return sorted(set(days))
 

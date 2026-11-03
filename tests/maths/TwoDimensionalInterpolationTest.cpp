@@ -33,7 +33,7 @@ void Maths2DInterpTest::testBilinearInterpolator()
     vector<vector<double>> volatility;
     volatility += v1, v2, v3, v4, v5;
 
-    QuantLib::Matrix M = QuantLib::Matrix(time.size(), delta.size());
+    QuantLib::Matrix M(delta.size(), time.size());
     for (size_t i = 0; i < delta.size(); ++i)
     {
         for (size_t j = 0; j < time.size(); ++j)
@@ -93,7 +93,7 @@ void Maths2DInterpTest::testBicubicInterpolator()
     vector<vector<double>> volatility;
     volatility += v1, v2, v3, v4, v5;
 
-    QuantLib::Matrix M = QuantLib::Matrix(time.size(), delta.size());
+    QuantLib::Matrix M(delta.size(), time.size());
     for (size_t i = 0; i < delta.size(); ++i)
     {
         for (size_t j = 0; j < time.size(); ++j)

@@ -111,9 +111,9 @@ These identifiers are the `code` field of a `ValidationIssue`. The constants liv
 | `STRUCTURE_UNCAPPED_WING` | has uncapped exposure but maximum volume is not in the (uncapped) wings |
 | `STRUCTURE_VOLUME_WITHOUT_EXPOSURE` | Structure Design Error, the structure has no volume but it does have price exposure |
 | `SURFACE_INPUTS_INSUFFICIENT` | A two-dimensional interpolator does not have enough x, y or z data |
-| `SURFACE_X_DIMENSION` | Surface x vector length does not match the z rows |
+| `SURFACE_X_DIMENSION` | Surface x vector length does not match the z columns |
 | `SURFACE_X_NOT_INCREASING` | Surface x values are not strictly increasing |
-| `SURFACE_Y_DIMENSION` | Surface y vector length does not match the z columns |
+| `SURFACE_Y_DIMENSION` | Surface y vector length does not match the z rows |
 | `SURFACE_Y_NOT_INCREASING` | Surface y values are not strictly increasing |
 | `VOLATILITY_CURVE_CMA_DIMENSION_MISMATCH` | volatility curve cma dimension mismatch |
 | `VOLATILITY_CURVE_CMA_INVALID` | Calendar-month-average volatility curve inputs are not usable |

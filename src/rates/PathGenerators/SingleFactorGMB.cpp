@@ -1,3 +1,4 @@
+#include <cmath>
 #include <random>
 #include <sjd/rates/PathGenerators/SingleFactorGMB.h>
 
@@ -222,7 +223,15 @@ namespace sjd
     {
         seed = seedInput;
         rng.seed(static_cast<std::mt19937::result_type>(seedInput));
-        nd.reset();
+    }
+
+    double SingleFactorEconomicScenarioGenerator::drawStandardNormal()
+    {
+        // Box-Muller. The uniform is in (0, 1) so the log argument is never zero.
+        constexpr double twoPi = 6.28318530717958647692;
+        const double u1 = (static_cast<double>(rng()) + 0.5) * (1.0 / 4294967296.0);
+        const double u2 = (static_cast<double>(rng()) + 0.5) * (1.0 / 4294967296.0);
+        return std::sqrt(-2.0 * std::log(u1)) * std::cos(twoPi * u2);
     }
 
     long SingleFactorEconomicScenarioGenerator::getRandomSeed() const
@@ -274,7 +283,7 @@ namespace sjd
     {
         for (size_t i = 0; i < numDates; ++i)
         {
-            randomNumbers[i] = nd(rng);
+            randomNumbers[i] = drawStandardNormal();
         }
         return getPathForRandomNumber(randomNumbers);
     }

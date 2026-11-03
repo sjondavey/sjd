@@ -30,12 +30,13 @@ namespace sjd
             recordIssue(issues::SURFACE_Y_NOT_INCREASING, "Y inputs not strictly increasing", {});
             return;
         }
-        if (y.size() != z.columns())
+        // Rows follow y and columns follow x, matching QuantLib's z[y][x].
+        if (y.size() != z.rows())
         {
             recordIssue(issues::SURFACE_Y_DIMENSION, "Y vector has inconsistent dimension with z data", {});
             return;
         }
-        if (x.size() != z.rows())
+        if (x.size() != z.columns())
         {
             recordIssue(issues::SURFACE_X_DIMENSION, "X vector has inconsistent dimension with z data", {});
         }

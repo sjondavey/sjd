@@ -4,14 +4,15 @@ import json
 
 import numpy as np
 import pytest
-
 from golden_cases import GOLDEN_PATH, compute
 
-# Closed-form values and seeded paths agree to rounding on one platform. Across
-# compilers the maths library can differ in the last bits, which compounds
-# along a path, so the tolerance is relative 1e-9 rather than exact.
+# Closed-form values agree to rounding. Seeded paths use one normal-draw
+# implementation, but libm can still differ in the last bits and that compounds
+# along a path, so simulation totals use a wider band than the closed form.
 RTOL = 1e-9
 ATOL = 1e-9
+SIM_RTOL = 1e-6
+SIM_ATOL = 1e-6
 
 
 @pytest.fixture(scope="module")
@@ -35,6 +36,7 @@ def test_value(key, golden, current):
     if key.endswith("dates"):
         assert actual == expected
         return
+    rtol, atol = (SIM_RTOL, SIM_ATOL) if key.startswith("simulation.") else (RTOL, ATOL)
     np.testing.assert_allclose(
-        np.asarray(actual, dtype=float), np.asarray(expected, dtype=float), rtol=RTOL, atol=ATOL, err_msg=key
+        np.asarray(actual, dtype=float), np.asarray(expected, dtype=float), rtol=rtol, atol=atol, err_msg=key
     )

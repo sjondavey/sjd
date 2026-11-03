@@ -63,6 +63,11 @@ jobs:
         with:
           arch: x64
 
+      # The MSVC developer prompt overwrites VCPKG_ROOT with Visual Studio's own copy.
+      - name: Pin vcpkg to the workspace
+        shell: bash
+        run: echo "VCPKG_ROOT=$GITHUB_WORKSPACE/vcpkg" >> "$GITHUB_ENV"
+
       - name: Restore vcpkg binary cache
         uses: actions/cache@v4
         with:
