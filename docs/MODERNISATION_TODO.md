@@ -419,19 +419,20 @@ mechanism to use.
 
 **Tasks**
 
-- [ ] Add `src/tools/Errors.cpp`, `ValidationError`, and the `SJD_ASSERT` /
+- [x] Add `src/tools/Errors.cpp`, `ValidationError`, and the `SJD_ASSERT` /
       `SJD_REQUIRE` macros. `include/sjd/tools/Errors.h` already has `Error`,
       `ConfigurationError` and `NumericalError` from Step 6. `SJD_REQUIRE`
       throws in every build; `SJD_ASSERT` is debug-only.
-- [ ] Convert the existing `throw std::invalid_argument` sites
+- [x] Convert the existing `throw std::invalid_argument` sites
       (`ForwardCurveFactory.cpp`, `Calendars.cpp`) to `ConfigurationError`.
       Since `ConfigurationError` derives from `std::runtime_error` and not
       `std::invalid_argument`, update the `catch` in `sjd_module.cpp` at the
-      same time (Step 10 replaces it with a translator).
-- [ ] Add tests for each exception type.
+      same time (Step 10 replaces it with a translator). The calendar
+      constructor catches it too, so an unknown name stays a Python `ValueError`.
+- [x] Add tests for each exception type.
 
 **Done when** the policy document exists and the two existing throw sites use
-the new types.
+the new types. Done. The policy is `docs/error-handling.md`.
 
 ---
 

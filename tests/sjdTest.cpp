@@ -71,6 +71,7 @@ test_suite* init_unit_test_suite(int, char*[])
     test->add(CVATest::suite());
 
     test->add(GoldenValuesTest::suite());
+    test->add(ErrorsTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

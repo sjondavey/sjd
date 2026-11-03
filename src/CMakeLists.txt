@@ -57,6 +57,7 @@ add_library(sjd STATIC
     tools/Common.cpp
     tools/Curve.cpp
     tools/DatedCurve.cpp
+    tools/Errors.cpp
     tools/Validation.cpp
 )
 add_library(sjd::sjd ALIAS sjd)

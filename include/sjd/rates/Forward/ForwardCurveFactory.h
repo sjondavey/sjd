@@ -14,7 +14,7 @@ namespace sjd
      * FORWARD_VOLATILITY_RATE_SOURCE_MISSING.
      *
      * Calendar-month averaging has no spot-volatility roll. That combination throws
-     * std::invalid_argument.
+     * ConfigurationError.
      */
     std::shared_ptr<ForwardRateSource> makeForwardCurve(QuantLib::Date anchorDate,
                                                         std::vector<QuantLib::Date> observationDates,

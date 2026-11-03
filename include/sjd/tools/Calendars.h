@@ -8,7 +8,7 @@ namespace sjd
 {
     // Names are the QuantLib class, then an optional ".Market" for calendars with several
     // markets, e.g. "UnitedKingdom", "UnitedKingdom.Metals", "UnitedStates.NYSE". A class
-    // name on its own means its settlement calendar. Throws std::invalid_argument for a
+    // name on its own means its settlement calendar. Throws ConfigurationError for a
     // name that is not in calendarNames().
     QuantLib::Calendar calendarNamed(const std::string& name);
 

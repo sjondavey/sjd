@@ -1,8 +1,8 @@
 #include <sjd/tools/Calendars.h>
+#include <sjd/tools/Errors.h>
 
 #include <functional>
 #include <map>
-#include <stdexcept>
 
 #include <ql/time/calendars/australia.hpp>
 #include <ql/time/calendars/canada.hpp>
@@ -65,7 +65,7 @@ namespace sjd
         auto found = registry().find(name);
         if (found == registry().end())
         {
-            throw invalid_argument("Unknown calendar \"" + name + "\"");
+            throw ConfigurationError("Unknown calendar \"" + name + "\"");
         }
         return found->second();
     }
@@ -74,7 +74,7 @@ namespace sjd
     {
         if (components.empty())
         {
-            throw invalid_argument("A joint calendar needs at least one component");
+            throw ConfigurationError("A joint calendar needs at least one component");
         }
         if (components.size() == 1)
         {

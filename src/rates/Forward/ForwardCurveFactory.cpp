@@ -5,8 +5,7 @@
 #include <sjd/rates/Forward/Stochastic/ForwardCurveCMAStochasticFwdVol.h>
 #include <sjd/rates/Forward/Stochastic/ForwardCurveStochasticFwdVol.h>
 #include <sjd/rates/Forward/Stochastic/ForwardCurveStochasticSpotVol.h>
-
-#include <stdexcept>
+#include <sjd/tools/Errors.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -33,8 +32,8 @@ namespace sjd
                 return std::make_shared<ForwardCurveCMAStochasticFwdVol>(
                     anchorDate, observationDates, forwards, interpolation, allowExtrapolation, volatility);
             case ForwardRoll::SpotVolatility:
-                throw invalid_argument("A calendar-month forward curve cannot roll with spot volatility. "
-                                       "Use the forward-volatility roll.");
+                throw ConfigurationError("A calendar-month forward curve cannot roll with spot volatility. "
+                                         "Use the forward-volatility roll.");
             }
         }
         switch (roll)
@@ -49,6 +48,6 @@ namespace sjd
             return std::make_shared<ForwardCurveStochasticSpotVol>(
                 anchorDate, observationDates, forwards, interpolation, allowExtrapolation, volatility);
         }
-        throw invalid_argument("Unknown forward roll.");
+        throw ConfigurationError("Unknown forward roll.");
     }
 }

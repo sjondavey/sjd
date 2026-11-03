@@ -281,8 +281,15 @@ PYBIND11_MODULE(_core, m)
                      NamedCalendar result;
                      result.name = name;
                      result.components = components;
-                     result.calendar =
-                         components.empty() ? sjd::calendarNamed(name) : sjd::jointCalendar(components);
+                     try
+                     {
+                         result.calendar =
+                             components.empty() ? sjd::calendarNamed(name) : sjd::jointCalendar(components);
+                     }
+                     catch (const sjd::ConfigurationError& error)
+                     {
+                         throw py::value_error(error.what());
+                     }
                      return result;
                  }),
              py::arg("name"), py::arg("components") = std::vector<std::string>())
@@ -416,7 +423,7 @@ PYBIND11_MODULE(_core, m)
                                                       forwards, interpolation, allow_extrapolation, averaging,
                                                       roll, volatility);
                      }
-                     catch (const std::invalid_argument& error)
+                     catch (const sjd::ConfigurationError& error)
                      {
                          throw py::value_error(error.what());
                      }
