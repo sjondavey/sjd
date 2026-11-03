@@ -899,10 +899,9 @@ void StructureTest::testSpecialCases()
     instruments.push_back(c1);
     instruments.push_back(c5);
     instruments.push_back(c4);
-    bool successful = false;
-    vector<std::shared_ptr<Structure>> structures =
-        Structure::createStructures(instruments, factors, successful);
-    BOOST_REQUIRE(successful);
+    Result<vector<std::shared_ptr<Structure>>> built = Structure::createStructures(instruments, factors);
+    BOOST_REQUIRE(built.ok());
+    vector<std::shared_ptr<Structure>> structures = built.value;
     BOOST_CHECK(structures.size() == 1);
     BOOST_CHECK(structures[0]->isExposureCapped());
     actualCap = structures[0]->getCap();
@@ -912,9 +911,9 @@ void StructureTest::testSpecialCases()
     instruments.push_back(c1);
     instruments.push_back(c4);
     instruments.push_back(c5);
-    successful = false;
-    structures = Structure::createStructures(instruments, factors, successful);
-    BOOST_REQUIRE(successful);
+    built = Structure::createStructures(instruments, factors);
+    BOOST_REQUIRE(built.ok());
+    structures = built.value;
     BOOST_CHECK(structures.size() == 1);
     BOOST_CHECK(structures[0]->isExposureCapped());
     actualCap = structures[0]->getCap();
@@ -944,10 +943,9 @@ void StructureTest::testStructureCreation()
     contracts.push_back(cf);
     contracts.push_back(option);
 
-    vector<std::shared_ptr<Structure>> structures;
-    bool successful;
-    structures = Structure::createStructures(contracts, regCapFactors, successful);
-    BOOST_CHECK(successful);
+    Result<vector<std::shared_ptr<Structure>>> built = Structure::createStructures(contracts, regCapFactors);
+    BOOST_CHECK(built.ok());
+    vector<std::shared_ptr<Structure>> structures = built.value;
     BOOST_REQUIRE(structures.size() == 1);
     BOOST_CHECK(structures[0]->isOK());
 
@@ -957,8 +955,9 @@ void StructureTest::testStructureCreation()
     contracts.push_back(fwdSale);
     contracts.push_back(cf);
     contracts.push_back(option);
-    structures = Structure::createStructures(contracts, regCapFactors, successful);
-    BOOST_CHECK(successful);
+    built = Structure::createStructures(contracts, regCapFactors);
+    BOOST_CHECK(built.ok());
+    structures = built.value;
     BOOST_REQUIRE(structures.size() == 1);
     BOOST_CHECK(structures[0]->isOK());
 
@@ -974,7 +973,7 @@ void StructureTest::testStructureCreation()
     threeway.push_back(purchasedCall);
     threeway.push_back(soldCall);
     Structure manualStructure(threeway, regCapFactors);
-    structures = Structure::createStructures(threeway, regCapFactors, successful);
+    structures = Structure::createStructures(threeway, regCapFactors).value;
     BOOST_REQUIRE(structures.size() == 1);
     std::shared_ptr<Structure> autoStructure = structures[0];
     BOOST_CHECK(autoStructure->isOK());
@@ -1017,9 +1016,9 @@ void StructureTest::testStructureCreation()
     contracts.push_back(s1c6);
     contracts.push_back(s1c7);
 
-    vector<std::shared_ptr<Structure>> s1 = Structure::createStructures(contracts, regCapFactors, successful);
-
-    BOOST_REQUIRE(successful);
+    Result<vector<std::shared_ptr<Structure>>> split = Structure::createStructures(contracts, regCapFactors);
+    BOOST_REQUIRE(split.ok());
+    vector<std::shared_ptr<Structure>> s1 = split.value;
     BOOST_REQUIRE(s1.size() == 2);
     BOOST_CHECK(s1[0]->isOK());
     BOOST_CHECK(s1[1]->isOK());

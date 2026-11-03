@@ -1,5 +1,7 @@
 #include <sjd/pricing/AsianOptionFormula.h>
 
+#include <sjd/tools/Errors.h>
+
 using namespace std;
 
 namespace sjd
@@ -8,11 +10,11 @@ namespace sjd
     /*======================================================================================
     AverageRateOption
      =======================================================================================*/
-    void AverageRateOption::setParameters(vector<double> forwardRatesInput,
-                                          vector<double> fixedRatesInputs,
-                                          double strikeInput,
-                                          vector<double> standardDeviationsInput,
-                                          double dfToSettlementInput)
+    void AverageRateOption::store(vector<double> forwardRatesInput,
+                                  vector<double> fixedRatesInputs,
+                                  double strikeInput,
+                                  vector<double> standardDeviationsInput,
+                                  double dfToSettlementInput)
     {
         forwards = forwardRatesInput;
         fixedRates = fixedRatesInputs;
@@ -22,6 +24,38 @@ namespace sjd
         strike = strikeInput;
         dfToSettlement = dfToSettlementInput;
         callWhenSettingAnyInternalParameter();
+    }
+
+    std::string AverageRateOption::inputProblem() const
+    {
+        if (standardDeviations.size() != forwards.size())
+            return "Standard deviation and forward inputs do not have the same length";
+        if (M > N)
+            return "The number of rate set points exceeds the total number of averaging points";
+        if (M == N)
+            return "All forwards have rate set, this is not an option anymore";
+        for (size_t i = 0; i < forwards.size(); ++i)
+        {
+            if (forwards[i] <= 0)
+                return "All rate sets or forwards must be positive";
+            if (standardDeviations[i] <= 0)
+                return "All live forwards must have positive standard deviations";
+        }
+        if (strike <= 0)
+            return "Strike must be positive";
+        if (dfToSettlement <= 0)
+            return "Discount factor must be positive";
+        return {};
+    }
+
+    void AverageRateOption::setParameters(vector<double> forwardRatesInput,
+                                          vector<double> fixedRatesInputs,
+                                          double strikeInput,
+                                          vector<double> standardDeviationsInput,
+                                          double dfToSettlementInput)
+    {
+        store(forwardRatesInput, fixedRatesInputs, strikeInput, standardDeviationsInput, dfToSettlementInput);
+        SJD_ASSERT(inputProblem().empty());
     }
 
     void AverageRateOption::setParameters(size_t nInput,
@@ -42,68 +76,14 @@ namespace sjd
         callWhenSettingAnyInternalParameter();
     }
 
-    bool AverageRateOption::isOK()
-    {
-        // Input vectors must be the same length
-        if ((standardDeviations.size() != forwards.size()))
-        {
-            errorMessage =
-                "AverageRateOption->Standard Deviation and forward inputs do not have the same length";
-            return false;
-        }
-        if (M > N)
-        {
-            errorMessage = "AverageRateOption->The number of rate set points exceeds to total number of "
-                           "averaging points";
-            return false;
-        }
-        // some forwards must be live
-        [[maybe_unused]] size_t numberOfAveragingPoints = forwards.size();
-        if (M == N)
-        {
-            errorMessage = "AverageRateOption->All forwards have rate set, this is not an option anymore";
-            return false;
-        }
-        // inputs must be positive
-        for (size_t i = 0; i < forwards.size(); ++i)
-        {
-            if (forwards[i] <= 0)
-            {
-                errorMessage = "AverageRateOption->all rate sets or forwards must be positive";
-                return false;
-            }
-            if (standardDeviations[i] <= 0)
-            {
-                errorMessage =
-                    "AverageRateOption->all (live) forwards must have positive standard deviations";
-                return false;
-            }
-        }
-        if (strike <= 0)
-        {
-            errorMessage = "AverageRateOption->strike must be positive";
-            return false;
-        }
-        if (dfToSettlement <= 0)
-        {
-            errorMessage = "AverageRateOption->Dsicount factor must be positive";
-            return false;
-        }
-        // I don't check for -ve fwd fwd variances becuase I only use variance out of T0
-        errorMessage = "AverageRateOption->No errors";
-        return true;
-    }
-
     void AverageRateOption::callWhenSettingAnyInternalParameter()
     {
         amountByWhichAverageExceedsStrike = 0;
         effectiveForward = 0;
         effectiveStrike = 0;
         effectiveStandardDeviation = 0;
-        option->setParameters(0, 0, 0, 0);
+        option->assign(0, 0, 0, 0);
         internalParamtersSet = false;
-        errorMessage = "AverageRateOption->Error checking has not happened, please call isOK() first to "
-                       "check for errors in input parameters.";
     }
 
     void AverageRateOption::calculateInternalOptionParameters()
@@ -112,7 +92,7 @@ namespace sjd
         {
             getEquivalentBlack76ParamtersFromVectorInputs();
             if (amountByWhichAverageExceedsStrike > 0)
-                option->setParameters(0, 0, 0, 0);
+                option->assign(0, 0, 0, 0);
             else
                 option->setParameters(effectiveForward, effectiveStrike, effectiveStandardDeviation,
                                       dfToSettlement);
@@ -182,20 +162,27 @@ namespace sjd
                                      double discountFactorToSettlement)
 
     {
-        option = new Black76Call(0, 0, 0, 0);
-        setParameters(forwardRates, fixedRates, strike, standardDeviation, discountFactorToSettlement);
-    };
+        option = new Black76Call(UncheckedFormulaInputs{}, 0, 0, 0, 0);
+        store(forwardRates, fixedRates, strike, standardDeviation, discountFactorToSettlement);
+        const std::string problem = inputProblem();
+        if (!problem.empty())
+            throw ConfigurationError(problem);
+    }
+
+    AverageRateCall::AverageRateCall(UncheckedFormulaInputs,
+                                     vector<double> forwardRates,
+                                     vector<double> fixedRates,
+                                     double strike,
+                                     vector<double> standardDeviation,
+                                     double discountFactorToSettlement)
+    {
+        option = new Black76Call(UncheckedFormulaInputs{}, 0, 0, 0, 0);
+        store(forwardRates, fixedRates, strike, standardDeviation, discountFactorToSettlement);
+    }
 
     AverageRateCall::~AverageRateCall()
     {
         delete option;
-    }
-
-    bool AverageRateCall::isOK()
-    {
-        bool isOKVariable = AverageRateOption::isOK();
-        errorMessage = "AverageRateCall->" + errorMessage;
-        return isOKVariable;
     }
 
     double AverageRateCall::getPremium()
@@ -218,20 +205,27 @@ namespace sjd
                                    double discountFactorToSettlement)
 
     {
-        option = new Black76Put(0, 0, 0, 0);
-        setParameters(forwardRates, fixedRates, strike, standardDeviation, discountFactorToSettlement);
-    };
+        option = new Black76Put(UncheckedFormulaInputs{}, 0, 0, 0, 0);
+        store(forwardRates, fixedRates, strike, standardDeviation, discountFactorToSettlement);
+        const std::string problem = inputProblem();
+        if (!problem.empty())
+            throw ConfigurationError(problem);
+    }
+
+    AverageRatePut::AverageRatePut(UncheckedFormulaInputs,
+                                   vector<double> forwardRates,
+                                   vector<double> fixedRates,
+                                   double strike,
+                                   vector<double> standardDeviation,
+                                   double discountFactorToSettlement)
+    {
+        option = new Black76Put(UncheckedFormulaInputs{}, 0, 0, 0, 0);
+        store(forwardRates, fixedRates, strike, standardDeviation, discountFactorToSettlement);
+    }
 
     AverageRatePut::~AverageRatePut()
     {
         delete option;
-    }
-
-    bool AverageRatePut::isOK()
-    {
-        bool isOKVariable = AverageRateOption::isOK();
-        errorMessage = "AverageRatePut->" + errorMessage;
-        return isOKVariable;
     }
 
     double AverageRatePut::getPremium()

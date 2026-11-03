@@ -71,7 +71,7 @@ namespace sjd
         ForwardRoll roll() const;
         ForwardQuote quote() const;
 
-        bool quotesAreOk(std::string& errorMessage);
+        ValidationReport validateQuotes();
         double getForward(QuantLib::Date toDate) const;
         std::vector<double> getForward(const std::vector<QuantLib::Date>& toDates) const;
         double getForward(QuantLib::Month month, QuantLib::Year year) const;

@@ -55,8 +55,7 @@ namespace sjd
         allowExtrapolation = datedCurve->getAllowsExtrapolation();
         finalDate = datedCurve->getFinalDate();
         type = typeInput;
-        string tmp;
-        if (datedCurve->isOK(tmp) && (!datedCurve->containsRateOnAnchorDate()))
+        if (datedCurve->validate().isOK() && (!datedCurve->containsRateOnAnchorDate()))
         {
             datedCurve->addPointOnAnchorDate(0.0);
             flatBackFilled = true;
@@ -68,13 +67,9 @@ namespace sjd
     void VolatilityCurve::runChecks()
     {
         DeterministicVolatilityRateSource::runChecks();
-        string errorMessage = "";
-        if (!datedCurve->isOK(errorMessage))
+        if (!datedCurve->validate().isOK())
         {
-            const std::string_view code = errorMessage.find("same dimension") != std::string::npos
-                                              ? issues::VOLATILITY_CURVE_DIMENSION_MISMATCH
-                                              : issues::VOLATILITY_CURVE_INVALID;
-            recordIssue(code, errorMessage, {"inputs"});
+            absorbChildReport(datedCurve->validationReport(), std::string());
             return;
         }
         for (size_t i = 0; i < inputVolatilities.size(); ++i)

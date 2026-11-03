@@ -1,5 +1,7 @@
 #include "TwoDimensionalInterpolationTest.h"
 
+#include <sjd/tools/Errors.h>
+
 // using namespace std;
 using namespace boost::unit_test_framework;
 using namespace boost::math;
@@ -66,7 +68,9 @@ void Maths2DInterpTest::testBilinearInterpolator()
     BOOST_CHECK(interpolator.getRate(1, 10) == qlInterp(1, 10));
     BOOST_CHECK(interpolator.getRate(24, 90) == qlInterp(24, 90));
     BOOST_CHECK(interpolator.getRate(9, 33) == qlInterp(9, 33));
-    BOOST_CHECK(boost::math::isnan<double>(interpolator.getRate(9, 95)));
+#ifndef NDEBUG
+    BOOST_CHECK_THROW(interpolator.getRate(9, 95), sjd::Error);
+#endif
 }
 
 void Maths2DInterpTest::testBicubicInterpolator()
@@ -124,7 +128,9 @@ void Maths2DInterpTest::testBicubicInterpolator()
     BOOST_CHECK(interpolator.getRate(1, 10) == qlInterp(1, 10));
     BOOST_CHECK(interpolator.getRate(24, 90) == qlInterp(24, 90));
     BOOST_CHECK(interpolator.getRate(9, 33) == qlInterp(9, 33));
-    BOOST_CHECK(boost::math::isnan<double>(interpolator.getRate(9, 95)));
+#ifndef NDEBUG
+    BOOST_CHECK_THROW(interpolator.getRate(9, 95), sjd::Error);
+#endif
 }
 
 test_suite* Maths2DInterpTest::suite()

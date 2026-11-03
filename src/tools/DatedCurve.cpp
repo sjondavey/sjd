@@ -9,7 +9,10 @@ namespace sjd
     /*======================================================================================
     DatedCurve
     =======================================================================================*/
-    DatedCurve::DatedCurve() {}
+    DatedCurve::DatedCurve()
+    {
+        errorTracking = std::make_shared<IssueTracker>("DatedCurve");
+    }
 
     DatedCurve::DatedCurve(Date anchorDateInput,
                            vector<Date> observationDatesInput,
@@ -17,6 +20,7 @@ namespace sjd
                            ArrayInterpolatorType typeInput,
                            bool allowExtrapolationInput)
     {
+        errorTracking = std::make_shared<IssueTracker>("DatedCurve");
         setParameters(anchorDateInput, observationDatesInput, observedRatesInput, typeInput,
                       allowExtrapolationInput);
     }
@@ -60,25 +64,21 @@ namespace sjd
         }
     }
 
-    bool DatedCurve::isOK(string& errorMessage)
+    void DatedCurve::runChecks()
     {
-        errorMessage = "";
         if (observationPoints.size() < 1)
         {
-            errorMessage = "Input time empty";
-            return false;
+            recordIssue(issues::CURVE_INPUT_EMPTY, "Input time empty", {});
+            return;
         }
         if (observationDates[0] < anchorDate)
         {
-            errorMessage = "First ovservation time before Anchor Date";
-            return false;
+            recordIssue(issues::CURVE_OBSERVATION_BEFORE_ANCHOR, "First ovservation time before Anchor Date",
+                        {});
+            return;
         }
-        if (!interpolator->isOk())
-        {
-            errorMessage = interpolator->getErrorMessage();
-            return false;
-        }
-        return true;
+        if (interpolator && !interpolator->isOk())
+            absorbChildReport(interpolator->validationReport(), {});
     }
 
     void DatedCurve::setRates(vector<double> updatedRates)

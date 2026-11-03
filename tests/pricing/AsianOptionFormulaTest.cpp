@@ -1,5 +1,7 @@
 #include "AsianOptionFormulaTest.h"
 
+#include <sjd/tools/Errors.h>
+
 using namespace std;
 
 using namespace std;
@@ -73,18 +75,16 @@ void AsianOptionTest::testErrorMessagesWithSpecificData(AsianOptionInputParamete
 
     AverageRateCall call(ip.fwds, ip.fixes, ip.strike, ip.sds, ip.df);
     AverageRatePut put(ip.fwds, ip.fixes, ip.strike, ip.sds, ip.df);
-    BOOST_CHECK(call.isOK() == true);
-    BOOST_CHECK(put.isOK() == true);
 
-    // input vectors must have the correct dimension
+    // A mismatched forward vector is a programming error on the setter used by valuation.
     vector<double> incorrectFwds = ip.fwds;
     incorrectFwds.pop_back();
-    put.setParameters(incorrectFwds, ip.fixes, ip.strike, ip.sds, ip.df);
-    BOOST_CHECK(put.isOK() == false);
+#ifndef NDEBUG
+    BOOST_CHECK_THROW(put.setParameters(incorrectFwds, ip.fixes, ip.strike, ip.sds, ip.df), sjd::Error);
+#endif
     vector<double> incorrectSD = ip.sds;
     incorrectSD.pop_back();
     put.setParameters(incorrectFwds, ip.fixes, ip.strike, incorrectSD, ip.df);
-    BOOST_CHECK(put.isOK() == true);
     put.setParameters(ip.fwds, ip.fixes, ip.strike, ip.sds, ip.df);
 }
 
@@ -94,8 +94,6 @@ void AsianOptionTest::testValulationBeforeAveraging()
     AsianOptionInputParameters ip = getAsianInputsBeforeAveragingStarts();
     AverageRateCall call(ip.fwds, ip.fixes, ip.strike, ip.sds, ip.df);
     AverageRatePut put(ip.fwds, ip.fixes, ip.strike, ip.sds, ip.df);
-    BOOST_REQUIRE(call.isOK() == true);
-    BOOST_REQUIRE(put.isOK() == true);
 
     // Manual replication
     double effectiveStrike = ip.strike;
@@ -130,8 +128,6 @@ void AsianOptionTest::testValulationDuringAveraging()
     AsianOptionInputParameters ip = getAsianInputsDuringAveraging();
     AverageRateCall call(ip.fwds, ip.fixes, ip.strike, ip.sds, ip.df);
     AverageRatePut put(ip.fwds, ip.fixes, ip.strike, ip.sds, ip.df);
-    BOOST_REQUIRE(call.isOK() == true);
-    BOOST_REQUIRE(put.isOK() == true);
 
     // Manual replication
     double effectiveStrike = 0;
@@ -176,8 +172,6 @@ void AsianOptionTest::testValulationJustBeforeSettlementWithHighAverage()
     AsianOptionInputParameters ip = getAsianInputsJustBeforeSettlementWithHighAverage();
     AverageRateCall call(ip.fwds, ip.fixes, ip.strike, ip.sds, ip.df);
     AverageRatePut put(ip.fwds, ip.fixes, ip.strike, ip.sds, ip.df);
-    BOOST_REQUIRE(call.isOK() == true);
-    BOOST_REQUIRE(put.isOK() == true);
 
     // Manual replication
     double effectiveStrike = 0;
@@ -212,8 +206,6 @@ void AsianOptionTest::testValulationJustBeforeSettlementWithLowAverage()
     AsianOptionInputParameters ip = getAsianInputsJustBeforeSettlementWithLowAverage();
     AverageRateCall call(ip.fwds, ip.fixes, ip.strike, ip.sds, ip.df);
     AverageRatePut put(ip.fwds, ip.fixes, ip.strike, ip.sds, ip.df);
-    BOOST_REQUIRE(call.isOK() == true);
-    BOOST_REQUIRE(put.isOK() == true);
 
     // Manual replication
     double effectiveStrike = 0;

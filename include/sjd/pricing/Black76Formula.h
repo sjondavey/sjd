@@ -14,18 +14,25 @@ namespace sjd
      * A trading greek is another valuation of the contract with bumped inputs.
      * getDelta() is the formula delta used to build a delta volatility surface.
      *
-     * isOK() rejects a negative input. If the caller skips isOK(), the formula
-     * does not check. Settlement after expiry belongs to the contract, not here.
+     * The constructor throws ConfigurationError when an input is not positive.
+     * setParameters() is the Monte Carlo setter: it asserts those inputs in Debug
+     * and does not check them in Release. Settlement after expiry belongs to the
+     * contract, not here.
      */
+    struct UncheckedFormulaInputs
+    {
+    };
+
     class Black76Option
     {
 
     public:
         void setParameters(double forward, double strike, double standardDeviation, double discountFactor);
+        // No check. Used for a sentinel Black76 that is not priced, and after the caller has already
+        // validated the inputs.
+        void assign(double forward, double strike, double standardDeviation, double discountFactor);
 
-        virtual bool isOK();
         virtual ~Black76Option() = default;
-        std::string getErrorMessage() { return errorMessage; };
 
         double getForward() { return F; };
         void setForward(double forwardInput);
@@ -46,8 +53,10 @@ namespace sjd
         virtual double getDelta() = 0;
 
     protected:
-        // This resets all internal variables when an option paramter is std::set / reset
-        void callWhenSettingAnyInternalParameter();
+        static void requireInputs(double forward,
+                                  double strike,
+                                  double standardDeviation,
+                                  double discountFactor);
 
         // When changing any of the input parameters we need to recalculate d1, d2, Nd1, Nd2
         void calculateInternalOptionParameters();
@@ -56,7 +65,6 @@ namespace sjd
         // boost N(0,1)
         boost::math::normal n_0_1;
         double d1, d2, Nd1, Nd2;
-        std::string errorMessage;
     };
 
     /*======================================================================================
@@ -66,7 +74,11 @@ namespace sjd
     {
     public:
         Black76Call(double forward, double strike, double standardDeviation, double discountFactor);
-        bool isOK();
+        Black76Call(UncheckedFormulaInputs,
+                    double forward,
+                    double strike,
+                    double standardDeviation,
+                    double discountFactor);
         double getPremium();
         double getPremiumAfterMaturity(double rateSetRate, double discountFactor)
         {
@@ -82,7 +94,11 @@ namespace sjd
     {
     public:
         Black76Put(double forward, double strike, double standardDeviation, double discountFactor);
-        bool isOK();
+        Black76Put(UncheckedFormulaInputs,
+                   double forward,
+                   double strike,
+                   double standardDeviation,
+                   double discountFactor);
         double getPremium();
         double getPremiumAfterMaturity(double rateSetRate, double discountFactor)
         {

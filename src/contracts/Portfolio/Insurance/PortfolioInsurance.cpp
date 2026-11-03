@@ -1,5 +1,7 @@
 #include <sjd/contracts/Portfolio/Insurance/PortfolioInsurance.h>
 
+#include <sjd/tools/Errors.h>
+
 using namespace std;
 using namespace QuantLib;
 
@@ -236,11 +238,7 @@ namespace sjd
                 else
                     ilo = i;
             }
-            if (ihi == ilo)
-            {
-                return numeric_limits<float>::quiet_NaN(); // shouldn't happen since we should check the x
-                                                           // array is strictly monotonic but you never know
-            }
+            SJD_ASSERT(ihi != ilo);
             return insuredAmounts[ihi];
         }
         return 0.0;

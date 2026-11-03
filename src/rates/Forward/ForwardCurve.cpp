@@ -45,8 +45,7 @@ namespace sjd
             anchor = monthCurve->getAnchorDate();
             extrapolation = monthCurve->getAllowsExtrapolation();
             final = monthCurve->getFinalDate();
-            string errorMessage;
-            if (monthCurve->isOK(errorMessage) && !extrapolation && !monthCurve->containsRateOnAnchorDate())
+            if (monthCurve->validate().isOK() && !extrapolation && !monthCurve->containsRateOnAnchorDate())
             {
                 monthCurve->addPointOnAnchorDate(forwards.front());
                 flatFilledAnchor = true;
@@ -61,8 +60,7 @@ namespace sjd
         anchor = datedCurve->getAnchorDate();
         extrapolation = datedCurve->getAllowsExtrapolation();
         final = datedCurve->getFinalDate();
-        string errorMessage;
-        if (datedCurve->isOK(errorMessage) && !extrapolation && !datedCurve->containsRateOnAnchorDate())
+        if (datedCurve->validate().isOK() && !extrapolation && !datedCurve->containsRateOnAnchorDate())
         {
             datedCurve->addPointOnAnchorDate(forwards.front());
             flatFilledAnchor = true;
@@ -117,18 +115,13 @@ namespace sjd
         return quoteStyle;
     }
 
-    bool ForwardCurve::quotesAreOk(string& errorMessage)
+    ValidationReport ForwardCurve::validateQuotes()
     {
         if (monthCurve)
-        {
-            return monthCurve->isOK(errorMessage);
-        }
+            return monthCurve->validate();
         if (datedCurve)
-        {
-            return datedCurve->isOK(errorMessage);
-        }
-        errorMessage.clear();
-        return true;
+            return datedCurve->validate();
+        return {};
     }
 
     double ForwardCurve::getForward(Date toDate) const

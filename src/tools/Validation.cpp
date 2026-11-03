@@ -177,6 +177,12 @@ namespace sjd
         return stream.str();
     }
 
+    ValidationReport ValidationReport::failure(std::string_view code, std::string_view message)
+    {
+        return ValidationReport(
+            {ValidationIssue(std::string(code), std::string(message), ValidationSeverity::ERROR, {})});
+    }
+
     ValidationReport ValidationReport::withIssue(const ValidationIssue& issue) const
     {
         std::vector<ValidationIssue> updatedIssues = issues;

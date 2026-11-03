@@ -4,6 +4,8 @@
  * Factorials, combinations, and interpolation.
  */
 
+#include <sjd/tools/Validation.h>
+
 #include <string>
 #include <vector>
 
@@ -140,7 +142,7 @@ namespace sjd
     ArrayInterpolator
     This is built to accept x inputs that are strictly increasing
     =======================================================================================*/
-    class ArrayInterpolator : public Interpolator
+    class ArrayInterpolator : public Interpolator, public Validatable
     {
     public:
         ArrayInterpolator(std::vector<double> xVector,
@@ -151,8 +153,9 @@ namespace sjd
         void setXVector(std::vector<double> xVector);
         void setYVector(std::vector<double> yVector);
 
-        bool isOk();
-        std::string getErrorMessage() const { return errorMessage; };
+        // Reads the report written by the constructor or the last setXVector / setYVector.
+        bool isOk() const { return isOK(); }
+        std::string validationRoot() const override { return "interpolator"; }
 
         // Returns true if the input x is outside the range [x_min, x_max].
         bool isInRange(double x) const;
@@ -169,12 +172,10 @@ namespace sjd
         double getRangeEnd() const { return xVector.back(); };
 
     protected:
-        void setOnError(std::string errorMessage);
+        void runChecks() override;
 
         std::vector<double> xVector, yVector;
         bool allowExtrapolation;
-        bool hasError; // used if any of the inputs are not of the assumed type
-        std::string errorMessage;
     };
 
     /*======================================================================================

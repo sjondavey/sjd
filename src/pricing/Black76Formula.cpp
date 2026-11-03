@@ -1,5 +1,7 @@
 #include <sjd/pricing/Black76Formula.h>
 
+#include <sjd/tools/Errors.h>
+
 using namespace std;
 
 namespace sjd
@@ -8,48 +10,36 @@ namespace sjd
     /*======================================================================================
     Black76Option
     =======================================================================================*/
-    void Black76Option::setParameters(double forward,
-                                      double strike,
-                                      double standardDeviation,
-                                      double discountFactor)
+    void Black76Option::assign(double forward, double strike, double standardDeviation, double discountFactor)
     {
         F = forward;
         X = strike;
         sd = standardDeviation;
         df = discountFactor;
-        callWhenSettingAnyInternalParameter();
     }
 
-    bool Black76Option::isOK()
+    void Black76Option::requireInputs(double forward,
+                                      double strike,
+                                      double standardDeviation,
+                                      double discountFactor)
     {
-        if (F <= 0)
-        {
-            errorMessage = "Black76Option->Forward is <= 0";
-            return false;
-        }
-        if (X <= 0)
-        {
-            errorMessage = "Black76Option->Strike is <= 0";
-            return false;
-        }
-        if (sd <= 0)
-        {
-            errorMessage = "Black76Option->Standard Deviation is <= 0";
-            return false;
-        }
-        if (df <= 0)
-        {
-            errorMessage = "Black76Option->Discount Factor is <= 0";
-            return false;
-        }
-        errorMessage = "Black76Option->No errors";
-        return true;
+        if (forward <= 0)
+            throw ConfigurationError("Black76 forward must be positive");
+        if (strike <= 0)
+            throw ConfigurationError("Black76 strike must be positive");
+        if (standardDeviation <= 0)
+            throw ConfigurationError("Black76 standard deviation must be positive");
+        if (discountFactor <= 0)
+            throw ConfigurationError("Black76 discount factor must be positive");
     }
 
-    void Black76Option::callWhenSettingAnyInternalParameter()
+    void Black76Option::setParameters(double forward,
+                                      double strike,
+                                      double standardDeviation,
+                                      double discountFactor)
     {
-        errorMessage = "Black76Option->Error checking has not happened, please call isOK() first to check "
-                       "for errors in input parameters.";
+        SJD_ASSERT(forward > 0 && strike > 0 && standardDeviation > 0 && discountFactor > 0);
+        assign(forward, strike, standardDeviation, discountFactor);
     }
 
     void Black76Option::calculateInternalOptionParameters()
@@ -62,26 +52,26 @@ namespace sjd
 
     void Black76Option::setForward(double forwardInput)
     {
+        SJD_ASSERT(forwardInput > 0);
         F = forwardInput;
-        callWhenSettingAnyInternalParameter();
     }
 
     void Black76Option::setStrike(double strikeInput)
     {
+        SJD_ASSERT(strikeInput > 0);
         X = strikeInput;
-        callWhenSettingAnyInternalParameter();
     }
 
     void Black76Option::setStandardDeviation(double standardDeviation)
     {
+        SJD_ASSERT(standardDeviation > 0);
         sd = standardDeviation;
-        callWhenSettingAnyInternalParameter();
     }
 
     void Black76Option::setDiscountFactor(double discountFactor)
     {
+        SJD_ASSERT(discountFactor > 0);
         df = discountFactor;
-        callWhenSettingAnyInternalParameter();
     }
 
     /*======================================================================================
@@ -89,14 +79,13 @@ namespace sjd
     =======================================================================================*/
     Black76Call::Black76Call(double f, double x, double sd, double df)
     {
-        setParameters(f, x, sd, df);
+        requireInputs(f, x, sd, df);
+        assign(f, x, sd, df);
     }
 
-    bool Black76Call::isOK()
+    Black76Call::Black76Call(UncheckedFormulaInputs, double f, double x, double sd, double df)
     {
-        bool isOKVariable = Black76Option::isOK();
-        errorMessage = "Black76Call->" + errorMessage;
-        return isOKVariable;
+        assign(f, x, sd, df);
     }
 
     double Black76Call::getPremium()
@@ -116,14 +105,13 @@ namespace sjd
      =======================================================================================*/
     Black76Put::Black76Put(double F, double X, double sd, double df)
     {
-        setParameters(F, X, sd, df);
+        requireInputs(F, X, sd, df);
+        assign(F, X, sd, df);
     }
 
-    bool Black76Put::isOK()
+    Black76Put::Black76Put(UncheckedFormulaInputs, double F, double X, double sd, double df)
     {
-        bool isOKVariable = Black76Option::isOK();
-        errorMessage = "Black76Put->" + errorMessage;
-        return isOKVariable;
+        assign(F, X, sd, df);
     }
 
     double Black76Put::getPremium()

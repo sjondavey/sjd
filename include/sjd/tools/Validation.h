@@ -50,6 +50,8 @@ namespace sjd
         ValidationReport withIssue(const ValidationIssue& issue) const;
         ValidationReport withPrefixedPath(const std::string& pathElement) const;
 
+        static ValidationReport failure(std::string_view code, std::string_view message);
+
     private:
         std::vector<ValidationIssue> issues;
     };
@@ -143,5 +145,15 @@ namespace sjd
         void absorbChildReport(const ValidationReport& child, const std::vector<std::string>& extra);
 
         std::shared_ptr<IssueTracker> errorTracking;
+    };
+
+    // A calculated value plus the validation report for the inputs that produced it.
+    // ok() is false when the report contains an error, and value is then empty or unused.
+    template <typename T> struct Result
+    {
+        T value{};
+        ValidationReport report;
+
+        bool ok() const { return report.isOK(); }
     };
 }

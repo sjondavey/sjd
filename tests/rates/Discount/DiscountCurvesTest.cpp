@@ -91,12 +91,13 @@ void DiscountCurvesTest::testRatesEnvironmentValidationReport()
     ValidationReport invalidReport = invalidEnvironment.validateReport();
     BOOST_REQUIRE(!invalidReport.isOK());
     BOOST_REQUIRE(invalidReport.getIssues().size() == 1);
-    BOOST_CHECK(invalidReport.getIssues()[0].code == "DISCOUNT_CURVE_DIMENSION_MISMATCH");
-    BOOST_REQUIRE(invalidReport.getIssues()[0].path.size() == 4);
+    BOOST_CHECK(invalidReport.getIssues()[0].code == "INTERPOLATOR_DIMENSION_MISMATCH");
+    BOOST_REQUIRE(invalidReport.getIssues()[0].path.size() == 5);
     BOOST_CHECK(invalidReport.getIssues()[0].path[0] == "rates_environment");
     BOOST_CHECK(invalidReport.getIssues()[0].path[1] == "discount_rate_source");
     BOOST_CHECK(invalidReport.getIssues()[0].path[2] == "discount_curve");
-    BOOST_CHECK(invalidReport.getIssues()[0].path[3] == "inputs");
+    BOOST_CHECK(invalidReport.getIssues()[0].path[3] == "dated_curve");
+    BOOST_CHECK(invalidReport.getIssues()[0].path[4] == "interpolator");
 }
 
 void DiscountCurvesTest::testParallelBump()

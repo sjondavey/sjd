@@ -1,6 +1,8 @@
 
 #include <sjd/contracts/AsianOptionContract.h>
 
+#include <sjd/tools/Errors.h>
+
 #include <iomanip>
 #include <sstream>
 
@@ -88,13 +90,13 @@ namespace sjd
         SingleOptionContract::setType(pc);
         if (pc == PutCall::PUT)
         {
-            option = std::make_shared<AverageRatePut>(vector<double>(1, 0), vector<double>(1, 0), 0,
-                                                      vector<double>(1, 0), 0);
+            option = std::make_shared<AverageRatePut>(UncheckedFormulaInputs{}, vector<double>(1, 0),
+                                                      vector<double>(1, 0), 0, vector<double>(1, 0), 0);
         }
         else
         {
-            option = std::make_shared<AverageRateCall>(vector<double>(1, 0), vector<double>(1, 0), 0,
-                                                       vector<double>(1, 0), 0);
+            option = std::make_shared<AverageRateCall>(UncheckedFormulaInputs{}, vector<double>(1, 0),
+                                                       vector<double>(1, 0), 0, vector<double>(1, 0), 0);
         }
     }
 
@@ -156,10 +158,7 @@ namespace sjd
 
         double premium = 0;
 
-        if (sds.size() != forwards.size())
-        {
-            return numeric_limits<double>::quiet_NaN();
-        }
+        SJD_ASSERT(sds.size() == forwards.size());
 
         double df = (re->getDRS())->getDiscountFactor(getSettlementDate());
 

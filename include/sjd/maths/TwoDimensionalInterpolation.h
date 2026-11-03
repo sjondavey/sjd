@@ -2,6 +2,7 @@
 
 #include "maths.h"
 #include <ql/math/interpolations/all.hpp>
+#include <sjd/tools/Validation.h>
 
 namespace sjd
 {
@@ -11,7 +12,7 @@ namespace sjd
 
      Abstract Base Class for 2 dimensional interpolation
     ======================================================================================*/
-    class TwoDimensionalInterpolator
+    class TwoDimensionalInterpolator : public Validatable
     {
     public:
         TwoDimensionalInterpolator(std::vector<double> xVector,
@@ -20,6 +21,8 @@ namespace sjd
                                    bool extrapolate = false)
             : x(xVector), y(yVector), z(zMatrix), allowExtrapolation(extrapolate)
         {
+            errorTracking = std::make_shared<IssueTracker>("TwoDimensionalInterpolator");
+            validate();
         }
 
         virtual ~TwoDimensionalInterpolator() {};
@@ -28,8 +31,8 @@ namespace sjd
         virtual void setY(std::vector<double> yVector) { y = yVector; };
         virtual void setZ(QuantLib::Matrix zMatrix) { z = zMatrix; };
 
-        virtual bool isOk();
-        std::string getErrorMessage() const { return errorMessage; };
+        bool isOk() const { return isOK(); }
+        std::string validationRoot() const override { return "surface"; }
 
         // Returns true if the input (x, y) point is inside the interpolation range
         bool isInRange(double x, double y) const;
@@ -48,14 +51,12 @@ namespace sjd
         double getYEnd() const { return y.back(); };
 
     protected:
-        void setOnError(std::string errorMessage);
+        void runChecks() override;
 
         std::vector<double> x, y;
         QuantLib::Matrix z;
 
         bool allowExtrapolation;
-        bool hasError; // used if any of the inputs are not of the assumed type
-        std::string errorMessage;
     };
 
     /*======================================================================================

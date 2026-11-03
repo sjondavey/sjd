@@ -1,5 +1,7 @@
 #include <sjd/contracts/Portfolio/RegulatoryCapital.h>
 
+#include <sjd/tools/Errors.h>
+
 #include <algorithm>
 #include <iomanip>
 #include <limits>
@@ -52,7 +54,7 @@ namespace sjd
         hasMargin = static_cast<bool>(marginInput);
         margin = marginInput;
         structureConversionError = false;
-        structureErrorMessage = "Structures not yet created";
+        conversionDetailText = "Structures not yet created";
         if (!regCapAssetFactors)
         {
             regCapAssetFactors = generateRegCapFactors("commodity");
@@ -64,14 +66,14 @@ namespace sjd
 
         if (optimise)
         {
-            bool successful = false;
-            nettingStructures = optimiseStructuresFromContracts(extractedContracts, regCapAssetFactors,
-                                                                successful, structureErrorMessage);
-            structureConversionError = !successful;
-            if (!successful)
+            Result<vector<std::shared_ptr<Structure>>> built =
+                optimiseStructuresFromContracts(extractedContracts, regCapAssetFactors);
+            nettingStructures = built.value;
+            structureConversionError = !built.ok();
+            if (!built.ok())
             {
-                errorTracking->record(issues::PORTFOLIO_STRUCTURE_CONVERSION, structureErrorMessage,
-                                      {"regulatory_capital", "structures"});
+                conversionDetailText = built.report.toString();
+                errorTracking->absorb(built.report, {"regulatory_capital", "structures"});
             }
         }
         else
@@ -85,7 +87,7 @@ namespace sjd
                     errorTracking->absorb(nettingSet->validationReport(),
                                           {"regulatory_capital", "structures", std::to_string(i)});
                     structureConversionError = true;
-                    structureErrorMessage = "Structure conversion failed";
+                    conversionDetailText = "Structure conversion failed";
                 }
                 else
                 {
@@ -108,7 +110,7 @@ namespace sjd
         regCapAssetFactors = other.regCapAssetFactors;
         regCapCreditParameters = other.regCapCreditParameters;
         structureConversionError = other.structureConversionError;
-        structureErrorMessage = other.structureErrorMessage;
+        conversionDetailText = other.conversionDetailText;
         for (size_t i = 0; i < other.nettingStructures.size(); ++i)
         {
             std::unique_ptr<Contract> cloned = other.nettingStructures[i]->clone();
@@ -122,7 +124,7 @@ namespace sjd
         resetErrorMessages();
         if (structureConversionError)
         {
-            errorTracking->record(issues::PORTFOLIO_STRUCTURE_CONVERSION, structureErrorMessage,
+            errorTracking->record(issues::PORTFOLIO_STRUCTURE_CONVERSION, conversionDetailText,
                                   {"regulatory_capital", "structures"});
             return;
         }
@@ -142,7 +144,7 @@ namespace sjd
         resetErrorMessages();
         if (structureConversionError)
         {
-            errorTracking->record(issues::PORTFOLIO_STRUCTURE_CONVERSION, structureErrorMessage,
+            errorTracking->record(issues::PORTFOLIO_STRUCTURE_CONVERSION, conversionDetailText,
                                   {"regulatory_capital", "structures"});
             return;
         }
@@ -163,9 +165,9 @@ namespace sjd
         return structureConversionError;
     }
 
-    const string& CurrentExposureMethod::structureConversionErrorMessage() const
+    const string& CurrentExposureMethod::conversionDetail() const
     {
-        return structureErrorMessage;
+        return conversionDetailText;
     }
 
     const vector<std::shared_ptr<Structure>>& CurrentExposureMethod::structures() const
@@ -173,15 +175,18 @@ namespace sjd
         return nettingStructures;
     }
 
-    vector<NettingSet> CurrentExposureMethod::nettingSets(string& error) const
+    Result<vector<NettingSet>> CurrentExposureMethod::nettingSets() const
     {
-        error.clear();
+        Result<vector<NettingSet>> result;
         if (hasErrors() || structureConversionError)
         {
-            error = structureConversionError ? structureErrorMessage : getErrorMessagesAsString();
-            return vector<NettingSet>();
+            result.report = validationReport();
+            if (result.report.isOK())
+                result.report =
+                    ValidationReport::failure(issues::PORTFOLIO_STRUCTURE_CONVERSION, conversionDetailText);
+            return result;
         }
-        vector<NettingSet> described;
+        vector<NettingSet>& described = result.value;
         for (size_t s = 0; s < nettingStructures.size(); ++s)
         {
             std::shared_ptr<Structure> structure = nettingStructures[s];
@@ -193,22 +198,19 @@ namespace sjd
             describedSet.cap = structure->getCap();
             described.push_back(describedSet);
         }
-        return described;
+        return result;
     }
 
-    vector<std::shared_ptr<Structure>> CurrentExposureMethod::optimiseStructuresFromContracts(
+    Result<vector<std::shared_ptr<Structure>>> CurrentExposureMethod::optimiseStructuresFromContracts(
         vector<std::shared_ptr<SingleInstrumentContract>> contractsInput,
-        std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
-        bool& sucessfullportfolio,
-        string& errorMessage)
+        std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors)
     {
-        sucessfullportfolio = true;
-        errorMessage = "No error converting structures to portfolio";
+        Result<vector<std::shared_ptr<Structure>>> result;
         if (contractsInput.size() == 0)
         {
-            sucessfullportfolio = false;
-            errorMessage = "No contracts to convert into structures";
-            return vector<std::shared_ptr<Structure>>(0);
+            result.report = ValidationReport::failure(issues::PORTFOLIO_STRUCTURE_CONVERSION,
+                                                      "No contracts to convert into structures");
+            return result;
         }
 
         // createStructures changes volume and premium, so it works on copies.
@@ -219,7 +221,6 @@ namespace sjd
         }
 
         vector<std::shared_ptr<SingleInstrumentContract>> potentialContractsForOneStructure;
-        vector<std::shared_ptr<Structure>> allStructures;
         while (tmpContracts.size() > 0)
         {
             potentialContractsForOneStructure.clear();
@@ -240,34 +241,31 @@ namespace sjd
                 }
             }
 
-            bool successful = false;
-            vector<std::shared_ptr<Structure>> structuresForOneSettlement = Structure::createStructures(
-                potentialContractsForOneStructure, regCapAssetFactors, successful);
-            if (!successful)
+            Result<vector<std::shared_ptr<Structure>>> structuresForOneSettlement =
+                Structure::createStructures(potentialContractsForOneStructure, regCapAssetFactors);
+            if (!structuresForOneSettlement.ok())
             {
-                sucessfullportfolio = false;
                 stringstream descriptionStream;
                 descriptionStream << "Unable to convert single instruments for settlement on "
                                   << QuantLib::io::iso_date(
                                          potentialContractsForOneStructure[0]->getSettlementDate())
                                   << " into a single structure";
-                errorMessage = descriptionStream.str();
+                result.report = ValidationReport::failure(issues::PORTFOLIO_STRUCTURE_CONVERSION,
+                                                          descriptionStream.str());
+                result.value.clear();
+                return result;
             }
-            for (size_t i = 0; i < structuresForOneSettlement.size(); ++i)
+            for (size_t i = 0; i < structuresForOneSettlement.value.size(); ++i)
             {
-                allStructures.push_back(structuresForOneSettlement[i]);
+                result.value.push_back(structuresForOneSettlement.value[i]);
             }
         }
-        return allStructures;
+        return result;
     }
 
     double CurrentExposureMethod::getNGR(std::shared_ptr<RatesEnvironment> re, double& mtm)
     {
-        if (hasErrors())
-        {
-            mtm = numeric_limits<double>::quiet_NaN();
-            return numeric_limits<double>::quiet_NaN();
-        }
+        SJD_ASSERT(!hasErrors());
         if (!regCapAssetFactors)
         {
             return 0;
@@ -297,11 +295,7 @@ namespace sjd
 
     double CurrentExposureMethod::getRegulatoryCapital(std::shared_ptr<RatesEnvironment> re)
     {
-        // max(0.0, NaN) is 0.0, so an invalid book must return before the floor below.
-        if (hasErrors())
-        {
-            return numeric_limits<double>::quiet_NaN();
-        }
+        SJD_ASSERT(!hasErrors());
         double mtm = 0;
         double ngr = getNGR(re, mtm);
 
@@ -390,8 +384,7 @@ namespace sjd
         Portfolio::runChecks();
         if (capital && capital->hasStructureConversionError())
         {
-            recordIssue(issues::PORTFOLIO_STRUCTURE_CONVERSION, capital->structureConversionErrorMessage(),
-                        {"structures"});
+            recordIssue(issues::PORTFOLIO_STRUCTURE_CONVERSION, capital->conversionDetail(), {"structures"});
             return;
         }
         if (capital)
@@ -414,8 +407,7 @@ namespace sjd
         Portfolio::runChecks(re);
         if (capital && capital->hasStructureConversionError())
         {
-            recordIssue(issues::PORTFOLIO_STRUCTURE_CONVERSION, capital->structureConversionErrorMessage(),
-                        {"structures"});
+            recordIssue(issues::PORTFOLIO_STRUCTURE_CONVERSION, capital->conversionDetail(), {"structures"});
             return;
         }
         if (capital)
@@ -463,14 +455,16 @@ namespace sjd
         return sets;
     }
 
-    vector<NettingSet> PortfolioB2CEM::nettingSets(string& error)
+    Result<vector<NettingSet>> PortfolioB2CEM::nettingSets()
     {
         if (!capital)
         {
-            error = "Portfolio has no regulatory capital model";
-            return vector<NettingSet>();
+            Result<vector<NettingSet>> result;
+            result.report = ValidationReport::failure(issues::PORTFOLIO_STRUCTURE_CONVERSION,
+                                                      "Portfolio has no regulatory capital model");
+            return result;
         }
-        return capital->nettingSets(error);
+        return capital->nettingSets();
     }
 
 }

@@ -35,6 +35,16 @@ keep in range, or `getValue` used without a successful validation — is
 `SJD_ASSERT`. In Debug a failure throws `Error` with code `ASSERT`. In Release
 the check is compiled out, so a Monte Carlo loop does not pay for it.
 
+A formula (`Black76Option`, `AverageRateOption`) is not a `Validatable`. Its
+constructor throws `ConfigurationError` when an input cannot be priced. The
+setters used while valuing a contract assert in Debug and do not re-check in
+Release.
+
+A function that used to return a value through `bool& successful` or
+`std::string& errorMessage` returns `Result<T>` instead: the value, and the
+`ValidationReport` for the inputs. `ok()` is false when that report has an
+error.
+
 ## 4. No silent fallbacks
 
 A function does not return `0`, `NaN`, or a sentinel date to mean "failed".

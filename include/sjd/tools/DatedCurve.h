@@ -3,6 +3,7 @@
 #include <memory>
 #include <ql/time/date.hpp>
 #include <sjd/maths/maths.h>
+#include <sjd/tools/Validation.h>
 
 namespace sjd
 {
@@ -12,7 +13,7 @@ namespace sjd
      NOTE 1) There are no calendar objects here, all dates are assumed to be good dates
              by the time they hit this class
      =======================================================================================*/
-    class DatedCurve
+    class DatedCurve : public Validatable
     {
     public:
         DatedCurve();
@@ -31,7 +32,7 @@ namespace sjd
 
         virtual ~DatedCurve() {};
 
-        bool isOK(std::string& errorMessage);
+        std::string validationRoot() const override { return "dated_curve"; }
 
         QuantLib::Date getAnchorDate() const;
         QuantLib::Date getFinalDate();
@@ -50,6 +51,7 @@ namespace sjd
         std::vector<QuantLib::Date> getObservationDates() const;
 
     protected:
+        void runChecks() override;
         QuantLib::Date anchorDate;
         QuantLib::Date finalDate;
         std::vector<QuantLib::Date> observationDates;

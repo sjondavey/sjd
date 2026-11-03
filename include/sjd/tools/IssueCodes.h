@@ -24,6 +24,9 @@ namespace sjd
             "CONTRACT_PREMIUM_DATE_AFTER_SETTLEMENT";
         inline constexpr std::string_view CONTRACT_PREMIUM_NEGATIVE = "CONTRACT_PREMIUM_NEGATIVE";
         inline constexpr std::string_view CONTRACT_STRIKE_NEGATIVE = "CONTRACT_STRIKE_NEGATIVE";
+        inline constexpr std::string_view CURVE_INPUT_EMPTY = "CURVE_INPUT_EMPTY";
+        inline constexpr std::string_view CURVE_OBSERVATION_BEFORE_ANCHOR = "CURVE_OBSERVATION_BEFORE_ANCHOR";
+        inline constexpr std::string_view CURVE_OBSERVATION_BEFORE_ZERO = "CURVE_OBSERVATION_BEFORE_ZERO";
         inline constexpr std::string_view CVA_DATES_BEFORE_ANCHOR = "CVA_DATES_BEFORE_ANCHOR";
         inline constexpr std::string_view CVA_LGD_INTERPOLATOR = "CVA_LGD_INTERPOLATOR";
         inline constexpr std::string_view CVA_LGD_RANGE = "CVA_LGD_RANGE";
@@ -82,6 +85,9 @@ namespace sjd
         inline constexpr std::string_view INSURANCE_STANDBY_RANGE = "INSURANCE_STANDBY_RANGE";
         inline constexpr std::string_view INSURANCE_SUM_NEGATIVE = "INSURANCE_SUM_NEGATIVE";
         inline constexpr std::string_view INSURANCE_UTILISATION_RANGE = "INSURANCE_UTILISATION_RANGE";
+        inline constexpr std::string_view INTERPOLATOR_DIMENSION_MISMATCH = "INTERPOLATOR_DIMENSION_MISMATCH";
+        inline constexpr std::string_view INTERPOLATOR_TOO_FEW_POINTS = "INTERPOLATOR_TOO_FEW_POINTS";
+        inline constexpr std::string_view INTERPOLATOR_X_NOT_INCREASING = "INTERPOLATOR_X_NOT_INCREASING";
         inline constexpr std::string_view MARGIN_COUNTERPARTY_INITIAL_NEGATIVE =
             "MARGIN_COUNTERPARTY_INITIAL_NEGATIVE";
         inline constexpr std::string_view MARGIN_COUNTERPARTY_THRESHOLD_NEGATIVE =
@@ -136,6 +142,7 @@ namespace sjd
         inline constexpr std::string_view SIMULATION_MARKET_INVALID = "SIMULATION_MARKET_INVALID";
         inline constexpr std::string_view SPOT_PATHS_EMPTY = "SPOT_PATHS_EMPTY";
         inline constexpr std::string_view SPOT_PATHS_LENGTH = "SPOT_PATHS_LENGTH";
+        inline constexpr std::string_view STRUCTURE_BUILD_FAILED = "STRUCTURE_BUILD_FAILED";
         inline constexpr std::string_view STRUCTURE_CONTRACT_CONVERSION = "STRUCTURE_CONTRACT_CONVERSION";
         inline constexpr std::string_view STRUCTURE_EMPTY = "STRUCTURE_EMPTY";
         inline constexpr std::string_view STRUCTURE_NOT_PIECEWISE_LINEAR = "STRUCTURE_NOT_PIECEWISE_LINEAR";
@@ -143,6 +150,11 @@ namespace sjd
         inline constexpr std::string_view STRUCTURE_UNCAPPED_WING = "STRUCTURE_UNCAPPED_WING";
         inline constexpr std::string_view STRUCTURE_VOLUME_WITHOUT_EXPOSURE =
             "STRUCTURE_VOLUME_WITHOUT_EXPOSURE";
+        inline constexpr std::string_view SURFACE_INPUTS_INSUFFICIENT = "SURFACE_INPUTS_INSUFFICIENT";
+        inline constexpr std::string_view SURFACE_X_DIMENSION = "SURFACE_X_DIMENSION";
+        inline constexpr std::string_view SURFACE_X_NOT_INCREASING = "SURFACE_X_NOT_INCREASING";
+        inline constexpr std::string_view SURFACE_Y_DIMENSION = "SURFACE_Y_DIMENSION";
+        inline constexpr std::string_view SURFACE_Y_NOT_INCREASING = "SURFACE_Y_NOT_INCREASING";
         inline constexpr std::string_view VOLATILITY_CURVE_CMA_DIMENSION_MISMATCH =
             "VOLATILITY_CURVE_CMA_DIMENSION_MISMATCH";
         inline constexpr std::string_view VOLATILITY_CURVE_CMA_INVALID = "VOLATILITY_CURVE_CMA_INVALID";

@@ -141,30 +141,28 @@ namespace sjd
                                   std::vector<std::shared_ptr<SingleInstrumentContract>>& fromContracts,
                                   std::vector<std::shared_ptr<SingleInstrumentContract>>& toContracts);
 
-        // Takes contacts which are *assumed* to qualify for full or partial reg cap offest and builds
-        // *optimal* structures By grouping according to volume
-        static std::vector<std::shared_ptr<Structure>> createStructures(
+        struct ExposureSplit
+        {
+            std::vector<std::shared_ptr<SingleInstrumentContract>> capped;
+            std::vector<std::shared_ptr<SingleInstrumentContract>> uncapped;
+        };
+
+        // Takes contracts which are assumed to qualify for full or partial reg cap offset and builds
+        // optimal structures by grouping according to volume.
+        static Result<std::vector<std::shared_ptr<Structure>>> createStructures(
             std::vector<std::shared_ptr<SingleInstrumentContract>> contracts,
-            std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
-            bool& successful);
+            std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
 
-        // Assumes the input cappedContracts and unCappedContracts are empty to start with, copies
-        // allContracts and distributes the inputs so that *only* the wings will be moved to the
-        // unCappedContracts and then only in the *minimum* volume necessary to leave the remaing contracts
-        // uncapped.
-        static void decomposeIntoCappedAndUncapped(
-            std::vector<std::shared_ptr<SingleInstrumentContract>>& allContracts,
-            std::vector<std::shared_ptr<SingleInstrumentContract>>& cappedContracts,
-            std::vector<std::shared_ptr<SingleInstrumentContract>>& unCappedContracts,
-            bool& successful);
+        // Copies allContracts and distributes them so that only the wings move into the uncapped
+        // leg, and only in the minimum volume that leaves the remaining contracts capped.
+        static Result<ExposureSplit> decomposeIntoCappedAndUncapped(
+            const std::vector<std::shared_ptr<SingleInstrumentContract>>& allContracts);
 
-        // Once we have capped and uncapped strucutres with the same maturity profile, this method moves any
-        // deferred premiums from one to the other to ensure the cappedContracts have a maximum MtM and the
-        // uncapped structures have a minimum MtM
-        static void optimiseCashflow(
+        // Moves deferred premiums so the capped leg has the maximum mark-to-market and the uncapped
+        // leg has the minimum.
+        static Result<bool> optimiseCashflow(
             std::vector<std::shared_ptr<SingleInstrumentContract>>& cappedContracts,
-            std::vector<std::shared_ptr<SingleInstrumentContract>>& unCappedContracts,
-            bool& successful);
+            std::vector<std::shared_ptr<SingleInstrumentContract>>& unCappedContracts);
 
         virtual std::string toString(std::shared_ptr<RatesEnvironment> re);
 

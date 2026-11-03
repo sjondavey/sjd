@@ -380,18 +380,38 @@ PYBIND11_MODULE(_core, m)
                                });
 
     py::class_<sjd::Black76Call>(m, "Black76Call")
-        .def(py::init<double, double, double, double>(), py::arg("forward"), py::arg("strike"),
-             py::arg("standard_deviation"), py::arg("discount_factor"))
-        .def("is_ok", &sjd::Black76Call::isOK)
-        .def("error_message", &sjd::Black76Call::getErrorMessage)
+        .def(py::init(
+                 [](double forward, double strike, double standardDeviation, double discountFactor)
+                 {
+                     try
+                     {
+                         return std::make_unique<sjd::Black76Call>(forward, strike, standardDeviation,
+                                                                   discountFactor);
+                     }
+                     catch (const sjd::ConfigurationError& error)
+                     {
+                         throw py::value_error(error.what());
+                     }
+                 }),
+             py::arg("forward"), py::arg("strike"), py::arg("standard_deviation"), py::arg("discount_factor"))
         .def("premium", &sjd::Black76Call::getPremium)
         .def("delta", &sjd::Black76Call::getDelta);
 
     py::class_<sjd::Black76Put>(m, "Black76Put")
-        .def(py::init<double, double, double, double>(), py::arg("forward"), py::arg("strike"),
-             py::arg("standard_deviation"), py::arg("discount_factor"))
-        .def("is_ok", &sjd::Black76Put::isOK)
-        .def("error_message", &sjd::Black76Put::getErrorMessage)
+        .def(py::init(
+                 [](double forward, double strike, double standardDeviation, double discountFactor)
+                 {
+                     try
+                     {
+                         return std::make_unique<sjd::Black76Put>(forward, strike, standardDeviation,
+                                                                  discountFactor);
+                     }
+                     catch (const sjd::ConfigurationError& error)
+                     {
+                         throw py::value_error(error.what());
+                     }
+                 }),
+             py::arg("forward"), py::arg("strike"), py::arg("standard_deviation"), py::arg("discount_factor"))
         .def("premium", &sjd::Black76Put::getPremium)
         .def("delta", &sjd::Black76Put::getDelta);
 
@@ -850,10 +870,10 @@ PYBIND11_MODULE(_core, m)
             "netting_sets",
             [](sjd::PortfolioB2CEM& portfolio)
             {
-                std::string error;
-                std::vector<sjd::NettingSet> sets = portfolio.nettingSets(error);
-                if (!error.empty())
-                    throw py::value_error(error);
+                sjd::Result<std::vector<sjd::NettingSet>> describedSets = portfolio.nettingSets();
+                if (!describedSets.ok())
+                    throw py::value_error(describedSets.report.toString());
+                std::vector<sjd::NettingSet> sets = describedSets.value;
                 py::list described;
                 for (const sjd::NettingSet& netting : sets)
                 {

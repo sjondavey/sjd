@@ -81,7 +81,7 @@ namespace sjd
 
     Used for excel *formula* rather than excel *objects*
     =======================================================================================*/
-    class SimpleDeltaSurface
+    class SimpleDeltaSurface : public Validatable
     {
     public:
         SimpleDeltaSurface(std::vector<double> times,
@@ -89,8 +89,7 @@ namespace sjd
                            std::vector<std::vector<double>> volatility,
                            bool extrapolate,
                            std::string interpolationType);
-        bool isOK();
-        std::string getErrorMessage();
+        std::string validationRoot() const override { return "delta_surface"; }
 
         bool isInDeltaRange(double time, double delta);
         bool isInMoneynessRange(double time, double moneyness);
@@ -99,13 +98,17 @@ namespace sjd
         double getVolatilityForDelta(double time, double delta) const;
         double getVolatilityForMoneyness(double time, double moneyness) const;
 
+    protected:
+        void runChecks() override;
+
     private:
         double calculateDeltaFromStrike(double forward, double strike, double time) const;
 
-        bool isOKVariable, extrapolate;
+        bool extrapolate;
         std::vector<double> times, delta;
+        std::vector<std::vector<double>> rows;
         QuantLib::Matrix volatilityMatrix;
         std::shared_ptr<QuantLib::Interpolation2D> interpolator;
-        std::string errorMessage, interpolationType, className;
+        std::string interpolationType;
     };
 }

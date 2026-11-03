@@ -15,6 +15,9 @@ These identifiers are the `code` field of a `ValidationIssue`. The constants liv
 | `CONTRACT_PREMIUM_DATE_AFTER_SETTLEMENT` | Premium payment date after settlement date. Consider using a cash flow and an  |
 | `CONTRACT_PREMIUM_NEGATIVE` | Premium Amount must be stored as a non-negative number |
 | `CONTRACT_STRIKE_NEGATIVE` | Strike is negative |
+| `CURVE_INPUT_EMPTY` | Curve observation times are empty |
+| `CURVE_OBSERVATION_BEFORE_ANCHOR` | First observation is before the anchor date |
+| `CURVE_OBSERVATION_BEFORE_ZERO` | First observation time is before zero |
 | `CVA_DATES_BEFORE_ANCHOR` | Observation dates before anchor date |
 | `CVA_LGD_INTERPOLATOR` | Loss-given-default interpolator is not usable |
 | `CVA_LGD_RANGE` | LDG is not in the range [0,1] / Loss given default must be between 0 and 1 |
@@ -60,6 +63,9 @@ These identifiers are the `code` field of a `ValidationIssue`. The constants liv
 | `INSURANCE_STANDBY_RANGE` | StandbyDRS does not extend to the policy maturity date |
 | `INSURANCE_SUM_NEGATIVE` | Sum insured is negative |
 | `INSURANCE_UTILISATION_RANGE` | UtilisationDRS does not extend to the policy maturity date |
+| `INTERPOLATOR_DIMENSION_MISMATCH` | Interpolator x and y vectors do not have the same length |
+| `INTERPOLATOR_TOO_FEW_POINTS` | Interpolator needs at least two points |
+| `INTERPOLATOR_X_NOT_INCREASING` | Interpolator x values are not strictly increasing |
 | `MARGIN_COUNTERPARTY_INITIAL_NEGATIVE` | Counterparty Required Initial Margin cannot be negative |
 | `MARGIN_COUNTERPARTY_THRESHOLD_NEGATIVE` | Counterparty Threshold cannot be negative |
 | `MARGIN_INITIAL_NEGATIVE` | My Required Initial Margin cannot be negative |
@@ -97,12 +103,18 @@ These identifiers are the `code` field of a `ValidationIssue`. The constants liv
 | `SIMULATION_MARKET_INVALID` | Portfolio cannot value against a path rate environment |
 | `SPOT_PATHS_EMPTY` | Number of spot paths must be at least 1 |
 | `SPOT_PATHS_LENGTH` | Spot paths must be number_of_paths times simulation dates |
+| `STRUCTURE_BUILD_FAILED` | Contracts could not be split into capped and uncapped structures |
 | `STRUCTURE_CONTRACT_CONVERSION` | Cound not convert Contract into a Structure |
 | `STRUCTURE_EMPTY` | Structure contains no contracts |
 | `STRUCTURE_NOT_PIECEWISE_LINEAR` | Structure Design Error, Payoff function is not piecewise linear |
 | `STRUCTURE_REGCAP_OFFSET` | not all the contracts quality for regulatory capital offset,  |
 | `STRUCTURE_UNCAPPED_WING` | has uncapped exposure but maximum volume is not in the (uncapped) wings |
 | `STRUCTURE_VOLUME_WITHOUT_EXPOSURE` | Structure Design Error, the structure has no volume but it does have price exposure |
+| `SURFACE_INPUTS_INSUFFICIENT` | A two-dimensional interpolator does not have enough x, y or z data |
+| `SURFACE_X_DIMENSION` | Surface x vector length does not match the z rows |
+| `SURFACE_X_NOT_INCREASING` | Surface x values are not strictly increasing |
+| `SURFACE_Y_DIMENSION` | Surface y vector length does not match the z columns |
+| `SURFACE_Y_NOT_INCREASING` | Surface y values are not strictly increasing |
 | `VOLATILITY_CURVE_CMA_DIMENSION_MISMATCH` | volatility curve cma dimension mismatch |
 | `VOLATILITY_CURVE_CMA_INVALID` | Calendar-month-average volatility curve inputs are not usable |
 | `VOLATILITY_CURVE_CMA_NEGATIVE_INPUT` | has negative inputs |

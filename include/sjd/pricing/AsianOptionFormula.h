@@ -39,15 +39,6 @@ namespace sjd
                            double averageStandardDeviation,
                            double discountFactorToSettlement);
 
-        // Returns true if there has been an error calculating any of the
-        // parameters, for example if there is a negative fwd fwd
-        // volatiltiy, etc. The "getParameter()" method should always
-        // check to ensure that there has been no error in calculation
-        // before proceeding with the calculation.
-        virtual bool isOK();
-
-        std::string getErrorMessage() { return errorMessage; };
-
         std::vector<double> getForwards() const { return forwards; };
         std::vector<double> getFixedRates() const { return fixedRates; };
         size_t getNumberOfRateSetForwards() { return M; };
@@ -74,6 +65,14 @@ namespace sjd
         void getEquivalentBlack76ParamtersFromVectorInputs();
 
     protected:
+        void store(std::vector<double> forwardRates,
+                   std::vector<double> fixedRatesInput,
+                   double strikeInput,
+                   std::vector<double> standardDeviationsInput,
+                   double discountFactorToSettlement);
+        // Empty when the stored inputs can be priced. The text is the ConfigurationError message.
+        std::string inputProblem() const;
+
         // This resets all internal variables when an option paramter is std::set / reset
         void callWhenSettingAnyInternalParameter();
 
@@ -81,7 +80,6 @@ namespace sjd
         // black scholes input paramters
         void calculateInternalOptionParameters();
 
-        std::string errorMessage;
         std::vector<double> forwards, fixedRates, standardDeviations;
         // std::vector<double> time,
         double strike, dfToSettlement;
@@ -106,10 +104,14 @@ namespace sjd
                         double strike,
                         std::vector<double> standardDeviation,
                         double discountFactorToSettlement);
+        AverageRateCall(UncheckedFormulaInputs,
+                        std::vector<double> forwardRates,
+                        std::vector<double> fixedRates,
+                        double strike,
+                        std::vector<double> standardDeviation,
+                        double discountFactorToSettlement);
 
         ~AverageRateCall();
-
-        bool isOK();
 
         double getPremium();
         double getPremiumAfterMaturity(double rateSetRate, double discountFactor)
@@ -130,9 +132,14 @@ namespace sjd
                        double strike,
                        std::vector<double> standardDeviation,
                        double discountFactorToSettlement);
+        AverageRatePut(UncheckedFormulaInputs,
+                       std::vector<double> forwardRates,
+                       std::vector<double> fixedRates,
+                       double strike,
+                       std::vector<double> standardDeviation,
+                       double discountFactorToSettlement);
 
         ~AverageRatePut();
-        bool isOK();
 
         double getPremium();
         double getPremiumAfterMaturity(double rateSetRate, double discountFactor)

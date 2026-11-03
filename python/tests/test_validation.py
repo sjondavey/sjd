@@ -74,14 +74,15 @@ class ValidationReportTest(unittest.TestCase):
         report = environment.validate_report()
         self.assertFalse(report.ok)
         self.assertEqual(len(report.issues), 1)
-        self.assertEqual(report.issues[0].code, "DISCOUNT_CURVE_DIMENSION_MISMATCH")
+        self.assertEqual(report.issues[0].code, "INTERPOLATOR_DIMENSION_MISMATCH")
         self.assertEqual(
             report.issues[0].path,
             (
                 "rates_environment",
                 "discount_rate_source",
                 "discount_curve",
-                "inputs",
+                "dated_curve",
+                "interpolator",
             ),
         )
 

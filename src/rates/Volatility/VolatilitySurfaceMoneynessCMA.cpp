@@ -1,5 +1,7 @@
 #include <sjd/rates/Volatility/VolatilitySurfaceMoneynessCMA.h>
 
+#include <sjd/tools/Errors.h>
+
 using namespace std;
 using namespace QuantLib;
 
@@ -143,10 +145,7 @@ namespace sjd
 
     double VolatilitySurfaceMoneynessCMA::getVolatility(Date toDate) const
     {
-        if (!isInRange(toDate))
-        {
-            return numeric_limits<double>::quiet_NaN();
-        }
+        SJD_ASSERT(isInRange(toDate));
 
         Date beginningOfMonth = Date(1, toDate.month(), toDate.year());
         double yf = simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, beginningOfMonth);
@@ -158,10 +157,7 @@ namespace sjd
 
     double VolatilitySurfaceMoneynessCMA::getVolatility(Date toDate, double strike, double forward) const
     {
-        if (!isInRange(toDate, strike, forward))
-        {
-            return numeric_limits<double>::quiet_NaN();
-        }
+        SJD_ASSERT(isInRange(toDate, strike, forward));
 
         Date beginningOfMonth = Date(1, toDate.month(), toDate.year());
         double yf = simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, beginningOfMonth);

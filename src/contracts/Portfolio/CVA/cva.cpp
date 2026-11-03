@@ -174,10 +174,7 @@ namespace sjd
                                   {"cva", "cumulative_pd"});
         }
         if (!defaultInterpolator->isOk())
-        {
-            errorTracking->record(issues::CVA_PD_INTERPOLATOR, defaultInterpolator->getErrorMessage(),
-                                  {"cva", "cumulative_pd"});
-        }
+            absorbChildReport(defaultInterpolator->validationReport(), {"cva", "cumulative_pd"});
         for (size_t i = 0; i < lossGivenDefault.size(); ++i)
         {
             if ((lossGivenDefault[i] < 0) || (lossGivenDefault[i] > 1))
@@ -187,10 +184,7 @@ namespace sjd
             }
         }
         if (!lossInterpolator->isOk())
-        {
-            errorTracking->record(issues::CVA_LGD_INTERPOLATOR, lossInterpolator->getErrorMessage(),
-                                  {"cva", "lgd"});
-        }
+            absorbChildReport(lossInterpolator->validationReport(), {"cva", "lgd"});
         return;
     }
 

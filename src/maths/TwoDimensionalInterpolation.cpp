@@ -1,5 +1,7 @@
 #include <sjd/maths/TwoDimensionalInterpolation.h>
 
+#include <sjd/tools/Errors.h>
+
 using namespace std;
 using namespace QuantLib;
 
@@ -10,36 +12,33 @@ namespace sjd
     TwoDimensionalInterpolator
 
     ======================================================================================*/
-    bool TwoDimensionalInterpolator::isOk()
+    void TwoDimensionalInterpolator::runChecks()
     {
         if ((x.size() < 2) || (y.size() < 2) || (z.rows() < 2) || (z.columns() < 2))
         {
-            errorMessage =
-                "TwoDimensionalInterpolation->The input x, y or z data does not have sufficient data";
-            return false;
+            recordIssue(issues::SURFACE_INPUTS_INSUFFICIENT,
+                        "The input x, y or z data does not have sufficient data", {});
+            return;
         }
         if (!isStrictlyIncreasing(x))
         {
-            errorMessage = "TwoDimensionalInterpolation->X inputs not structly increasing";
-            return false;
+            recordIssue(issues::SURFACE_X_NOT_INCREASING, "X inputs not strictly increasing", {});
+            return;
         }
         if (!isStrictlyIncreasing(y))
         {
-            errorMessage = "TwoDimensionalInterpolation->Y inputs not structly increasing";
-            return false;
+            recordIssue(issues::SURFACE_Y_NOT_INCREASING, "Y inputs not strictly increasing", {});
+            return;
         }
         if (y.size() != z.columns())
         {
-            errorMessage = "TwoDimensionalInterpolation->Y vector has inconsistent dimension with z data";
-            return false;
+            recordIssue(issues::SURFACE_Y_DIMENSION, "Y vector has inconsistent dimension with z data", {});
+            return;
         }
         if (x.size() != z.rows())
         {
-            errorMessage = "TwoDimensionalInterpolation->X vector has inconsistent dimension with z data";
-            return false;
+            recordIssue(issues::SURFACE_X_DIMENSION, "X vector has inconsistent dimension with z data", {});
         }
-        errorMessage = "TwoDimensionalInterpolation->No Error";
-        return true;
     }
 
     bool TwoDimensionalInterpolator::isInRange(double xValue, double yValue) const
@@ -86,8 +85,7 @@ namespace sjd
     ======================================================================================*/
     double BilinearInterpolator::getRate(double xInput, double yInput) const
     {
-        if (!isInRange(xInput, yInput))
-            return numeric_limits<double>::quiet_NaN();
+        SJD_ASSERT(isInRange(xInput, yInput));
 
         size_t i = locateX(xInput);
         double x1 = x[i], x2 = x[i + 1];
@@ -112,7 +110,7 @@ namespace sjd
                                              bool extrapolate)
         : TwoDimensionalInterpolator(xVector, yVector, zMatrix, extrapolate)
     {
-        if (!isOk())
+        if (!isOK())
             return;
         for (size_t i = 0; i < yVector.size(); ++i)
         {
@@ -124,8 +122,7 @@ namespace sjd
 
     double BicubicInterpolator::getRate(double xInput, double yInput) const
     {
-        if (!isInRange(xInput, yInput))
-            return numeric_limits<double>::quiet_NaN();
+        SJD_ASSERT(isInRange(xInput, yInput));
 
         std::vector<double> section(splines.size());
         for (Size i = 0; i < splines.size(); i++)

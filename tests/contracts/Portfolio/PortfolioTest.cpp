@@ -129,8 +129,6 @@ void PortfolioTest::testPortfolioB2CEM()
     vector<std::shared_ptr<Contract>> contracts;
     contracts.push_back(put);
 
-    string errorMessage;
-
     std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors =
         PortfolioTest::getDefaultRegCapUnderlyingFactors();
     std::shared_ptr<RegCapCreditParameters> regCapCreditParameters =
@@ -244,7 +242,9 @@ void PortfolioTest::testInvalidRegulatoryCapitalIsNaN()
     BOOST_REQUIRE(issuesWithRates > 0);
     capital.validate(re);
     BOOST_CHECK_EQUAL(capital.validationReport().getIssues().size(), issuesWithRates);
-    BOOST_CHECK(std::isnan(capital.getRegulatoryCapital(re)));
+#ifndef NDEBUG
+    BOOST_CHECK_THROW(capital.getRegulatoryCapital(re), sjd::Error);
+#endif
 
     PortfolioB2CEM book(nettingSets, getDefaultRegCapUnderlyingFactors(), getDefaultRegCreditParameters(),
                         optimise);

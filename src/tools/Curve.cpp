@@ -9,7 +9,10 @@ namespace sjd
     /*======================================================================================
    Curve
     =======================================================================================*/
-    Curve::Curve() {}
+    Curve::Curve()
+    {
+        errorTracking = std::make_shared<IssueTracker>("Curve");
+    }
 
     Curve::Curve(Date anchorDateInput,
                  vector<double> observationPointsInput,
@@ -17,6 +20,7 @@ namespace sjd
                  ArrayInterpolatorType typeInput,
                  bool allowExtrapolationInput)
     {
+        errorTracking = std::make_shared<IssueTracker>("Curve");
         setParameters(anchorDateInput, observationPointsInput, observedRatesInput, typeInput,
                       allowExtrapolationInput);
     }
@@ -53,25 +57,20 @@ namespace sjd
         }
     }
 
-    bool Curve::isOK(string& errorMessage)
+    void Curve::runChecks()
     {
-        errorMessage = "";
         if (observationPoints.size() < 1)
         {
-            errorMessage = "Input time empty";
-            return false;
+            recordIssue(issues::CURVE_INPUT_EMPTY, "Input time empty", {});
+            return;
         }
         if (observationPoints[0] < 0)
         {
-            errorMessage = "First ovservation time before zero";
-            return false;
+            recordIssue(issues::CURVE_OBSERVATION_BEFORE_ZERO, "First ovservation time before zero", {});
+            return;
         }
-        if (!interpolator->isOk())
-        {
-            errorMessage = interpolator->getErrorMessage();
-            return false;
-        }
-        return true;
+        if (interpolator && !interpolator->isOk())
+            absorbChildReport(interpolator->validationReport(), {});
     }
 
     Date Curve::getAnchorDate() const

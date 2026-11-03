@@ -4,6 +4,7 @@
 #include <memory>
 #include <ql/time/date.hpp>
 #include <sjd/maths/maths.h>
+#include <sjd/tools/Validation.h>
 
 #include <ql/time/calendar.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
@@ -16,7 +17,7 @@ namespace sjd
     CalendarMonthAverageCurve
 
     =======================================================================================*/
-    class CalendarMonthAverageCurve
+    class CalendarMonthAverageCurve : public Validatable
     {
     public:
         CalendarMonthAverageCurve();
@@ -33,7 +34,7 @@ namespace sjd
                            ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
                            bool allowExtrapolation = false);
 
-        bool isOK(std::string& errorMessage);
+        std::string validationRoot() const override { return "month_average_curve"; }
 
         QuantLib::Date getAnchorDate() const;
         QuantLib::Date getBeginningOfAnchorDateMonth();
@@ -56,6 +57,7 @@ namespace sjd
         static int getNumberOfNumberOfMonthsBetween(QuantLib::Date fromDate, QuantLib::Date toDate);
 
     protected:
+        void runChecks() override;
         int getNumberOfMonthsAheadOfAnchorDate(QuantLib::Date date) const;
 
         QuantLib::Date anchorDate;

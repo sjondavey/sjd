@@ -68,17 +68,15 @@ namespace sjd
         double getRegulatoryCapital(std::shared_ptr<RatesEnvironment> re) override;
 
         bool hasStructureConversionError() const;
-        const std::string& structureConversionErrorMessage() const;
+        const std::string& conversionDetail() const;
         const std::vector<std::shared_ptr<Structure>>& structures() const;
 
-        // Empty, with error set, when the contracts could not be turned into sets.
-        std::vector<NettingSet> nettingSets(std::string& error) const;
+        // Empty, with the report set, when the contracts could not be turned into sets.
+        Result<std::vector<NettingSet>> nettingSets() const;
 
-        static std::vector<std::shared_ptr<Structure>> optimiseStructuresFromContracts(
+        static Result<std::vector<std::shared_ptr<Structure>>> optimiseStructuresFromContracts(
             std::vector<std::shared_ptr<SingleInstrumentContract>> contracts,
-            std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
-            bool& successful,
-            std::string& errorMessage);
+            std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
 
     private:
         double getNGR(std::shared_ptr<RatesEnvironment> re, double& mtm);
@@ -89,7 +87,7 @@ namespace sjd
         std::shared_ptr<Margin> margin;
         bool hasMargin;
         bool structureConversionError;
-        std::string structureErrorMessage;
+        std::string conversionDetailText;
     };
 
     /*======================================================================================
@@ -122,7 +120,7 @@ namespace sjd
 
         std::shared_ptr<RegulatoryCapital> regulatoryCapital() const;
         double getRegulatoryCapital(std::shared_ptr<RatesEnvironment> re);
-        std::vector<NettingSet> nettingSets(std::string& error);
+        Result<std::vector<NettingSet>> nettingSets();
         std::vector<std::shared_ptr<Contract>> regulatoryStructures() const override;
 
     private:

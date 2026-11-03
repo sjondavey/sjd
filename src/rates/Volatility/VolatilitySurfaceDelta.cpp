@@ -1,5 +1,7 @@
 #include <sjd/rates/Volatility/VolatilitySurfaceDelta.h>
 
+#include <sjd/tools/Errors.h>
+
 #include <boost/algorithm/string.hpp>
 #include <sjd/tools/Errors.h>
 
@@ -179,48 +181,14 @@ namespace sjd
                                            vector<vector<double>> volatility,
                                            bool extrapolate,
                                            string interpolationType)
-        : extrapolate(extrapolate), times(timesInput), delta(deltaInput)
+        : extrapolate(extrapolate), times(timesInput), delta(deltaInput), rows(volatility),
+          interpolationType(interpolationType)
     {
-        className = "SimpleDeltaSurface";
-        boost::algorithm::to_lower(interpolationType);
-        boost::algorithm::trim(interpolationType);
-        if (!((interpolationType.compare("bilinear") == 0) || (interpolationType.compare("bicubic") == 0)))
-        {
-            isOKVariable = false;
-            errorMessage = className + "Interpolation Type must be either Bilinear or Bicubic";
+        errorTracking = std::make_shared<IssueTracker>("SimpleDeltaSurface");
+        boost::algorithm::to_lower(this->interpolationType);
+        boost::algorithm::trim(this->interpolationType);
+        if (!validate().isOK())
             return;
-        }
-        isOKVariable = true;
-        errorMessage = "";
-        if ((times.size() == 0) || (delta.size() == 0) || (volatility.size() == 0))
-        {
-            isOKVariable = false;
-            errorMessage = className + "One of the input vectors is empty";
-            return;
-        }
-        size_t rows = volatility.size();
-        size_t columns = volatility[0].size();
-        for (size_t i = 0; i < rows; ++i)
-        {
-            if (volatility[i].size() != columns)
-            {
-                isOKVariable = false;
-                errorMessage = className + "The input volatlity is not square";
-                return;
-            }
-        }
-        if (!isStrictlyIncreasing<double>(times))
-        {
-            isOKVariable = false;
-            errorMessage = className + "Times are not strictly increasing";
-            return;
-        }
-        if (!isStrictlyIncreasing<double>(delta))
-        {
-            isOKVariable = false;
-            errorMessage = "Deltas are not strictly increasing";
-            return;
-        }
         if (delta[0] < 1.0)
         {
             for (size_t i = 0; i < delta.size(); ++i)
@@ -231,21 +199,23 @@ namespace sjd
         if (times[0] > 0)
         {
             times.insert(times.begin(), 0);
-            for (size_t i = 0; i < volatility.size(); ++i)
+            for (size_t i = 0; i < rows.size(); ++i)
             {
-                double vol = volatility[i][0];
-                volatility[i].insert(volatility[i].begin(), vol);
+                double vol = rows[i][0];
+                rows[i].insert(rows[i].begin(), vol);
             }
         }
-        volatilityMatrix = Matrix(rows, columns);
-        for (size_t i = 0; i < rows; ++i)
+        const size_t rowCount = rows.size();
+        const size_t columnCount = rows[0].size();
+        volatilityMatrix = Matrix(rowCount, columnCount);
+        for (size_t i = 0; i < rowCount; ++i)
         {
-            for (size_t j = 0; j < columns; ++j)
+            for (size_t j = 0; j < columnCount; ++j)
             {
-                volatilityMatrix[i][j] = volatility[i][j];
+                volatilityMatrix[i][j] = rows[i][j];
             }
         }
-        if (interpolationType.compare("bilinear") == 0)
+        if (this->interpolationType.compare("bilinear") == 0)
         {
             interpolator = std::make_shared<BilinearInterpolation>(times.begin(), times.end(), delta.begin(),
                                                                    delta.end(), volatilityMatrix);
@@ -257,14 +227,40 @@ namespace sjd
         }
     }
 
-    bool SimpleDeltaSurface::isOK()
+    void SimpleDeltaSurface::runChecks()
     {
-        return isOKVariable;
-    }
-
-    string SimpleDeltaSurface::getErrorMessage()
-    {
-        return errorMessage;
+        if (!((interpolationType.compare("bilinear") == 0) || (interpolationType.compare("bicubic") == 0)))
+        {
+            recordIssue(issues::VOLATILITY_SURFACE_INTERPOLATOR_TYPE,
+                        "Interpolation Type must be either Bilinear or Bicubic", {});
+            return;
+        }
+        if ((times.size() == 0) || (delta.size() == 0) || (rows.size() == 0))
+        {
+            recordIssue(issues::VOLATILITY_SURFACE_INPUTS_EMPTY, "One of the input vectors is empty", {});
+            return;
+        }
+        const size_t columns = rows[0].size();
+        for (size_t i = 0; i < rows.size(); ++i)
+        {
+            if (rows[i].size() != columns)
+            {
+                recordIssue(issues::VOLATILITY_SURFACE_DIMENSION_MISMATCH,
+                            "The input volatility is not square", {});
+                return;
+            }
+        }
+        if (!isStrictlyIncreasing<double>(times))
+        {
+            recordIssue(issues::VOLATILITY_SURFACE_TIMES_NOT_INCREASING, "Times are not strictly increasing",
+                        {});
+            return;
+        }
+        if (!isStrictlyIncreasing<double>(delta))
+        {
+            recordIssue(issues::VOLATILITY_SURFACE_STRIKES_NOT_INCREASING,
+                        "Deltas are not strictly increasing", {});
+        }
     }
 
     bool SimpleDeltaSurface::isInDeltaRange(double time, double deltaPoint)
@@ -300,11 +296,8 @@ namespace sjd
 
     double SimpleDeltaSurface::getVolatilityForDelta(double time, double deltaPoint) const
     {
-        if ((extrapolate) || (interpolator->isInRange(time, deltaPoint)))
-        {
-            return (*interpolator)(time, deltaPoint, extrapolate);
-        }
-        return numeric_limits<double>::quiet_NaN();
+        SJD_ASSERT(interpolator && (extrapolate || interpolator->isInRange(time, deltaPoint)));
+        return (*interpolator)(time, deltaPoint, extrapolate);
     }
 
     double SimpleDeltaSurface::getVolatilityForMoneyness(double time, double moneyness) const

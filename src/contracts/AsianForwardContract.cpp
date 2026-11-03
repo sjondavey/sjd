@@ -1,5 +1,7 @@
 #include <sjd/contracts/AsianForwardContract.h>
 
+#include <sjd/tools/Errors.h>
+
 #include <iomanip>
 #include <sstream>
 
@@ -107,10 +109,7 @@ namespace sjd
         {
             return 0;
         }
-        if (!ForwardContract::isOK())
-        {
-            return numeric_limits<double>::quiet_NaN();
-        }
+        SJD_ASSERT(ForwardContract::isOK());
 
         double premium = 0;
         vector<double> forwards, fixes;

@@ -1,6 +1,8 @@
 
 #include "Black76FormulaTest.h"
 
+#include <sjd/tools/Errors.h>
+
 using namespace std;
 
 using namespace std;
@@ -15,6 +17,8 @@ void Black76Test::testPutCallParity()
     double F = 100, X = 110, sd = 0.2, df = 0.97;
     Black76Call call(F, X, sd, df);
     Black76Put put(F, X, sd, df);
+    BOOST_CHECK_THROW(Black76Call(-1, X, sd, df), ConfigurationError);
+    BOOST_CHECK_THROW(Black76Put(F, X, 0, df), ConfigurationError);
 
     Black76Option* option = new Black76Call(F, X, sd, df);
 

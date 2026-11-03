@@ -44,8 +44,6 @@ def _black76():
         premiums, deltas = [], []
         for forward, strike, sd, df in grid:
             option = cls(forward, strike, sd, df)
-            if not option.is_ok():
-                raise RuntimeError(option.error_message())
             premiums.append(option.premium())
             deltas.append(option.delta())
         out[f"black76.{kind}.premium"] = premiums

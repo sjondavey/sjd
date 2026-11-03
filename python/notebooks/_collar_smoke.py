@@ -50,10 +50,6 @@ for settlement in settlements:
     standard_deviation = vrs.get_volatility(maturity) * math.sqrt(yf(maturity))
     put_formula = sjd.Black76Put(forward, put_strike, standard_deviation, discount_factor)
     call_formula = sjd.Black76Call(forward, call_strike, standard_deviation, discount_factor)
-    if not put_formula.is_ok():
-        raise ValueError(put_formula.error_message())
-    if not call_formula.is_ok():
-        raise ValueError(call_formula.error_message())
     expected_put = put_formula.premium() * volume
     expected_call = -call_formula.premium() * volume
     assert math.isclose(put.get_value(environment), expected_put, rel_tol=1e-12)

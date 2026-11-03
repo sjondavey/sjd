@@ -35,13 +35,10 @@ namespace sjd
     void ForwardCurveDeterministic::runChecks()
     {
         ForwardRateSourceDeterministic::runChecks();
-        string errorMessage = "";
-        if (!quotes.quotesAreOk(errorMessage))
+        const ValidationReport quoteReport = quotes.validateQuotes();
+        if (!quoteReport.isOK())
         {
-            const std::string_view code = errorMessage.find("same dimension") != std::string::npos
-                                              ? issues::FORWARD_CURVE_DIMENSION_MISMATCH
-                                              : issues::FORWARD_CURVE_INVALID;
-            recordIssue(code, errorMessage, {"inputs"});
+            absorbChildReport(quoteReport, std::string());
             return;
         }
         return;

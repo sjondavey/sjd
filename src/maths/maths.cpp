@@ -1,5 +1,7 @@
 ﻿#include <sjd/maths/maths.h>
 
+#include <sjd/tools/Errors.h>
+
 #include <limits>
 
 //======================================================================================
@@ -109,65 +111,44 @@ namespace sjd
                                          bool allowExtrapolation)
         : xVector(xVector), yVector(yVector), allowExtrapolation(allowExtrapolation)
     {
-        isOk();
+        errorTracking = std::make_shared<IssueTracker>("ArrayInterpolator");
+        validate();
     }
 
-    bool ArrayInterpolator::isOk()
+    void ArrayInterpolator::runChecks()
     {
         if (!isStrictlyIncreasing(xVector))
         {
-            setOnError("ArrayInterpolator::ArrayInterpolator. X vector input not strictly monotonic");
-            return false;
+            recordIssue(issues::INTERPOLATOR_X_NOT_INCREASING, "X vector input not strictly monotonic", {});
+            return;
         }
         if (xVector.size() != yVector.size())
         {
-            setOnError(
-                "ArrayInterpolator::ArrayInterpolator. X and Y vectors do not have the same dimension");
-            return false;
+            recordIssue(issues::INTERPOLATOR_DIMENSION_MISMATCH,
+                        "X and Y vectors do not have the same dimension", {});
+            return;
         }
         if (xVector.size() < 2)
         {
-            setOnError("ArrayInterpolator::ArrayInterpolator. X vector must have a least 2 points");
-            return false;
+            recordIssue(issues::INTERPOLATOR_TOO_FEW_POINTS, "X vector must have at least 2 points", {});
         }
-        errorMessage = "";
-        hasError = false;
-        return true;
     }
 
     void ArrayInterpolator::setXVector(vector<double> xVectorInput)
     {
         xVector = xVectorInput;
-        if (!isStrictlyIncreasing(xVector))
-        {
-            setOnError("ArrayInterpolator::setXVector. X vector input not strictly monotonic");
-        }
-        if (xVector.size() != yVector.size())
-        {
-            setOnError("ArrayInterpolator::setXVector. X and Y vectors do not have the same dimension");
-        }
-        else
-        {
-            hasError = false;
-        }
+        validate();
     }
 
     void ArrayInterpolator::setYVector(vector<double> yVectorInput)
     {
         yVector = yVectorInput;
-        if (xVector.size() != yVector.size())
-        {
-            setOnError("ArrayInterpolator::setYVector. X and Y vectors do not have the same dimension");
-        }
-        else
-        {
-            hasError = false;
-        }
+        validate();
     }
 
     bool ArrayInterpolator::isInRange(double x) const
     {
-        if (hasError)
+        if (!isOK() || xVector.empty())
         {
             return false;
         }
@@ -184,7 +165,7 @@ namespace sjd
 
     bool ArrayInterpolator::isInRange(vector<double> xInput) const
     {
-        if (hasError)
+        if (!isOK())
         {
             return false;
         }
@@ -215,12 +196,6 @@ namespace sjd
         return yOutput;
     }
 
-    void ArrayInterpolator::setOnError(string errorMessageInput)
-    {
-        hasError = true;
-        errorMessage = errorMessageInput;
-    }
-
     //======================================================================================
     // LinearArrayInterpolator
     //======================================================================================
@@ -233,15 +208,8 @@ namespace sjd
 
     double LinearArrayInterpolator::getRate(double x) const
     {
-        if (hasError)
-        {
-            return numeric_limits<double>::quiet_NaN();
-        }
-
-        if ((allowExtrapolation == false) && !isInRange(x))
-        {
-            return numeric_limits<double>::quiet_NaN();
-        }
+        SJD_ASSERT(isOK());
+        SJD_ASSERT(allowExtrapolation || isInRange(x));
         // we are now either inside the range (if we do not allow extrapolation) or we allow extrapolation
         // using the "closest" points in the input arrays
 
@@ -263,11 +231,7 @@ namespace sjd
             }
         }
         double h = xVector[ihi] - xVector[ilo];
-        if (h == 0)
-        {
-            return numeric_limits<float>::quiet_NaN(); // shouldn't happen since we should check the x array
-                                                       // is strictly monotonic but you never know
-        }
+        SJD_ASSERT(h != 0);
         return LinearInterpolator(xVector[ilo], yVector[ilo], xVector[ihi], yVector[ihi]).getRate(x);
     }
 
@@ -279,7 +243,7 @@ namespace sjd
         : ArrayInterpolator(xVector, yVector, allowExtrapolation), _yp1(yp1), _ypn(ypn),
           spline(xVector.size())
     {
-        if (!hasError)
+        if (isOK())
         {
             setSpline();
         }
@@ -291,7 +255,7 @@ namespace sjd
         : ArrayInterpolator(xVector, yVector, allowExtrapolation), _yp1(0.0), _ypn(0.0),
           spline(xVector.size())
     {
-        if (!hasError)
+        if (isOK())
         {
             setSpline();
         }
@@ -299,15 +263,8 @@ namespace sjd
 
     double CubicSplineInterpolator::getRate(double x) const
     {
-        if (hasError)
-        {
-            return numeric_limits<float>::quiet_NaN();
-        }
-
-        if (!allowExtrapolation && !isInRange(x))
-        {
-            return numeric_limits<float>::quiet_NaN();
-        }
+        SJD_ASSERT(isOK());
+        SJD_ASSERT(allowExtrapolation || isInRange(x));
 
         // We find the right place in the table by means of bisection. This will return the two "extreme"
         // points if we are extrapolating outside the curve
@@ -328,11 +285,7 @@ namespace sjd
         }
 
         double h = xVector[khi] - xVector[klo];
-        if (h == 0)
-        {
-            return numeric_limits<float>::quiet_NaN(); // shouldn't happen since we should check the x array
-                                                       // is strictly monotonic but you never know
-        }
+        SJD_ASSERT(h != 0);
         double a = (xVector[khi] - x) / h;
         double b = (x - xVector[klo]) / h;
         double y = a * yVector[klo] + b * yVector[khi] +

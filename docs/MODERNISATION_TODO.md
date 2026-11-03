@@ -491,38 +491,29 @@ the silent fallbacks.
 
 **Tasks**
 
-- [ ] **Pricing formulas** (`Black76Option`, `AverageRateOption`). These are on
-      the hot path. Either (a) validate inputs once in a constructor and throw
-      `ConfigurationError`, with `SJD_ASSERT` in the setters used by Monte
-      Carlo, or (b) make them `Validatable` like the rest. Option (a) suits a
-      formula better. Remove `getErrorMessage()`.
-- [ ] **Interpolators and curves** (`ArrayInterpolator`,
+- [x] **Pricing formulas** (`Black76Option`, `AverageRateOption`). The public
+      constructors throw `ConfigurationError`. `setParameters` and the scalar
+      setters assert in Debug. `getErrorMessage()` is gone. A contract that
+      fills the formula on each valuation constructs it with
+      `UncheckedFormulaInputs`.
+- [x] **Interpolators and curves** (`ArrayInterpolator`,
       `TwoDimensionalInterpolation`, `Curve`, `DatedCurve`,
-      `CalendarMonthAverageCurve`). These are built once from market data, so
-      they should be `Validatable` and report through the owning rate source's
-      report with a path such as `forward_curve/interpolator`.
-- [ ] **Output parameters.** Replace `bool& successful, std::string& errorMessage`
-      in `Structure::createStructures`, `decomposeIntoCappedAndUncapped`,
-      `optimiseCashflow` and `CurrentExposureMethod::optimiseStructuresFromContracts`
-      with a return type such as:
-
-      ```cpp
-      template <class T>
-      struct Result {
-          T value;
-          ValidationReport report;
-          bool ok() const { return report.isOK(); }
-      };
-      ```
-
-      (or `tl::expected` from vcpkg, or `std::expected` if you move to C++23).
-      Replace `nettingSets(std::string& error)` the same way.
-- [ ] **NaN returns** in `CurrentExposureMethod::getRegulatoryCapital` and
-      `getNGR`: replace with `SJD_ASSERT(!hasErrors())`. Callers must validate
-      first, as with contracts.
+      `CalendarMonthAverageCurve`) are `Validatable`. The owning rate source
+      absorbs the child report, so an interpolator problem is reported under
+      the curve.
+- [x] **Output parameters.** `Structure::createStructures`,
+      `decomposeIntoCappedAndUncapped`, `optimiseCashflow`,
+      `CurrentExposureMethod::optimiseStructuresFromContracts` and `nettingSets`
+      return `Result<T>` (`value` plus a `ValidationReport`).
+- [x] **NaN returns** in `CurrentExposureMethod::getRegulatoryCapital` and
+      `getNGR` are `SJD_ASSERT(!hasErrors())`. Callers validate first.
 
 **Done when** `rg "errorMessage|bool ?& ?successful|quiet_NaN" src include`
 finds nothing that signals failure, and the golden tests pass.
+
+**Status.** Done. The remaining `quiet_NaN` hits are the uncapped-structure cap,
+which is a stored value (the golden netting sets record it). `getErrorMessages`
+stays until Step 10.
 
 ---
 

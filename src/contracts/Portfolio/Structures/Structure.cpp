@@ -1,6 +1,9 @@
+#include <sjd/contracts/Portfolio/Structures/Structure.h>
+
+#include <sjd/tools/Errors.h>
+
 #include <algorithm>
 #include <iomanip>
-#include <sjd/contracts/Portfolio/Structures/Structure.h>
 #include <sstream>
 
 using namespace std;
@@ -200,10 +203,7 @@ namespace sjd
     double Structure::getMtMPlusAddOn(std::shared_ptr<RatesEnvironment> re, double netGrossRatio)
     {
         double mtm = getValue(re);
-        if (errorTracking->getHasErrors())
-        {
-            return numeric_limits<double>::quiet_NaN();
-        }
+        SJD_ASSERT(!errorTracking->getHasErrors());
 
         return getMtMPlusAddOnForGivenMtM(re, mtm, netGrossRatio);
     }
@@ -217,10 +217,7 @@ namespace sjd
             return 0;
         }
 
-        if (errorTracking->getHasErrors())
-        {
-            return numeric_limits<double>::quiet_NaN();
-        }
+        SJD_ASSERT(!errorTracking->getHasErrors());
 
         double addOn = 0;
         if (!hasPriceExposure)
@@ -242,10 +239,7 @@ namespace sjd
                 }
                 ++it;
             }
-            if ((it == contracts.end()) && ((spot < 0) || (volume < 0)))
-            {
-                return numeric_limits<double>::quiet_NaN();
-            }
+            SJD_ASSERT(!((it == contracts.end()) && ((spot < 0) || (volume < 0))));
 
             Date sd = getSettlementDate();
             double tts = ((double)(sd - re->getAnchorDate())) / 365.0;
@@ -386,10 +380,9 @@ namespace sjd
         vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts)
     {
         set<double> strikes = getAllStrikes(underlyingContracts);
-        if (strikes.size() == 0)
-        {
-            return numeric_limits<double>::quiet_NaN();
-        }
+        // A cashflow has no strikes and no price volume.
+        if (strikes.empty())
+            return 0;
 
         double lowStrike = *(strikes.begin());
         double g1 = gradient(underlyingContracts, lowStrike * .975, lowStrike * .999);
@@ -747,16 +740,16 @@ namespace sjd
         return (std::dynamic_pointer_cast<AsianContract>(underlyingContract) != 0);
     }
 
-    vector<std::shared_ptr<Structure>> Structure::createStructures(
+    Result<vector<std::shared_ptr<Structure>>> Structure::createStructures(
         vector<std::shared_ptr<SingleInstrumentContract>> inputContracts,
-        std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors,
-        bool& successful)
+        std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors)
     {
-        successful = false;
-        vector<std::shared_ptr<Structure>> structures = vector<std::shared_ptr<Structure>>(0);
+        Result<vector<std::shared_ptr<Structure>>> result;
         if (inputContracts.size() == 0)
         {
-            return structures;
+            result.report =
+                ValidationReport::failure(issues::STRUCTURE_EMPTY, "No contracts to build a structure");
+            return result;
         }
 
         if (inputContracts.size() > 1)
@@ -766,74 +759,63 @@ namespace sjd
             {
                 if (!qualifyForRegulatoryCapitalOffset(c1, inputContracts[i]))
                 {
-                    return structures;
+                    result.report =
+                        ValidationReport::failure(issues::STRUCTURE_REGCAP_OFFSET,
+                                                  "Contracts do not qualify for regulatory capital offset");
+                    return result;
                 }
             }
         }
 
         double cap;
         bool hasExposure;
-        if (isCapped(inputContracts, cap, hasExposure))
+        if (isCapped(inputContracts, cap, hasExposure) || isMaximumVolumeInUncappedWing(inputContracts))
         {
-            structures.clear();
-            std::shared_ptr<Structure> s = std::make_shared<Structure>(inputContracts, regCapAssetFactors);
-            successful = !s->errorTracking->getHasErrors();
-            structures.push_back(s);
-            return structures;
+            std::shared_ptr<Structure> built =
+                std::make_shared<Structure>(inputContracts, regCapAssetFactors);
+            if (built->hasErrors())
+                result.report = built->validationReport();
+            else
+                result.value.push_back(built);
+            return result;
         }
-        else if (isMaximumVolumeInUncappedWing(inputContracts))
+
+        // Uncapped with the maximum volume in the interior. Split the convex part into two structures.
+        Result<ExposureSplit> split = decomposeIntoCappedAndUncapped(inputContracts);
+        if (!split.ok())
         {
-            structures.clear();
-            std::shared_ptr<Structure> s = std::make_shared<Structure>(inputContracts, regCapAssetFactors);
-            successful = !s->errorTracking->getHasErrors();
-            structures.push_back(s);
-            return structures;
+            result.report = split.report;
+            return result;
         }
-        else
-        { // uncapped with max volume in the interior. remove convex part and create 2 strucutres
-            // double maxVolume = getEffectiveVolume(inputContracts);
-            vector<std::shared_ptr<SingleInstrumentContract>> cappedContracts, uncappedContracts;
-            decomposeIntoCappedAndUncapped(inputContracts, cappedContracts, uncappedContracts, successful);
-            if (!successful)
-            {
-                return structures;
-            }
 
-            bool opOK;
-            optimiseCashflow(cappedContracts, uncappedContracts, opOK);
-            if (!opOK)
-            {
-                successful = false;
-                return structures;
-            }
-
-            std::shared_ptr<Structure> cappedStructure =
-                std::make_shared<Structure>(cappedContracts, regCapAssetFactors);
-            std::shared_ptr<Structure> uncappedStructure =
-                std::make_shared<Structure>(uncappedContracts, regCapAssetFactors);
-            if (cappedStructure->errorTracking->getHasErrors() ||
-                uncappedStructure->errorTracking->getHasErrors())
-            {
-                successful = false;
-                return structures;
-            }
-
-            structures.push_back(cappedStructure);
-            structures.push_back(uncappedStructure);
+        Result<bool> cashflow = optimiseCashflow(split.value.capped, split.value.uncapped);
+        if (!cashflow.ok())
+        {
+            result.report = cashflow.report;
+            return result;
         }
-        successful = true;
-        return structures;
+
+        std::shared_ptr<Structure> cappedStructure =
+            std::make_shared<Structure>(split.value.capped, regCapAssetFactors);
+        std::shared_ptr<Structure> uncappedStructure =
+            std::make_shared<Structure>(split.value.uncapped, regCapAssetFactors);
+        if (cappedStructure->hasErrors() || uncappedStructure->hasErrors())
+        {
+            result.report = cappedStructure->validationReport().merge(uncappedStructure->validationReport());
+            return result;
+        }
+
+        result.value.push_back(cappedStructure);
+        result.value.push_back(uncappedStructure);
+        return result;
     }
 
-    void Structure::decomposeIntoCappedAndUncapped(
-        vector<std::shared_ptr<SingleInstrumentContract>>& allContracts,
-        vector<std::shared_ptr<SingleInstrumentContract>>& cappedContracts,
-        vector<std::shared_ptr<SingleInstrumentContract>>& uncappedContracts,
-        bool& successful)
+    Result<Structure::ExposureSplit> Structure::decomposeIntoCappedAndUncapped(
+        const vector<std::shared_ptr<SingleInstrumentContract>>& allContracts)
     {
-        cappedContracts.clear();
-        uncappedContracts.clear();
-        successful = true;
+        Result<ExposureSplit> result;
+        vector<std::shared_ptr<SingleInstrumentContract>>& cappedContracts = result.value.capped;
+        vector<std::shared_ptr<SingleInstrumentContract>>& uncappedContracts = result.value.uncapped;
         for (size_t i = 0; i < allContracts.size(); ++i)
         {
             cappedContracts.push_back(cloneInstrument(allContracts[i]));
@@ -874,8 +856,10 @@ namespace sjd
         }
         if (loopCounter == infiniteLoopBreaker)
         {
-            successful = false;
-            return;
+            result.report = ValidationReport::failure(issues::STRUCTURE_BUILD_FAILED,
+                                                      "Could not split capped and uncapped exposure");
+            result.value = {};
+            return result;
         }
         infiniteLoopBreaker = static_cast<int>(cappedContracts.size()) + 1;
         loopCounter = 0;
@@ -912,20 +896,26 @@ namespace sjd
         }
         if (loopCounter == infiniteLoopBreaker)
         {
-            successful = false;
-            return;
+            result.report = ValidationReport::failure(issues::STRUCTURE_BUILD_FAILED,
+                                                      "Could not split capped and uncapped exposure");
+            result.value = {};
+            return result;
         }
-        return;
+        return result;
     }
 
-    void Structure::optimiseCashflow(vector<std::shared_ptr<SingleInstrumentContract>>& cappedContracts,
-                                     vector<std::shared_ptr<SingleInstrumentContract>>& unCappedContracts,
-                                     bool& successful)
+    Result<bool> Structure::optimiseCashflow(
+        vector<std::shared_ptr<SingleInstrumentContract>>& cappedContracts,
+        vector<std::shared_ptr<SingleInstrumentContract>>& unCappedContracts)
     {
+        Result<bool> result;
+        result.value = true;
         if ((cappedContracts.size() == 0) && (unCappedContracts.size() == 0))
         {
-            successful = false;
-            return;
+            result.value = false;
+            result.report = ValidationReport::failure(issues::STRUCTURE_BUILD_FAILED,
+                                                      "No contracts to optimise into a structure");
+            return result;
         }
 
         Date settlement;
@@ -965,7 +955,7 @@ namespace sjd
                 cappedContracts.push_back(cashflowReceivable);
             }
         }
-        successful = true;
+        return result;
     }
 
     string Structure::toString(std::shared_ptr<RatesEnvironment> re)

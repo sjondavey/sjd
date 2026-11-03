@@ -25,8 +25,7 @@ namespace sjd
         allowExtrapolation = curve->getAllowsExtrapolation();
         finalDate = curve->getFinalDate();
         type = typeInput;
-        string tmp;
-        if (curve->isOK(tmp) && (!curve->containsRateOnAnchorDate()))
+        if (curve->validate().isOK() && (!curve->containsRateOnAnchorDate()))
         {
             curve->addPointOnAnchorDate(volatilityInput[0]);
             flatBackFilled = true;
@@ -39,13 +38,9 @@ namespace sjd
     void VolatilityCurveCMA::runChecks()
     {
         DeterministicVolatilityRateSource::runChecks();
-        string errorMessage = "";
-        if (!curve->isOK(errorMessage))
+        if (!curve->validate().isOK())
         {
-            const std::string_view code = errorMessage.find("same dimension") != std::string::npos
-                                              ? issues::VOLATILITY_CURVE_CMA_DIMENSION_MISMATCH
-                                              : issues::VOLATILITY_CURVE_CMA_INVALID;
-            recordIssue(code, errorMessage, {"inputs"});
+            absorbChildReport(curve->validationReport(), std::string());
             return;
         }
         for (size_t i = 0; i < curve->getObservationDates().size(); ++i)

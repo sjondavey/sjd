@@ -1,5 +1,7 @@
 #include "MathsTest.h"
 
+#include <sjd/tools/Errors.h>
+
 // using namespace std;
 using namespace boost::unit_test_framework;
 using namespace boost::math;
@@ -99,20 +101,20 @@ void MathsFunctionsTest::testArrayInterpolator()
     yVector.push_back(m * x + c);
     LinearArrayInterpolator interp(xVector, yVector, true);
     BOOST_CHECK(interp.isOk() == false);
-    BOOST_CHECK(boost::math::isnan<double>(interp.getRate(3.5)) == true);
+    BOOST_CHECK(interp.validationReport().getIssues()[0].code == "INTERPOLATOR_X_NOT_INCREASING");
 
     xVector.pop_back();
     xVector.push_back(5);
     xVector.push_back(6);
     interp = LinearArrayInterpolator(xVector, yVector, true); // inconsistent dimensions
     BOOST_CHECK(interp.isOk() == false);
-    BOOST_CHECK(boost::math::isnan<double>(interp.getRate(3.5)) == true);
+    BOOST_CHECK(interp.validationReport().getIssues()[0].code == "INTERPOLATOR_DIMENSION_MISMATCH");
 
     xVector.clear();
     yVector.clear();
     interp = LinearArrayInterpolator(xVector, yVector, true); // no data
     BOOST_CHECK(interp.isOk() == false);
-    BOOST_CHECK(boost::math::isnan<double>(interp.getRate(3.5)) == true);
+    BOOST_CHECK(interp.validationReport().getIssues()[0].code == "INTERPOLATOR_X_NOT_INCREASING");
 
     for (size_t i = 0; i < 5; ++i)
     {
@@ -179,7 +181,11 @@ void MathsFunctionsTest::testLinearArrayInterpolator()
     BOOST_CHECK(interpWithExtrap.getRate(3.5) == (m * 3.5 + c));
     BOOST_CHECK(interpWithExtrap.getRate(4.75) == interpWithoutExtrap.getRate(4.75));
     BOOST_CHECK(abs(interpWithExtrap.getRate(10.75) - (m * 10.75 + c)) < epsilon);
-    BOOST_CHECK(boost::math::isnan<double>(interpWithoutExtrap.getRate(10.75)) == true);
+#ifndef NDEBUG
+    BOOST_CHECK_THROW(interpWithoutExtrap.getRate(10.75), sjd::Error);
+#else
+    BOOST_CHECK(abs(interpWithoutExtrap.getRate(10.75) - (m * 10.75 + c)) < epsilon);
+#endif
 }
 
 void MathsFunctionsTest::testCubicSplineInterpolator()

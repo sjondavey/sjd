@@ -1,5 +1,7 @@
 #include <sjd/rates/Volatility/VolatilitySurfaceMoneyness.h>
 
+#include <sjd/tools/Errors.h>
+
 using namespace std;
 using namespace QuantLib;
 
@@ -57,20 +59,14 @@ namespace sjd
 
     double VolatilitySurfaceMoneyness::getVolatility(Date toDate) const
     {
-        if (!isInRange(toDate))
-        {
-            return numeric_limits<double>::quiet_NaN();
-        }
+        SJD_ASSERT(isInRange(toDate));
         double yf = dayCounter->yearFraction(anchorDate, toDate);
         return surfaceVolatility(yf, 0.0);
     }
 
     double VolatilitySurfaceMoneyness::getVolatility(Date toDate, double strike, double forward) const
     {
-        if (!isInRange(toDate, strike, forward))
-        {
-            return numeric_limits<double>::quiet_NaN();
-        }
+        SJD_ASSERT(isInRange(toDate, strike, forward));
         double yf = dayCounter->yearFraction(anchorDate, toDate);
         double moneyness = (strike - forward) / forward;
         return surfaceVolatility(yf, moneyness);

@@ -44,10 +44,10 @@ namespace sjd
         {
             return;
         }
-        string errorMessage = "";
-        if (!quotes.quotesAreOk(errorMessage))
+        const ValidationReport quoteReport = quotes.validateQuotes();
+        if (!quoteReport.isOK())
         {
-            recordIssue(issues::FORWARD_CURVE_INVALID, errorMessage, {"forward_curve"});
+            absorbChildReport(quoteReport, std::string());
             return;
         }
         Date d1, d2;

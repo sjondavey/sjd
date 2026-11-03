@@ -62,11 +62,11 @@ namespace sjd
         SingleOptionContract::setType(pc);
         if (getType() == PutCall::PUT)
         {
-            option = std::make_shared<Black76Put>(0, 0, 0, 0);
+            option = std::make_shared<Black76Put>(UncheckedFormulaInputs{}, 0, 0, 0, 0);
         }
         else
         {
-            option = std::make_shared<Black76Call>(0, 0, 0, 0);
+            option = std::make_shared<Black76Call>(UncheckedFormulaInputs{}, 0, 0, 0, 0);
         }
     }
 

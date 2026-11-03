@@ -8,7 +8,10 @@ namespace sjd
     /*======================================================================================
     CalendarMonthAverageCurve
     =======================================================================================*/
-    CalendarMonthAverageCurve::CalendarMonthAverageCurve() {}
+    CalendarMonthAverageCurve::CalendarMonthAverageCurve()
+    {
+        errorTracking = std::make_shared<IssueTracker>("CalendarMonthAverageCurve");
+    }
 
     CalendarMonthAverageCurve::CalendarMonthAverageCurve(Date anchorDateInput,
                                                          vector<Date> observationDatesInput,
@@ -16,6 +19,7 @@ namespace sjd
                                                          ArrayInterpolatorType typeInput,
                                                          bool allowExtrapolationInput)
     {
+        errorTracking = std::make_shared<IssueTracker>("CalendarMonthAverageCurve");
         setParameters(anchorDateInput, observationDatesInput, observedRatesInput, typeInput,
                       allowExtrapolationInput);
     }
@@ -63,25 +67,21 @@ namespace sjd
         }
     }
 
-    bool CalendarMonthAverageCurve::isOK(string& errorMessage)
+    void CalendarMonthAverageCurve::runChecks()
     {
-        errorMessage = "";
         if (observationPoints.size() < 1)
         {
-            errorMessage = "Input time empty";
-            return false;
+            recordIssue(issues::CURVE_INPUT_EMPTY, "Input time empty", {});
+            return;
         }
         if (observationPoints[0] < 0)
         {
-            errorMessage = "First observation time before Anchor Date";
-            return false;
+            recordIssue(issues::CURVE_OBSERVATION_BEFORE_ANCHOR, "First observation time before Anchor Date",
+                        {});
+            return;
         }
-        if (!interpolator->isOk())
-        {
-            errorMessage = interpolator->getErrorMessage();
-            return false;
-        }
-        return true;
+        if (interpolator && !interpolator->isOk())
+            absorbChildReport(interpolator->validationReport(), {});
     }
 
     Date CalendarMonthAverageCurve::getAnchorDate() const
