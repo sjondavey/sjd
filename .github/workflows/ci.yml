@@ -11,8 +11,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # vcpkg commit matching builtin-baseline in vcpkg.json.
-  VCPKG_COMMIT: 26abb5b33f976246a5f2cdc45cdd073d51caff06
+  # Tool checkout, not the port baseline in vcpkg.json. MSYS2 deletes old
+  # packages from its mirrors, and this commit's scripts still request one
+  # that is hosted. Library versions stay on the builtin-baseline.
+  VCPKG_COMMIT: 6fa128f2b6e1dd260ebfb30fdb1c38a191369812
   VCPKG_ROOT: ${{ github.workspace }}/vcpkg
   VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg-cache,readwrite
   PYTHON_VERSION: "3.10"

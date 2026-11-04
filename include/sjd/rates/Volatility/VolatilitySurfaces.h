@@ -65,6 +65,6 @@ namespace sjd
         std::vector<double> time, strikeDimension;
         QuantLib::Matrix volatility;
         std::shared_ptr<QuantLib::Interpolation2D> interpolator;
-        SurfaceInterpolatorType interpolatorType;
+        SurfaceInterpolatorType interpolatorType = BILINEAR;
     };
 }

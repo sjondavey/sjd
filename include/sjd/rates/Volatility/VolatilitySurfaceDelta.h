@@ -104,7 +104,7 @@ namespace sjd
     private:
         double calculateDeltaFromStrike(double forward, double strike, double time) const;
 
-        bool extrapolate;
+        bool extrapolate = false;
         std::vector<double> times, delta;
         std::vector<std::vector<double>> rows;
         QuantLib::Matrix volatilityMatrix;

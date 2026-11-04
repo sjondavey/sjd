@@ -97,17 +97,20 @@ namespace sjd
                                                 SurfaceInterpolatorType interpolatorTypeInput,
                                                 bool extrapolateInput)
     {
+        allowExtrapolation = extrapolateInput;
+        interpolatorType = interpolatorTypeInput;
         if (observationDatesInput.size() == 0 || strikeDimensionInput.size() == 0 ||
             volatilityInput.rows() * volatilityInput.columns() == 0)
         {
             observationDates = vector<Date>();
             strikeDimension = vector<double>();
+            time.clear();
             volatility = Matrix(0, 0);
+            interpolator.reset();
             return;
         }
         anchorDate = anchorDateInput;
         dayCounter = std::make_shared<Actual365Fixed>();
-        allowExtrapolation = extrapolateInput;
 
         strikeDimension = strikeDimensionInput;
         observationDates = observationDatesInput;

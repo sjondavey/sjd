@@ -51,7 +51,7 @@ namespace sjd
         QuantLib::Date anchorDate;
         QuantLib::Date finalDate;
 
-        bool allowExtrapolation;
+        bool allowExtrapolation = false;
         // Set when a constructor flat-fills the anchor from the first observation.
         bool flatBackFilled = false;
     };
