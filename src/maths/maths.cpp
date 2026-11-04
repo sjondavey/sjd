@@ -230,8 +230,7 @@ namespace sjd
                 ilo = i;
             }
         }
-        double h = xVector[ihi] - xVector[ilo];
-        SJD_ASSERT(h != 0);
+        SJD_ASSERT(xVector[ihi] != xVector[ilo]);
         return LinearInterpolator(xVector[ilo], yVector[ilo], xVector[ihi], yVector[ihi]).getRate(x);
     }
 

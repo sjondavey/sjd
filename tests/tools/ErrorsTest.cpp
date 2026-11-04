@@ -12,14 +12,45 @@ using namespace sjd;
 namespace
 {
 
+    // The volatile read stops MSVC, at /O2, from marking the function noreturn.
+    // A noreturn call makes Boost.Test's "did not throw" path look unreachable,
+    // and that warning is reported inside a Boost header.
+    bool releaseKeepsBothPaths()
+    {
+        volatile bool fail = true;
+        return fail;
+    }
+
     void requireFalse()
     {
-        SJD_REQUIRE(false);
+        if (releaseKeepsBothPaths())
+        {
+            SJD_REQUIRE(false);
+        }
     }
 
     void assertFalse()
     {
-        SJD_ASSERT(false);
+        if (releaseKeepsBothPaths())
+        {
+            SJD_ASSERT(false);
+        }
+    }
+
+    void throwConfiguration()
+    {
+        if (releaseKeepsBothPaths())
+        {
+            throw ConfigurationError("unknown name");
+        }
+    }
+
+    void throwNumerical()
+    {
+        if (releaseKeepsBothPaths())
+        {
+            throw NumericalError("solver failed");
+        }
     }
 
     class Probe : public Validatable
@@ -64,8 +95,6 @@ void ErrorsTest::testErrorCodes()
     BOOST_CHECK_EQUAL(numerical.code(), "NUMERICAL");
     BOOST_CHECK_EQUAL(string(numerical.what()), "solver failed");
 
-    auto throwConfiguration = [&]() { throw configuration; };
-    auto throwNumerical = [&]() { throw numerical; };
     BOOST_CHECK_THROW(throwConfiguration(), sjd::Error);
     BOOST_CHECK_THROW(throwNumerical(), runtime_error);
 }
