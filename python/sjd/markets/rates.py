@@ -178,8 +178,12 @@ def _surface_interpolator(sjd, interpolation: SurfaceInterpolation):
 
 
 def _require_built(curve, what: str) -> None:
-    if not curve.is_ok():
-        raise RuntimeError(f"{what}: {curve.error_messages()}")
+    import sjd
+
+    try:
+        sjd.require_valid(curve)
+    except sjd.ValidationError as error:
+        raise sjd.ValidationError(f"{what}\n{error}", error.report) from None
 
 
 def _discount_curve(sjd, anchor: date, currency: str, spec, connection: sqlite3.Connection):

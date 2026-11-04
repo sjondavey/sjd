@@ -17,8 +17,7 @@ environment = sjd.RatesEnvironment(anchor)
 environment.set_frs(frs)
 environment.set_drs(drs)
 environment.set_vrs(vrs)
-if not environment.is_ok():
-    raise RuntimeError(environment.error_messages())
+sjd.require_valid(environment)
 
 
 def make_option(maturity, settlement, strike, option_type, buy_sell):
@@ -32,9 +31,7 @@ def make_option(maturity, settlement, strike, option_type, buy_sell):
         premium_amount=0.0,
         buy_sell=buy_sell,
     )
-    option.validate(environment)
-    if not option.is_ok():
-        raise ValueError(option.error_messages())
+    sjd.require_valid(option, environment)
     return option
 
 

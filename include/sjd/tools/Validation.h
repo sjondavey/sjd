@@ -89,7 +89,8 @@ namespace sjd
         void absorb(const ValidationReport& child, const std::vector<std::string>& prefix);
 
         bool getHasErrors() const;
-        // Deprecated. The old "className: message" text, errors only, until Step 10.
+        // Deprecated. The old "className: message" text, errors only.
+        // Python's error_messages() still returns it.
         std::vector<std::string> getErrorMessages() const;
         std::string getErrorMessagesAsString() const;
         ValidationReport snapshot() const;
@@ -121,7 +122,7 @@ namespace sjd
 
         bool hasErrors() const;
         // Deprecated. Prefer validationReport().toString(). Kept so existing tests and
-        // the Python bindings can keep searching the old "className: message" text.
+        // Python's error_messages() can keep reading the old "className: message" text.
         std::vector<std::string> getErrorMessages() const;
         std::string getErrorMessagesAsString() const;
         virtual ValidationReport validationReport() const;

@@ -54,8 +54,18 @@ so the caller can see that it happened.
 
 ## Python
 
-Until Step 10 registers a translator, the bindings catch `ConfigurationError`
-at the calendar constructor and at `ForwardCurve` and raise `ValueError` with
-the same message. Any other `sjd::Error` that escapes a binding becomes a
-Python `RuntimeError`, because these types derive from `std::runtime_error`
-and not from `std::invalid_argument`.
+`sjd_module.cpp` registers a translator. `sjd::Error` becomes `sjd.SjdError`
+(`RuntimeError`) and keeps `.code`. The three derived types keep the old
+`except` clauses working:
+
+| C++ | Python | Also a |
+| --- | --- | --- |
+| `ConfigurationError` | `sjd.ConfigurationError` | `ValueError` |
+| `ValidationError` | `sjd.ValidationError`, with `.report` | `ValueError` |
+| `NumericalError` | `sjd.NumericalError` | `ArithmeticError` |
+
+`validate(env=None)` runs the checks and returns a `ValidationReport`.
+`is_valid` and `report` only read the last report. `is_ok`, `error_messages`,
+`validation_report` and `validate_report` remain as the old names.
+`str(report)` is one `path: code: message` line per issue.
+`sjd.require_valid(obj, env=None)` validates and raises `ValidationError`.

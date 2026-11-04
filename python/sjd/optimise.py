@@ -81,11 +81,7 @@ def value_on_spots(
         holding_period=holding_period,
         holding_period_calendar=holding_period_calendar,
     )
-    report = evolver.validate_report()
-    if not report.ok:
-        raise ValueError(
-            "Cannot value on spots: " + "; ".join(issue.message for issue in report.issues)
-        )
+    sjd.require_valid(evolver)
     return evolver.value_spot_paths(spots, by_trade=by_trade, by_structure=by_structure)
 
 

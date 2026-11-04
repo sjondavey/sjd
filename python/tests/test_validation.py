@@ -57,7 +57,10 @@ class ValidationReportTest(unittest.TestCase):
         self.assertEqual(forward.is_ok(), False)
 
         legacy_before = forward.error_messages()
-        self.assertIsNone(forward.validate(environment))
+        again = forward.validate(environment)
+        self.assertFalse(again.ok)
+        self.assertFalse(forward.is_valid)
+        self.assertEqual(str(forward.report), str(again))
         self.assertEqual(forward.error_messages(), legacy_before)
 
     def test_nested_invalid_discount_curve_has_component_path(self):

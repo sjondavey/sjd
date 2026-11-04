@@ -513,7 +513,7 @@ finds nothing that signals failure, and the golden tests pass.
 
 **Status.** Done. The remaining `quiet_NaN` hits are the uncapped-structure cap,
 which is a stored value (the golden netting sets record it). `getErrorMessages`
-stays until Step 10.
+stays as the deprecated Python `error_messages()` text.
 
 ---
 
@@ -523,29 +523,33 @@ stays until Step 10.
 
 **Tasks**
 
-- [ ] Register pybind11 exception translators in `sjd_module.cpp`: `sjd::Error`
+- [x] Register pybind11 exception translators in `sjd_module.cpp`: `sjd::Error`
       becomes `sjd.SjdError`, `ConfigurationError` becomes
       `sjd.ConfigurationError(SjdError, ValueError)`, `ValidationError` becomes
       `sjd.ValidationError(SjdError, ValueError)` with a `.report` attribute,
       and `NumericalError` becomes `sjd.NumericalError(SjdError, ArithmeticError)`.
       Subclassing `ValueError` keeps existing `except ValueError` code working.
-- [ ] Replace the `throw py::value_error("Cannot simulate: " + ...)` patterns
+- [x] Replace the `throw py::value_error("Cannot simulate: " + ...)` patterns
       with `throw sjd::ValidationError(report)` so Python gets the structured
       report, not just a string.
-- [ ] Settle on one naming scheme for the bound validation methods. Today the
+- [x] Settle on one naming scheme for the bound validation methods. Today the
       bindings mix `is_ok`, `error_messages`, `validation_report`,
       `validate_report` and `validate`. Suggested: `validate(env=None) ->
       ValidationReport`, `is_valid` (property), and `report` (property, the
       last report). Keep the old names as deprecated aliases.
-- [ ] Give `ValidationReport` and `ValidationIssue` a `__str__`, `__repr__`, a
+- [x] Give `ValidationReport` and `ValidationIssue` a `__str__`, `__repr__`, a
       `to_dict()` and `_repr_html_` (for a table in notebooks), and a
       `raise_if_invalid()` method.
-- [ ] Add `sjd.require_valid(obj, env=None)`, which validates and raises
+- [x] Add `sjd.require_valid(obj, env=None)`, which validates and raises
       `ValidationError`, and use it in `optimise.value_on_spots` and anywhere
       else that hand-builds error strings today.
 
 **Done when** `pytest` covers each exception type and `str(report)` gives one
 readable line per issue.
+
+**Status.** Done. Argument mistakes such as a missing holding-period calendar
+or a spots array of the wrong rank stay `ValueError`. `is_ok` on a curve still
+re-runs `validate()`; on a contract it still only reads the last report.
 
 ---
 

@@ -27,8 +27,10 @@ FIRST_PATHS = 3
 
 
 def _ok(source, name):
-    if not source.is_ok():
-        raise RuntimeError(f"golden case {name} is not valid: {source.error_messages()}")
+    try:
+        sjd.require_valid(source)
+    except sjd.ValidationError as error:
+        raise sjd.ValidationError(f"golden case {name} is not valid:\n{error}", error.report) from None
 
 
 def _black76():
