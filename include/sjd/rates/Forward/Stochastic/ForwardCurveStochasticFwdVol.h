@@ -49,6 +49,7 @@ namespace sjd
                                                                std::vector<double>& rateSetsFromAnchorToDate);
 
         virtual void setForwardValuationDates(std::set<QuantLib::Date> dates);
+        std::shared_ptr<ForwardRateSourceStochastic> cloneCurve() const override;
         virtual std::vector<std::shared_ptr<ForwardRateSource>> rollForward();
         virtual std::vector<std::shared_ptr<ForwardRateSource>> rollForward(
             std::vector<QuantLib::Date> rateSetDates, std::vector<double>& rateSetsFromAnchorToFinalRollDate);

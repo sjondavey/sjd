@@ -1,12 +1,28 @@
 #include <cmath>
 #include <random>
-#include <sjd/rates/PathGenerators/SingleFactorGMB.h>
+#include <sjd/rates/PathGenerators/GbmPathGenerator.h>
 
 using namespace std;
 using namespace QuantLib;
 
 namespace sjd
 {
+    Mt19937Normals::Mt19937Normals(long seed) : rng(static_cast<std::mt19937::result_type>(seed)) {}
+
+    double Mt19937Normals::next()
+    {
+        // Box-Muller. The uniform is in (0, 1) so the log argument is never zero.
+        constexpr double twoPi = 6.28318530717958647692;
+        const double u1 = (static_cast<double>(rng()) + 0.5) * (1.0 / 4294967296.0);
+        const double u2 = (static_cast<double>(rng()) + 0.5) * (1.0 / 4294967296.0);
+        return std::sqrt(-2.0 * std::log(u1)) * std::cos(twoPi * u2);
+    }
+
+    void Mt19937Normals::discardNormals(std::uint64_t count)
+    {
+        rng.discard(count * 2);
+    }
+
     /*======================================================================================
     EconomicScenarioGenerator
     =======================================================================================*/
@@ -66,19 +82,18 @@ namespace sjd
     }
 
     /*======================================================================================
-    SingleFactorEconomicScenarioGenerator
+    GbmPathGenerator
     =======================================================================================*/
-    SingleFactorEconomicScenarioGenerator::SingleFactorEconomicScenarioGenerator(
-        const std::shared_ptr<RatesEnvironment> re)
+    GbmPathGenerator::GbmPathGenerator(const std::shared_ptr<RatesEnvironment> re)
     {
-        errorTracking = std::make_shared<sjd::IssueTracker>("SingleFactorEconomicScenarioGenerator");
+        errorTracking = std::make_shared<sjd::IssueTracker>("GbmPathGenerator");
         setBaseRates(re);
         // random_device, not the clock, so two generators built in the same second differ,
         // and the value is the one setRandomSeed stored.
         setRandomSeed(static_cast<long>(std::random_device{}()));
     }
 
-    void SingleFactorEconomicScenarioGenerator::setBaseRates(const std::shared_ptr<RatesEnvironment> rates)
+    void GbmPathGenerator::setBaseRates(const std::shared_ptr<RatesEnvironment> rates)
     {
         EconomicScenarioGenerator::setBaseRates(rates);
         frsDependsOnInterestRateDifferential = false;
@@ -111,7 +126,7 @@ namespace sjd
         }
     }
 
-    void SingleFactorEconomicScenarioGenerator::runChecks()
+    void GbmPathGenerator::runChecks()
     {
         EconomicScenarioGenerator::runChecks();
         if (hasErrors())
@@ -161,7 +176,7 @@ namespace sjd
         return;
     }
 
-    bool SingleFactorEconomicScenarioGenerator::setSimulationDates(set<Date> simulationDatesSet)
+    bool GbmPathGenerator::setSimulationDates(set<Date> simulationDatesSet)
     {
         EconomicScenarioGenerator::setSimulationDates(simulationDatesSet);
         if (validate().isOK())
@@ -219,28 +234,126 @@ namespace sjd
         return false;
     }
 
-    void SingleFactorEconomicScenarioGenerator::setRandomSeed(long seedInput)
+    void GbmPathGenerator::setRandomSeed(long seedInput)
     {
         seed = seedInput;
-        rng.seed(static_cast<std::mt19937::result_type>(seedInput));
+        normals = Mt19937Normals(seedInput);
     }
 
-    double SingleFactorEconomicScenarioGenerator::drawStandardNormal()
+    double GbmPathGenerator::drawStandardNormal()
     {
-        // Box-Muller. The uniform is in (0, 1) so the log argument is never zero.
-        constexpr double twoPi = 6.28318530717958647692;
-        const double u1 = (static_cast<double>(rng()) + 0.5) * (1.0 / 4294967296.0);
-        const double u2 = (static_cast<double>(rng()) + 0.5) * (1.0 / 4294967296.0);
-        return std::sqrt(-2.0 * std::log(u1)) * std::cos(twoPi * u2);
+        return normals.next();
     }
 
-    long SingleFactorEconomicScenarioGenerator::getRandomSeed() const
+    long GbmPathGenerator::getRandomSeed() const
     {
         return seed;
     }
 
-    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getConfidenceInterval(
-        double confidenceInterval)
+    size_t GbmPathGenerator::factors() const
+    {
+        return 1;
+    }
+
+    PathWorkspace GbmPathGenerator::workspace()
+    {
+        PathWorkspace space;
+        space.curve = frs->cloneCurve();
+        space.usesInterestDifferential = frsDependsOnInterestRateDifferential;
+        set<Date> dates(simulationDates.begin(), simulationDates.end());
+        space.curve->setForwardValuationDates(dates);
+        space.shocks.assign(numDates, 0.0);
+        space.curve->setRandomVariables(space.shocks);
+        space.forwards = space.curve->rollForward();
+
+        if (fixingrs != 0)
+        {
+            space.fixingDates = fixingrs->getFixingDatesFor(simulationDates);
+            space.fixingRates.assign(space.fixingDates.size(), 0.0);
+        }
+
+        vector<std::shared_ptr<RatesEnvironment>> ratesPath;
+        for (size_t i = 0; i < numDates; ++i)
+        {
+            std::shared_ptr<RatesEnvironment> environment =
+                std::make_shared<RatesEnvironment>(simulationDates[i]);
+            environment->setDRS(drss[i]);
+            if (foreigndrs != 0)
+            {
+                environment->setForeignDRS(foreigndrss[i]);
+                if (space.usesInterestDifferential)
+                {
+                    std::shared_ptr<UsesInterestRateDifferential> fx =
+                        std::dynamic_pointer_cast<UsesInterestRateDifferential>(space.forwards[i]);
+                    if (fx != 0)
+                    {
+                        fx->setRateSources(drss[i], foreigndrss[i]);
+                    }
+                }
+            }
+            environment->setFRS(space.forwards[i]);
+            environment->setVRS(vrss[i]);
+            if (fixingrs != 0)
+            {
+                std::shared_ptr<RollingFixingRateSource> rolled =
+                    fixingrs->rollForward(simulationDates[i], space.fixingDates, space.fixingRates);
+                space.fixings.push_back(rolled);
+                environment->setFixingRS(rolled);
+            }
+            ratesPath.push_back(environment);
+        }
+        space.path = std::make_shared<Path>(ratesPath);
+        return space;
+    }
+
+    std::shared_ptr<Path> GbmPathGenerator::generatePath(Mt19937Normals& rng, PathWorkspace& space)
+    {
+        space.shocks.resize(numDates);
+        for (size_t i = 0; i < numDates; ++i)
+        {
+            space.shocks[i] = rng.next();
+        }
+        return writeShocks(space.shocks, space);
+    }
+
+    std::shared_ptr<Path> GbmPathGenerator::generateAntithetic(PathWorkspace& space)
+    {
+        for (size_t i = 0; i < space.shocks.size(); ++i)
+        {
+            space.shocks[i] = -space.shocks[i];
+        }
+        return writeShocks(space.shocks, space);
+    }
+
+    std::shared_ptr<Path> GbmPathGenerator::writeShocks(const vector<double>& shocks, PathWorkspace& space)
+    {
+        space.shocks = shocks;
+        space.curve->setRandomVariables(space.shocks);
+        if (space.fixings.empty())
+        {
+            space.forwards = space.curve->rollForward();
+        }
+        else
+        {
+            space.forwards = space.curve->rollForward(space.fixingDates, space.fixingRates);
+            for (size_t i = 0; i < space.fixings.size(); ++i)
+            {
+                space.fixings[i]->updateAppendedRates(space.fixingRates);
+            }
+        }
+        for (size_t i = 0; i < numDates; ++i)
+        {
+            space.path->getRatesEnvironment(i)->setFRS(space.forwards[i]);
+        }
+        return space.path;
+    }
+
+    std::shared_ptr<Path> GbmPathGenerator::generateSpot(const vector<double>& spot, PathWorkspace& space)
+    {
+        return writeShocks(space.curve->getImpliedRandomNumbers(spot), space);
+    }
+
+    std::shared_ptr<Path> GbmPathGenerator::getConfidenceInterval(double confidenceInterval)
     {
         boost::math::normal dist(0.0, 1.0);
         double epsi = quantile(dist, confidenceInterval);
@@ -279,7 +392,7 @@ namespace sjd
         return path;
     }
 
-    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getRandomPath()
+    std::shared_ptr<Path> GbmPathGenerator::getRandomPath()
     {
         for (size_t i = 0; i < numDates; ++i)
         {
@@ -288,7 +401,7 @@ namespace sjd
         return getPathForRandomNumber(randomNumbers);
     }
 
-    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getAntitheticPath()
+    std::shared_ptr<Path> GbmPathGenerator::getAntitheticPath()
     {
         for (size_t i = 0; i < numDates; ++i)
         {
@@ -297,7 +410,7 @@ namespace sjd
         return getPathForRandomNumber(randomNumbers);
     }
 
-    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getPathForRandomNumber(vector<double> draws)
+    std::shared_ptr<Path> GbmPathGenerator::getPathForRandomNumber(vector<double> draws)
     {
         frs->setRandomVariables(draws);
         if (fixingrs == 0)
@@ -320,14 +433,13 @@ namespace sjd
         return path;
     }
 
-    std::shared_ptr<Path> SingleFactorEconomicScenarioGenerator::getPathForSpot(vector<double> spot)
+    std::shared_ptr<Path> GbmPathGenerator::getPathForSpot(vector<double> spot)
     {
         vector<double> impliedRV = frs->getImpliedRandomNumbers(spot);
         return getPathForRandomNumber(impliedRV);
     }
 
-    void SingleFactorEconomicScenarioGenerator::updateFXForwardWithRolledDiscountRateSources(
-        size_t stepNumber)
+    void GbmPathGenerator::updateFXForwardWithRolledDiscountRateSources(size_t stepNumber)
     {
         std::shared_ptr<sjd::UsesInterestRateDifferential> tmpFRS =
             std::dynamic_pointer_cast<sjd::UsesInterestRateDifferential>(frss[stepNumber]);

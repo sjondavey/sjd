@@ -88,6 +88,7 @@ namespace sjd
 
         std::vector<std::shared_ptr<Contract>> nettingSetContracts() const override;
         Result<std::vector<NettingSet>> nettingSets() const;
+        const CounterpartyCredit& counterparty() const;
 
         std::string validationRoot() const override;
 

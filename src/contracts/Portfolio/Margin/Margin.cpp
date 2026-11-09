@@ -140,17 +140,34 @@ namespace sjd
 
     double SimpleMargin::getMarginCall(double mtm)
     {
-        double threshold = 0, marginCall = 0;
+        return marginCall(balance, mtm);
+    }
+
+    void SimpleMargin::getFutureMarginBalancesAlongPath(vector<double> mtmPath,
+                                                        vector<double>& futureMarginBalances)
+    {
+        futureMarginBalances.assign(mtmPath.size(), 0.0);
+        double running = balance;
+        for (size_t i = 0; i < mtmPath.size(); ++i)
+        {
+            running += marginCall(running, mtmPath[i]);
+            futureMarginBalances[i] = running;
+        }
+    }
+
+    double SimpleMargin::marginCall(double openingBalance, double mtm)
+    {
+        double threshold = 0, call = 0;
         if (mtm >= 0)
         {
             if (useMyThreshold)
             {
                 threshold = myThreshold;
-                marginCall = simpleBilateralMargin(balance, mtm, threshold);
+                call = simpleBilateralMargin(openingBalance, mtm, threshold);
             }
             else
             {
-                marginCall = -balance;
+                call = -openingBalance;
             }
         }
         else if (mtm <
@@ -159,14 +176,14 @@ namespace sjd
             if (useCptyThreshold)
             {
                 threshold = cptyThreshold;
-                marginCall = simpleBilateralMargin(balance, mtm, threshold);
+                call = simpleBilateralMargin(openingBalance, mtm, threshold);
             }
             else
             {
-                marginCall = -balance;
+                call = -openingBalance;
             }
         }
-        return marginCall;
+        return call;
     }
 
     double SimpleMargin::simpleBilateralMargin(double openingBalance, double mtm, double threshold)
@@ -190,7 +207,7 @@ namespace sjd
             }
             else
             {
-                marginCall = round(marginCall);
+                marginCall = round(marginCall, openingBalance);
             }
         }
         else // Inside the threshold means we must return all the margin
@@ -200,13 +217,13 @@ namespace sjd
         return marginCall;
     }
 
-    double SimpleMargin::round(double unroundedCall)
+    double SimpleMargin::round(double unroundedCall, double openingBalance)
     {
         double roundedCall = unroundedCall / rounding;
         if (boost::math::sign<double>(unroundedCall) ==
-                boost::math::sign<double>(balance) || // Delivering more
-            (abs(unroundedCall) > abs(balance)))      // reversing the position
-        {                                             // Round away from zero
+                boost::math::sign<double>(openingBalance) || // Delivering more
+            (abs(unroundedCall) > abs(openingBalance)))      // reversing the position
+        {                                                    // Round away from zero
             if (unroundedCall > 0)
             {
                 roundedCall = ceil(roundedCall);

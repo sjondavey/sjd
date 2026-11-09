@@ -752,6 +752,21 @@ speed-up for the optimiser.
 **Done when** seeded results are identical for 1 and N threads, and a
 10,000-path simulation scales close to linearly up to the core count.
 
+**Status.** Done for correctness. The design is `docs/simulation-engine.md`.
+`GbmPathGenerator` has `factors() == 1`. Python
+`SingleFactorEconomicScenarioGenerator` is that class. The default sequence is
+still `std::mt19937` and Box-Muller; a worker discards to its first path, so
+one thread and many threads match. Sobol with a Brownian bridge is opt-in.
+`aggregates` returns per-step profiles, including mean CEM capital when the
+book has netting sets, and `float32` casts the arrays on the way out. The
+margin walk keeps a local balance. Debug `ctest` passed and pytest reported
+156 passed. Golden paths were not regenerated.
+
+A 10,000-path debug run on 16 logical cores does not scale linearly. Pricing
+time was about 1.13 s on one thread, 0.70 s on four, 0.97 s on eight and 1.82 s
+on sixteen. Four threads is the fastest. More threads contend, most likely on
+the debug heap. `threads=0` still means the hardware count.
+
 ---
 
 ### Step 16. Rates layer tidy-up

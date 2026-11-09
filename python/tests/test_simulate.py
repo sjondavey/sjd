@@ -210,6 +210,67 @@ class SimulateTest(unittest.TestCase):
                 self._portfolio(), self.environment, self.dates, paths=2, seed=1, by_structure=True
             )
 
+    def test_one_thread_matches_many(self):
+        book = self._margined()
+        kwargs = {"paths": 16, "seed": 4, "antithetic": True, "by_netting_set": True}
+        one = sjd.simulate(book, self.environment, self.dates, threads=1, **kwargs)
+        many = sjd.simulate(book, self.environment, self.dates, threads=4, **kwargs)
+        np.testing.assert_array_equal(one.spot, many.spot)
+        np.testing.assert_array_equal(one.mtm, many.mtm)
+        np.testing.assert_array_equal(one.margin, many.margin)
+        np.testing.assert_array_equal(one.by_netting_set, many.by_netting_set)
+        self.assertEqual(sjd.GbmPathGenerator(self.environment).factors(), 1)
+        self.assertIs(sjd.GbmPathGenerator, sjd.SingleFactorEconomicScenarioGenerator)
+
+    def test_sobol_is_finite_and_independent_of_the_thread_count(self):
+        book = self._portfolio()
+        kwargs = {"paths": 8, "seed": 4, "antithetic": False, "sampling": "sobol"}
+        one = sjd.simulate(book, self.environment, self.dates, threads=1, **kwargs)
+        many = sjd.simulate(book, self.environment, self.dates, threads=3, **kwargs)
+        pseudo = sjd.simulate(
+            book, self.environment, self.dates, paths=8, seed=4, antithetic=False, threads=1
+        )
+        np.testing.assert_array_equal(one.mtm, many.mtm)
+        self.assertTrue(np.isfinite(one.mtm).all())
+        self.assertFalse(np.array_equal(one.mtm, pseudo.mtm))
+        with self.assertRaisesRegex(ValueError, "sampling"):
+            sjd.simulate(book, self.environment, self.dates, paths=2, seed=1, sampling="halton")
+
+    def test_aggregates_match_the_path_statistics(self):
+        book = self._margined()
+        factors = sjd.reg_cap_factors("commodity")
+        credit = examples.credit_parameters()
+        kwargs = {"paths": 20, "seed": 6, "antithetic": False, "threads": 2}
+        full = sjd.simulate(book, self.environment, self.dates, by_netting_set=True, **kwargs)
+        profiles = sjd.simulate(book, self.environment, self.dates, aggregates=True, **kwargs)
+        self.assertTrue(profiles.aggregated)
+        self.assertIsNone(profiles.by_netting_set)
+        self.assertEqual(profiles.spot.shape, (full.steps,))
+        np.testing.assert_allclose(profiles.spot, full.spot.mean(axis=0))
+        np.testing.assert_allclose(profiles.mtm, full.mtm.mean(axis=0))
+        np.testing.assert_allclose(profiles.margin, full.margin.mean(axis=0))
+        np.testing.assert_allclose(profiles.ee, stats.expected_exposure(full.mtm))
+        np.testing.assert_allclose(profiles.pfe, stats.potential_future_exposure(full.mtm))
+        capital = stats.regulatory_capital(full, book.netting_sets(), factors, credit)
+        np.testing.assert_allclose(profiles.mean_capital, capital.mean(axis=0))
+
+    def test_float32_casts_the_arrays(self):
+        full = sjd.simulate(
+            self._portfolio(), self.environment, self.dates, paths=8, seed=2, antithetic=False, threads=1
+        )
+        narrow = sjd.simulate(
+            self._portfolio(),
+            self.environment,
+            self.dates,
+            paths=8,
+            seed=2,
+            antithetic=False,
+            threads=1,
+            float32=True,
+        )
+        self.assertEqual(narrow.mtm.dtype, np.float32)
+        np.testing.assert_allclose(narrow.mtm, full.mtm, rtol=1e-6, atol=1e-5)
+
 
 class StatisticsTest(unittest.TestCase):
     values = np.array([

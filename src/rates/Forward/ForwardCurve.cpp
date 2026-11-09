@@ -442,6 +442,14 @@ namespace sjd
         return datesToUse;
     }
 
+    void ForwardCurve::releasePreparedPath()
+    {
+        pathCurves.clear();
+        forwardDeviations.clear();
+        spotDeviations.clear();
+        forwardIndexes.clear();
+    }
+
     void ForwardCurve::preparePath(const vector<Date>& forwardSimulationDates,
                                    const vector<Date>& monthStarts)
     {

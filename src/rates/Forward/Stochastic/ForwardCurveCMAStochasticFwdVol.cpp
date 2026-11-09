@@ -127,4 +127,13 @@ namespace sjd
         return quotes.impliedRandomNumbers(spot, normalRVs, anchorDate, forwardSimulationDates);
     }
 
+    std::shared_ptr<ForwardRateSourceStochastic> ForwardCurveCMAStochasticFwdVol::cloneCurve() const
+    {
+        auto copy = std::make_shared<ForwardCurveCMAStochasticFwdVol>(*this);
+        copy->quotes.releasePreparedPath();
+        copy->normalRVs.clear();
+        copy->errorTracking = std::make_shared<IssueTracker>("ForwardCurveCMAStochasticFwdVol");
+        return copy;
+    }
+
 }

@@ -210,6 +210,11 @@ namespace sjd
         return sets;
     }
 
+    const CounterpartyCredit& CurrentExposureMethod::counterparty() const
+    {
+        return credit;
+    }
+
     Result<vector<NettingSet>> CurrentExposureMethod::nettingSets() const
     {
         Result<vector<NettingSet>> result;

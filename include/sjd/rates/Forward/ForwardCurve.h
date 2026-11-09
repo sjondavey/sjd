@@ -97,6 +97,8 @@ namespace sjd
 
         void preparePath(const std::vector<QuantLib::Date>& forwardSimulationDates,
                          const std::vector<QuantLib::Date>& monthStarts);
+        // Drops the curves preparePath built. The quotes themselves stay.
+        void releasePreparedPath();
         std::vector<std::shared_ptr<ForwardRateSource>> rollPath(
             const std::vector<double>& normalRVs, const std::vector<QuantLib::Date>& forwardSimulationDates);
         std::vector<double> impliedRandomNumbers(std::vector<double> spot,

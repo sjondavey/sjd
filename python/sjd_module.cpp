@@ -42,7 +42,7 @@
 #include <sjd/rates/Discount/DiscountCurves.h>
 #include <sjd/rates/Fixing/FixingCurves.h>
 #include <sjd/rates/Forward/ForwardCurveFactory.h>
-#include <sjd/rates/PathGenerators/SingleFactorGMB.h>
+#include <sjd/rates/PathGenerators/GbmPathGenerator.h>
 #include <sjd/rates/RatesEnvironment.h>
 #include <sjd/rates/Volatility/VolatilityCurve.h>
 #include <sjd/rates/Volatility/VolatilityCurveCMA.h>
@@ -229,11 +229,15 @@ namespace
         py::list dates;
         py::array_t<py::ssize_t> exposure_steps;
         py::array_t<py::ssize_t> margin_reset_steps;
-        py::array_t<double> spot;
-        py::array_t<double> mtm;
-        py::object margin;
-        py::object by_trade;
-        py::object by_structure;
+        py::object spot = py::none();
+        py::object mtm = py::none();
+        py::object margin = py::none();
+        py::object by_trade = py::none();
+        py::object by_structure = py::none();
+        py::object ee = py::none();
+        py::object pfe = py::none();
+        py::object mean_capital = py::none();
+        bool aggregated = false;
         size_t paths = 0;
         size_t steps = 0;
         size_t trades = 0;
@@ -259,7 +263,22 @@ namespace
         return array;
     }
 
-    Simulation simulation_from(const sjd::SimulatedPaths& simulated)
+    py::object as_array(const std::vector<double>& values,
+                        const std::vector<py::ssize_t>& shape,
+                        bool float32)
+    {
+        if (float32)
+        {
+            py::array_t<float> array(shape);
+            float* out = array.mutable_data();
+            for (size_t i = 0; i < values.size(); ++i)
+                out[i] = static_cast<float>(values[i]);
+            return array;
+        }
+        return to_array(values, shape);
+    }
+
+    Simulation simulation_from(const sjd::SimulatedPaths& simulated, bool float32)
     {
         Simulation result;
         for (const QuantLib::Date& date : simulated.dates)
@@ -268,20 +287,38 @@ namespace
         result.margin_reset_steps = to_index_array(simulated.marginResetSteps);
         const py::ssize_t paths = static_cast<py::ssize_t>(simulated.paths);
         const py::ssize_t steps = static_cast<py::ssize_t>(simulated.steps);
-        result.spot = to_array(simulated.spot, {paths, steps});
-        result.mtm = to_array(simulated.mtm, {paths, steps});
-        result.margin =
-            simulated.margin.empty() ? py::none() : py::object(to_array(simulated.margin, {paths, steps}));
-        result.by_trade =
-            simulated.byTrade.empty()
-                ? py::none()
-                : py::object(to_array(simulated.byTrade,
-                                      {paths, steps, static_cast<py::ssize_t>(simulated.trades)}));
-        result.by_structure =
-            simulated.byStructure.empty()
-                ? py::none()
-                : py::object(to_array(simulated.byStructure,
-                                      {paths, steps, static_cast<py::ssize_t>(simulated.structures)}));
+        result.aggregated = simulated.aggregated;
+        if (simulated.aggregated)
+        {
+            result.spot = as_array(simulated.meanSpot, {steps}, float32);
+            result.mtm = as_array(simulated.meanMtm, {steps}, float32);
+            result.margin =
+                simulated.meanMargin.empty() ? py::none() : as_array(simulated.meanMargin, {steps}, float32);
+            result.ee = as_array(simulated.expectedExposure, {steps}, float32);
+            result.pfe = as_array(simulated.potentialFutureExposure, {steps}, float32);
+            result.mean_capital =
+                simulated.meanCapital.empty()
+                    ? py::none()
+                    : as_array(simulated.meanCapital,
+                               {static_cast<py::ssize_t>(simulated.meanCapital.size())}, float32);
+        }
+        else
+        {
+            result.spot = as_array(simulated.spot, {paths, steps}, float32);
+            result.mtm = as_array(simulated.mtm, {paths, steps}, float32);
+            result.margin =
+                simulated.margin.empty() ? py::none() : as_array(simulated.margin, {paths, steps}, float32);
+            result.by_trade =
+                simulated.byTrade.empty()
+                    ? py::none()
+                    : as_array(simulated.byTrade, {paths, steps, static_cast<py::ssize_t>(simulated.trades)},
+                               float32);
+            result.by_structure =
+                simulated.byStructure.empty()
+                    ? py::none()
+                    : as_array(simulated.byStructure,
+                               {paths, steps, static_cast<py::ssize_t>(simulated.structures)}, float32);
+        }
         result.paths = simulated.paths;
         result.steps = simulated.steps;
         result.trades = simulated.trades;
@@ -1339,16 +1376,17 @@ PYBIND11_MODULE(_core, m)
             },
             "Static netting sets. Mark-to-market along a path is simulation.by_netting_set.");
 
-    auto pathGenerator = py::class_<sjd::SingleFactorEconomicScenarioGenerator,
-                                    std::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator>>(
-        m, "SingleFactorEconomicScenarioGenerator");
+    auto pathGenerator =
+        py::class_<sjd::GbmPathGenerator, std::shared_ptr<sjd::GbmPathGenerator>>(m, "GbmPathGenerator");
     bindValidation(pathGenerator);
     pathGenerator
         .def(py::init([](std::shared_ptr<sjd::RatesEnvironment> environment)
-                      { return std::make_shared<sjd::SingleFactorEconomicScenarioGenerator>(environment); }),
+                      { return std::make_shared<sjd::GbmPathGenerator>(environment); }),
              py::arg("rates_environment"))
-        .def("set_random_seed", &sjd::SingleFactorEconomicScenarioGenerator::setRandomSeed, py::arg("seed"),
+        .def("factors", &sjd::GbmPathGenerator::factors, "The number of random factors. This model has one.")
+        .def("set_random_seed", &sjd::GbmPathGenerator::setRandomSeed, py::arg("seed"),
              "Reseed the generator. The next simulated paths repeat for the same seed.");
+    m.attr("SingleFactorEconomicScenarioGenerator") = pathGenerator;
 
     auto evolverClass =
         py::class_<sjd::PortfolioEvolver, std::shared_ptr<sjd::PortfolioEvolver>>(m, "PortfolioEvolver");
@@ -1382,7 +1420,7 @@ PYBIND11_MODULE(_core, m)
                 if (simulated.paths == 0)
                     throwIfNoPaths(evolver.validationReport());
                 require_structures(bySet, simulated);
-                Simulation result = simulation_from(simulated);
+                Simulation result = simulation_from(simulated, false);
                 py::dict inputs;
                 inputs["spots"] = spots.size();
                 inputs["by_trade"] = by_trade;
@@ -1398,7 +1436,7 @@ PYBIND11_MODULE(_core, m)
             "value_spot_paths",
             [](sjd::PortfolioEvolver& evolver,
                const py::array_t<double, py::array::c_style | py::array::forcecast>& spots, bool by_trade,
-               bool by_netting_set, const py::object& by_structure)
+               bool by_netting_set, const py::object& by_structure, size_t threads)
             {
                 const bool bySet = nettingSetsRequested(by_netting_set, by_structure);
                 FlushLogs flush;
@@ -1424,7 +1462,8 @@ PYBIND11_MODULE(_core, m)
                     else
                     {
                         const auto pathsStarted = std::chrono::steady_clock::now();
-                        simulated = evolver.valueSpotPaths(flat, static_cast<size_t>(paths), by_trade, bySet);
+                        simulated = evolver.valueSpotPaths(flat, static_cast<size_t>(paths), by_trade, bySet,
+                                                           threads);
                         pathsMs = elapsedMilliseconds(pathsStarted);
                     }
                 }
@@ -1433,19 +1472,21 @@ PYBIND11_MODULE(_core, m)
                 if (static_cast<py::ssize_t>(simulated.steps) != steps)
                     throw py::value_error("spots steps must match the evolver simulation dates");
                 require_structures(bySet, simulated);
-                Simulation result = simulation_from(simulated);
+                Simulation result = simulation_from(simulated, false);
                 py::dict inputs;
                 inputs["paths"] = paths;
                 inputs["steps"] = steps;
+                inputs["threads"] = threads;
                 inputs["by_trade"] = by_trade;
                 inputs["by_netting_set"] = bySet;
                 result.metadata = runMetadata(evolver, nullptr, nullptr, nullptr, inputs, setupMs, pathsMs);
                 return result;
             },
             py::arg("spots"), py::arg("by_trade") = false, py::arg("by_netting_set") = false,
-            py::arg("by_structure") = py::none(),
+            py::arg("by_structure") = py::none(), py::arg("threads") = 0,
             "Mark the book to many forward paths. spots is shaped [paths, steps]. "
-            "Reuse the same spots across candidate portfolios for common random numbers.");
+            "Reuse the same spots across candidate portfolios for common random numbers. "
+            "threads 0 uses one thread per core, and never more threads than paths.");
 
     py::class_<Simulation>(m, "Simulation",
                            "Simulated paths. Arrays are numpy, indexed [path, step], "
@@ -1459,7 +1500,17 @@ PYBIND11_MODULE(_core, m)
         .def_readonly("spot", &Simulation::spot, "Forward for each simulation date, read on that date.")
         .def_readonly("mtm", &Simulation::mtm, "Portfolio value.")
         .def_readonly("margin", &Simulation::margin,
-                      "Margin balance, or None when the portfolio is not margined.")
+                      "Margin balance, or None when the portfolio is not margined. "
+                      "With aggregates, the mean margin.")
+        .def_readonly("ee", &Simulation::ee,
+                      "Expected exposure of each step, or None unless aggregates was set.")
+        .def_readonly(
+            "pfe", &Simulation::pfe,
+            "95% potential future exposure of the positive part, or None unless aggregates was set.")
+        .def_readonly("mean_capital", &Simulation::mean_capital,
+                      "Mean CEM capital on the exposure dates, or None when the run has no netting sets.")
+        .def_readonly("aggregated", &Simulation::aggregated,
+                      "True when spot, mtm and margin are per-step profiles rather than path cubes.")
         .def_readonly("by_trade", &Simulation::by_trade,
                       "Value of each underlying contract, or None unless by_trade was requested.")
         .def_property_readonly(
@@ -1494,10 +1545,16 @@ PYBIND11_MODULE(_core, m)
         [](const py::object& book, std::shared_ptr<sjd::RatesEnvironment> environment,
            const py::iterable& simulation_dates, unsigned long paths, const py::object& seed, bool antithetic,
            bool by_trade, bool by_netting_set, const py::object& by_structure, size_t holding_period,
-           const py::object& holding_period_calendar)
+           const py::object& holding_period_calendar, size_t threads, const std::string& sampling,
+           bool aggregates, bool float32)
         {
             FlushLogs flush;
             const bool bySet = nettingSetsRequested(by_netting_set, by_structure);
+            sjd::PathSampling sampler = sjd::PathSampling::Pseudo;
+            if (sampling == "sobol")
+                sampler = sjd::PathSampling::Sobol;
+            else if (sampling != "pseudo")
+                throw py::value_error("sampling must be 'pseudo' or 'sobol'");
             const ResolvedBook resolved = resolveBook(book);
             std::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator> generator(
                 std::make_shared<sjd::SingleFactorEconomicScenarioGenerator>(environment));
@@ -1511,6 +1568,21 @@ PYBIND11_MODULE(_core, m)
             SJD_LOG_INFO("simulation start paths=" + std::to_string(paths) +
                          " dates=" + std::to_string(evolver->getSimulationDates().size()) + " antithetic=" +
                          std::string(antithetic ? "true" : "false") + " seed=" + std::to_string(usedSeed));
+            sjd::SimulationOptions options;
+            options.antithetic = antithetic;
+            options.byTrade = by_trade;
+            options.byNettingSet = bySet;
+            options.threads = threads;
+            options.sampling = sampler;
+            options.aggregates = aggregates;
+            options.capital = aggregates && !resolved.nettingSets.empty();
+            if (options.capital && py::hasattr(book, "capital_model"))
+            {
+                std::shared_ptr<sjd::CurrentExposureMethod> model =
+                    book.attr("capital_model").cast<std::shared_ptr<sjd::CurrentExposureMethod>>();
+                const sjd::CounterpartyCredit& credit = model->counterparty();
+                options.capitalScale = credit.capitalRatio * credit.riskWeight;
+            }
             sjd::SimulatedPaths simulated;
             long long setupMs = 0;
             long long pathsMs = 0;
@@ -1526,7 +1598,7 @@ PYBIND11_MODULE(_core, m)
                 else
                 {
                     const auto pathsStarted = std::chrono::steady_clock::now();
-                    simulated = evolver->simulatePaths(paths, antithetic, by_trade, bySet);
+                    simulated = evolver->simulatePaths(paths, options);
                     pathsMs = elapsedMilliseconds(pathsStarted);
                 }
             }
@@ -1536,7 +1608,7 @@ PYBIND11_MODULE(_core, m)
                          std::to_string(simulated.steps) + " trades=" + std::to_string(simulated.trades) +
                          " setup_ms=" + std::to_string(setupMs) + " paths_ms=" + std::to_string(pathsMs));
             require_structures(bySet, simulated);
-            Simulation result = simulation_from(simulated);
+            Simulation result = simulation_from(simulated, float32);
             result.seed = py::int_(usedSeed);
             py::dict inputs;
             inputs["paths"] = paths;
@@ -1545,6 +1617,10 @@ PYBIND11_MODULE(_core, m)
             inputs["by_trade"] = by_trade;
             inputs["by_netting_set"] = bySet;
             inputs["holding_period"] = holding_period;
+            inputs["threads"] = threads;
+            inputs["sampling"] = sampling;
+            inputs["aggregates"] = aggregates;
+            inputs["float32"] = float32;
             result.metadata =
                 runMetadata(*evolver, resolved.portfolio, generator, environment, inputs, setupMs, pathsMs);
             return result;
@@ -1553,11 +1629,16 @@ PYBIND11_MODULE(_core, m)
         py::arg("paths") = 10000, py::kw_only(), py::arg("seed") = py::none(), py::arg("antithetic") = true,
         py::arg("by_trade") = false, py::arg("by_netting_set") = false, py::arg("by_structure") = py::none(),
         py::arg("holding_period") = 0, py::arg("holding_period_calendar") = py::none(),
+        py::arg("threads") = 0, py::arg("sampling") = "pseudo", py::arg("aggregates") = false,
+        py::arg("float32") = false,
         "Simulate the portfolio along single-factor paths and return every value.\n\n"
         "The first simulation date must be the anchor date, and the forward must have a "
         "stochastic roll. With antithetic paths an odd count is rounded up. Omit seed and "
         "one is drawn from the system; simulation.seed is the value that repeats the "
         "arrays. simulation.metadata records the build, timings, warnings and inputs. "
+        "threads 0 uses one thread per core. One thread and many threads write the same "
+        "numbers. sampling is 'pseudo' or 'sobol'. aggregates keeps per-step profiles "
+        "instead of the path cubes. float32 casts the arrays on the way out. "
         "A holding period on a margined portfolio adds a margin reset date "
         "holding_period business days before each simulation date. Raises "
         "ValidationError if the portfolio or market cannot be simulated.");

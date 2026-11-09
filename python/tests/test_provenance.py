@@ -63,6 +63,10 @@ def test_metadata_records_the_run():
         "by_trade": False,
         "by_netting_set": False,
         "holding_period": 0,
+        "threads": 0,
+        "sampling": "pseudo",
+        "aggregates": False,
+        "float32": False,
     }
 
 

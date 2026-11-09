@@ -98,10 +98,13 @@ namespace sjd
 
         virtual ~SimpleMargin() {};
         virtual double getMarginCall(double mtm);
+        void getFutureMarginBalancesAlongPath(std::vector<double> mtmPath,
+                                              std::vector<double>& futureMarginBalances) override;
 
     private:
+        double marginCall(double openingBalance, double mtm);
         double simpleBilateralMargin(double openingBalance, double mtm, double threshold);
-        double round(double r);
+        double round(double unroundedCall, double openingBalance);
     };
 
 }

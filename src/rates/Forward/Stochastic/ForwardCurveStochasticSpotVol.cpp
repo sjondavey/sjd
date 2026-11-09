@@ -102,4 +102,13 @@ namespace sjd
         return ForwardRateSourceStochastic::rollForward(rateSetDates, rateSetsFromAnchorToFinalRollDate);
     }
 
+    std::shared_ptr<ForwardRateSourceStochastic> ForwardCurveStochasticSpotVol::cloneCurve() const
+    {
+        auto copy = std::make_shared<ForwardCurveStochasticSpotVol>(*this);
+        copy->quotes.releasePreparedPath();
+        copy->normalRVs.clear();
+        copy->errorTracking = std::make_shared<IssueTracker>("ForwardCurveStochasticSpotVol");
+        return copy;
+    }
+
 }

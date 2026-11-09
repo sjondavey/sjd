@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include <boost/math/distributions/normal.hpp>
+#include <cstdint>
 #include <random>
 #include <set>
 #include <sjd/rates/RatesEnvironment.h>
@@ -17,6 +18,31 @@
 
 namespace sjd
 {
+    // Box-Muller on std::mt19937. Two uniforms per normal, the sequence the golden paths use.
+    class Mt19937Normals
+    {
+    public:
+        explicit Mt19937Normals(long seed);
+        double next();
+        void discardNormals(std::uint64_t count);
+
+    private:
+        std::mt19937 rng;
+    };
+
+    // One path buffer. The curves it rolls are not shared with another workspace.
+    struct PathWorkspace
+    {
+        std::shared_ptr<ForwardRateSourceStochastic> curve;
+        std::shared_ptr<Path> path;
+        std::vector<std::shared_ptr<ForwardRateSource>> forwards;
+        std::vector<std::shared_ptr<RollingFixingRateSource>> fixings;
+        std::vector<QuantLib::Date> fixingDates;
+        std::vector<double> fixingRates;
+        std::vector<double> shocks;
+        bool usesInterestDifferential = false;
+    };
+
     /*======================================================================================
     EconomicScenarioGenerator
     =======================================================================================*/
@@ -51,19 +77,19 @@ namespace sjd
         QuantLib::Date anchorDate;
 
         std::vector<QuantLib::Date> simulationDates;
-        size_t numDates;
+        size_t numDates = 0;
     };
 
     /*======================================================================================
-    SingleFactorEconomicScenarioGenerator
+    GbmPathGenerator
 
-    Has a deterministic discount and volatility rate source, a stochastic forward rate source
-    and an optional fixing rate source
+    One geometric Brownian factor. Discount and volatility roll deterministically.
+    The forward rolls with the shocks passed into generatePath. factors() is 1.
     =======================================================================================*/
-    class SingleFactorEconomicScenarioGenerator : public EconomicScenarioGenerator
+    class GbmPathGenerator : public EconomicScenarioGenerator
     {
     public:
-        SingleFactorEconomicScenarioGenerator(const std::shared_ptr<RatesEnvironment> re);
+        GbmPathGenerator(const std::shared_ptr<RatesEnvironment> re);
 
         virtual void setBaseRates(const std::shared_ptr<RatesEnvironment> re);
         void runChecks() override;
@@ -74,8 +100,19 @@ namespace sjd
 
         virtual void setRandomSeed(long seed);
         long getRandomSeed() const;
+        size_t factors() const;
 
-        // 0 < confidenceInterval < 1
+        // A path buffer whose rolled curves are not the template's.
+        PathWorkspace workspace();
+
+        // Draws the next block of normals and writes them into the workspace.
+        std::shared_ptr<Path> generatePath(Mt19937Normals& rng, PathWorkspace& space);
+        // Negates the shocks just written. Does not draw again.
+        std::shared_ptr<Path> generateAntithetic(PathWorkspace& space);
+        std::shared_ptr<Path> writeShocks(const std::vector<double>& shocks, PathWorkspace& space);
+        std::shared_ptr<Path> generateSpot(const std::vector<double>& spot, PathWorkspace& space);
+
+        // 0 < confidenceInterval < 1. Uses the template path, for prepare().
         virtual std::shared_ptr<Path> getConfidenceInterval(double confidenceInterval);
         virtual std::shared_ptr<Path> getRandomPath();
         virtual std::shared_ptr<Path> getAntitheticPath();
@@ -84,7 +121,7 @@ namespace sjd
 
     protected:
         void updateFXForwardWithRolledDiscountRateSources(size_t stepNumber);
-        bool frsDependsOnInterestRateDifferential;
+        bool frsDependsOnInterestRateDifferential = false;
 
         std::shared_ptr<DeterministicDiscountRateSource> drs;
         std::shared_ptr<DeterministicDiscountRateSource> foreigndrs;
@@ -94,12 +131,13 @@ namespace sjd
         std::vector<QuantLib::Date> allFixingDates;
         std::vector<double> allFixingRates;
 
-        // One implementation on every platform. std::normal_distribution is not.
         double drawStandardNormal();
 
         long seed = 0;
-        std::mt19937 rng;
+        Mt19937Normals normals{0};
         std::vector<double> randomNumbers;
     };
+
+    using SingleFactorEconomicScenarioGenerator = GbmPathGenerator;
 
 }

@@ -37,6 +37,7 @@ namespace sjd
         void setForwards(std::vector<double> updatedForwards);
 
         virtual void setForwardValuationDates(std::set<QuantLib::Date> dates);
+        std::shared_ptr<ForwardRateSourceStochastic> cloneCurve() const override;
         virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate, double normalRV);
         virtual std::shared_ptr<ForwardRateSource> rollForward(QuantLib::Date toDate,
                                                                double normalRV,

@@ -32,6 +32,9 @@ namespace sjd
                                                                std::vector<double>& rateSetsFromAnchorToDate);
 
         virtual void setForwardValuationDates(std::set<QuantLib::Date> dates);
+
+        // A copy that does not share the path curves rollPath edits.
+        virtual std::shared_ptr<ForwardRateSourceStochastic> cloneCurve() const = 0;
         virtual void setRandomVariables(std::vector<double> normalRVs);
         virtual std::vector<std::shared_ptr<ForwardRateSource>> rollForward() = 0;
         virtual std::vector<std::shared_ptr<ForwardRateSource>> rollForward(

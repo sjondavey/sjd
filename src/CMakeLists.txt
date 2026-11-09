@@ -40,7 +40,7 @@ add_library(sjd STATIC
     rates/Forward/Stochastic/ForwardCurveStochasticFwdVol.cpp
     rates/Forward/Stochastic/ForwardCurveStochasticSpotVol.cpp
     rates/PathGenerators/Path.cpp
-    rates/PathGenerators/SingleFactorGMB.cpp
+    rates/PathGenerators/GbmPathGenerator.cpp
     rates/RatesEnvironment.cpp
     rates/RateSource.cpp
     rates/Volatility/VolatilityRateSource.cpp
