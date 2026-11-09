@@ -1,4 +1,15 @@
-#include "OptionContractTest.h"
+// to use the boost::math::isnan(...) function
+
+#include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <ql/time/daycounter.hpp>
+#include <ql/time/daycounters/all.hpp>
+#include <sjd/contracts/AsianOptionContract.h>
+#include <sjd/contracts/EuropeanForwardContract.h>
+#include <sjd/contracts/EuropeanOptionContract.h>
+#include <support/GenerateRatesEnvironments.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -8,7 +19,11 @@ using namespace boost::unit_test_framework;
 using namespace boost::math;
 using namespace sjd;
 
-std::shared_ptr<EuropeanOption> OptionContractTest::getDefaultEuropeanOption(Date anchorDate)
+BOOST_AUTO_TEST_SUITE(OptionContractTest)
+
+std::shared_ptr<EuropeanOption> getDefaultEuropeanOption(Date anchorDate);
+
+std::shared_ptr<EuropeanOption> getDefaultEuropeanOption(Date anchorDate)
 {
     NullCalendar nullCalendar;
     Date optionMaturity = nullCalendar.advance(anchorDate, 2, Years);
@@ -21,8 +36,7 @@ std::shared_ptr<EuropeanOption> OptionContractTest::getDefaultEuropeanOption(Dat
     return std::make_shared<EuropeanOption>(optionMaturity, optionSettlement, strike, type, volume,
                                             optionSettlement, defPremium, BuySell::BUY);
 }
-
-void OptionContractTest::testBuySell()
+BOOST_AUTO_TEST_CASE(testBuySell)
 {
     BOOST_TEST_MESSAGE("Testing OptionContract ...");
     Date anchorDate(1, Jan, 2013);
@@ -32,8 +46,7 @@ void OptionContractTest::testBuySell()
         base->getVolume(), base->getPremiumPaymentDate(), base->getPremiumAmount(), BuySell::SELL);
     BOOST_CHECK(contract->getBuySell() == BuySell::SELL);
 }
-
-void OptionContractTest::testStrike()
+BOOST_AUTO_TEST_CASE(testStrike)
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<EuropeanOption> base = getDefaultEuropeanOption(anchorDate);
@@ -42,10 +55,9 @@ void OptionContractTest::testStrike()
         base->getPremiumPaymentDate(), base->getPremiumAmount(), base->getBuySell());
     contract->validate();
     BOOST_CHECK(!contract->isOK());
-    BOOST_CHECK(abs(contract->getStrike() + 1.0) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(contract->getStrike() + 1.0, EPSILON_FOR_DOUBLES);
 }
-
-void OptionContractTest::testVolume()
+BOOST_AUTO_TEST_CASE(testVolume)
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<EuropeanOption> base = getDefaultEuropeanOption(anchorDate);
@@ -53,10 +65,9 @@ void OptionContractTest::testVolume()
         base->getMaturityDate(), base->getSettlementDate(), base->getStrike(), base->getType(), -1.0,
         base->getPremiumPaymentDate(), base->getPremiumAmount(), base->getBuySell());
     BOOST_CHECK(contract->isOK());
-    BOOST_CHECK(abs(contract->getVolume() - 1.0) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(contract->getVolume() - 1.0, EPSILON_FOR_DOUBLES);
 }
-
-void OptionContractTest::testMaturityDate()
+BOOST_AUTO_TEST_CASE(testMaturityDate)
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<EuropeanOption> base = getDefaultEuropeanOption(anchorDate);
@@ -69,18 +80,16 @@ void OptionContractTest::testMaturityDate()
     BOOST_CHECK(!contract->isOK());
     BOOST_CHECK(contract->getMaturityDate() == optionMaturity);
 }
-
-void OptionContractTest::testPremiumAmount()
+BOOST_AUTO_TEST_CASE(testPremiumAmount)
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<EuropeanOption> base = getDefaultEuropeanOption(anchorDate);
     std::shared_ptr<EuropeanOption> contract = std::make_shared<EuropeanOption>(
         base->getMaturityDate(), base->getSettlementDate(), base->getStrike(), base->getType(),
         base->getVolume(), base->getPremiumPaymentDate(), -10.0, base->getBuySell());
-    BOOST_CHECK(abs(contract->getPremiumAmount() - 10.0) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(contract->getPremiumAmount() - 10.0, EPSILON_FOR_DOUBLES);
 }
-
-void OptionContractTest::testType()
+BOOST_AUTO_TEST_CASE(testType)
 {
     Date anchorDate(1, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -97,8 +106,7 @@ void OptionContractTest::testType()
     double valueCall = call->getValue(re);
     BOOST_CHECK(abs(valuePut - valueCall) > EPSILON_FOR_DOUBLES);
 }
-
-void OptionContractTest::testPutCallParity()
+BOOST_AUTO_TEST_CASE(testPutCallParity)
 {
     Date anchorDate(1, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -112,10 +120,9 @@ void OptionContractTest::testPutCallParity()
 
     EuropeanForward forward(put->getMaturityDate(), put->getSettlementDate(), put->getStrike(),
                             put->getVolume(), BuySell::SELL);
-    BOOST_CHECK(abs(put->getValue(re) + call->getValue(re) - forward.getValue(re)) < 1e-10);
+    BOOST_CHECK_SMALL(put->getValue(re) + call->getValue(re) - forward.getValue(re), 1e-10);
 }
-
-void OptionContractTest::testValue()
+BOOST_AUTO_TEST_CASE(testValue)
 {
     Date anchorDate(1, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -153,37 +160,38 @@ void OptionContractTest::testValue()
     double fwd = re->getFRS()->getForward(optionSettlement);
     // Maturity is a pillar, so the input volatility is recovered. The premium uses
     // the curve's standard deviation, which is that volatility times sqrt(time).
-    BOOST_CHECK(abs(re->getVRS()->getVolatility(optionMaturity) - gr.defaultVolatiltiy) <
-                EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(re->getVRS()->getVolatility(optionMaturity) - gr.defaultVolatiltiy,
+                      EPSILON_FOR_DOUBLES);
     double sd = re->getVRS()->getStandardDeviation(optionMaturity, strike, fwd);
     Black76Put simplePut(fwd, strike, sd, exp(-gr.defaultNACCRate * yts));
     double pvDefPremium = defPremium * re->getDRS()->getDiscountFactor(optionSettlement);
 
     // 1) Before maturity
     contract.validate();
-    BOOST_CHECK(abs(simplePut.getPremium() - contract.getOptionValue(re)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(simplePut.getPremium() - contract.getValue(re)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(contract2.getOptionValue(re) - 2 * contract.getOptionValue(re)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(contract2.getValue(re) - 2 * contract.getValue(re)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(simplePut.getPremium() - contract.getOptionValue(re), EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(simplePut.getPremium() - contract.getValue(re), EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(contract2.getOptionValue(re) - 2 * contract.getOptionValue(re), EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(contract2.getValue(re) - 2 * contract.getValue(re), EPSILON_FOR_DOUBLES);
 
-    BOOST_CHECK(abs(deferredPremiumContract2.getOptionValue(re) -
-                    2 * deferredPremiumContract.getOptionValue(re)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(deferredPremiumContract2.getOptionValue(re) -
-                    2 * (pvDefPremium + deferredPremiumContract.getValue(re))) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(simplePut.getPremium() - deferredPremiumContract.getOptionValue(re)) <
-                EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(simplePut.getPremium() - pvDefPremium - deferredPremiumContract.getValue(re)) <
-                EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(deferredPremiumContract2.getOptionValue(re) -
+                          2 * deferredPremiumContract.getOptionValue(re),
+                      EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(deferredPremiumContract2.getOptionValue(re) -
+                          2 * (pvDefPremium + deferredPremiumContract.getValue(re)),
+                      EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(simplePut.getPremium() - deferredPremiumContract.getOptionValue(re),
+                      EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(simplePut.getPremium() - pvDefPremium - deferredPremiumContract.getValue(re),
+                      EPSILON_FOR_DOUBLES);
 
     // 3) After settlement
     Date dayAfterSettlement = nullCalendar.advance(optionSettlement, 1, Days);
     manditoryDates.clear();
     re = gr.getRatesEnvironmentForEuropeanOption(dayAfterSettlement, manditoryDates);
-    BOOST_CHECK(abs(contract2.getOptionValue(re)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(deferredPremiumContract2.getOptionValue(re)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(contract2.getOptionValue(re), EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(deferredPremiumContract2.getOptionValue(re), EPSILON_FOR_DOUBLES);
 }
-
-void OptionContractTest::testGetPayoffAfterMaturity()
+BOOST_AUTO_TEST_CASE(testGetPayoffAfterMaturity)
 {
     Actual365Fixed dayCounter;
     NullCalendar nullCalendar;
@@ -202,13 +210,12 @@ void OptionContractTest::testGetPayoffAfterMaturity()
     double sign1 = (option->getBuySell() == BuySell::BUY ? 1 : -1);
 
     double maturitySpot = k1 - 10;
-    BOOST_CHECK(abs(option->getPayoff(maturitySpot) - (k1 - maturitySpot - p1) * v1 * sign1) < 1e-14);
+    BOOST_CHECK_SMALL(option->getPayoff(maturitySpot) - (k1 - maturitySpot - p1) * v1 * sign1, 1e-14);
     maturitySpot = k1 + 10;
-    BOOST_CHECK(abs(option->getPayoff(maturitySpot) - (-p1) * v1 * sign1) < 1e-14);
-    BOOST_CHECK(abs(option2->getPayoff(maturitySpot) - (maturitySpot - k1 - p1) * v1 * sign1) < 1e-14);
+    BOOST_CHECK_SMALL(option->getPayoff(maturitySpot) - (-p1) * v1 * sign1, 1e-14);
+    BOOST_CHECK_SMALL(option2->getPayoff(maturitySpot) - (maturitySpot - k1 - p1) * v1 * sign1, 1e-14);
 }
-
-void OptionContractTest::testEuropeanOptionWithMoneynessVol()
+BOOST_AUTO_TEST_CASE(testEuropeanOptionWithMoneynessVol)
 {
     BOOST_TEST_MESSAGE("Testing European Option with moneyness vol ...");
 
@@ -261,12 +268,12 @@ void OptionContractTest::testEuropeanOptionWithMoneynessVol()
     double pvDefPremium = defPremium * df;
 
     // 1) Before maturity
-    BOOST_CHECK(abs(simplePut.getPremium() * volume - contract.getOptionValue(re)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(simplePut.getPremium() * volume - contract.getValue(re)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(simplePut.getPremium() * volume - deferredPremiumContract.getOptionValue(re)) <
-                EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs((simplePut.getPremium() - pvDefPremium) * volume - deferredPremiumContract.getValue(re)) <
-                EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(simplePut.getPremium() * volume - contract.getOptionValue(re), EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(simplePut.getPremium() * volume - contract.getValue(re), EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(simplePut.getPremium() * volume - deferredPremiumContract.getOptionValue(re),
+                      EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL((simplePut.getPremium() - pvDefPremium) * volume - deferredPremiumContract.getValue(re),
+                      EPSILON_FOR_DOUBLES);
 
     // 3) After settlement
     Date dayAfterSettlement = nullCalendar.advance(optionSettlement, 1, Days);
@@ -279,26 +286,8 @@ void OptionContractTest::testEuropeanOptionWithMoneynessVol()
     re->setFRS(fc);
     re->setVRS(vs);
 
-    BOOST_CHECK(abs(contract.getOptionValue(re)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(deferredPremiumContract.getOptionValue(re)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(contract.getOptionValue(re), EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(deferredPremiumContract.getOptionValue(re), EPSILON_FOR_DOUBLES);
 }
 
-test_suite* OptionContractTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("Option Contract");
-
-    suite->add(BOOST_TEST_CASE(&OptionContractTest::testBuySell));
-    suite->add(BOOST_TEST_CASE(&OptionContractTest::testStrike));
-    suite->add(BOOST_TEST_CASE(&OptionContractTest::testVolume));
-    suite->add(BOOST_TEST_CASE(&OptionContractTest::testMaturityDate));
-    suite->add(BOOST_TEST_CASE(&OptionContractTest::testPremiumAmount));
-    suite->add(BOOST_TEST_CASE(&OptionContractTest::testType));
-
-    suite->add(BOOST_TEST_CASE(&OptionContractTest::testValue));
-    suite->add(BOOST_TEST_CASE(&OptionContractTest::testGetPayoffAfterMaturity));
-    suite->add(BOOST_TEST_CASE(&OptionContractTest::testPutCallParity));
-
-    suite->add(BOOST_TEST_CASE(&OptionContractTest::testEuropeanOptionWithMoneynessVol));
-
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

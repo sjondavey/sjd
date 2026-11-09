@@ -1,4 +1,19 @@
-#include "StructureTest.h"
+// to use the boost::math::isnan(...) function
+
+#include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <ql/time/daycounter.hpp>
+#include <ql/time/daycounters/all.hpp>
+#include <sjd/contracts/AsianForwardContract.h>
+#include <sjd/contracts/AsianOptionContract.h>
+#include <sjd/contracts/Cashflow.h>
+#include <sjd/contracts/EuropeanForwardContract.h>
+#include <sjd/contracts/EuropeanOptionContract.h>
+#include <sjd/contracts/Portfolio/Structures/CemNettingSet.h>
+#include <support/GenerateContracts.h>
+#include <support/GenerateRatesEnvironments.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -8,12 +23,15 @@ using namespace boost::unit_test_framework;
 using namespace boost::math;
 using namespace sjd;
 
-AssetClass StructureTest::getDefaultRegCapUnderlyingFactors()
+BOOST_AUTO_TEST_SUITE(StructureTest)
+
+AssetClass getDefaultRegCapUnderlyingFactors();
+
+AssetClass getDefaultRegCapUnderlyingFactors()
 {
     return AssetClass::Commodity;
 }
-
-void StructureTest::testGradient()
+BOOST_AUTO_TEST_CASE(testGradient)
 {
     BOOST_TEST_MESSAGE("Testing Structures ...");
 
@@ -34,19 +52,18 @@ void StructureTest::testGradient()
     instruments.push_back(call3);
 
     double g = CemNettingSet::gradient(instruments, 60, 70);
-    BOOST_CHECK(abs(g) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(g, EPSILON_FOR_DOUBLES);
 
     g = CemNettingSet::gradient(instruments, 80, 85);
-    BOOST_CHECK(abs(g - volume) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(g - volume, EPSILON_FOR_DOUBLES);
 
     g = CemNettingSet::gradient(instruments, 120, 130);
-    BOOST_CHECK(abs(g + volume) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(g + volume, EPSILON_FOR_DOUBLES);
 
     g = CemNettingSet::gradient(instruments, 160, 170);
-    BOOST_CHECK(abs(g) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(g, EPSILON_FOR_DOUBLES);
 }
-
-void StructureTest::testIsUncappedOnTheLeft()
+BOOST_AUTO_TEST_CASE(testIsUncappedOnTheLeft)
 {
     Date anchorDate = Date(27, Jan, 2013);
     int yearsToSettlement = 2;
@@ -61,9 +78,9 @@ void StructureTest::testIsUncappedOnTheLeft()
     double effectiveGradient;
     bool uncapped = CemNettingSet::isUncappedOnTheLeft(instruments, effectiveGradient);
     BOOST_CHECK(uncapped);
-    BOOST_CHECK(abs(effectiveGradient - (-volume)) < volume * EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(effectiveGradient - (-volume), volume * EPSILON_FOR_DOUBLES);
     double g = CemNettingSet::gradient(instruments, 40, 50);
-    BOOST_CHECK(abs(effectiveGradient - g) < volume * EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(effectiveGradient - g, volume * EPSILON_FOR_DOUBLES);
 
     std::shared_ptr<SingleInstrumentContract> put2 = GenerateContracts::getDefaultEuropeanOption(
         anchorDate, yearsToSettlement, 70, volume, BuySell::SELL, PutCall::PUT, 0);
@@ -72,9 +89,9 @@ void StructureTest::testIsUncappedOnTheLeft()
     instruments.push_back(put2);
     uncapped = CemNettingSet::isUncappedOnTheLeft(instruments, effectiveGradient);
     BOOST_CHECK(!uncapped);
-    BOOST_CHECK(abs(effectiveGradient) < volume * EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(effectiveGradient, volume * EPSILON_FOR_DOUBLES);
     g = CemNettingSet::gradient(instruments, 40, 50);
-    BOOST_CHECK(abs(effectiveGradient - g) < volume * EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(effectiveGradient - g, volume * EPSILON_FOR_DOUBLES);
 
     put2 = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 70, volume,
                                                        BuySell::BUY, PutCall::PUT, 0);
@@ -83,9 +100,9 @@ void StructureTest::testIsUncappedOnTheLeft()
     instruments.push_back(put2);
     uncapped = CemNettingSet::isUncappedOnTheLeft(instruments, effectiveGradient);
     BOOST_CHECK(uncapped);
-    BOOST_CHECK(abs(effectiveGradient - (-2 * volume)) < volume * EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(effectiveGradient - (-2 * volume), volume * EPSILON_FOR_DOUBLES);
     g = CemNettingSet::gradient(instruments, 40, 50);
-    BOOST_CHECK(abs(effectiveGradient - g) < volume * EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(effectiveGradient - g, volume * EPSILON_FOR_DOUBLES);
 
     std::shared_ptr<SingleInstrumentContract> put3 = GenerateContracts::getDefaultEuropeanOption(
         anchorDate, yearsToSettlement, 60, volume, BuySell::SELL, PutCall::PUT, 0);
@@ -95,12 +112,11 @@ void StructureTest::testIsUncappedOnTheLeft()
     instruments.push_back(put3);
     uncapped = CemNettingSet::isUncappedOnTheLeft(instruments, effectiveGradient);
     BOOST_CHECK(uncapped);
-    BOOST_CHECK(abs(effectiveGradient - (-volume)) < volume * EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(effectiveGradient - (-volume), volume * EPSILON_FOR_DOUBLES);
     g = CemNettingSet::gradient(instruments, 40, 50);
-    BOOST_CHECK(abs(effectiveGradient - g) < volume * EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(effectiveGradient - g, volume * EPSILON_FOR_DOUBLES);
 }
-
-void StructureTest::testGetContractsWithUncappedExposureOnTheLeft()
+BOOST_AUTO_TEST_CASE(testGetContractsWithUncappedExposureOnTheLeft)
 {
     Date anchorDate = Date(27, Jan, 2013);
     int yearsToSettlement = 2;
@@ -146,8 +162,7 @@ void StructureTest::testGetContractsWithUncappedExposureOnTheLeft()
     BOOST_CHECK(uncappedContracts[0] == put1);
     BOOST_CHECK(uncappedContracts[1] == put2);
 }
-
-void StructureTest::testQualifyForRegulatoryCapitalOffset()
+BOOST_AUTO_TEST_CASE(testQualifyForRegulatoryCapitalOffset)
 {
     Date anchorDate = Date(27, Jan, 2013);
     int yearsToSettlement = 2;
@@ -182,8 +197,7 @@ void StructureTest::testQualifyForRegulatoryCapitalOffset()
         anchorDate, yearsToSettlement, numberOfAveragingDates - 1, 90, volume, BuySell::BUY);
     BOOST_CHECK(!CemNettingSet::qualifyForRegulatoryCapitalOffset(asianFwd, asianFwd2, errorMsg));
 }
-
-void StructureTest::testMoveContracts()
+BOOST_AUTO_TEST_CASE(testMoveContracts)
 {
     Date anchorDate = Date(27, Jan, 2013);
     int yearsToSettlement = 2;
@@ -221,10 +235,7 @@ void StructureTest::testMoveContracts()
     BOOST_CHECK(outputInstruments.size() == 2);
     BOOST_CHECK(outputInstruments[1] == put1);
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void StructureTest::testSettlementDate()
+BOOST_AUTO_TEST_CASE(testSettlementDate)
 {
 
     Date anchorDate = Date(27, Jan, 2013);
@@ -247,8 +258,7 @@ void StructureTest::testSettlementDate()
     BOOST_REQUIRE(structure.isOK());
     BOOST_CHECK(sd1 == sd2);
 }
-
-void StructureTest::testCashFlowN()
+BOOST_AUTO_TEST_CASE(testCashFlowN)
 {
 
     Date anchorDate = Date(27, Jan, 2013);
@@ -279,10 +289,10 @@ void StructureTest::testCashFlowN()
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_REQUIRE(structure->isExposureCapped());
-    BOOST_CHECK(abs(structure->getCap() - cf->getVolume()) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getCap() - cf->getVolume(), EPSILON_FOR_DOUBLES);
     double expectedMtM = cf->getValue(re);
-    BOOST_CHECK(abs(structure->getValue(re) - expectedMtM) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - cf->getVolume()) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getValue(re) - expectedMtM, EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getMtMPlusAddOn(re, ngr) - cf->getVolume(), EPSILON_FOR_DOUBLES);
 
     // b) premium
     cf = GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, BuySell::BUY);
@@ -292,11 +302,11 @@ void StructureTest::testCashFlowN()
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_REQUIRE(structure->isExposureCapped());
-    BOOST_CHECK(abs(structure->getCap() - (cf->getVolume() - cf->getPremiumAmount())) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getCap() - (cf->getVolume() - cf->getPremiumAmount()), EPSILON_FOR_DOUBLES);
     expectedMtM = cf->getValue(re);
-    BOOST_CHECK(abs(structure->getValue(re) - expectedMtM) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - (cf->getVolume() - cf->getPremiumAmount())) <
-                EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getValue(re) - expectedMtM, EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getMtMPlusAddOn(re, ngr) - (cf->getVolume() - cf->getPremiumAmount()),
+                      EPSILON_FOR_DOUBLES);
 
     // c) sold cashflow
     cf = GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, BuySell::SELL);
@@ -306,12 +316,12 @@ void StructureTest::testCashFlowN()
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_REQUIRE(structure->isExposureCapped());
-    BOOST_CHECK(abs(structure->getCap() + ((cf->getVolume() - cf->getPremiumAmount()))) <
-                EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getCap() + ((cf->getVolume() - cf->getPremiumAmount())),
+                      EPSILON_FOR_DOUBLES);
     expectedMtM = cf->getValue(re);
-    BOOST_CHECK(abs(structure->getValue(re) - expectedMtM) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) + (cf->getVolume() - cf->getPremiumAmount())) <
-                EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getValue(re) - expectedMtM, EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getMtMPlusAddOn(re, ngr) + (cf->getVolume() - cf->getPremiumAmount()),
+                      EPSILON_FOR_DOUBLES);
 
     // d multiple cash flows
     cf = GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, BuySell::BUY);
@@ -327,10 +337,9 @@ void StructureTest::testCashFlowN()
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_REQUIRE(structure->isExposureCapped());
-    BOOST_CHECK(abs(structure->getCap() - (5 - 2 + 1)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getCap() - (5 - 2 + 1), EPSILON_FOR_DOUBLES);
 }
-
-void StructureTest::testEuropeanForward()
+BOOST_AUTO_TEST_CASE(testEuropeanForward)
 {
     Date anchorDate = Date(27, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -361,8 +370,8 @@ void StructureTest::testEuropeanForward()
     double expectedMtM = structure->getValue(re);
     double expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     double expectedMtMPlusAddOn = expectedMtM + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
-    BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
-                EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn,
+                      EPSILON_FOR_DOUBLES * volume);
 
     // b) Forward with premium
     instruments.clear();
@@ -376,8 +385,8 @@ void StructureTest::testEuropeanForward()
     expectedMtM = structure->getValue(re);
     expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn = expectedMtM + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
-    BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
-                EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn,
+                      EPSILON_FOR_DOUBLES * volume);
 
     // c) Buy and sell forward - lock in profit
     std::shared_ptr<EuropeanForward> ef2 = GenerateContracts::getDefaultEuropeanForward(
@@ -389,14 +398,14 @@ void StructureTest::testEuropeanForward()
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
-    BOOST_CHECK(abs(structure->getCap() - (120 - 100) * volume) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getCap() - (120 - 100) * volume, EPSILON_FOR_DOUBLES);
 
     expectedMtM = structure->getValue(re);
     expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn =
         (120 - 100) * volume; // + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
-    BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
-                EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn,
+                      EPSILON_FOR_DOUBLES * volume);
 
     // d) Buy and sell forward - lock in loss
     ef2 = GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToSettlement, 80, volume,
@@ -409,12 +418,12 @@ void StructureTest::testEuropeanForward()
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
     BOOST_CHECK(!structure->getHasPriceExposure());
-    BOOST_CHECK(abs(structure->getCap() - (80 - 100) * volume) < EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getCap() - (80 - 100) * volume, EPSILON_FOR_DOUBLES * volume);
     expectedMtM = structure->getValue(re);
     expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn = (80 - 100) * volume;
-    BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
-                EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn,
+                      EPSILON_FOR_DOUBLES * volume);
 
     // e) Portfolio of 3 forwards
     std::shared_ptr<EuropeanForward> ef3 = GenerateContracts::getDefaultEuropeanForward(
@@ -431,11 +440,10 @@ void StructureTest::testEuropeanForward()
     expectedMtM = structure->getValue(re);
     expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn = expectedMtM + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
-    BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
-                2 * EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn,
+                      2 * EPSILON_FOR_DOUBLES * volume);
 }
-
-void StructureTest::testAsianforward()
+BOOST_AUTO_TEST_CASE(testAsianforward)
 {
     Date anchorDate = Date(27, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -474,8 +482,8 @@ void StructureTest::testAsianforward()
     double expectedMtM = structure->getValue(re);
     double expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     double expectedMtMPlusAddOn = expectedMtM + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
-    BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
-                EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn,
+                      EPSILON_FOR_DOUBLES * volume);
 
     // b) Forward with premium
     instruments.clear();
@@ -489,8 +497,8 @@ void StructureTest::testAsianforward()
     expectedMtM = structure->getValue(re);
     expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn = expectedMtM + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
-    BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
-                EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn,
+                      EPSILON_FOR_DOUBLES * volume);
 
     // c) Buy and sell forward - lock in profit
     std::shared_ptr<AsianForward> af2 = GenerateContracts::getDefaultAsianForward(
@@ -503,13 +511,13 @@ void StructureTest::testAsianforward()
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
     BOOST_CHECK(!structure->getHasPriceExposure());
-    BOOST_CHECK(abs(structure->getCap() - (120 - 100) * volume) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getCap() - (120 - 100) * volume, EPSILON_FOR_DOUBLES);
     expectedMtM = structure->getValue(re);
     expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn =
         (120 - 100) * volume; // + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
-    BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
-                EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn,
+                      EPSILON_FOR_DOUBLES * volume);
 
     // d) Buy and sell forward - lock in loss
     af2 = GenerateContracts::getDefaultAsianForward(anchorDate, yearsToSettlement, numberOfAveragingPoints,
@@ -522,12 +530,12 @@ void StructureTest::testAsianforward()
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
     BOOST_CHECK(!structure->getHasPriceExposure());
-    BOOST_CHECK(abs(structure->getCap() - (80 - 100) * volume) < EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getCap() - (80 - 100) * volume, EPSILON_FOR_DOUBLES * volume);
     expectedMtM = structure->getValue(re);
     expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn = (80 - 100) * volume;
-    BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
-                EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn,
+                      EPSILON_FOR_DOUBLES * volume);
 
     // e) Portfolio of 3 forwards
     std::shared_ptr<AsianForward> af3 = GenerateContracts::getDefaultAsianForward(
@@ -543,11 +551,10 @@ void StructureTest::testAsianforward()
     expectedMtM = structure->getValue(re);
     expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn = expectedMtM + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
-    BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
-                2 * EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn,
+                      2 * EPSILON_FOR_DOUBLES * volume);
 }
-
-void StructureTest::testEuropeanOption()
+BOOST_AUTO_TEST_CASE(testEuropeanOption)
 {
     Date anchorDate = Date(27, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -598,8 +605,8 @@ void StructureTest::testEuropeanOption()
     double expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     double expectedMtMPlusAddOn =
         expectedMtM + (spot * (2 * volume) * expectedCommodityFactor * (0.4 + 0.6 * ngr));
-    BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
-                2 * EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn,
+                      2 * EPSILON_FOR_DOUBLES * volume);
 
     // b) sold option
     std::shared_ptr<EuropeanOption> soldPutDP = GenerateContracts::getDefaultEuropeanOption(
@@ -616,14 +623,15 @@ void StructureTest::testEuropeanOption()
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
-    BOOST_CHECK(abs(structure->getCap() - (instruments[0]->getPremiumAmount() *
-                                           instruments[0]->getVolume())) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getCap() -
+                          (instruments[0]->getPremiumAmount() * instruments[0]->getVolume()),
+                      EPSILON_FOR_DOUBLES);
     expectedMtM = structure->getValue(re);
     expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn = expectedMtM + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
     expectedMtMPlusAddOn = min(expectedMtMPlusAddOn, structure->getCap());
-    BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
-                EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn,
+                      EPSILON_FOR_DOUBLES * volume);
 
     instruments.clear();
     instruments.push_back(soldPutNoDP);
@@ -631,8 +639,9 @@ void StructureTest::testEuropeanOption()
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
-    BOOST_CHECK(abs(structure->getCap() - (instruments[0]->getPremiumAmount() *
-                                           instruments[0]->getVolume())) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getCap() -
+                          (instruments[0]->getPremiumAmount() * instruments[0]->getVolume()),
+                      EPSILON_FOR_DOUBLES);
 
     instruments.clear();
     instruments.push_back(soldCallDP);
@@ -640,8 +649,9 @@ void StructureTest::testEuropeanOption()
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
-    BOOST_CHECK(abs(structure->getCap() - (instruments[0]->getPremiumAmount() *
-                                           instruments[0]->getVolume())) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getCap() -
+                          (instruments[0]->getPremiumAmount() * instruments[0]->getVolume()),
+                      EPSILON_FOR_DOUBLES);
 
     instruments.clear();
     instruments.push_back(soldCallNoDP);
@@ -649,8 +659,9 @@ void StructureTest::testEuropeanOption()
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
-    BOOST_CHECK(abs(structure->getCap() - (instruments[0]->getPremiumAmount() *
-                                           instruments[0]->getVolume())) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getCap() -
+                          (instruments[0]->getPremiumAmount() * instruments[0]->getVolume()),
+                      EPSILON_FOR_DOUBLES);
 
     // c) Put spread
     soldPutDP = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 80, volume,
@@ -668,7 +679,7 @@ void StructureTest::testEuropeanOption()
     expectedCap = (purchasedPutNoDP->getStrike() - purchasedPutNoDP->getPremiumAmount());
     expectedCap -= (soldPutDP->getStrike() - soldPutDP->getPremiumAmount());
     expectedCap *= soldPutDP->getVolume();
-    BOOST_CHECK(abs(structure->getCap() - expectedCap) < EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getCap() - expectedCap, EPSILON_FOR_DOUBLES * volume);
 
     // d) Producer capped collar
     soldPutNoDP = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 80, volume,
@@ -688,10 +699,9 @@ void StructureTest::testEuropeanOption()
     expectedCap = (soldCallNoDP->getStrike() - soldCallNoDP->getPremiumAmount());
     expectedCap -= (purchasedCallNoDP->getStrike() - purchasedCallNoDP->getPremiumAmount());
     expectedCap *= soldCallNoDP->getVolume();
-    BOOST_CHECK(abs(structure->getCap() - expectedCap) < EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getCap() - expectedCap, EPSILON_FOR_DOUBLES * volume);
 }
-
-void StructureTest::testAsianOption()
+BOOST_AUTO_TEST_CASE(testAsianOption)
 {
     Date anchorDate = Date(27, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -749,8 +759,9 @@ void StructureTest::testAsianOption()
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
-    BOOST_CHECK(abs(structure->getCap() - (instruments[0]->getPremiumAmount() *
-                                           instruments[0]->getVolume())) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getCap() -
+                          (instruments[0]->getPremiumAmount() * instruments[0]->getVolume()),
+                      EPSILON_FOR_DOUBLES);
 
     instruments.clear();
     instruments.push_back(soldPutNoDP);
@@ -758,8 +769,9 @@ void StructureTest::testAsianOption()
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
-    BOOST_CHECK(abs(structure->getCap() - (instruments[0]->getPremiumAmount() *
-                                           instruments[0]->getVolume())) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getCap() -
+                          (instruments[0]->getPremiumAmount() * instruments[0]->getVolume()),
+                      EPSILON_FOR_DOUBLES);
 
     instruments.clear();
     instruments.push_back(soldCallDP);
@@ -767,8 +779,9 @@ void StructureTest::testAsianOption()
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
-    BOOST_CHECK(abs(structure->getCap() - (instruments[0]->getPremiumAmount() *
-                                           instruments[0]->getVolume())) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getCap() -
+                          (instruments[0]->getPremiumAmount() * instruments[0]->getVolume()),
+                      EPSILON_FOR_DOUBLES);
 
     instruments.clear();
     instruments.push_back(soldCallNoDP);
@@ -776,8 +789,9 @@ void StructureTest::testAsianOption()
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
-    BOOST_CHECK(abs(structure->getCap() - (instruments[0]->getPremiumAmount() *
-                                           instruments[0]->getVolume())) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(structure->getCap() -
+                          (instruments[0]->getPremiumAmount() * instruments[0]->getVolume()),
+                      EPSILON_FOR_DOUBLES);
 
     // c) Put spread
     soldPutDP =
@@ -797,7 +811,7 @@ void StructureTest::testAsianOption()
     expectedCap = (purchasedPutNoDP->getStrike() - purchasedPutNoDP->getPremiumAmount());
     expectedCap -= (soldPutDP->getStrike() - soldPutDP->getPremiumAmount());
     expectedCap *= soldPutDP->getVolume();
-    BOOST_CHECK(abs(structure->getCap() - expectedCap) < EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getCap() - expectedCap, EPSILON_FOR_DOUBLES * volume);
 
     // d) Producer capped collar
     soldPutNoDP =
@@ -820,10 +834,9 @@ void StructureTest::testAsianOption()
     expectedCap = (soldCallNoDP->getStrike() - soldCallNoDP->getPremiumAmount());
     expectedCap -= (purchasedCallNoDP->getStrike() - purchasedCallNoDP->getPremiumAmount());
     expectedCap *= soldCallNoDP->getVolume();
-    BOOST_CHECK(abs(structure->getCap() - expectedCap) < EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getCap() - expectedCap, EPSILON_FOR_DOUBLES * volume);
 }
-
-void StructureTest::testMixedStructures()
+BOOST_AUTO_TEST_CASE(testMixedStructures)
 {
     Date anchorDate = Date(27, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -853,10 +866,9 @@ void StructureTest::testMixedStructures()
     double expectedCap = 0;
     expectedCap = (call->getStrike() - ef->getStrike());
     expectedCap *= call->getVolume();
-    BOOST_CHECK(abs(structure->getCap() - expectedCap) < EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(structure->getCap() - expectedCap, EPSILON_FOR_DOUBLES * volume);
 }
-
-void StructureTest::testSpecialCases()
+BOOST_AUTO_TEST_CASE(testSpecialCases)
 {
     Date anchorDate = Date(27, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -891,7 +903,7 @@ void StructureTest::testSpecialCases()
     double actualCap = structure->getCap();
     double expectedCap = (c2->getStrike() - c1->getStrike());
     expectedCap *= c1->getVolume();
-    BOOST_CHECK(abs(actualCap - expectedCap) < EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(actualCap - expectedCap, EPSILON_FOR_DOUBLES * volume);
     // Now replace the 2 solf contracts c2 and c3 with one contract with the combined volume
     std::shared_ptr<EuropeanOption> c5 = GenerateContracts::getDefaultEuropeanOption(
         anchorDate, yearsToSettlement, peakStrike, 2 * volume, BuySell::SELL, PutCall::CALL, 0, false);
@@ -906,7 +918,7 @@ void StructureTest::testSpecialCases()
     BOOST_CHECK(structures.size() == 1);
     BOOST_CHECK(structures[0]->isExposureCapped());
     actualCap = structures[0]->getCap();
-    BOOST_CHECK(abs(actualCap - expectedCap) < EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(actualCap - expectedCap, EPSILON_FOR_DOUBLES * volume);
     // also confirm that the order of the structures is not important
     instruments.clear();
     instruments.push_back(c1);
@@ -918,10 +930,9 @@ void StructureTest::testSpecialCases()
     BOOST_CHECK(structures.size() == 1);
     BOOST_CHECK(structures[0]->isExposureCapped());
     actualCap = structures[0]->getCap();
-    BOOST_CHECK(abs(actualCap - expectedCap) < EPSILON_FOR_DOUBLES * volume);
+    BOOST_CHECK_SMALL(actualCap - expectedCap, EPSILON_FOR_DOUBLES * volume);
 }
-
-void StructureTest::testStructureCreation()
+BOOST_AUTO_TEST_CASE(testStructureCreation)
 {
     Date anchorDate = Date(27, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -934,7 +945,7 @@ void StructureTest::testStructureCreation()
         anchorDate, yearsToSettlement, 112, structureVolume, BuySell::SELL);
     std::shared_ptr<SingleInstrumentContract> cf = GenerateContracts::getDefaultFixedCashflowWithPremium(
         anchorDate, yearsToSettlement, premiumRecievable, BuySell::BUY);
-    AssetClass regCapFactors = StructureTest::getDefaultRegCapUnderlyingFactors();
+    AssetClass regCapFactors = getDefaultRegCapUnderlyingFactors();
     std::shared_ptr<EuropeanOption> option = GenerateContracts::getDefaultEuropeanOption(
         anchorDate, yearsToSettlement, 115, structureVolume, BuySell::BUY, PutCall::CALL, 0);
 
@@ -978,8 +989,8 @@ void StructureTest::testStructureCreation()
     BOOST_REQUIRE(structures.size() == 1);
     std::shared_ptr<CemNettingSet> autoStructure = structures[0];
     BOOST_CHECK(autoStructure->isOK());
-    BOOST_CHECK(abs(autoStructure->getMtMPlusAddOn(re) - manualStructure.getMtMPlusAddOn(re)) <
-                EPSILON_FOR_DOUBLES * structureVolume);
+    BOOST_CHECK_SMALL(autoStructure->getMtMPlusAddOn(re) - manualStructure.getMtMPlusAddOn(re),
+                      EPSILON_FOR_DOUBLES * structureVolume);
 
     // Test most complex case
     std::shared_ptr<EuropeanOption> s1p1 = GenerateContracts::getDefaultEuropeanOption(
@@ -1052,7 +1063,7 @@ void StructureTest::testStructureCreation()
         {
             underlyingPayoff += contracts[j]->getPayoff(testCases[i]);
         }
-        BOOST_CHECK(abs(structrePayoff - underlyingPayoff) < 1e-8);
+        BOOST_CHECK_SMALL(structrePayoff - underlyingPayoff, 1e-8);
     }
     double v1 = s1[0]->getValue(re);
     double v2 = s1[1]->getValue(re);
@@ -1061,32 +1072,7 @@ void StructureTest::testStructureCreation()
     {
         c += contracts[j]->getValue(re);
     }
-    BOOST_CHECK(abs(v1 + v2 - c) < 1e-8);
+    BOOST_CHECK_SMALL(v1 + v2 - c, 1e-8);
 }
 
-test_suite* StructureTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("Structures");
-
-    suite->add(BOOST_TEST_CASE(&StructureTest::testGradient));
-    suite->add(BOOST_TEST_CASE(&StructureTest::testIsUncappedOnTheLeft));
-    suite->add(BOOST_TEST_CASE(&StructureTest::testGetContractsWithUncappedExposureOnTheLeft));
-
-    suite->add(BOOST_TEST_CASE(&StructureTest::testQualifyForRegulatoryCapitalOffset));
-    // suite->add(BOOST_TEST_CASE(&StructureTest::testIsConvex));
-    suite->add(BOOST_TEST_CASE(&StructureTest::testMoveContracts));
-
-    suite->add(BOOST_TEST_CASE(&StructureTest::testSettlementDate));
-
-    suite->add(BOOST_TEST_CASE(&StructureTest::testCashFlowN));
-
-    suite->add(BOOST_TEST_CASE(&StructureTest::testEuropeanForward));
-    suite->add(BOOST_TEST_CASE(&StructureTest::testAsianforward));
-    suite->add(BOOST_TEST_CASE(&StructureTest::testEuropeanOption));
-    suite->add(BOOST_TEST_CASE(&StructureTest::testAsianOption));
-    suite->add(BOOST_TEST_CASE(&StructureTest::testMixedStructures));
-    suite->add(BOOST_TEST_CASE(&StructureTest::testSpecialCases));
-
-    suite->add(BOOST_TEST_CASE(&StructureTest::testStructureCreation));
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

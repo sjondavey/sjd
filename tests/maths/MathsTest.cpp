@@ -1,22 +1,24 @@
-#include "MathsTest.h"
-
 #include <sjd/tools/Errors.h>
 
-// using namespace std;
-using namespace boost::unit_test_framework;
-using namespace boost::math;
-using namespace sjd;
-
 #include <boost/assign/std/vector.hpp>
-using namespace boost::assign; // used to initialize vector
 
+#include <boost/math/special_functions/fpclassify.hpp> // boost::math::isnan
+#include <boost/test/unit_test.hpp>
+#include <iostream>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/matrix.hpp>
+#include <sjd/maths/maths.h>
 
 using namespace std;
 using namespace QuantLib;
+using namespace boost::unit_test_framework;
+using namespace boost::math;
+using namespace boost::assign; // used to initialize vector
+using namespace sjd;
 
-void MathsFunctionsTest::testFunctions()
+BOOST_AUTO_TEST_SUITE(MathsFunctionsTest)
+
+BOOST_AUTO_TEST_CASE(testFunctions)
 {
     BOOST_TEST_MESSAGE("Testing Maths Functions...");
 
@@ -65,8 +67,7 @@ void MathsFunctionsTest::testFunctions()
     BOOST_CHECK(isStrictlyMonotonic(constantVector) == false);
     BOOST_CHECK(isStrictlyMonotonic(emptyVector) == false);
 }
-
-void MathsFunctionsTest::testLinearInterpolator()
+BOOST_AUTO_TEST_CASE(testLinearInterpolator)
 {
     BOOST_TEST_MESSAGE("Testing LinearInterpolator class ...");
 
@@ -82,8 +83,7 @@ void MathsFunctionsTest::testLinearInterpolator()
     linearInterpolator = LinearInterpolator(x1, y1, x2, y2);
     BOOST_CHECK(linearInterpolator.arePointsDistinct() == false);
 }
-
-void MathsFunctionsTest::testArrayInterpolator()
+BOOST_AUTO_TEST_CASE(testArrayInterpolator)
 {
     BOOST_TEST_MESSAGE("Testing ArrayInterpolator class ...");
     vector<double> xVector, yVector;
@@ -161,8 +161,7 @@ void MathsFunctionsTest::testArrayInterpolator()
     for (size_t i = 0; i < yOutputs1.size(); ++i)
         BOOST_CHECK(yOutputs1[i] == yOutputs2[i]);
 }
-
-void MathsFunctionsTest::testLinearArrayInterpolator()
+BOOST_AUTO_TEST_CASE(testLinearArrayInterpolator)
 {
     BOOST_TEST_MESSAGE("Testing LinearArrayInterpolator class ...");
 
@@ -180,15 +179,14 @@ void MathsFunctionsTest::testLinearArrayInterpolator()
     LinearArrayInterpolator interpWithoutExtrap(xVector, yVector, false);
     BOOST_CHECK(interpWithExtrap.getRate(3.5) == (m * 3.5 + c));
     BOOST_CHECK(interpWithExtrap.getRate(4.75) == interpWithoutExtrap.getRate(4.75));
-    BOOST_CHECK(abs(interpWithExtrap.getRate(10.75) - (m * 10.75 + c)) < epsilon);
+    BOOST_CHECK_SMALL(interpWithExtrap.getRate(10.75) - (m * 10.75 + c), epsilon);
 #ifndef NDEBUG
     BOOST_CHECK_THROW(interpWithoutExtrap.getRate(10.75), sjd::Error);
 #else
-    BOOST_CHECK(abs(interpWithoutExtrap.getRate(10.75) - (m * 10.75 + c)) < epsilon);
+    BOOST_CHECK_SMALL(interpWithoutExtrap.getRate(10.75) - (m * 10.75 + c), epsilon);
 #endif
 }
-
-void MathsFunctionsTest::testCubicSplineInterpolator()
+BOOST_AUTO_TEST_CASE(testCubicSplineInterpolator)
 {
     vector<double> xVector, yVector;
     double a = 2.4, b = -3.1, c = -10;
@@ -205,14 +203,4 @@ void MathsFunctionsTest::testCubicSplineInterpolator()
     BOOST_CHECK(cSplineInpterp1.getRate(1.73) == -8.24323396243094);
 }
 
-test_suite* MathsFunctionsTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("Maths Functions Tests");
-    suite->add(BOOST_TEST_CASE(&MathsFunctionsTest::testFunctions));
-    suite->add(BOOST_TEST_CASE(&MathsFunctionsTest::testLinearInterpolator));
-    suite->add(BOOST_TEST_CASE(&MathsFunctionsTest::testArrayInterpolator));
-    suite->add(BOOST_TEST_CASE(&MathsFunctionsTest::testLinearArrayInterpolator));
-    suite->add(BOOST_TEST_CASE(&MathsFunctionsTest::testCubicSplineInterpolator));
-
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

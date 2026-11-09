@@ -1,7 +1,10 @@
-#include "PortfolioInsuranceTest.h"
 #include <support/GenerateRatesEnvironments.h>
 
+#include <boost/test/unit_test.hpp>
+#include <iostream>
 #include <math.h>
+#include <sjd/contracts/Portfolio/Insurance/PortfolioInsurance.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -10,7 +13,9 @@ using namespace std;
 using namespace boost::unit_test_framework;
 using namespace sjd;
 
-void PortfolioInsuranceTest::testSimpleInsurance()
+BOOST_AUTO_TEST_SUITE(PortfolioInsuranceTest)
+
+BOOST_AUTO_TEST_CASE(testSimpleInsurance)
 {
     BOOST_TEST_MESSAGE("Testing Simple Insurance");
 
@@ -83,10 +88,9 @@ void PortfolioInsuranceTest::testSimpleInsurance()
 
     BOOST_REQUIRE(insurancePaymentsManual.size() == insurancePayments.size());
     for (size_t i = 0; i < insurancePayments.size(); ++i)
-        BOOST_CHECK(abs(insurancePaymentsManual[i] - insurancePayments[i]) < 1e-10);
+        BOOST_CHECK_SMALL(insurancePaymentsManual[i] - insurancePayments[i], 1e-10);
 }
-
-void PortfolioInsuranceTest::testSimpleInsuranceWithTermStructure()
+BOOST_AUTO_TEST_CASE(testSimpleInsuranceWithTermStructure)
 {
     BOOST_TEST_MESSAGE("Testing Simple Insurance with Term Structure");
 
@@ -124,10 +128,10 @@ void PortfolioInsuranceTest::testSimpleInsuranceWithTermStructure()
     BOOST_REQUIRE(siWT->validate().isOK());
 
     int index = (anchorDate - policyStartDate) / 366;
-    BOOST_CHECK(abs(siWT->getSumInsured(anchorDate) - insuredAmounts[index]) < 1e-10);
-    BOOST_CHECK(abs(siWT->getSumInsured(insuranceDates[1]) - insuredAmounts[1]) < 1e-10);
-    BOOST_CHECK(abs(siWT->getSumInsured(insuranceDates[years - 2]) - insuredAmounts[years - 2]) < 1e-10);
-    BOOST_CHECK(abs(siWT->getSumInsured(insuranceDates[years - 2] - 1) - insuredAmounts[years - 2]) < 1e-10);
+    BOOST_CHECK_SMALL(siWT->getSumInsured(anchorDate) - insuredAmounts[index], 1e-10);
+    BOOST_CHECK_SMALL(siWT->getSumInsured(insuranceDates[1]) - insuredAmounts[1], 1e-10);
+    BOOST_CHECK_SMALL(siWT->getSumInsured(insuranceDates[years - 2]) - insuredAmounts[years - 2], 1e-10);
+    BOOST_CHECK_SMALL(siWT->getSumInsured(insuranceDates[years - 2] - 1) - insuredAmounts[years - 2], 1e-10);
 
     vector<double> fwdFwdDF, standbyFwdFwd, utilisationFwdFwd, mtm, insurancePayments;
     vector<Date> fwdDates;
@@ -182,16 +186,8 @@ void PortfolioInsuranceTest::testSimpleInsuranceWithTermStructure()
     BOOST_REQUIRE(insurancePaymentsManual.size() == insurancePayments.size());
     for (size_t i = 0; i < insurancePayments.size(); ++i)
     {
-        BOOST_CHECK(abs(insurancePaymentsManual[i] - insurancePayments[i]) < 1e-10);
+        BOOST_CHECK_SMALL(insurancePaymentsManual[i] - insurancePayments[i], 1e-10);
     }
 }
 
-test_suite* PortfolioInsuranceTest::suite()
-{
-
-    test_suite* suite = BOOST_TEST_SUITE("Insurance");
-    suite->add(BOOST_TEST_CASE(&PortfolioInsuranceTest::testSimpleInsurance));
-    suite->add(BOOST_TEST_CASE(&PortfolioInsuranceTest::testSimpleInsuranceWithTermStructure));
-
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

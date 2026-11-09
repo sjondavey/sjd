@@ -1,7 +1,15 @@
-#include "VolatilitySurfacesTest.h"
-
 #include <boost/assign/std/vector.hpp>
+#include <boost/math/special_functions/fpclassify.hpp> // boost::math::isnan
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <ql/time/calendar.hpp>
+#include <ql/time/calendars/all.hpp>
+#include <ql/time/daycounter.hpp>
+#include <ql/time/daycounters/all.hpp>
+#include <sjd/rates/Volatility/VolatilitySurfaces.h>
 #include <sjd/tools/Errors.h>
+#include <support/GenerateRatesEnvironments.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -11,7 +19,9 @@ using namespace std;
 using namespace boost::unit_test_framework;
 using namespace sjd;
 
-void VolatilitySurfacesTest::testEuropeanMoneynessConstruction()
+BOOST_AUTO_TEST_SUITE(VolatilitySurfacesTest)
+
+BOOST_AUTO_TEST_CASE(testEuropeanMoneynessConstruction)
 {
     BOOST_TEST_MESSAGE("Testing VolatilitySurfaceMoneyness Construction ...");
     // initialise with nulls
@@ -68,8 +78,7 @@ void VolatilitySurfacesTest::testEuropeanMoneynessConstruction()
                                                               volatility, BICUBIC, false);
     BOOST_CHECK(volSurface->validate().isOK() == true);
 }
-
-void VolatilitySurfacesTest::testEuropeanMoneynessConsistencyBetweenVolAndSD()
+BOOST_AUTO_TEST_CASE(testEuropeanMoneynessConsistencyBetweenVolAndSD)
 {
     BOOST_TEST_MESSAGE("Testing VolatilitySurfaceMoneyness for consistency between stdev and vol ...");
     GenerateRates re = GenerateRates();
@@ -81,24 +90,23 @@ void VolatilitySurfacesTest::testEuropeanMoneynessConsistencyBetweenVolAndSD()
 
     Date d = calendar.advance(anchorDate, 3, Months);
     double vol = volSurface->getVolatility(d, 1, 1);
-    BOOST_CHECK(abs(vol - .205) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(vol - volSurface->getVolatility(d)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(vol - .205, EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(vol - volSurface->getVolatility(d), EPSILON_FOR_DOUBLES);
 
     DayCounter dc = Actual365Fixed();
     double yf = dc.yearFraction(anchorDate, d);
     double sd = volSurface->getStandardDeviation(d, 1.0, 1.0);
-    BOOST_CHECK(abs(sd - vol * sqrt(yf)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(sd - vol * sqrt(yf), EPSILON_FOR_DOUBLES);
 
     double moneynessAsDouble = 0.5;
     double fwd = 1.0;
     double impliedStrike = moneynessAsDouble * fwd + fwd;
     vol = volSurface->getVolatility(d, impliedStrike, fwd);
-    BOOST_CHECK(abs(vol - 0.223725) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(vol - 0.223725, EPSILON_FOR_DOUBLES);
     sd = volSurface->getStandardDeviation(d, impliedStrike, fwd);
-    BOOST_CHECK(abs(sd - vol * sqrt(yf)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(sd - vol * sqrt(yf), EPSILON_FOR_DOUBLES);
 }
-
-void VolatilitySurfacesTest::testEuropeanMoneynessRoll()
+BOOST_AUTO_TEST_CASE(testEuropeanMoneynessRoll)
 {
     BOOST_TEST_MESSAGE("Testing VolatilitySurfaceMoneyness roll ...");
 
@@ -117,11 +125,11 @@ void VolatilitySurfacesTest::testEuropeanMoneynessRoll()
 
     double originalVol = volSurface->getVolatility(d2, fwd, fwd);
     double rolledVol = rolledSurface->getVolatility(d2, fwd, fwd);
-    BOOST_CHECK(abs(rolledVol - originalVol) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(rolledVol - originalVol, EPSILON_FOR_DOUBLES);
 
     originalVol = volSurface->getVolatility(d2, fwd * 1.01, fwd);
     rolledVol = rolledSurface->getVolatility(d2, fwd * 1.01, fwd);
-    BOOST_CHECK(abs(rolledVol - originalVol) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(rolledVol - originalVol, EPSILON_FOR_DOUBLES);
 
     SurfaceInterpolatorType interpolatorType = BILINEAR;
     vector<Date> surfaceDates = boost::assign::list_of(calendar.advance(anchorDate, 1, Years))(
@@ -153,21 +161,22 @@ void VolatilitySurfacesTest::testEuropeanMoneynessRoll()
     std::shared_ptr<VolatilitySurfaceMoneyness> manualCurve = std::make_shared<VolatilitySurfaceMoneyness>(
         surfaceDates[0], surfaceDates, moneyness, surfaceData, interpolatorType, false);
 
-    BOOST_CHECK(abs(rolledCurve->getVolatility(surfaceDates[1], 1, 1) -
-                    manualCurve->getVolatility(surfaceDates[1], 1, 1)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(rolledCurve->getVolatility(surfaceDates[1], 1, 1) -
+                          manualCurve->getVolatility(surfaceDates[1], 1, 1),
+                      EPSILON_FOR_DOUBLES);
     Date anotherDate = calendar.advance(surfaceDates[0], 18, Months);
-    BOOST_CHECK(abs(rolledCurve->getVolatility(anotherDate, 1, 1) -
-                    manualCurve->getVolatility(anotherDate, 1, 1)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(rolledCurve->getVolatility(anotherDate, 1, 1) -
+                          manualCurve->getVolatility(anotherDate, 1, 1),
+                      EPSILON_FOR_DOUBLES);
     anotherDate = calendar.advance(surfaceDates[0], 20, Months);
-    BOOST_CHECK(abs(rolledCurve->getVolatility(anotherDate, .75, 1) -
-                    manualCurve->getVolatility(anotherDate, .75, 1)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(rolledCurve->getVolatility(anotherDate, 1.25, 1) -
-                    manualCurve->getVolatility(anotherDate, 1.25, 1)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(rolledCurve->getVolatility(anotherDate, .75, 1) -
+                          manualCurve->getVolatility(anotherDate, .75, 1),
+                      EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(rolledCurve->getVolatility(anotherDate, 1.25, 1) -
+                          manualCurve->getVolatility(anotherDate, 1.25, 1),
+                      EPSILON_FOR_DOUBLES);
 }
-
-//////////////////////////////////////////////////////////////////////////////////////////////////
-
-void VolatilitySurfacesTest::testCalendarMonthMoneynessConstruction()
+BOOST_AUTO_TEST_CASE(testCalendarMonthMoneynessConstruction)
 {
     BOOST_TEST_MESSAGE("Testing VolatilitySurfaceMoneynessCMA Construction ...");
     // initialise with nulls
@@ -233,8 +242,7 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessConstruction()
                                                                  volatility, BICUBIC, false);
     BOOST_CHECK(volSurface->validate().isOK() == true);
 }
-
-void VolatilitySurfacesTest::testCalendarMonthMoneynessConsistencyBetweenVolAndSD()
+BOOST_AUTO_TEST_CASE(testCalendarMonthMoneynessConsistencyBetweenVolAndSD)
 {
     BOOST_TEST_MESSAGE("Testing VolatilitySurfaceMoneynessCMA for consistency between stdev and vol ...");
 
@@ -249,24 +257,23 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessConsistencyBetweenVolAndS
     double fwd = 1.0;
 
     double vol = volSurface->getVolatility(d, fwd, fwd);
-    BOOST_CHECK(abs(vol - .205) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(vol - volSurface->getVolatility(d)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(vol - .205, EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(vol - volSurface->getVolatility(d), EPSILON_FOR_DOUBLES);
 
     DayCounter dc = Actual365Fixed();
     double yf = dc.yearFraction(anchorDate, d);
     double sd = volSurface->getStandardDeviation(d, fwd, fwd);
-    BOOST_CHECK(abs(sd - vol * sqrt(yf)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(sd - vol * sqrt(yf), EPSILON_FOR_DOUBLES);
 
     double moneynessAsDouble = 0.5;
     double impliedStrike = moneynessAsDouble * fwd + fwd;
 
     vol = volSurface->getVolatility(d, impliedStrike, fwd);
-    BOOST_CHECK(abs(vol - 0.223725) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(vol - 0.223725, EPSILON_FOR_DOUBLES);
     sd = volSurface->getStandardDeviation(d, impliedStrike, fwd);
-    BOOST_CHECK(abs(sd - vol * sqrt(yf)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(sd - vol * sqrt(yf), EPSILON_FOR_DOUBLES);
 }
-
-void VolatilitySurfacesTest::testCalendarMonthMoneynessRoll()
+BOOST_AUTO_TEST_CASE(testCalendarMonthMoneynessRoll)
 {
     BOOST_TEST_MESSAGE("Testing VolatilitySurfaceMoneynessCMA roll ...");
 
@@ -287,12 +294,12 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessRoll()
     double originalVol = volSurface->getVolatility(d2, fwd, fwd);
     double rolledVol = rolledSurface->getVolatility(d2, fwd, fwd);
 
-    BOOST_CHECK(abs(rolledVol - originalVol) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(rolledVol - originalVol, EPSILON_FOR_DOUBLES);
 
     originalVol = volSurface->getVolatility(d2, fwd * 1.01, fwd);
     rolledVol = rolledSurface->getVolatility(d2, fwd * 1.01, fwd);
 
-    BOOST_CHECK(abs(rolledVol - originalVol) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(rolledVol - originalVol, EPSILON_FOR_DOUBLES);
 
     SurfaceInterpolatorType interpolatorType = BILINEAR;
     vector<Date> surfaceDates = boost::assign::list_of(calendar.advance(anchorDate, 1, Years))(
@@ -326,21 +333,22 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessRoll()
         std::make_shared<VolatilitySurfaceMoneynessCMA>(surfaceDates[0], surfaceDates, moneyness, surfaceData,
                                                         interpolatorType, false);
 
-    BOOST_CHECK(abs(rolledCurve->getVolatility(surfaceDates[1], 1, 1) -
-                    manualCurve->getVolatility(surfaceDates[1], 1, 1)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(rolledCurve->getVolatility(surfaceDates[1], 1, 1) -
+                          manualCurve->getVolatility(surfaceDates[1], 1, 1),
+                      EPSILON_FOR_DOUBLES);
     Date anotherDate = calendar.advance(surfaceDates[0], 18, Months);
-    BOOST_CHECK(abs(rolledCurve->getVolatility(anotherDate, 1, 1) -
-                    manualCurve->getVolatility(anotherDate, 1, 1)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(rolledCurve->getVolatility(anotherDate, 1, 1) -
+                          manualCurve->getVolatility(anotherDate, 1, 1),
+                      EPSILON_FOR_DOUBLES);
     anotherDate = calendar.advance(surfaceDates[0], 20, Months);
-    BOOST_CHECK(abs(rolledCurve->getVolatility(anotherDate, .75, 1) -
-                    manualCurve->getVolatility(anotherDate, .75, 1)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(rolledCurve->getVolatility(anotherDate, 1.25, 1) -
-                    manualCurve->getVolatility(anotherDate, 1.25, 1)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(rolledCurve->getVolatility(anotherDate, .75, 1) -
+                          manualCurve->getVolatility(anotherDate, .75, 1),
+                      EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(rolledCurve->getVolatility(anotherDate, 1.25, 1) -
+                          manualCurve->getVolatility(anotherDate, 1.25, 1),
+                      EPSILON_FOR_DOUBLES);
 }
-
-//////////////////////////////////////////////////////////////////////////////////////////////////
-
-void VolatilitySurfacesTest::testForwardDeltaVolatilitySurfaceConstruction()
+BOOST_AUTO_TEST_CASE(testForwardDeltaVolatilitySurfaceConstruction)
 {
     BOOST_TEST_MESSAGE("Testing VolatilitySurfaceDelta Construction ...");
 
@@ -382,10 +390,10 @@ void VolatilitySurfacesTest::testForwardDeltaVolatilitySurfaceConstruction()
     double fwd = frs->getForward(d1);
     double strike1 = vs.calculateStrikeFromDelta(d1, 50, fwd);
     BOOST_REQUIRE(vs.isInRange(d1, strike1, fwd));
-    BOOST_CHECK(abs(vs.getVolatility(d1, strike1, fwd) - 0.235) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(vs.getVolatility(d1, strike1, fwd) - 0.235, EPSILON_FOR_DOUBLES);
     double strike2 = vs.calculateStrikeFromDelta(d1, 10, fwd);
     BOOST_REQUIRE(vs.isInRange(d1, strike2, fwd));
-    BOOST_CHECK(abs(vs.getVolatility(d1, strike2, fwd) - 0.248396) < 1e-6);
+    BOOST_CHECK_SMALL(vs.getVolatility(d1, strike2, fwd) - 0.248396, 1e-6);
     // A negative put delta is outside the solver bracket. The surface used to
     // swallow the solver failure and return a zero strike.
     BOOST_CHECK_THROW(vs.calculateStrikeFromDelta(d1, -1.0, fwd), NumericalError);
@@ -398,11 +406,10 @@ void VolatilitySurfacesTest::testForwardDeltaVolatilitySurfaceConstruction()
     [[maybe_unused]] double naccIRDiff = 0.045;
     [[maybe_unused]] double vol = 0.2;
 
-    BOOST_CHECK(abs(vs.getVolatility(d1) - vs.getVolatility(d1, frs->getForward(d1), frs->getForward(d1))) <
-                EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(vs.getVolatility(d1) - vs.getVolatility(d1, frs->getForward(d1), frs->getForward(d1)),
+                      EPSILON_FOR_DOUBLES);
 }
-
-void VolatilitySurfacesTest::testFlatWings()
+BOOST_AUTO_TEST_CASE(testFlatWings)
 {
     BOOST_TEST_MESSAGE("Testing flat volatility wings ...");
 
@@ -434,8 +441,8 @@ void VolatilitySurfacesTest::testFlatWings()
         // A low strike has a put delta below 10 and a high strike a put delta above 90.
         BOOST_CHECK(vs.isInRange(d1, 20, fwd));
         BOOST_CHECK(vs.isInRange(d1, 500, fwd));
-        BOOST_CHECK(abs(vs.getVolatility(d1, 20, fwd) - 0.26) < 1e-10);
-        BOOST_CHECK(abs(vs.getVolatility(d1, 500, fwd) - 0.31) < 1e-10);
+        BOOST_CHECK_SMALL(vs.getVolatility(d1, 20, fwd) - 0.26, 1e-10);
+        BOOST_CHECK_SMALL(vs.getVolatility(d1, 500, fwd) - 0.31, 1e-10);
         BOOST_CHECK(abs(vs.calculateStrikeFromDelta(d1, 5, fwd) - vs.calculateStrikeFromDelta(d1, 10, fwd)) >
                     1);
 
@@ -458,34 +465,17 @@ void VolatilitySurfacesTest::testFlatWings()
     BOOST_REQUIRE(ms.validate().isOK());
     BOOST_CHECK(ms.isInRange(d1, 10, fwd));
     BOOST_CHECK(ms.isInRange(d1, 300, fwd));
-    BOOST_CHECK(abs(ms.getVolatility(d1, 10, fwd) - 0.20) < 1e-10);
-    BOOST_CHECK(abs(ms.getVolatility(d1, 300, fwd) - 0.30) < 1e-10);
+    BOOST_CHECK_SMALL(ms.getVolatility(d1, 10, fwd) - 0.20, 1e-10);
+    BOOST_CHECK_SMALL(ms.getVolatility(d1, 300, fwd) - 0.30, 1e-10);
     BOOST_CHECK(!ms.isInRange(pastFinal, fwd, fwd));
 
     VolatilitySurfaceMoneynessCMA cma(anchorDate, observationDates, moneyness, moneynessVols, BILINEAR,
                                       false);
     BOOST_REQUIRE(cma.validate().isOK());
     BOOST_CHECK(cma.isInRange(d1, 10, fwd));
-    BOOST_CHECK(abs(cma.getVolatility(d1, 10, fwd) - 0.20) < 1e-10);
-    BOOST_CHECK(abs(cma.getVolatility(d1, 300, fwd) - 0.30) < 1e-10);
+    BOOST_CHECK_SMALL(cma.getVolatility(d1, 10, fwd) - 0.20, 1e-10);
+    BOOST_CHECK_SMALL(cma.getVolatility(d1, 300, fwd) - 0.30, 1e-10);
     BOOST_CHECK(!cma.isInRange(pastFinal, fwd, fwd));
 }
 
-test_suite* VolatilitySurfacesTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("Volatility Surfaces");
-
-    suite->add(BOOST_TEST_CASE(&VolatilitySurfacesTest::testEuropeanMoneynessConstruction));
-    suite->add(BOOST_TEST_CASE(&VolatilitySurfacesTest::testEuropeanMoneynessConsistencyBetweenVolAndSD));
-    suite->add(BOOST_TEST_CASE(&VolatilitySurfacesTest::testEuropeanMoneynessRoll));
-
-    suite->add(BOOST_TEST_CASE(&VolatilitySurfacesTest::testCalendarMonthMoneynessConstruction));
-    suite->add(
-        BOOST_TEST_CASE(&VolatilitySurfacesTest::testCalendarMonthMoneynessConsistencyBetweenVolAndSD));
-    suite->add(BOOST_TEST_CASE(&VolatilitySurfacesTest::testCalendarMonthMoneynessRoll));
-
-    suite->add(BOOST_TEST_CASE(&VolatilitySurfacesTest::testForwardDeltaVolatilitySurfaceConstruction));
-    suite->add(BOOST_TEST_CASE(&VolatilitySurfacesTest::testFlatWings));
-
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

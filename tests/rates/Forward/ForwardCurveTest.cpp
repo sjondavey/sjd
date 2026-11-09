@@ -1,4 +1,12 @@
-#include "ForwardCurveTest.h"
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <ql/time/daycounter.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
+#include <sjd/rates/Forward/Deterministic/ForwardCurveDeterministic.h>
+#include <sjd/rates/Forward/Stochastic/ForwardCurveStochasticFwdVol.h>
+#include <sjd/rates/Forward/Stochastic/ForwardCurveStochasticSpotVol.h>
+#include <support/GenerateRatesEnvironments.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -7,7 +15,9 @@ using namespace std;
 using namespace boost::unit_test_framework;
 using namespace sjd;
 
-void ForwardCurveTest::testForwardCurveConstruction()
+BOOST_AUTO_TEST_SUITE(ForwardCurveTest)
+
+BOOST_AUTO_TEST_CASE(testForwardCurveConstruction)
 {
     BOOST_TEST_MESSAGE("Testing Construction of ForwardCurveDeterministic ...");
     Date anchorDate = Date(27, Jan, 2012);
@@ -77,8 +87,7 @@ void ForwardCurveTest::testForwardCurveConstruction()
     BOOST_CHECK(sfc->isInRange(d2) == true);
     BOOST_CHECK(sfc->isInRange(d3) == false);
 }
-
-void ForwardCurveTest::testForwardCurveRollsAtForwardVolConstruction()
+BOOST_AUTO_TEST_CASE(testForwardCurveRollsAtForwardVolConstruction)
 {
     BOOST_TEST_MESSAGE("Testing Construction of ForwardCurveStochasticFwdVol ...");
 
@@ -120,8 +129,7 @@ void ForwardCurveTest::testForwardCurveRollsAtForwardVolConstruction()
                                                          ArrayInterpolatorType::LINEAR, false, vrs);
     BOOST_CHECK(frs->validate().isOK() == true);
 }
-
-void ForwardCurveTest::testConsistencyBetweenGetMethods()
+BOOST_AUTO_TEST_CASE(testConsistencyBetweenGetMethods)
 {
     BOOST_TEST_MESSAGE("Testing ForwardCurveDeterministic has consistent get methods ...");
 
@@ -154,13 +162,15 @@ void ForwardCurveTest::testConsistencyBetweenGetMethods()
     vector<double> rates = fcd->getForward(dateVector);
     for (size_t step = 0; step < dateVector.size(); ++step)
     {
-        BOOST_CHECK(abs(rates[step] - fcd->getForward(dateVector[step])) < EPSILON_FOR_DOUBLES);
+        BOOST_CHECK_SMALL(rates[step] - fcd->getForward(dateVector[step]), EPSILON_FOR_DOUBLES);
     }
 
-    BOOST_CHECK(abs(fcd->getForwardForwardAdditive(date1, date2) -
-                    (fcd->getForward(date2) - fcd->getForward(date1))) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(fcd->getForwardForwardMultiplicative(date1, date2) -
-                    (fcd->getForward(date2) / fcd->getForward(date1))) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(fcd->getForwardForwardAdditive(date1, date2) -
+                          (fcd->getForward(date2) - fcd->getForward(date1)),
+                      EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(fcd->getForwardForwardMultiplicative(date1, date2) -
+                          (fcd->getForward(date2) / fcd->getForward(date1)),
+                      EPSILON_FOR_DOUBLES);
 
     Date date3 = Date(day, December, year);
     dateVector.clear();
@@ -170,20 +180,19 @@ void ForwardCurveTest::testConsistencyBetweenGetMethods()
     rates = fcd->getForwardForwardAdditive(date1, dateVector);
     for (size_t step = 0; step < rates.size(); ++step)
     {
-        BOOST_CHECK(abs(rates[step] - fcd->getForwardForwardAdditive(date1, dateVector[step])) <
-                    EPSILON_FOR_DOUBLES);
+        BOOST_CHECK_SMALL(rates[step] - fcd->getForwardForwardAdditive(date1, dateVector[step]),
+                          EPSILON_FOR_DOUBLES);
     }
     rates.clear();
     rates = fcd->getForwardForwardMultiplicative(date1, dateVector);
     for (size_t step = 0; step < rates.size(); ++step)
     {
-        BOOST_CHECK(abs(rates[step] - fcd->getForwardForwardMultiplicative(date1, dateVector[step])) <
-                    EPSILON_FOR_DOUBLES);
+        BOOST_CHECK_SMALL(rates[step] - fcd->getForwardForwardMultiplicative(date1, dateVector[step]),
+                          EPSILON_FOR_DOUBLES);
     }
     delete fcd;
 }
-
-void ForwardCurveTest::testValues()
+BOOST_AUTO_TEST_CASE(testValues)
 {
     BOOST_TEST_MESSAGE("Testing ForwardCurveDeterministic values ...");
 
@@ -213,12 +222,11 @@ void ForwardCurveTest::testValues()
     double interpolatedValue = la.getRate(date1.serialNumber());
 
     double fwd = sfc->getForward(date1);
-    BOOST_CHECK(abs(fwd - (interpolatedValue)) < 10 * EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(fwd - (interpolatedValue), 10 * EPSILON_FOR_DOUBLES);
 
     delete sfc;
 }
-
-void ForwardCurveTest::testRoll()
+BOOST_AUTO_TEST_CASE(testRoll)
 {
     BOOST_TEST_MESSAGE("Testing ForwardCurveDeterministic roll ...");
 
@@ -253,10 +261,10 @@ void ForwardCurveTest::testRoll()
         frs->rollForward(rollDate, intermedateDates, rateSetForwards);
     BOOST_REQUIRE(rolledCurve->validate().isOK() == true);
     BOOST_REQUIRE(rateSetForwards.size() == 2);
-    BOOST_CHECK(abs(frs->getForward(observationDates[5]) - rolledCurve->getForward(observationDates[5])) <
-                EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(frs->getForward(intermedateDates[0]) - rateSetForwards[0]) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(frs->getForward(intermedateDates[1]) - rateSetForwards[1]) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(frs->getForward(observationDates[5]) - rolledCurve->getForward(observationDates[5]),
+                      EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(frs->getForward(intermedateDates[0]) - rateSetForwards[0], EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(frs->getForward(intermedateDates[1]) - rateSetForwards[1], EPSILON_FOR_DOUBLES);
 
     set<Date> forwardDates;
     forwardDates.insert(observationDates[0]);
@@ -269,18 +277,17 @@ void ForwardCurveTest::testRoll()
     BOOST_REQUIRE(frss.size() == 2);
     BOOST_REQUIRE(frss[0]->validate().isOK());
     BOOST_REQUIRE(frss[1]->validate().isOK());
-    BOOST_CHECK(abs(frs->getForward(observationDates[5]) - frss[0]->getForward(observationDates[5])) <
-                EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(frs->getForward(observationDates[5]) - frss[1]->getForward(observationDates[5])) <
-                EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(frs->getForward(observationDates[5]) - frss[0]->getForward(observationDates[5]),
+                      EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(frs->getForward(observationDates[5]) - frss[1]->getForward(observationDates[5]),
+                      EPSILON_FOR_DOUBLES);
     BOOST_REQUIRE(rateSetForwards.size() == 4);
-    BOOST_CHECK(abs(frs->getForward(intermedateDates[0]) - rateSetForwards[0]) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(frs->getForward(intermedateDates[1]) - rateSetForwards[1]) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(frs->getForward(intermedateDates[2]) - rateSetForwards[2]) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(frs->getForward(intermedateDates[3]) - rateSetForwards[3]) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(frs->getForward(intermedateDates[0]) - rateSetForwards[0], EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(frs->getForward(intermedateDates[1]) - rateSetForwards[1], EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(frs->getForward(intermedateDates[2]) - rateSetForwards[2], EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(frs->getForward(intermedateDates[3]) - rateSetForwards[3], EPSILON_FOR_DOUBLES);
 }
-
-void ForwardCurveTest::testRollStochastic()
+BOOST_AUTO_TEST_CASE(testRollStochastic)
 {
     BOOST_TEST_MESSAGE("Testing ForwardCurveStochasticFwdVol roll ...");
 
@@ -324,7 +331,7 @@ void ForwardCurveTest::testRollStochastic()
     double manualVol = vrs->getVolatility(observationDates[1]);
     double manualTime = (rollToDate - anchorDate) / 365.0;
     manualCheck *= exp(-manualVol * manualVol * manualTime / 2.0 + manualVol * sqrt(manualTime) * normalRV);
-    BOOST_CHECK(abs(rolledCurve->getForward(observationDates[1]) - manualCheck) < EPSILON_FOR_DOUBLES * 10);
+    BOOST_CHECK_SMALL(rolledCurve->getForward(observationDates[1]) - manualCheck, EPSILON_FOR_DOUBLES * 10);
 
     double expectedFwd = frs->getForward(rollToDate);
     double actualFwd = rolledCurve->getForward(rollToDate);
@@ -334,8 +341,8 @@ void ForwardCurveTest::testRollStochastic()
         frs->getForward(intermedateDates[0]) * (1 + factor * ((double)(intermedateDates[0] - anchorDate)));
     double manualRateSet2 =
         frs->getForward(intermedateDates[1]) * (1 + factor * ((double)(intermedateDates[1] - anchorDate)));
-    BOOST_CHECK(abs(manualRateSet1 - rateSetForwards[0]) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(manualRateSet2 - rateSetForwards[1]) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(manualRateSet1 - rateSetForwards[0], EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(manualRateSet2 - rateSetForwards[1], EPSILON_FOR_DOUBLES);
 
     set<Date> forwardDates;
     forwardDates.insert(observationDates[0]);
@@ -354,11 +361,11 @@ void ForwardCurveTest::testRollStochastic()
     BOOST_REQUIRE(frss[0]->validate().isOK());
     BOOST_REQUIRE(frss[1]->validate().isOK());
     BOOST_REQUIRE(rateSetForwards.size() == 4);
-    BOOST_CHECK(abs(frss[0]->getForward(observationDates[1]) - manualCheck) < EPSILON_FOR_DOUBLES * 10);
+    BOOST_CHECK_SMALL(frss[0]->getForward(observationDates[1]) - manualCheck, EPSILON_FOR_DOUBLES * 10);
 
-    BOOST_CHECK(abs(manualRateSet1 - rateSetForwards[0]) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(manualRateSet1 - rateSetForwards[0], EPSILON_FOR_DOUBLES);
     // The path roll and the single roll round one ulp apart once volatility is not a constant.
-    BOOST_CHECK(abs(manualRateSet2 - rateSetForwards[1]) < 1e-12);
+    BOOST_CHECK_SMALL(manualRateSet2 - rateSetForwards[1], 1e-12);
     rollToDate = observationDates[1];
     expectedFwd = frss[0]->getForward(rollToDate);
     actualFwd = frss[1]->getForward(rollToDate);
@@ -368,11 +375,10 @@ void ForwardCurveTest::testRollStochastic()
     manualRateSet3 *= (1 + factor * ((double)(intermedateDates[2] - observationDates[0])));
     double manualRateSet4 = frss[0]->getForward(intermedateDates[3]) *
                             (1 + factor * ((double)(intermedateDates[3] - observationDates[0])));
-    BOOST_CHECK(abs(manualRateSet3 - rateSetForwards[2]) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(manualRateSet4 - rateSetForwards[3]) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(manualRateSet3 - rateSetForwards[2], EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(manualRateSet4 - rateSetForwards[3], EPSILON_FOR_DOUBLES);
 }
-
-void ForwardCurveTest::testSpotVolPathVariance()
+BOOST_AUTO_TEST_CASE(testSpotVolPathVariance)
 {
     BOOST_TEST_MESSAGE("Testing ForwardCurveStochasticSpotVol path variance ...");
 
@@ -410,22 +416,8 @@ void ForwardCurveTest::testSpotVolPathVariance()
         double expected = frs->getForward(lastPillar) * exp(-sd * sd / 2.0);
         double rolled = frss[i]->getForward(lastPillar);
         BOOST_CHECK(std::isfinite(rolled));
-        BOOST_CHECK(abs(rolled - expected) < EPSILON_FOR_DOUBLES * 100);
+        BOOST_CHECK_SMALL(rolled - expected, EPSILON_FOR_DOUBLES * 100);
     }
 }
 
-test_suite* ForwardCurveTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("Forward Curves");
-
-    suite->add(BOOST_TEST_CASE(&ForwardCurveTest::testForwardCurveConstruction));
-    suite->add(BOOST_TEST_CASE(&ForwardCurveTest::testConsistencyBetweenGetMethods));
-    suite->add(BOOST_TEST_CASE(&ForwardCurveTest::testValues));
-    suite->add(BOOST_TEST_CASE(&ForwardCurveTest::testRoll));
-
-    suite->add(BOOST_TEST_CASE(&ForwardCurveTest::testForwardCurveRollsAtForwardVolConstruction));
-    suite->add(BOOST_TEST_CASE(&ForwardCurveTest::testRollStochastic));
-    suite->add(BOOST_TEST_CASE(&ForwardCurveTest::testSpotVolPathVariance));
-
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

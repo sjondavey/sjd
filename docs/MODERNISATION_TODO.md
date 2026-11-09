@@ -822,6 +822,17 @@ regenerated.
   one simulation step, and a full 10,000-path book, so Steps 13 and 15 can be
   measured.
 
+**Status.** Done. The design is `docs/cpp-tests.md`. The suite stays on
+Boost.Test. Cases register themselves under the class name, the per-test
+headers are gone, and so is `boost::timer`. Absolute checks are
+`BOOST_CHECK_SMALL` with the same threshold. `tt::tolerance` was not used: it
+is relative, and these checks are absolute. `SJD_COVERAGE` is off unless CI
+asks for it. Linux debug uploads an `lcov` report. Windows debug uploads an
+OpenCppCoverage report of `sjdTest`. Neither report has a minimum percentage.
+`sjdBenchmark` is not a ctest test. A debug run of the one-option book reported
+about 470 ns for Black76, 17 µs for the Asian formula, 0.30 ms for one path,
+and 0.34 s for 10,000 paths. Debug `ctest` passed.
+
 ---
 
 ## Phase 5 — Finish the Python layer

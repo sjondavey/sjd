@@ -1,6 +1,14 @@
-#include "AsianOptionTest.h"
-
+#include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <ql/time/daycounter.hpp>
+#include <ql/time/daycounters/all.hpp>
+#include <sjd/contracts/AsianForwardContract.h>
+#include <sjd/contracts/AsianOptionContract.h>
+#include <sjd/contracts/EuropeanForwardContract.h>
 #include <sjd/pricing/AsianOptionFormula.h>
+#include <support/GenerateRatesEnvironments.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -10,7 +18,12 @@ using namespace boost::unit_test_framework;
 using namespace boost::math;
 using namespace sjd;
 
-std::shared_ptr<AsianOption> AsianOptionContractTest::getDefaultAsianOption(Date anchorDate)
+BOOST_AUTO_TEST_SUITE(AsianOptionContractTest)
+
+std::shared_ptr<AsianOption> getDefaultAsianOption(Date anchorDate);
+std::shared_ptr<AsianOption> getAsianOptionWithMoneynessVol(Date anchorDate);
+
+std::shared_ptr<AsianOption> getDefaultAsianOption(Date anchorDate)
 {
     NullCalendar nullCalendar;
     Date optionMaturity = nullCalendar.advance(anchorDate, 2, Years);
@@ -34,7 +47,7 @@ std::shared_ptr<AsianOption> AsianOptionContractTest::getDefaultAsianOption(Date
                                          defPremium, BuySell::BUY);
 }
 
-std::shared_ptr<AsianOption> AsianOptionContractTest::getAsianOptionWithMoneynessVol(Date anchorDate)
+std::shared_ptr<AsianOption> getAsianOptionWithMoneynessVol(Date anchorDate)
 {
     NullCalendar nullCalendar;
     Date optionMaturity = nullCalendar.advance(anchorDate, 2, Years);
@@ -57,16 +70,14 @@ std::shared_ptr<AsianOption> AsianOptionContractTest::getAsianOptionWithMoneynes
     return std::make_shared<AsianOption>(averagingDates, settlement, strike, type, volume, settlement,
                                          defPremium, BuySell::BUY);
 }
-
-void AsianOptionContractTest::testMaturityDate()
+BOOST_AUTO_TEST_CASE(testMaturityDate)
 {
     BOOST_TEST_MESSAGE("Testing AsianOption ...");
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<AsianOption> contract = getDefaultAsianOption(anchorDate);
     BOOST_CHECK(contract->getMaturityDate() == contract->getAveragingDates().back());
 }
-
-void AsianOptionContractTest::testAveragingDates()
+BOOST_AUTO_TEST_CASE(testAveragingDates)
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<AsianOption> contract = getDefaultAsianOption(anchorDate);
@@ -91,8 +102,7 @@ void AsianOptionContractTest::testAveragingDates()
     d = nullCalendar.advance(d, -1, Days);
     BOOST_CHECK(contract->getMaturityDate() == d);
 }
-
-void AsianOptionContractTest::testType()
+BOOST_AUTO_TEST_CASE(testType)
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<AsianOption> contract = getDefaultAsianOption(anchorDate);
@@ -106,8 +116,7 @@ void AsianOptionContractTest::testType()
         contract->getBuySell());
     BOOST_CHECK(call->getType() == PutCall::CALL);
 }
-
-void AsianOptionContractTest::testPutCallParity()
+BOOST_AUTO_TEST_CASE(testPutCallParity)
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<AsianOption> put = getDefaultAsianOption(anchorDate);
@@ -123,10 +132,9 @@ void AsianOptionContractTest::testPutCallParity()
     std::shared_ptr<AsianForward> forward = std::make_shared<AsianForward>(
         averagingDates, put->getSettlementDate(), put->getStrike(), put->getVolume(), BuySell::SELL);
 
-    BOOST_CHECK(abs(put->getValue(re) + call->getValue(re) - forward->getValue(re)) < 1e-10);
+    BOOST_CHECK_SMALL(put->getValue(re) + call->getValue(re) - forward->getValue(re), 1e-10);
 }
-
-void AsianOptionContractTest::testValue()
+BOOST_AUTO_TEST_CASE(testValue)
 {
     Date anchorDate(1, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -162,7 +170,7 @@ void AsianOptionContractTest::testValue()
     double optionFormulaValue =
         (callFormula->getPremium() - call->getPremiumAmount() * df) * call->getVolume();
 
-    BOOST_CHECK(abs(call->getValue(re) - optionFormulaValue) < 1e-10);
+    BOOST_CHECK_SMALL(call->getValue(re) - optionFormulaValue, 1e-10);
 
     // 2) In Averaging Month
     Date newAnchorDate = nullCalendar.advance(anchorDate, 2, Years);
@@ -185,15 +193,14 @@ void AsianOptionContractTest::testValue()
     df = re->getDRS()->getDiscountFactor(call->getSettlementDate());
     callFormula = std::make_shared<AverageRateCall>(forwardRates, fixedRates, strike, sd, df);
     optionFormulaValue = (callFormula->getPremium() - call->getPremiumAmount() * df) * call->getVolume();
-    BOOST_CHECK(abs(call->getValue(re) - optionFormulaValue) < 1e-10);
+    BOOST_CHECK_SMALL(call->getValue(re) - optionFormulaValue, 1e-10);
 
     // 4) After settlement
     Date dayAfterSettlement = nullCalendar.advance(call->getSettlementDate(), 1, Days);
     re = gr.getRatesEnvironmentForAsianOption(dayAfterSettlement, vector<Date>(0));
-    BOOST_CHECK(abs(call->getOptionValue(re)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(call->getOptionValue(re), EPSILON_FOR_DOUBLES);
 }
-
-void AsianOptionContractTest::testGetPayoffAfterMaturity()
+BOOST_AUTO_TEST_CASE(testGetPayoffAfterMaturity)
 {
     Date anchorDate(1, Jan, 2013);
     GenerateRates gr = GenerateRates();
@@ -215,13 +222,12 @@ void AsianOptionContractTest::testGetPayoffAfterMaturity()
     double sign1 = (option->getBuySell() == BuySell::BUY ? 1 : -1);
 
     double maturitySpot = k1 - 10;
-    BOOST_CHECK(abs(option->getPayoff(maturitySpot) - (k1 - maturitySpot - p1) * v1 * sign1) < 1e-14);
+    BOOST_CHECK_SMALL(option->getPayoff(maturitySpot) - (k1 - maturitySpot - p1) * v1 * sign1, 1e-14);
     maturitySpot = k1 + 10;
-    BOOST_CHECK(abs(option->getPayoff(maturitySpot) - (-p1) * v1 * sign1) < 1e-14);
-    BOOST_CHECK(abs(option2->getPayoff(maturitySpot) - (maturitySpot - k1 - p1) * v1 * sign1) < 1e-14);
+    BOOST_CHECK_SMALL(option->getPayoff(maturitySpot) - (-p1) * v1 * sign1, 1e-14);
+    BOOST_CHECK_SMALL(option2->getPayoff(maturitySpot) - (maturitySpot - k1 - p1) * v1 * sign1, 1e-14);
 }
-
-void AsianOptionContractTest::testEuropeanOptionWithMoneynessVol()
+BOOST_AUTO_TEST_CASE(testEuropeanOptionWithMoneynessVol)
 {
     BOOST_TEST_MESSAGE("Testing European Option with moneyness vol ...");
 
@@ -266,7 +272,7 @@ void AsianOptionContractTest::testEuropeanOptionWithMoneynessVol()
         std::make_shared<AverageRateCall>(forwardRates, fixedRates, strike, sd, df);
     double optionFormulaValue =
         (callFormula->getPremium() - call->getPremiumAmount() * df) * call->getVolume();
-    BOOST_CHECK(abs(call->getValue(re) - optionFormulaValue) < 1e-10);
+    BOOST_CHECK_SMALL(call->getValue(re) - optionFormulaValue, 1e-10);
 
     // 2) In Averaging Month
     Date newAnchorDate = nullCalendar.advance(anchorDate, 2, Years);
@@ -291,26 +297,12 @@ void AsianOptionContractTest::testEuropeanOptionWithMoneynessVol()
     df = re->getDRS()->getDiscountFactor(call->getSettlementDate());
     callFormula = std::make_shared<AverageRateCall>(forwardRates, fixedRates, strike, sd, df);
     optionFormulaValue = (callFormula->getPremium() - call->getPremiumAmount() * df) * call->getVolume();
-    BOOST_CHECK(abs(call->getValue(re) - optionFormulaValue) < 1e-10);
+    BOOST_CHECK_SMALL(call->getValue(re) - optionFormulaValue, 1e-10);
 
     // 4) After settlement
     Date dayAfterSettlement = nullCalendar.advance(call->getSettlementDate(), 1, Days);
     re = gr.getRatesEnvironmentForAsianOption(dayAfterSettlement, vector<Date>(0));
-    BOOST_CHECK(abs(call->getOptionValue(re)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(call->getOptionValue(re), EPSILON_FOR_DOUBLES);
 }
 
-test_suite* AsianOptionContractTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("AsianOption Contract");
-
-    suite->add(BOOST_TEST_CASE(&AsianOptionContractTest::testMaturityDate));
-    suite->add(BOOST_TEST_CASE(&AsianOptionContractTest::testAveragingDates));
-    suite->add(BOOST_TEST_CASE(&AsianOptionContractTest::testType));
-    suite->add(BOOST_TEST_CASE(&AsianOptionContractTest::testPutCallParity));
-    suite->add(BOOST_TEST_CASE(&AsianOptionContractTest::testValue));
-    suite->add(BOOST_TEST_CASE(&AsianOptionContractTest::testGetPayoffAfterMaturity));
-
-    suite->add(BOOST_TEST_CASE(&AsianOptionContractTest::testEuropeanOptionWithMoneynessVol));
-
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

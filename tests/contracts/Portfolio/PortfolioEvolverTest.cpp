@@ -1,7 +1,11 @@
-#include "PortfolioEvolverTest.h"
-
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <sjd/contracts/Portfolio/PortfolioEvolver.h>
 #include <sjd/rates/Forward/Deterministic/ForwardCurveDeterministic.h>
 #include <sjd/rates/Forward/Stochastic/ForwardCurveStochasticFwdVol.h>
+#include <support/GenerateContracts.h>
+#include <support/GenerateRatesEnvironments.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -58,7 +62,9 @@ namespace
 
 }
 
-void PortfolioEvolverTest::testPortfolioEvovler()
+BOOST_AUTO_TEST_SUITE(PortfolioEvolverTest)
+
+BOOST_AUTO_TEST_CASE(testPortfolioEvovler)
 {
     BOOST_TEST_MESSAGE("Testing PortfolioEvolver ...");
 
@@ -98,7 +104,7 @@ void PortfolioEvolverTest::testPortfolioEvovler()
     BOOST_REQUIRE_EQUAL(forwardPath.dates.front(), anchor);
 
     double anchorValue = portfolio->getValue(re);
-    BOOST_CHECK(abs(forwardPath.mtm[0] - anchorValue) < valueTolerance);
+    BOOST_CHECK_SMALL(forwardPath.mtm[0] - anchorValue, valueTolerance);
 
     std::shared_ptr<RatesEnvironment> shockedMarket = europeanMarket(gr, anchor, manditoryDates);
     std::shared_ptr<EuropeanOption> shockedOption = soldPut(anchor, strike);
@@ -142,7 +148,7 @@ void PortfolioEvolverTest::testPortfolioEvovler()
     BOOST_REQUIRE_EQUAL(expectedMargin.size(), mtmPath.size());
     for (size_t i = 0; i < expectedMargin.size(); ++i)
     {
-        BOOST_CHECK(abs(marginPath.margin[i] - expectedMargin[i]) < valueTolerance);
+        BOOST_CHECK_SMALL(marginPath.margin[i] - expectedMargin[i], valueTolerance);
     }
 
     std::shared_ptr<RatesEnvironment> monteCarloMarket = europeanMarket(gr, anchor, manditoryDates);
@@ -179,8 +185,8 @@ void PortfolioEvolverTest::testPortfolioEvovler()
         for (size_t i = 0; i < simulated.steps; ++i)
         {
             size_t cell = p * simulated.steps + i;
-            BOOST_CHECK(abs(simulated.mtm[cell] - sampledMtM[p][i]) < valueTolerance);
-            BOOST_CHECK(abs(simulated.byTrade[cell] - simulated.mtm[cell]) < valueTolerance);
+            BOOST_CHECK_SMALL(simulated.mtm[cell] - sampledMtM[p][i], valueTolerance);
+            BOOST_CHECK_SMALL(simulated.byTrade[cell] - simulated.mtm[cell], valueTolerance);
         }
     }
 
@@ -190,7 +196,7 @@ void PortfolioEvolverTest::testPortfolioEvovler()
     BOOST_CHECK(independent.byTrade.empty());
     for (size_t i = 0; i < independent.steps; ++i)
     {
-        BOOST_CHECK(abs(independent.mtm[i] - sampledMtM[0][i]) < valueTolerance);
+        BOOST_CHECK_SMALL(independent.mtm[i] - sampledMtM[0][i], valueTolerance);
     }
 
     SimulatedPaths none = monteCarloEvolver->simulatePaths(0, true, false);
@@ -198,9 +204,4 @@ void PortfolioEvolverTest::testPortfolioEvovler()
     BOOST_CHECK(monteCarloEvolver->getErrorMessagesAsString().find("Number of paths") != string::npos);
 }
 
-test_suite* PortfolioEvolverTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("PortfolioEvolver");
-    suite->add(BOOST_TEST_CASE(&PortfolioEvolverTest::testPortfolioEvovler));
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

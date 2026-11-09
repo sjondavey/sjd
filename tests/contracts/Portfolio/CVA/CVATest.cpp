@@ -1,4 +1,8 @@
-#include "CVATest.h"
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <ql/time/calendars/all.hpp>
+#include <sjd/contracts/Portfolio/CVA/cva.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -7,7 +11,9 @@ using namespace std;
 using namespace boost::unit_test_framework;
 using namespace sjd;
 
-void CVATest::testFlatPD()
+BOOST_AUTO_TEST_SUITE(CVATest)
+
+BOOST_AUTO_TEST_CASE(testFlatPD)
 {
     BOOST_TEST_MESSAGE("Testing Flat PD CVA");
 
@@ -44,10 +50,9 @@ void CVATest::testFlatPD()
     double manualHazardRate = -std::log(1 - pd);
     double t = (d - anchorDate) / 365.0;
     double cpd = 1 - exp(-t * manualHazardRate);
-    BOOST_CHECK(abs(pd1 - cpd) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(pd1 - cpd, EPSILON_FOR_DOUBLES);
 }
-
-void CVATest::testCumulativeDefaultProbability()
+BOOST_AUTO_TEST_CASE(testCumulativeDefaultProbability)
 {
     BOOST_TEST_MESSAGE("Testing CumulativeDefaultProbability CVA");
 
@@ -67,14 +72,14 @@ void CVATest::testCumulativeDefaultProbability()
     CumulativeDefaultProbability cva(anchorDate, dates, cdp, lgd);
     cva.validate().isOK();
     BOOST_REQUIRE(cva.validate().isOK());
-    BOOST_CHECK(abs(cva.getPD(anchorDate)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(cva.getLGD(anchorDate) - 0.4) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(cva.getPD(anchorDate), EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(cva.getLGD(anchorDate) - 0.4, EPSILON_FOR_DOUBLES);
     Date beforeFirstPillar = anchorDate + 180;
-    BOOST_CHECK(abs(cva.getLGD(beforeFirstPillar) - 0.4) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(cva.getLGD(beforeFirstPillar) - 0.4, EPSILON_FOR_DOUBLES);
 
     Date d = nullCalendar.advance(anchorDate, 2, Years);
     double pd1 = cva.getPD(d);
-    BOOST_CHECK(abs(pd1 - 0.02) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(pd1 - 0.02, EPSILON_FOR_DOUBLES);
 
     vector<double> decreasing;
     decreasing.push_back(0.05);
@@ -86,12 +91,4 @@ void CVATest::testCumulativeDefaultProbability()
     BOOST_CHECK(!falling.validate().isOK());
 }
 
-test_suite* CVATest::suite()
-{
-
-    test_suite* suite = BOOST_TEST_SUITE("CVA");
-    suite->add(BOOST_TEST_CASE(&CVATest::testFlatPD));
-    suite->add(BOOST_TEST_CASE(&CVATest::testCumulativeDefaultProbability));
-
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

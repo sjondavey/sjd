@@ -1,19 +1,21 @@
-#include "TwoDimensionalInterpolationTest.h"
-
 #include <sjd/tools/Errors.h>
 
-// using namespace std;
-using namespace boost::unit_test_framework;
-using namespace boost::math;
-using namespace sjd;
-
 #include <boost/assign/std/vector.hpp>
+#include <boost/math/special_functions/fpclassify.hpp> // boost::math::isnan
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <sjd/maths/TwoDimensionalInterpolation.h>
 
 using namespace std;
 using namespace QuantLib;
+using namespace boost::unit_test_framework;
+using namespace boost::math;
 using namespace boost::assign; // used to initialize vector
+using namespace sjd;
 
-void Maths2DInterpTest::testBilinearInterpolator()
+BOOST_AUTO_TEST_SUITE(Maths2DInterpTest)
+
+BOOST_AUTO_TEST_CASE(testBilinearInterpolator)
 {
     BOOST_TEST_MESSAGE("Testing BilinearInterpolation class ...");
 
@@ -72,8 +74,7 @@ void Maths2DInterpTest::testBilinearInterpolator()
     BOOST_CHECK_THROW(interpolator.getRate(9, 95), sjd::Error);
 #endif
 }
-
-void Maths2DInterpTest::testBicubicInterpolator()
+BOOST_AUTO_TEST_CASE(testBicubicInterpolator)
 {
     BOOST_TEST_MESSAGE("Testing BilinearCubic class ...");
 
@@ -133,12 +134,4 @@ void Maths2DInterpTest::testBicubicInterpolator()
 #endif
 }
 
-test_suite* Maths2DInterpTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("Maths TwoDimnsionalInterpolation Tests");
-
-    suite->add(BOOST_TEST_CASE(&Maths2DInterpTest::testBilinearInterpolator));
-    suite->add(BOOST_TEST_CASE(&Maths2DInterpTest::testBicubicInterpolator));
-
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

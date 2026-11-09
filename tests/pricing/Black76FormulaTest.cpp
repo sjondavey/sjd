@@ -1,7 +1,10 @@
 
-#include "Black76FormulaTest.h"
-
+#include <boost/math/special_functions/fpclassify.hpp> // boost::math::isnan
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <sjd/pricing/Black76Formula.h>
 #include <sjd/tools/Errors.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 
@@ -9,24 +12,6 @@ using namespace std;
 using namespace boost::unit_test_framework;
 using namespace boost::math;
 using namespace sjd;
-
-void Black76Test::testPutCallParity()
-{
-    BOOST_TEST_MESSAGE("Testing Black Scholes Inputs ...");
-
-    double F = 100, X = 110, sd = 0.2, df = 0.97;
-    Black76Call call(F, X, sd, df);
-    Black76Put put(F, X, sd, df);
-    BOOST_CHECK_THROW(Black76Call(-1, X, sd, df), ConfigurationError);
-    BOOST_CHECK_THROW(Black76Put(F, X, 0, df), ConfigurationError);
-
-    Black76Option* option = new Black76Call(F, X, sd, df);
-
-    // Put call parity
-    BOOST_CHECK(abs(put.getPremium() - call.getPremium() - (X - F) * df) < EPSILON_FOR_DOUBLES);
-
-    delete option;
-}
 
 /*
 
@@ -57,16 +42,27 @@ void BlackScholesTest::testErrorMessages() {
 0"; BOOST_CHECK(put.getErrorMessage().compare(expectedErrorMessage) == 0);
 
 }
+
 */
 
-test_suite* Black76Test::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("Black 76 Option Pricing Suite");
-    // suite->add(BOOST_TEST_CASE(&Black76Test::testInputsAndOutputs));
-    suite->add(BOOST_TEST_CASE(&Black76Test::testPutCallParity));
-    // suite->add(BOOST_TEST_CASE(&BlackScholesTest::testGreeks));
-    // suite->add(BOOST_TEST_CASE(&BlackScholesTest::testSpecialCases));
-    // suite->add(BOOST_TEST_CASE(&BlackScholesTest::testErrorMessages));
+BOOST_AUTO_TEST_SUITE(Black76Test)
 
-    return suite;
+BOOST_AUTO_TEST_CASE(testPutCallParity)
+{
+    BOOST_TEST_MESSAGE("Testing Black Scholes Inputs ...");
+
+    double F = 100, X = 110, sd = 0.2, df = 0.97;
+    Black76Call call(F, X, sd, df);
+    Black76Put put(F, X, sd, df);
+    BOOST_CHECK_THROW(Black76Call(-1, X, sd, df), ConfigurationError);
+    BOOST_CHECK_THROW(Black76Put(F, X, 0, df), ConfigurationError);
+
+    Black76Option* option = new Black76Call(F, X, sd, df);
+
+    // Put call parity
+    BOOST_CHECK_SMALL(put.getPremium() - call.getPremium() - (X - F) * df, EPSILON_FOR_DOUBLES);
+
+    delete option;
 }
+
+BOOST_AUTO_TEST_SUITE_END()

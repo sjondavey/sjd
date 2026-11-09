@@ -1,5 +1,4 @@
-#include "ErrorsTest.h"
-
+#include <boost/test/unit_test.hpp>
 #include <sjd/rates/Forward/ForwardCurveFactory.h>
 #include <sjd/tools/Calendars.h>
 #include <sjd/tools/Errors.h>
@@ -79,7 +78,9 @@ namespace
 
 }
 
-void ErrorsTest::testErrorCodes()
+BOOST_AUTO_TEST_SUITE(ErrorsTest)
+
+BOOST_AUTO_TEST_CASE(testErrorCodes)
 {
     BOOST_TEST_MESSAGE("Testing error codes");
 
@@ -98,8 +99,7 @@ void ErrorsTest::testErrorCodes()
     BOOST_CHECK_THROW(throwConfiguration(), sjd::Error);
     BOOST_CHECK_THROW(throwNumerical(), runtime_error);
 }
-
-void ErrorsTest::testValidationErrorCarriesTheReport()
+BOOST_AUTO_TEST_CASE(testValidationErrorCarriesTheReport)
 {
     BOOST_TEST_MESSAGE("Testing ValidationError");
 
@@ -113,8 +113,7 @@ void ErrorsTest::testValidationErrorCarriesTheReport()
     BOOST_CHECK_EQUAL(error.report().getIssues().front().code, "CURVE_EMPTY");
     BOOST_CHECK(!error.report().isOK());
 }
-
-void ErrorsTest::testRequireAndAssert()
+BOOST_AUTO_TEST_CASE(testRequireAndAssert)
 {
     BOOST_TEST_MESSAGE("Testing SJD_REQUIRE and SJD_ASSERT");
 
@@ -145,8 +144,7 @@ void ErrorsTest::testRequireAndAssert()
     assertFalse();
 #endif
 }
-
-void ErrorsTest::testConfigurationSites()
+BOOST_AUTO_TEST_CASE(testConfigurationSites)
 {
     BOOST_TEST_MESSAGE("Testing configuration throws");
 
@@ -168,8 +166,7 @@ void ErrorsTest::testConfigurationSites()
                                        ForwardAveraging::CalendarMonth, ForwardRoll::SpotVolatility, {}),
                       ConfigurationError);
 }
-
-void ErrorsTest::testReportHelpers()
+BOOST_AUTO_TEST_CASE(testReportHelpers)
 {
     BOOST_TEST_MESSAGE("Testing the validation report helpers");
 
@@ -215,13 +212,4 @@ void ErrorsTest::testReportHelpers()
     BOOST_CHECK(report.toString() == "probe/anchor_date: PROBE_NOTE: note");
 }
 
-test_suite* ErrorsTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("Errors");
-    suite->add(BOOST_TEST_CASE(&ErrorsTest::testErrorCodes));
-    suite->add(BOOST_TEST_CASE(&ErrorsTest::testValidationErrorCarriesTheReport));
-    suite->add(BOOST_TEST_CASE(&ErrorsTest::testRequireAndAssert));
-    suite->add(BOOST_TEST_CASE(&ErrorsTest::testConfigurationSites));
-    suite->add(BOOST_TEST_CASE(&ErrorsTest::testReportHelpers));
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

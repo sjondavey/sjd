@@ -1,4 +1,8 @@
-#include "DiscountCurvesTest.h"
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <sjd/rates/Discount/DiscountCurves.h>
+#include <support/GenerateRatesEnvironments.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -7,7 +11,9 @@ using namespace std;
 using namespace boost::unit_test_framework;
 using namespace sjd;
 
-void DiscountCurvesTest::testConstruction()
+BOOST_AUTO_TEST_SUITE(DiscountCurvesTest)
+
+BOOST_AUTO_TEST_CASE(testConstruction)
 {
     BOOST_TEST_MESSAGE("Testing Discount Curve Construction ...");
     Calendar calendar = SouthAfrica();
@@ -44,7 +50,7 @@ void DiscountCurvesTest::testConstruction()
     BOOST_CHECK(dc2->isInRange(d2) == false);
     BOOST_CHECK(dc2->isInRange(d3) == false);
     // Check the behaviour on the anchor date
-    BOOST_CHECK(abs(dc2->getDiscountFactor(anchorDate) - 1.0) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(dc2->getDiscountFactor(anchorDate) - 1.0, EPSILON_FOR_DOUBLES);
 
     allowExtrapolation = !allowExtrapolation;
     dc2 = std::make_shared<DiscountCurve>(anchorDate, observationDates, df, ArrayInterpolatorType::LINEAR,
@@ -53,10 +59,9 @@ void DiscountCurvesTest::testConstruction()
     BOOST_CHECK(dc2->isInRange(d2) == true);
     BOOST_CHECK(dc2->isInRange(d3) == false);
     // Check the behaviour on the anchor date
-    BOOST_CHECK(abs(dc2->getDiscountFactor(anchorDate) - 1.0) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(dc2->getDiscountFactor(anchorDate) - 1.0, EPSILON_FOR_DOUBLES);
 }
-
-void DiscountCurvesTest::testRatesEnvironmentValidationReport()
+BOOST_AUTO_TEST_CASE(testRatesEnvironmentValidationReport)
 {
     Date anchorDate(27, Jan, 2012);
     RatesEnvironment emptyEnvironment(anchorDate);
@@ -99,8 +104,7 @@ void DiscountCurvesTest::testRatesEnvironmentValidationReport()
     BOOST_CHECK(invalidReport.getIssues()[0].path[3] == "dated_curve");
     BOOST_CHECK(invalidReport.getIssues()[0].path[4] == "interpolator");
 }
-
-void DiscountCurvesTest::testParallelBump()
+BOOST_AUTO_TEST_CASE(testParallelBump)
 {
     BOOST_TEST_MESSAGE("Testing Discount Curve Parallel Bump ...");
     Calendar calendar = SouthAfrica();
@@ -127,10 +131,9 @@ void DiscountCurvesTest::testParallelBump()
     double tmp = convention.dfToRate(dfTest, anchorDate, observationDates[2]);
     double dfPlusSPread = convention.rateToDF(tmp + 0.01, anchorDate, observationDates[2]);
     double dfCheck = dc3->getDiscountFactor(observationDates[2]);
-    BOOST_CHECK(abs(dfPlusSPread - dfCheck) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(dfPlusSPread - dfCheck, EPSILON_FOR_DOUBLES);
 }
-
-void DiscountCurvesTest::testConsistencyOfGetMethods()
+BOOST_AUTO_TEST_CASE(testConsistencyOfGetMethods)
 {
     BOOST_TEST_MESSAGE("Testing Discount Curve for consistency between get methods ...");
 
@@ -145,8 +148,8 @@ void DiscountCurvesTest::testConsistencyOfGetMethods()
     Date toDate = defaultCalendar.advance(anchorDate, 9, Months);
     double toDF = testDiscountCurve->getDiscountFactor(toDate);
 
-    BOOST_CHECK(abs(testDiscountCurve->getDiscountFactor(fromDate, toDate) - toDF / fromDF) <
-                EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(testDiscountCurve->getDiscountFactor(fromDate, toDate) - toDF / fromDF,
+                      EPSILON_FOR_DOUBLES);
 
     vector<Date> toDates;
     toDates.push_back(defaultCalendar.advance(anchorDate, 6, Months));
@@ -158,13 +161,12 @@ void DiscountCurvesTest::testConsistencyOfGetMethods()
     vector<double> dfs1 = testDiscountCurve->getDiscountFactor(fromDate, toDates);
     for (size_t i = 0; i < toDates.size(); ++i)
     {
-        BOOST_CHECK(abs(dfs[i] / fromDF - dfs1[i]) < EPSILON_FOR_DOUBLES);
-        BOOST_CHECK(abs(testDiscountCurve->getDiscountFactor(toDates[i]) / fromDF - dfs1[i]) <
-                    EPSILON_FOR_DOUBLES);
+        BOOST_CHECK_SMALL(dfs[i] / fromDF - dfs1[i], EPSILON_FOR_DOUBLES);
+        BOOST_CHECK_SMALL(testDiscountCurve->getDiscountFactor(toDates[i]) / fromDF - dfs1[i],
+                          EPSILON_FOR_DOUBLES);
     }
 }
-
-void DiscountCurvesTest::testValues()
+BOOST_AUTO_TEST_CASE(testValues)
 {
     BOOST_TEST_MESSAGE("Testing Discount Curve values ...");
 
@@ -179,10 +181,9 @@ void DiscountCurvesTest::testValues()
 
     double df = testDiscountCurve->getDiscountFactor(date1);
     double time1 = defaultDayCounter.yearFraction(defaultAnchorDate, date1);
-    BOOST_CHECK(abs(df - exp(-defaultNACCRate * time1)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(df - exp(-defaultNACCRate * time1), EPSILON_FOR_DOUBLES);
 }
-
-void DiscountCurvesTest::testRollForward()
+BOOST_AUTO_TEST_CASE(testRollForward)
 {
     BOOST_TEST_MESSAGE("Testing Discount Curve roll forward ...");
 
@@ -200,18 +201,7 @@ void DiscountCurvesTest::testRollForward()
 
     double manualDF = testDiscountCurve->getDiscountFactor(rollDate, checkDate);
     double rolledDF = rolledCurve->getDiscountFactor(checkDate);
-    BOOST_CHECK(abs(manualDF - rolledDF) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(manualDF - rolledDF, EPSILON_FOR_DOUBLES);
 }
 
-test_suite* DiscountCurvesTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("Discount Factor Curve");
-
-    suite->add(BOOST_TEST_CASE(&DiscountCurvesTest::testConstruction));
-    suite->add(BOOST_TEST_CASE(&DiscountCurvesTest::testRatesEnvironmentValidationReport));
-    suite->add(BOOST_TEST_CASE(&DiscountCurvesTest::testParallelBump));
-    suite->add(BOOST_TEST_CASE(&DiscountCurvesTest::testConsistencyOfGetMethods));
-    suite->add(BOOST_TEST_CASE(&DiscountCurvesTest::testValues));
-    suite->add(BOOST_TEST_CASE(&DiscountCurvesTest::testRollForward));
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

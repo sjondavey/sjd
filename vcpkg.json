@@ -10,7 +10,7 @@
     "boost-lexical-cast",
     "boost-math",
     "boost-test",
-    "boost-timer",
+    "benchmark",
     "spdlog"
   ]
 }

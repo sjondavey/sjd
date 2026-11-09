@@ -1,4 +1,11 @@
-#include "CalendarMonthAverageTest.h"
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <ql/time/daycounter.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
+#include <sjd/rates/Forward/Deterministic/ForwardCurveCMADeterministic.h>
+#include <sjd/rates/Forward/Stochastic/ForwardCurveCMAStochasticFwdVol.h>
+#include <support/GenerateRatesEnvironments.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -7,7 +14,9 @@ using namespace std;
 using namespace boost::unit_test_framework;
 using namespace sjd;
 
-void CalendarMonthAverageTest::testConstruction()
+BOOST_AUTO_TEST_SUITE(CalendarMonthAverageTest)
+
+BOOST_AUTO_TEST_CASE(testConstruction)
 {
     BOOST_TEST_MESSAGE("Testing Calendar Month Average Futures Curve Construction ...");
 
@@ -79,8 +88,7 @@ void CalendarMonthAverageTest::testConstruction()
     BOOST_CHECK(sfc2->isInRange(d2) == true);
     BOOST_CHECK(sfc2->isInRange(d3) == false);
 }
-
-void CalendarMonthAverageTest::testValues()
+BOOST_AUTO_TEST_CASE(testValues)
 {
     BOOST_TEST_MESSAGE("Testing Calendar Month Average Forward Curve Valuations ...");
 
@@ -100,7 +108,7 @@ void CalendarMonthAverageTest::testValues()
     ForwardCurveCMADeterministic* fc = new ForwardCurveCMADeterministic(
         anchorDate, observationDates, futures, sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
     BOOST_REQUIRE(fc->validate().isOK() == true);
-    BOOST_CHECK(abs(fc->getForward(anchorDate) - futures[0]) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(fc->getForward(anchorDate) - futures[0], EPSILON_FOR_DOUBLES);
 
     GenerateRates gr = GenerateRates();
     std::shared_ptr<VolatilitySurfaceMoneynessCMA> vc =
@@ -108,21 +116,20 @@ void CalendarMonthAverageTest::testValues()
     std::shared_ptr<ForwardCurveCMAStochasticFwdVol> sfc = std::make_shared<ForwardCurveCMAStochasticFwdVol>(
         anchorDate, observationDates, futures, sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation, vc);
     BOOST_REQUIRE(sfc->validate().isOK() == true);
-    BOOST_CHECK(abs(sfc->getForward(anchorDate) - futures[0]) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(sfc->getForward(anchorDate) - futures[0], EPSILON_FOR_DOUBLES);
 
     Date d1 = calendar.advance(anchorDate, 3, Months);
     double interpolatedRate = (futures[0] + futures[1]) / 2.0;
-    BOOST_CHECK(abs(fc->getForward(d1) - interpolatedRate) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(sfc->getForward(d1) - interpolatedRate) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(fc->getForward(d1) - interpolatedRate, EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(sfc->getForward(d1) - interpolatedRate, EPSILON_FOR_DOUBLES);
 
     d1 = calendar.advance(d1, -3, Days); // different date in the same month
-    BOOST_CHECK(abs(fc->getForward(d1) - interpolatedRate) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(sfc->getForward(d1) - interpolatedRate) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(fc->getForward(d1) - interpolatedRate, EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(sfc->getForward(d1) - interpolatedRate, EPSILON_FOR_DOUBLES);
 
     delete fc;
 }
-
-void CalendarMonthAverageTest::testRoll_CMA()
+BOOST_AUTO_TEST_CASE(testRoll_CMA)
 {
     BOOST_TEST_MESSAGE("Testing Calendar Month Average Forward Curve roll ...");
 
@@ -156,15 +163,7 @@ void CalendarMonthAverageTest::testRoll_CMA()
     double vol = vrs->getVolatility(dateToCheck);
     double sd = vol * sqrtDt;
     manualRolledForward *= exp(-sd * sd / 2 + sd * rn);
-    BOOST_CHECK(abs(manualRolledForward - (rolledFwd->getForward(dateToCheck))) < 10 * EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(manualRolledForward - (rolledFwd->getForward(dateToCheck)), 10 * EPSILON_FOR_DOUBLES);
 }
 
-test_suite* CalendarMonthAverageTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("Calendar Month Average Forward Curves");
-
-    suite->add(BOOST_TEST_CASE(&CalendarMonthAverageTest::testConstruction));
-    suite->add(BOOST_TEST_CASE(&CalendarMonthAverageTest::testValues));
-    suite->add(BOOST_TEST_CASE(&CalendarMonthAverageTest::testRoll_CMA));
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

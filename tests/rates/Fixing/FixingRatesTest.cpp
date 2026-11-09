@@ -1,4 +1,10 @@
-#include "FixingRatesTest.h"
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/time/daycounter.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
+#include <sjd/rates/Fixing/FixingCurves.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -7,7 +13,9 @@ using namespace std;
 using namespace boost::unit_test_framework;
 using namespace sjd;
 
-void FixingRateTest::testDailyFixingCurve()
+BOOST_AUTO_TEST_SUITE(FixingRateTest)
+
+BOOST_AUTO_TEST_CASE(testDailyFixingCurve)
 {
     BOOST_TEST_MESSAGE("Testing Daily Fixing Curve ...");
 
@@ -33,7 +41,7 @@ void FixingRateTest::testDailyFixingCurve()
     BOOST_CHECK(endDate == fix->getMostRecentDate());
     BOOST_CHECK(fix->containsARateSetOn(observationDates[2]));
     BOOST_CHECK(!fix->containsARateSetOn(anchorDate - 1));
-    BOOST_CHECK(abs(fix->getRateSetOn(observationDates[3]) - rates[3]) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(fix->getRateSetOn(observationDates[3]) - rates[3], EPSILON_FOR_DOUBLES);
 
     rates.push_back(100);
     fix = std::make_shared<DailyFixingCurve>(observationDates, rates);
@@ -64,8 +72,7 @@ void FixingRateTest::testDailyFixingCurve()
     BOOST_CHECK(endDate == fix->getMostRecentDate());
     BOOST_CHECK(!fix->containsARateSetOn(appendedDates[2]));
 }
-
-void FixingRateTest::testMonthlyFixingCurve()
+BOOST_AUTO_TEST_CASE(testMonthlyFixingCurve)
 {
     BOOST_TEST_MESSAGE("Testing Monthly Fixing Curve ...");
 
@@ -92,11 +99,11 @@ void FixingRateTest::testMonthlyFixingCurve()
     BOOST_CHECK(endDate == fix->getMostRecentDate());
     BOOST_CHECK(fix->containsARateSetOn(observationDates[2]));
     BOOST_CHECK(!fix->containsARateSetOn(anchorDate - 1));
-    BOOST_CHECK(abs(fix->getRateSetOn(observationDates[3]) - rates[3]) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(fix->getRateSetOn(observationDates[3]) - rates[3], EPSILON_FOR_DOUBLES);
     Date d1 = observationDates[3];
     Date d2 = d1 + 1;
     BOOST_CHECK(fix->containsARateSetOn(d2));
-    BOOST_CHECK(abs(fix->getRateSetOn(d1) - fix->getRateSetOn(d2)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(fix->getRateSetOn(d1) - fix->getRateSetOn(d2), EPSILON_FOR_DOUBLES);
 
     rates.push_back(100);
     fix = std::make_shared<MonthlyFixingCurve>(observationDates, rates);
@@ -126,8 +133,7 @@ void FixingRateTest::testMonthlyFixingCurve()
     BOOST_CHECK(endDate == fix->getMostRecentDate());
     BOOST_CHECK(!fix->containsARateSetOn(appendedDates[2]));
 }
-
-void FixingRateTest::testHistoricFedFundsCurve()
+BOOST_AUTO_TEST_CASE(testHistoricFedFundsCurve)
 {
     BOOST_TEST_MESSAGE("Testing HistoricFedFundsCurve ...");
 
@@ -167,16 +173,7 @@ void FixingRateTest::testHistoricFedFundsCurve()
 
     double marginInterest =
         fed.calculateNonCompoundedInterestOnMargin(0, startDate, endDate, marginCallDates, marginCallAmounts);
-    BOOST_REQUIRE(abs(marginInterest - 211.83) < 1e-10);
+    BOOST_REQUIRE_SMALL(marginInterest - 211.83, 1e-10);
 }
 
-test_suite* FixingRateTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("Fixing Rate source");
-
-    suite->add(BOOST_TEST_CASE(&FixingRateTest::testDailyFixingCurve));
-    suite->add(BOOST_TEST_CASE(&FixingRateTest::testMonthlyFixingCurve));
-    suite->add(BOOST_TEST_CASE(&FixingRateTest::testHistoricFedFundsCurve));
-
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

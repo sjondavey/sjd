@@ -1,6 +1,35 @@
-#include "AsianOptionFormulaTest.h"
-
+#include <boost/math/special_functions/fpclassify.hpp> // boost::math::isnan
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <sjd/pricing/AsianOptionFormula.h>
 #include <sjd/tools/Errors.h>
+#include <support/TestingParameters.h>
+
+/*======================================================================================
+AsianOptionInputParameters
+A simple class to group inputs for Asian Option. This makes testing a lot neater
+=======================================================================================*/
+class AsianOptionInputParameters
+{
+public:
+    AsianOptionInputParameters(std::vector<double> yearFractionsToRateSets,
+                               std::vector<double> fixingAndForwardRates,
+                               double strike,
+                               double yearsToExpiry,
+                               double yearsToSettlement,
+                               std::vector<double> standardDeviation,
+                               double discountFactorToSettlement);
+
+    AsianOptionInputParameters(std::vector<double> forwardRates, // "Live" forwards
+                               std::vector<double> fixedRates,
+                               double strike,
+                               std::vector<double> standardDeviation,
+                               double discountFactorToSettlement);
+
+    std::vector<double> fwds, sds, fixes;
+    double strike, df;
+    size_t N, M;
+};
 
 using namespace std;
 
@@ -54,10 +83,15 @@ AsianOptionInputParameters::AsianOptionInputParameters(vector<double> forwardRat
     M = fixes.size();
 }
 
-/*======================================================================================
-AsianOptionTest
-=======================================================================================*/
-void AsianOptionTest::testErrorMessages()
+BOOST_AUTO_TEST_SUITE(AsianOptionTest)
+
+void testErrorMessagesWithSpecificData(AsianOptionInputParameters ip);
+AsianOptionInputParameters getAsianInputsBeforeAveragingStarts();
+AsianOptionInputParameters getAsianInputsDuringAveraging();
+AsianOptionInputParameters getAsianInputsJustBeforeSettlementWithHighAverage();
+AsianOptionInputParameters getAsianInputsJustBeforeSettlementWithLowAverage();
+
+BOOST_AUTO_TEST_CASE(testErrorMessages)
 {
     BOOST_TEST_MESSAGE("Testing Asian Option Error Messages ...");
     BOOST_TEST_MESSAGE("... before averaging");
@@ -70,7 +104,7 @@ void AsianOptionTest::testErrorMessages()
     testErrorMessagesWithSpecificData(getAsianInputsJustBeforeSettlementWithLowAverage());
 }
 
-void AsianOptionTest::testErrorMessagesWithSpecificData(AsianOptionInputParameters ip)
+void testErrorMessagesWithSpecificData(AsianOptionInputParameters ip)
 {
 
     AverageRateCall call(ip.fwds, ip.fixes, ip.strike, ip.sds, ip.df);
@@ -87,8 +121,7 @@ void AsianOptionTest::testErrorMessagesWithSpecificData(AsianOptionInputParamete
     put.setParameters(incorrectFwds, ip.fixes, ip.strike, incorrectSD, ip.df);
     put.setParameters(ip.fwds, ip.fixes, ip.strike, ip.sds, ip.df);
 }
-
-void AsianOptionTest::testValulationBeforeAveraging()
+BOOST_AUTO_TEST_CASE(testValulationBeforeAveraging)
 {
     BOOST_TEST_MESSAGE("Testing Asian Option Valuation before averaging");
     AsianOptionInputParameters ip = getAsianInputsBeforeAveragingStarts();
@@ -119,10 +152,10 @@ void AsianOptionTest::testValulationBeforeAveraging()
     Black76Call equivalentCall(effectiveForward, effectiveStrike, effectiveStandardDeviation, ip.df);
     Black76Put equivalentPut(effectiveForward, effectiveStrike, effectiveStandardDeviation, ip.df);
 
-    BOOST_CHECK(abs(call.getPremium() - equivalentCall.getPremium()) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(put.getPremium() - equivalentPut.getPremium()) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(call.getPremium() - equivalentCall.getPremium(), EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(put.getPremium() - equivalentPut.getPremium(), EPSILON_FOR_DOUBLES);
 }
-void AsianOptionTest::testValulationDuringAveraging()
+BOOST_AUTO_TEST_CASE(testValulationDuringAveraging)
 {
     BOOST_TEST_MESSAGE("Testing Asian Option Valuation during averaging");
     AsianOptionInputParameters ip = getAsianInputsDuringAveraging();
@@ -161,11 +194,10 @@ void AsianOptionTest::testValulationDuringAveraging()
     Black76Call equivalentCall(effectiveForward, effectiveStrike, effectiveStandardDeviation, ip.df);
     Black76Put equivalentPut(effectiveForward, effectiveStrike, effectiveStandardDeviation, ip.df);
 
-    BOOST_CHECK(abs(call.getPremium() - equivalentCall.getPremium()) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(put.getPremium() - equivalentPut.getPremium()) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(call.getPremium() - equivalentCall.getPremium(), EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(put.getPremium() - equivalentPut.getPremium(), EPSILON_FOR_DOUBLES);
 }
-
-void AsianOptionTest::testValulationJustBeforeSettlementWithHighAverage()
+BOOST_AUTO_TEST_CASE(testValulationJustBeforeSettlementWithHighAverage)
 {
     BOOST_TEST_MESSAGE("Testing Asian Option Valuation during averaging with high average");
 
@@ -196,11 +228,10 @@ void AsianOptionTest::testValulationJustBeforeSettlementWithHighAverage()
     double equivalentCallPremium = amountByWhichAverageExceedsStrike * ip.df;
     double equivalentPutPremium = 0;
 
-    BOOST_CHECK(abs(call.getPremium() - equivalentCallPremium) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(put.getPremium() - equivalentPutPremium) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(call.getPremium() - equivalentCallPremium, EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(put.getPremium() - equivalentPutPremium, EPSILON_FOR_DOUBLES);
 }
-
-void AsianOptionTest::testValulationJustBeforeSettlementWithLowAverage()
+BOOST_AUTO_TEST_CASE(testValulationJustBeforeSettlementWithLowAverage)
 {
     BOOST_TEST_MESSAGE("Testing Asian Option Valuation during averaging with low average");
     AsianOptionInputParameters ip = getAsianInputsJustBeforeSettlementWithLowAverage();
@@ -239,24 +270,11 @@ void AsianOptionTest::testValulationJustBeforeSettlementWithLowAverage()
     Black76Call equivalentCall(effectiveForward, effectiveStrike, effectiveStandardDeviation, ip.df);
     Black76Put equivalentPut(effectiveForward, effectiveStrike, effectiveStandardDeviation, ip.df);
 
-    BOOST_CHECK(abs(call.getPremium() - equivalentCall.getPremium()) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(put.getPremium() - equivalentPut.getPremium()) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(call.getPremium() - equivalentCall.getPremium(), EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(put.getPremium() - equivalentPut.getPremium(), EPSILON_FOR_DOUBLES);
 }
 
-test_suite* AsianOptionTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("Asian Option Pricing Suite");
-
-    suite->add(BOOST_TEST_CASE(&AsianOptionTest::testErrorMessages));
-
-    suite->add(BOOST_TEST_CASE(&AsianOptionTest::testValulationBeforeAveraging));
-    suite->add(BOOST_TEST_CASE(&AsianOptionTest::testValulationDuringAveraging));
-    suite->add(BOOST_TEST_CASE(&AsianOptionTest::testValulationJustBeforeSettlementWithHighAverage));
-    suite->add(BOOST_TEST_CASE(&AsianOptionTest::testValulationJustBeforeSettlementWithLowAverage));
-    return suite;
-}
-
-AsianOptionInputParameters AsianOptionTest::getAsianInputsBeforeAveragingStarts()
+AsianOptionInputParameters getAsianInputsBeforeAveragingStarts()
 {
     vector<double> time, fwds, sds;
     double strike, yte, yts, df;
@@ -280,7 +298,7 @@ AsianOptionInputParameters AsianOptionTest::getAsianInputsBeforeAveragingStarts(
     return AsianOptionInputParameters(time, fwds, strike, yte, yts, sds, df);
 }
 
-AsianOptionInputParameters AsianOptionTest::getAsianInputsDuringAveraging()
+AsianOptionInputParameters getAsianInputsDuringAveraging()
 {
     vector<double> time, fwds, sds;
     double strike, yte, yts, df;
@@ -310,7 +328,7 @@ AsianOptionInputParameters AsianOptionTest::getAsianInputsDuringAveraging()
     return AsianOptionInputParameters(time, fwds, strike, yte, yts, sds, df);
 }
 
-AsianOptionInputParameters AsianOptionTest::getAsianInputsJustBeforeSettlementWithHighAverage()
+AsianOptionInputParameters getAsianInputsJustBeforeSettlementWithHighAverage()
 {
 
     vector<double> time, fwds, sds;
@@ -343,7 +361,7 @@ AsianOptionInputParameters AsianOptionTest::getAsianInputsJustBeforeSettlementWi
     return AsianOptionInputParameters(time, fwds, strike, yte, yts, sds, df);
 }
 
-AsianOptionInputParameters AsianOptionTest::getAsianInputsJustBeforeSettlementWithLowAverage()
+AsianOptionInputParameters getAsianInputsJustBeforeSettlementWithLowAverage()
 {
     vector<double> time, fwds, sds;
     double strike, yte, yts, df;
@@ -374,3 +392,5 @@ AsianOptionInputParameters AsianOptionTest::getAsianInputsJustBeforeSettlementWi
     df = exp(-rfr * yts);
     return AsianOptionInputParameters(time, fwds, strike, yte, yts, sds, df);
 }
+
+BOOST_AUTO_TEST_SUITE_END()

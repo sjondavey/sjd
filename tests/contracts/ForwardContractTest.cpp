@@ -1,4 +1,16 @@
-#include "ForwardContractTest.h"
+// to use the boost::math::isnan(...) function
+
+#include <boost/math/special_functions/fpclassify.hpp> // boost::math::isnan
+#include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <math.h>
+#include <ql/time/daycounter.hpp>
+#include <ql/time/daycounters/all.hpp>
+#include <sjd/contracts/AsianForwardContract.h>
+#include <sjd/contracts/EuropeanForwardContract.h>
+#include <support/GenerateRatesEnvironments.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -8,7 +20,12 @@ using namespace boost::unit_test_framework;
 using namespace boost::math;
 using namespace sjd;
 
-std::shared_ptr<EuropeanForward> ForwardContractTest::getDefaultEuropeanForward(Date anchorDate)
+BOOST_AUTO_TEST_SUITE(ForwardContractTest)
+
+std::shared_ptr<EuropeanForward> getDefaultEuropeanForward(Date anchorDate);
+std::shared_ptr<AsianForward> getDefaultAsianForward(Date anchorDate);
+
+std::shared_ptr<EuropeanForward> getDefaultEuropeanForward(Date anchorDate)
 {
     NullCalendar nullCalendar;
     Date rateSetDate = nullCalendar.advance(anchorDate, 2, Years);
@@ -19,7 +36,7 @@ std::shared_ptr<EuropeanForward> ForwardContractTest::getDefaultEuropeanForward(
     return std::make_shared<EuropeanForward>(rateSetDate, settlement, strike, volume, BuySell::BUY);
 }
 
-std::shared_ptr<AsianForward> ForwardContractTest::getDefaultAsianForward(Date anchorDate)
+std::shared_ptr<AsianForward> getDefaultAsianForward(Date anchorDate)
 {
     NullCalendar nullCalendar;
     Date rateSetDate = nullCalendar.advance(anchorDate, 2, Years);
@@ -39,8 +56,7 @@ std::shared_ptr<AsianForward> ForwardContractTest::getDefaultAsianForward(Date a
 
     return std::make_shared<AsianForward>(averagingDates, settlement, strike, volume, BuySell::BUY);
 }
-
-void ForwardContractTest::testBuySell()
+BOOST_AUTO_TEST_CASE(testBuySell)
 {
     BOOST_TEST_MESSAGE("Testing ForwardContract ...");
 
@@ -50,8 +66,7 @@ void ForwardContractTest::testBuySell()
                          base->getVolume(), BuySell::SELL);
     BOOST_CHECK(sold.getBuySell() == BuySell::SELL);
 }
-
-void ForwardContractTest::testStrike()
+BOOST_AUTO_TEST_CASE(testStrike)
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
@@ -63,10 +78,9 @@ void ForwardContractTest::testStrike()
                              contract->getVolume(), contract->getBuySell());
     negative.validate();
     BOOST_CHECK(!negative.isOK());
-    BOOST_CHECK(abs(negative.getStrike() + 1.0) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(negative.getStrike() + 1.0, EPSILON_FOR_DOUBLES);
 }
-
-void ForwardContractTest::testVolume()
+BOOST_AUTO_TEST_CASE(testVolume)
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
@@ -78,10 +92,9 @@ void ForwardContractTest::testVolume()
                              contract->getStrike(), -1.0, contract->getBuySell());
     negative.validate();
     BOOST_CHECK(negative.isOK());
-    BOOST_CHECK(abs(negative.getVolume() - 1.0) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(negative.getVolume() - 1.0, EPSILON_FOR_DOUBLES);
 }
-
-void ForwardContractTest::testMaturityDate()
+BOOST_AUTO_TEST_CASE(testMaturityDate)
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
@@ -97,8 +110,7 @@ void ForwardContractTest::testMaturityDate()
     BOOST_CHECK(!later.isOK());
     BOOST_CHECK(later.getMaturityDate() == maturityDate);
 }
-
-void ForwardContractTest::testSettlementDate()
+BOOST_AUTO_TEST_CASE(testSettlementDate)
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
@@ -114,8 +126,7 @@ void ForwardContractTest::testSettlementDate()
     BOOST_CHECK(!earlier.isOK());
     BOOST_CHECK(earlier.getSettlementDate() == settlementDate);
 }
-
-void ForwardContractTest::testValidationReport()
+BOOST_AUTO_TEST_CASE(testValidationReport)
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
@@ -154,8 +165,7 @@ void ForwardContractTest::testValidationReport()
     BOOST_CHECK(marketReport.getIssues()[1].code == "MARKET_DISCOUNT_RATE_SOURCE_MISSING");
     BOOST_CHECK(marketReport.getIssues()[2].code == "MARKET_FORWARD_RATE_SOURCE_MISSING");
 }
-
-void ForwardContractTest::testValue()
+BOOST_AUTO_TEST_CASE(testValue)
 {
 
     std::shared_ptr<RatesEnvironment> re;
@@ -204,8 +214,8 @@ void ForwardContractTest::testValue()
     double df = dc->getDiscountFactor(settlement);
 
     // 1) Before maturity
-    BOOST_CHECK(abs(contract.getValue(re) + contract2.getValue(re)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(contract.getValue(re) - volume * (F - strike) * df) / volume < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(contract.getValue(re) + contract2.getValue(re), EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL((contract.getValue(re) - volume * (F - strike) * df) / volume, EPSILON_FOR_DOUBLES);
 
     // 3) After settlement
     Date dayAfterSettlement = nullCalendar.advance(settlement, 1, Days);
@@ -216,10 +226,9 @@ void ForwardContractTest::testValue()
     re->setDRS(dc);
     re->setFRS(fc);
 
-    BOOST_CHECK(abs(contract2.getValue(re)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(contract2.getValue(re), EPSILON_FOR_DOUBLES);
 }
-
-void ForwardContractTest::testGetPayoffAfterMaturity()
+BOOST_AUTO_TEST_CASE(testGetPayoffAfterMaturity)
 {
     Actual365Fixed dayCounter;
     NullCalendar nullCalendar;
@@ -234,10 +243,9 @@ void ForwardContractTest::testGetPayoffAfterMaturity()
     double sign1 = (fwd->getBuySell() == BuySell::BUY ? 1 : -1);
 
     double maturitySpot = k1 + 10;
-    BOOST_CHECK(abs(fwd->getPayoff(maturitySpot) - (maturitySpot - k1 - p1) * v1 * sign1) < 1e-14);
+    BOOST_CHECK_SMALL(fwd->getPayoff(maturitySpot) - (maturitySpot - k1 - p1) * v1 * sign1, 1e-14);
 }
-
-void ForwardContractTest::testAsianAveragingDates()
+BOOST_AUTO_TEST_CASE(testAsianAveragingDates)
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<AsianForward> contract = getDefaultAsianForward(anchorDate);
@@ -262,8 +270,7 @@ void ForwardContractTest::testAsianAveragingDates()
     contract->validate();
     BOOST_CHECK(!contract->isOK());
 }
-
-void ForwardContractTest::testFixingAndForwardDates()
+BOOST_AUTO_TEST_CASE(testFixingAndForwardDates)
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<AsianForward> contract = getDefaultAsianForward(anchorDate);
@@ -282,8 +289,7 @@ void ForwardContractTest::testFixingAndForwardDates()
     BOOST_CHECK(fixingDates.size() == i + 1);
     BOOST_CHECK(forwardDates.size() == averagingDates.size() - i - 1);
 }
-
-void ForwardContractTest::testAsianForward()
+BOOST_AUTO_TEST_CASE(testAsianForward)
 {
 
     std::shared_ptr<RatesEnvironment> re;
@@ -348,9 +354,9 @@ void ForwardContractTest::testAsianForward()
     double df = dc->getDiscountFactor(settlement);
 
     // 1) Before maturity
-    BOOST_CHECK(abs(contract.getValue(re) + contract2.getValue(re)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(contract.getValue(re) - volume * (averageFwd - strike) * df) / volume <
-                EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(contract.getValue(re) + contract2.getValue(re), EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL((contract.getValue(re) - volume * (averageFwd - strike) * df) / volume,
+                      EPSILON_FOR_DOUBLES);
 
     // 3) After settlement
     Date dayAfterSettlement = nullCalendar.advance(settlement, 1, Days);
@@ -360,10 +366,9 @@ void ForwardContractTest::testAsianForward()
     re = std::make_shared<RatesEnvironment>(dayAfterSettlement);
     re->setDRS(dc);
     re->setFRS(fc);
-    BOOST_CHECK(abs(contract2.getValue(re)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(contract2.getValue(re), EPSILON_FOR_DOUBLES);
 }
-
-void ForwardContractTest::testAsianGetPayoffAfterMaturity()
+BOOST_AUTO_TEST_CASE(testAsianGetPayoffAfterMaturity)
 {
     Actual365Fixed dayCounter;
     NullCalendar nullCalendar;
@@ -378,28 +383,7 @@ void ForwardContractTest::testAsianGetPayoffAfterMaturity()
     double sign1 = (fwd->getBuySell() == BuySell::BUY ? 1 : -1);
 
     double maturitySpot = k1 + 10;
-    BOOST_CHECK(abs(fwd->getPayoff(maturitySpot) - (maturitySpot - k1 - p1) * v1 * sign1) < 1e-14);
+    BOOST_CHECK_SMALL(fwd->getPayoff(maturitySpot) - (maturitySpot - k1 - p1) * v1 * sign1, 1e-14);
 }
 
-test_suite* ForwardContractTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("Forward Contracts");
-
-    suite->add(BOOST_TEST_CASE(&ForwardContractTest::testBuySell));
-    suite->add(BOOST_TEST_CASE(&ForwardContractTest::testStrike));
-    suite->add(BOOST_TEST_CASE(&ForwardContractTest::testVolume));
-    suite->add(BOOST_TEST_CASE(&ForwardContractTest::testMaturityDate));
-    suite->add(BOOST_TEST_CASE(&ForwardContractTest::testSettlementDate));
-    suite->add(BOOST_TEST_CASE(&ForwardContractTest::testValidationReport));
-    suite->add(BOOST_TEST_CASE(&ForwardContractTest::testValue));
-    suite->add(BOOST_TEST_CASE(&ForwardContractTest::testGetPayoffAfterMaturity));
-
-    BOOST_TEST_MESSAGE("Testing AsianForwards ...");
-    suite->add(BOOST_TEST_CASE(&ForwardContractTest::testAsianAveragingDates));
-    suite->add(BOOST_TEST_CASE(&ForwardContractTest::testFixingAndForwardDates));
-
-    suite->add(BOOST_TEST_CASE(&ForwardContractTest::testAsianForward));
-    suite->add(BOOST_TEST_CASE(&ForwardContractTest::testAsianGetPayoffAfterMaturity));
-
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

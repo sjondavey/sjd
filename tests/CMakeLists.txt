@@ -1,4 +1,5 @@
-# Boost.Test runner. Test headers are included as <contracts/...> from this directory.
+# Boost.Test runner. Cases register themselves. Support headers are included
+# as <support/...> from this directory.
 add_executable(sjdTest
     contracts/AsianOptionTest.cpp
     contracts/CashflowTest.cpp
@@ -41,14 +42,25 @@ target_link_libraries(sjdTest
         sjd_warnings
 )
 
-# Boost 1.86 still ships boost/timer.hpp but requires this define.
-# Used only by the test runner for wall-clock reporting.
-target_compile_definitions(sjdTest
-    PRIVATE
-        BOOST_TIMER_ENABLE_DEPRECATED
-)
-
 add_test(
     NAME sjdTest
     COMMAND sjdTest --log_level=message --build_info=yes --report_level=short
+)
+
+# Measurements, not a ctest gate. The 10,000-path case is one repetition.
+find_package(benchmark CONFIG REQUIRED)
+add_executable(sjdBenchmark
+    benchmarks/Benchmarks.cpp
+    support/GenerateContracts.cpp
+    support/GenerateRatesEnvironments.cpp
+)
+target_include_directories(sjdBenchmark
+    PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+target_link_libraries(sjdBenchmark
+    PRIVATE
+        sjd::sjd
+        benchmark::benchmark
+        sjd_warnings
 )

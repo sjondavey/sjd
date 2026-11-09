@@ -1,4 +1,8 @@
-#include "VolatilityCurveTest.h"
+#include <boost/math/special_functions/fpclassify.hpp> // boost::math::isnan
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <support/GenerateRatesEnvironments.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -7,7 +11,9 @@ using namespace std;
 using namespace boost::unit_test_framework;
 using namespace sjd;
 
-void VolatilityCurveTest::testVolatilityCurveConstruction()
+BOOST_AUTO_TEST_SUITE(VolatilityCurveTest)
+
+BOOST_AUTO_TEST_CASE(testVolatilityCurveConstruction)
 {
     BOOST_TEST_MESSAGE("Testing VolatilityCurve Construction ...");
     Calendar calendar = SouthAfrica();
@@ -41,8 +47,8 @@ void VolatilityCurveTest::testVolatilityCurveConstruction()
     BOOST_CHECK(vc2->isInRange(d2) == false);
     BOOST_CHECK(vc2->isInRange(d3) == false);
     // Check the behaviour on the anchor date
-    BOOST_CHECK(abs(vc2->getVolatility(anchorDate) - vc2->getVolatility(observationDates.front())) <
-                EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(vc2->getVolatility(anchorDate) - vc2->getVolatility(observationDates.front()),
+                      EPSILON_FOR_DOUBLES);
 
     allowExtrapolation = !allowExtrapolation;
     delete vc2;
@@ -51,13 +57,12 @@ void VolatilityCurveTest::testVolatilityCurveConstruction()
     BOOST_CHECK(vc2->isInRange(d2) == true);
     BOOST_CHECK(vc2->isInRange(d3) == false);
     // Check the behaviour on the anchor date
-    BOOST_CHECK(abs(vc2->getVolatility(anchorDate) - vc2->getVolatility(observationDates.front())) <
-                EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(vc2->getVolatility(anchorDate) - vc2->getVolatility(observationDates.front()),
+                      EPSILON_FOR_DOUBLES);
 
     delete vc2;
 }
-
-void VolatilityCurveTest::testVolatilityCurveConsistencyBetweenVolAndSD()
+BOOST_AUTO_TEST_CASE(testVolatilityCurveConsistencyBetweenVolAndSD)
 {
     BOOST_TEST_MESSAGE("Testing Volatiltiy Curve for consistency between getVol and getSD ...");
     GenerateRates re = GenerateRates();
@@ -70,16 +75,15 @@ void VolatilityCurveTest::testVolatilityCurveConsistencyBetweenVolAndSD()
     double fromYF = dayCounter.yearFraction(anchorDate, fromDate);
     double fromSD = vc->getStandardDeviation(fromDate);
     double fromVol = vc->getVolatility(fromDate);
-    BOOST_CHECK(abs(fromVol - fromSD / sqrt(fromYF)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(fromVol - fromSD / sqrt(fromYF), EPSILON_FOR_DOUBLES);
 
     Date toDate = defaultCalendar.advance(anchorDate, 9, Months);
     double toYF = dayCounter.yearFraction(anchorDate, toDate);
     double toSD = vc->getStandardDeviation(toDate);
     double toVol = vc->getVolatility(toDate);
-    BOOST_CHECK(abs(toVol - toSD / sqrt(toYF)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(toVol - toSD / sqrt(toYF), EPSILON_FOR_DOUBLES);
 }
-
-void VolatilityCurveTest::testVolatilityCurveValues()
+BOOST_AUTO_TEST_CASE(testVolatilityCurveValues)
 {
     BOOST_TEST_MESSAGE("Testing Volatiltiy Curve values ...");
     GenerateRates re = GenerateRates();
@@ -89,8 +93,8 @@ void VolatilityCurveTest::testVolatilityCurveValues()
     std::shared_ptr<VolatilityCurve> vc = re.getDefaultVolatiltiyCurve(anchorDate);
 
     Date pillar = calendar.advance(anchorDate, 1, Years);
-    BOOST_CHECK(abs(vc->getVolatility(pillar) - re.defaultVolatiltiy) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(vc->getVolatility(anchorDate) - re.defaultVolatiltiy) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(vc->getVolatility(pillar) - re.defaultVolatiltiy, EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(vc->getVolatility(anchorDate) - re.defaultVolatiltiy, EPSILON_FOR_DOUBLES);
 
     // A flat curve stays flat between the anchor and the first pillar, because the
     // curve interpolates total variance rather than standard deviation.
@@ -98,11 +102,10 @@ void VolatilityCurveTest::testVolatilityCurveValues()
     double time1 = dayCounter.yearFraction(anchorDate, date1);
     double sd = vc->getStandardDeviation(date1);
     double vol = vc->getVolatility(date1);
-    BOOST_CHECK(abs(vol - sd / sqrt(time1)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(vol - re.defaultVolatiltiy) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(vol - sd / sqrt(time1), EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(vol - re.defaultVolatiltiy, EPSILON_FOR_DOUBLES);
 }
-
-void VolatilityCurveTest::testVolatilityCurveRoll()
+BOOST_AUTO_TEST_CASE(testVolatilityCurveRoll)
 {
     BOOST_TEST_MESSAGE("Testing Volatiltiy Curve roll forward ...");
 
@@ -124,16 +127,7 @@ void VolatilityCurveTest::testVolatilityCurveRoll()
     double yf = (dayCounter.yearFraction(rollDate, checkDate));
     double v12 = sqrt((pow(v2, 2) - pow(v1, 2)) / yf);
     double rolledVol = rolledCurve->getVolatility(checkDate);
-    BOOST_CHECK(abs(v12 - rolledVol) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(v12 - rolledVol, EPSILON_FOR_DOUBLES);
 }
 
-test_suite* VolatilityCurveTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("Volatility Rate Sources");
-    suite->add(BOOST_TEST_CASE(&VolatilityCurveTest::testVolatilityCurveConstruction));
-    suite->add(BOOST_TEST_CASE(&VolatilityCurveTest::testVolatilityCurveConsistencyBetweenVolAndSD));
-    suite->add(BOOST_TEST_CASE(&VolatilityCurveTest::testVolatilityCurveValues));
-    suite->add(BOOST_TEST_CASE(&VolatilityCurveTest::testVolatilityCurveRoll));
-
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

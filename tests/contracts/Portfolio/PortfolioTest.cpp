@@ -1,7 +1,16 @@
-#include "PortfolioTest.h"
+// to use the boost::math::isnan(...) function
 
+#include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <math.h>
+#include <sjd/contracts/Portfolio/CapitalModel.h>
+#include <sjd/contracts/Portfolio/Portfolio.h>
 #include <sjd/contracts/Portfolio/Structures/CemNettingSet.h>
 #include <sjd/tools/Errors.h>
+#include <support/GenerateContracts.h>
+#include <support/GenerateRatesEnvironments.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -11,17 +20,21 @@ using namespace boost::unit_test_framework;
 using namespace boost::math;
 using namespace sjd;
 
-AssetClass PortfolioTest::getDefaultRegCapUnderlyingFactors()
+BOOST_AUTO_TEST_SUITE(PortfolioTest)
+
+AssetClass getDefaultRegCapUnderlyingFactors();
+CounterpartyCredit getDefaultRegCreditParameters();
+
+AssetClass getDefaultRegCapUnderlyingFactors()
 {
     return AssetClass::Commodity;
 }
 
-CounterpartyCredit PortfolioTest::getDefaultRegCreditParameters()
+CounterpartyCredit getDefaultRegCreditParameters()
 {
     return CounterpartyCredit{1.5, 0.1};
 }
-
-void PortfolioTest::testStructureCreation()
+BOOST_AUTO_TEST_CASE(testStructureCreation)
 {
     BOOST_TEST_MESSAGE("Testing Portfolios ...");
 
@@ -65,7 +78,7 @@ void PortfolioTest::testStructureCreation()
     BOOST_REQUIRE(p2->isOK());
     BOOST_REQUIRE(!p2->isMargined());
 
-    BOOST_CHECK(abs(p1->getValue(re) - p2->getValue(re)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(p1->getValue(re) - p2->getValue(re), EPSILON_FOR_DOUBLES);
 
     bool useMyThreshold = true;
     bool useCptyThreshold = true;
@@ -77,7 +90,7 @@ void PortfolioTest::testStructureCreation()
     p1->validate(re);
     BOOST_REQUIRE(p1->isOK());
     BOOST_REQUIRE(p1->isMargined());
-    BOOST_CHECK(abs(p1->getValue(re) - p2->getValue(re)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(p1->getValue(re) - p2->getValue(re), EPSILON_FOR_DOUBLES);
 
     std::shared_ptr<Margin> margin2 =
         std::make_shared<SimpleMargin>(anchorDate, useMyThreshold, myThreshold, useCptyThreshold,
@@ -86,23 +99,22 @@ void PortfolioTest::testStructureCreation()
     p2->validate(re);
     BOOST_REQUIRE(p2->isOK());
     BOOST_REQUIRE(p2->isMargined());
-    BOOST_CHECK(abs(p1->getValue(re) - p2->getValue(re)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(p1->getValue(re) - p2->getValue(re), EPSILON_FOR_DOUBLES);
 
-    BOOST_CHECK(abs(p1->getMarginCall(re) - p2->getMarginCall(re)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(p1->getMarginCall(re) - p2->getMarginCall(re), EPSILON_FOR_DOUBLES);
 
     double newBalance = -50000.0;
     p1->setMarginBalance(newBalance);
     BOOST_CHECK(abs(p1->getMarginCall(re) - p2->getMarginCall(re)) > EPSILON_FOR_DOUBLES);
     p2->getMargin()->setMarginBalance(newBalance);
-    BOOST_CHECK(abs(p1->getMarginCall(re) - p2->getMarginCall(re)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(p1->getMarginCall(re) - p2->getMarginCall(re), EPSILON_FOR_DOUBLES);
 
     p1->updateMarginBalanceWithCall(p1->getMarginCall(re));
     BOOST_CHECK(abs(p1->getMarginCall(re) - p2->getMarginCall(re)) > EPSILON_FOR_DOUBLES);
     p2->setMarginBalance(p2->getMarginBalance() + p2->getMarginCall(re));
-    BOOST_CHECK(abs(p1->getMarginCall(re) - p2->getMarginCall(re)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(p1->getMarginCall(re) - p2->getMarginCall(re), EPSILON_FOR_DOUBLES);
 }
-
-void PortfolioTest::testPortfolioB2CEM()
+BOOST_AUTO_TEST_CASE(testPortfolioB2CEM)
 {
     BOOST_TEST_MESSAGE("Testing B2 CEM ...");
 
@@ -127,8 +139,8 @@ void PortfolioTest::testPortfolioB2CEM()
     vector<std::shared_ptr<Contract>> contracts;
     contracts.push_back(put);
 
-    AssetClass regCapAssetFactors = PortfolioTest::getDefaultRegCapUnderlyingFactors();
-    CounterpartyCredit regCapCreditParameters = PortfolioTest::getDefaultRegCreditParameters();
+    AssetClass regCapAssetFactors = getDefaultRegCapUnderlyingFactors();
+    CounterpartyCredit regCapCreditParameters = getDefaultRegCreditParameters();
     bool optimise = true;
 
     std::shared_ptr<Portfolio> unmarginedPortfolio = std::make_shared<Portfolio>(contracts);
@@ -212,8 +224,7 @@ void PortfolioTest::testPortfolioB2CEM()
     }
     */
 }
-
-void PortfolioTest::testInvalidRegulatoryCapitalIsNaN()
+BOOST_AUTO_TEST_CASE(testInvalidRegulatoryCapitalIsNaN)
 {
     BOOST_TEST_MESSAGE("Testing B2 CEM on a netting set that cannot be offset ...");
 
@@ -254,8 +265,7 @@ void PortfolioTest::testInvalidRegulatoryCapitalIsNaN()
     book.validate(re);
     BOOST_CHECK(book.isOK());
 }
-
-void PortfolioTest::testNullMarginAndUnknownFactors()
+BOOST_AUTO_TEST_CASE(testNullMarginAndUnknownFactors)
 {
     BOOST_TEST_MESSAGE("Testing a null margin and an unknown regulatory factor name");
 
@@ -285,14 +295,4 @@ void PortfolioTest::testNullMarginAndUnknownFactors()
     BOOST_CHECK(empty.getErrorMessagesAsString().find("no contracts") != string::npos);
 }
 
-test_suite* PortfolioTest::suite()
-{
-
-    test_suite* suite = BOOST_TEST_SUITE("Portfolios");
-    suite->add(BOOST_TEST_CASE(&PortfolioTest::testStructureCreation));
-    suite->add(BOOST_TEST_CASE(&PortfolioTest::testPortfolioB2CEM));
-    suite->add(BOOST_TEST_CASE(&PortfolioTest::testInvalidRegulatoryCapitalIsNaN));
-    suite->add(BOOST_TEST_CASE(&PortfolioTest::testNullMarginAndUnknownFactors));
-
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

@@ -1,4 +1,15 @@
-#include "CashflowTest.h"
+// to use the boost::math::isnan(...) function
+
+#include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <math.h>
+#include <ql/time/daycounter.hpp>
+#include <ql/time/daycounters/all.hpp>
+#include <sjd/contracts/Cashflow.h>
+#include <support/GenerateContracts.h>
+#include <support/GenerateRatesEnvironments.h>
+#include <support/TestingParameters.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -8,7 +19,9 @@ using namespace boost::unit_test_framework;
 using namespace boost::math;
 using namespace sjd;
 
-void CashflowTest::testBuySell()
+BOOST_AUTO_TEST_SUITE(CashflowTest)
+
+BOOST_AUTO_TEST_CASE(testBuySell)
 {
     Date anchorDate(1, Jan, 2013);
     int yearsToSettlement = 2;
@@ -27,8 +40,7 @@ void CashflowTest::testBuySell()
         GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, BuySell::SELL);
     BOOST_CHECK(sold->getBuySell() == BuySell::SELL);
 }
-
-void CashflowTest::testVolume()
+BOOST_AUTO_TEST_CASE(testVolume)
 {
     Date anchorDate(1, Jan, 2013);
     int yearsToSettlement = 2;
@@ -44,10 +56,9 @@ void CashflowTest::testVolume()
     std::shared_ptr<FixedCashflow> negative =
         GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, -1, bs);
     BOOST_CHECK(negative->isOK());
-    BOOST_CHECK(abs(negative->getVolume() - 1.0) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(negative->getVolume() - 1.0, EPSILON_FOR_DOUBLES);
 }
-
-void CashflowTest::testMaturityDate()
+BOOST_AUTO_TEST_CASE(testMaturityDate)
 {
     Date anchorDate(1, Jan, 2013);
     double volume = 1000;
@@ -59,8 +70,7 @@ void CashflowTest::testMaturityDate()
     BOOST_CHECK(moved.getMaturityDate() == maturityDate);
     BOOST_CHECK(moved.getSettlementDate() == maturityDate);
 }
-
-void CashflowTest::testSettlementDate()
+BOOST_AUTO_TEST_CASE(testSettlementDate)
 {
     Date anchorDate(1, Jan, 2013);
     double volume = 1000;
@@ -72,8 +82,7 @@ void CashflowTest::testSettlementDate()
     BOOST_CHECK(moved.getSettlementDate() == settlementDate);
     BOOST_CHECK(moved.getMaturityDate() == settlementDate);
 }
-
-void CashflowTest::testValue()
+BOOST_AUTO_TEST_CASE(testValue)
 {
     GenerateRates gr = GenerateRates();
 
@@ -109,8 +118,8 @@ void CashflowTest::testValue()
     double df = dc->getDiscountFactor(settlement);
 
     // 1) Before maturity
-    BOOST_CHECK(abs(cf1.getValue(re) + cf2.getValue(re)) < EPSILON_FOR_DOUBLES);
-    BOOST_CHECK(abs(cf1.getValue(re) - (volume * df)) / volume < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(cf1.getValue(re) + cf2.getValue(re), EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL((cf1.getValue(re) - (volume * df)) / volume, EPSILON_FOR_DOUBLES);
 
     // 2) After maturity with ContractStatus = Excecised
 
@@ -118,10 +127,9 @@ void CashflowTest::testValue()
     Date dayAfterSettlement = nullCalendar.advance(settlement, 1, Days);
     manditoryDates.clear();
     re = gr.getRatesEnvironmentForCashflow(dayAfterSettlement, manditoryDates);
-    BOOST_CHECK(abs(cf2.getValue(re)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK_SMALL(cf2.getValue(re), EPSILON_FOR_DOUBLES);
 }
-
-void CashflowTest::testGetPayoffAfterMaturity()
+BOOST_AUTO_TEST_CASE(testGetPayoffAfterMaturity)
 {
     Actual365Fixed dayCounter;
     NullCalendar nullCalendar;
@@ -144,17 +152,4 @@ void CashflowTest::testGetPayoffAfterMaturity()
     BOOST_CHECK(cf2->getPayoff(0) == (v2)*sign2);
 }
 
-test_suite* CashflowTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("FixedCashFlows");
-
-    suite->add(BOOST_TEST_CASE(&CashflowTest::testBuySell));
-    suite->add(BOOST_TEST_CASE(&CashflowTest::testVolume));
-    suite->add(BOOST_TEST_CASE(&CashflowTest::testMaturityDate));
-    suite->add(BOOST_TEST_CASE(&CashflowTest::testSettlementDate));
-
-    suite->add(BOOST_TEST_CASE(&CashflowTest::testValue));
-    suite->add(BOOST_TEST_CASE(&CashflowTest::testGetPayoffAfterMaturity));
-
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

@@ -1,4 +1,8 @@
-#include "GoldenValuesTest.h"
+// Values for classes that Python cannot reach yet, recorded at the
+// pre-modernisation baseline. The Python golden tests cover everything else.
+//
+// After an intended change, run sjdTest with SJD_PRINT_GOLDEN=1 set, paste the
+// printed table over the expected values, and explain the change in the commit.
 
 #include <algorithm>
 #include <cmath>
@@ -9,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include <boost/test/unit_test.hpp>
 #include <sjd/contracts/ContractStressor.h>
 #include <sjd/contracts/Portfolio/Insurance/PortfolioInsurance.h>
 #include <support/GenerateContracts.h>
@@ -81,7 +86,9 @@ namespace
     }
 }
 
-void GoldenValuesTest::testContractStressor()
+BOOST_AUTO_TEST_SUITE(GoldenValuesTest)
+
+BOOST_AUTO_TEST_CASE(testContractStressor)
 {
     BOOST_TEST_MESSAGE("Testing golden values for ContractStressor");
 
@@ -291,8 +298,7 @@ void GoldenValuesTest::testContractStressor()
     };
     compare("contract stressor", expected, actual);
 }
-
-void GoldenValuesTest::testSimpleInsurance()
+BOOST_AUTO_TEST_CASE(testSimpleInsurance)
 {
     BOOST_TEST_MESSAGE("Testing golden values for SimpleInsurance");
 
@@ -341,10 +347,4 @@ void GoldenValuesTest::testSimpleInsurance()
     compare("simple insurance", expected, actual);
 }
 
-test_suite* GoldenValuesTest::suite()
-{
-    test_suite* suite = BOOST_TEST_SUITE("GoldenValues");
-    suite->add(BOOST_TEST_CASE(&GoldenValuesTest::testContractStressor));
-    suite->add(BOOST_TEST_CASE(&GoldenValuesTest::testSimpleInsurance));
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()

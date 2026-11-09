@@ -90,8 +90,9 @@ jobs:
           fi
 
       # MSVC /W4 is clean, so warnings fail the Windows jobs. Linux -Wpedantic is not clean yet.
+      # Linux debug is the gcov build. The report is uploaded after the tests.
       - name: Configure
-        run: cmake --preset ${{ matrix.preset }} -DPython3_EXECUTABLE="${{ env.pythonLocation }}/${{ runner.os == 'Windows' && 'python.exe' || 'bin/python' }}" -DSJD_WARNINGS_AS_ERRORS=${{ runner.os == 'Windows' && 'ON' || 'OFF' }}
+        run: cmake --preset ${{ matrix.preset }} -DPython3_EXECUTABLE="${{ env.pythonLocation }}/${{ runner.os == 'Windows' && 'python.exe' || 'bin/python' }}" -DSJD_WARNINGS_AS_ERRORS=${{ runner.os == 'Windows' && 'ON' || 'OFF' }} ${{ matrix.preset == 'linux-debug' && '-DSJD_COVERAGE=ON' || '' }}
 
       - name: Build
         run: cmake --build --preset ${{ matrix.preset }}
@@ -102,6 +103,41 @@ jobs:
           ASAN_OPTIONS: detect_leaks=0:strict_string_checks=1
           UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
         run: ctest --preset ${{ matrix.preset }}
+
+      - name: Linux coverage report
+        if: matrix.preset == 'linux-debug'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lcov
+          lcov --capture --directory build/linux-debug --output-file coverage.raw
+          lcov --remove coverage.raw '/usr/*' '*/vcpkg_installed/*' --output-file coverage.info
+          genhtml coverage.info --output-directory coverage-html
+
+      - name: Upload Linux coverage
+        if: matrix.preset == 'linux-debug'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-linux-debug
+          path: coverage-html
+
+      - name: Windows coverage report
+        if: matrix.preset == 'debug'
+        shell: pwsh
+        run: |
+          choco install opencppcoverage --no-progress -y
+          & "C:\ProgramData\chocolatey\bin\OpenCppCoverage.exe" --quiet `
+            --sources "${{ github.workspace }}\src" `
+            --sources "${{ github.workspace }}\include" `
+            --excluded_sources ".*vcpkg_installed.*" `
+            --export_type "html:${{ github.workspace }}\coverage-html" `
+            -- "${{ github.workspace }}\build\debug\sjdTest.exe" --log_level=error --report_level=no
+
+      - name: Upload Windows coverage
+        if: matrix.preset == 'debug'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-windows-debug
+          path: coverage-html
 
       - name: Upload build log on failure
         if: failure()
