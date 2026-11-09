@@ -1,8 +1,8 @@
 """Parametrised derivative strategies that materialise into contracts.
 
-A strategy is the user-facing book shape (collar, strip, and so on). It is
-not a C++ ``Structure``: that name still means a regulatory-capital netting
-set, and simulation ``by_structure`` still means the same.
+A strategy is the user-facing book shape (collar, strip, and so on). A CEM
+netting set is a ``CemNettingSet``. Simulation ``by_netting_set`` is the value
+of each set. ``by_structure`` is the same array.
 """
 
 from __future__ import annotations

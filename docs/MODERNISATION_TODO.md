@@ -715,6 +715,13 @@ for user-facing books.
 numbers are unchanged, and adding a second model needs no change to
 `Portfolio`.
 
+**Status.** Done. The design is `docs/capital-model.md`. `CurrentExposureMethod`
+implements `CapitalModel`. `Portfolio` has no capital method. Python
+`PortfolioB2CEM` builds a portfolio and that model. Supervisory parameters are
+one `AssetClass` table. `Structure` is `CemNettingSet`, and `by_structure` is
+an alias of `by_netting_set`. Debug `ctest` passed, including the golden
+capital numbers. SA-CCR is not implemented.
+
 ---
 
 ### Step 15. Simulation engine: independent paths, explicit RNG, parallelism

@@ -4,8 +4,7 @@
 
 #include <sjd/contracts/Cashflow.h>
 #include <sjd/contracts/Contracts.h>
-#include <sjd/contracts/Portfolio/RegCap/RegCapCreditParameters.h>
-#include <sjd/contracts/Portfolio/RegCap/RegCapUnderlyingFactors.h>
+#include <sjd/contracts/Portfolio/SupervisoryParameters.h>
 
 /*======================================================================================
 Factors for add-ons: From Annex 4: Treatment of Counterparty Credit Risk
@@ -23,7 +22,7 @@ namespace sjd
 {
 
     /*======================================================================================
-    Structure
+    CemNettingSet
     Structures consist of one or more Single Instrument Contracts naturally grouped for
     regulatory capital purposes. This code only works for a final payoff profile that is
     piecewise linear i.e. it only works if the input contracts are forwards, regular or
@@ -46,21 +45,20 @@ namespace sjd
     one for the uncapped exposure. The volume of each structure will be determined
     by the gradient of the payoff profile over various ranges
     =======================================================================================*/
-    class Structure : public MultipleInstrumentContract
+    class CemNettingSet : public MultipleInstrumentContract
     {
     public:
-        Structure(std::shared_ptr<SingleInstrumentContract> underlyingContract,
-                  std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
+        CemNettingSet(std::shared_ptr<SingleInstrumentContract> underlyingContract,
+                      AssetClass regCapAssetFactors);
 
-        Structure(std::vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts,
-                  std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
+        CemNettingSet(std::vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts,
+                      AssetClass regCapAssetFactors);
 
-        Structure(std::shared_ptr<Contract> underlyingContract,
-                  std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
+        CemNettingSet(std::shared_ptr<Contract> underlyingContract, AssetClass regCapAssetFactors);
 
-        Structure(const Structure& structure);
+        CemNettingSet(const CemNettingSet& structure);
         std::unique_ptr<Contract> clone() const override;
-        virtual ~Structure() {};
+        virtual ~CemNettingSet() {};
 
         void runChecks() override;
         void runChecks(RatesEnvironment& re) override;
@@ -83,7 +81,7 @@ namespace sjd
 
         // The following functions are static becuase they will be used both in the class
         // and also when manipulating a general collection of Single Instrument Contracts which may
-        // need to be manipulated before it qualifies as a Structure
+        // need to be manipulated before it qualifies as a CemNettingSet
         static std::set<double> getAllStrikes(
             std::vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts);
         static std::vector<std::shared_ptr<SingleInstrumentContract>> getAllContractsWithStrike(
@@ -149,9 +147,8 @@ namespace sjd
 
         // Takes contracts which are assumed to qualify for full or partial reg cap offset and builds
         // optimal structures by grouping according to volume.
-        static Result<std::vector<std::shared_ptr<Structure>>> createStructures(
-            std::vector<std::shared_ptr<SingleInstrumentContract>> contracts,
-            std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
+        static Result<std::vector<std::shared_ptr<CemNettingSet>>> createStructures(
+            std::vector<std::shared_ptr<SingleInstrumentContract>> contracts, AssetClass regCapAssetFactors);
 
         // Copies allContracts and distributes them so that only the wings move into the uncapped
         // leg, and only in the minimum volume that leaves the remaining contracts capped.
@@ -168,9 +165,9 @@ namespace sjd
 
     protected:
         void commonConstructor(std::vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts,
-                               std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
+                               AssetClass regCapAssetFactors);
 
-        std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors;
+        AssetClass regCapAssetFactors;
         std::vector<double> regCapFactorsFromForwardDates;
         bool cappedExposure, hasPriceExposure;
         double cap;

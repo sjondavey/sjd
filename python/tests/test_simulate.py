@@ -200,8 +200,12 @@ class SimulateTest(unittest.TestCase):
             capital[0, 0], portfolio.get_regulatory_capital(self.environment), places=4
         )
 
-    def test_by_structure_needs_a_capital_portfolio(self):
-        with self.assertRaisesRegex(ValueError, "by_structure"):
+    def test_by_netting_set_needs_a_capital_model(self):
+        with self.assertRaisesRegex(ValueError, "by_netting_set"):
+            sjd.simulate(
+                self._portfolio(), self.environment, self.dates, paths=2, seed=1, by_netting_set=True
+            )
+        with self.assertRaisesRegex(ValueError, "by_netting_set"):
             sjd.simulate(
                 self._portfolio(), self.environment, self.dates, paths=2, seed=1, by_structure=True
             )

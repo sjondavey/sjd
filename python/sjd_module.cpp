@@ -33,10 +33,10 @@
 #include <sjd/contracts/EuropeanForwardContract.h>
 #include <sjd/contracts/EuropeanOptionContract.h>
 #include <sjd/contracts/Portfolio/CVA/cva.h>
+#include <sjd/contracts/Portfolio/CapitalModel.h>
 #include <sjd/contracts/Portfolio/Margin/Margin.h>
 #include <sjd/contracts/Portfolio/Portfolio.h>
 #include <sjd/contracts/Portfolio/PortfolioEvolver.h>
-#include <sjd/contracts/Portfolio/RegulatoryCapital.h>
 #include <sjd/maths/maths.h>
 #include <sjd/pricing/Black76Formula.h>
 #include <sjd/rates/Discount/DiscountCurves.h>
@@ -150,16 +150,6 @@ namespace
         return dates;
     }
 
-    std::vector<std::shared_ptr<sjd::Contract>> contract_inputs_from(const py::list& contracts)
-    {
-        std::vector<std::shared_ptr<sjd::Contract>> inputs;
-        for (const std::shared_ptr<sjd::SingleInstrumentContract>& contract : contracts_from(contracts))
-        {
-            inputs.push_back(contract);
-        }
-        return inputs;
-    }
-
     struct NamedCalendar
     {
         std::string name;
@@ -175,21 +165,63 @@ namespace
         return result;
     }
 
+    struct ResolvedBook
+    {
+        std::shared_ptr<sjd::Portfolio> portfolio;
+        std::vector<std::shared_ptr<sjd::Contract>> nettingSets;
+    };
+
+    ResolvedBook resolveBook(const py::object& book)
+    {
+        if (py::isinstance<sjd::Portfolio>(book))
+            return {book.cast<std::shared_ptr<sjd::Portfolio>>(), {}};
+        if (py::hasattr(book, "portfolio") && py::hasattr(book, "capital_model"))
+        {
+            std::shared_ptr<sjd::Portfolio> portfolio =
+                book.attr("portfolio").cast<std::shared_ptr<sjd::Portfolio>>();
+            std::shared_ptr<sjd::CurrentExposureMethod> model =
+                book.attr("capital_model").cast<std::shared_ptr<sjd::CurrentExposureMethod>>();
+            return {portfolio, model->nettingSetContracts()};
+        }
+        throw py::type_error("expected a Portfolio");
+    }
+
+    bool nettingSetsRequested(bool by_netting_set, const py::object& by_structure)
+    {
+        if (!by_structure.is_none())
+        {
+            if (by_netting_set)
+                throw py::value_error("pass only one of by_netting_set and by_structure");
+            return by_structure.cast<bool>();
+        }
+        return by_netting_set;
+    }
+
     std::shared_ptr<sjd::PortfolioEvolver> make_evolver(
-        std::shared_ptr<sjd::Portfolio> portfolio,
+        const py::object& book,
         std::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator> generator,
         const py::iterable& simulation_dates,
         size_t holding_period,
         const py::object& holding_period_calendar)
     {
+        const ResolvedBook resolved = resolveBook(book);
         const std::set<QuantLib::Date> dates = simulation_dates_from(simulation_dates);
+        std::shared_ptr<sjd::PortfolioEvolver> evolver;
         if (holding_period == 0)
-            return std::make_shared<sjd::PortfolioEvolver>(portfolio, generator, dates);
-        if (holding_period_calendar.is_none())
-            throw py::value_error("holding_period needs a holding_period_calendar");
-        std::shared_ptr<QuantLib::Calendar> calendar(std::make_shared<QuantLib::Calendar>(
-            holding_period_calendar.cast<const NamedCalendar&>().calendar));
-        return std::make_shared<sjd::PortfolioEvolver>(portfolio, generator, dates, calendar, holding_period);
+        {
+            evolver = std::make_shared<sjd::PortfolioEvolver>(resolved.portfolio, generator, dates);
+        }
+        else
+        {
+            if (holding_period_calendar.is_none())
+                throw py::value_error("holding_period needs a holding_period_calendar");
+            std::shared_ptr<QuantLib::Calendar> calendar(std::make_shared<QuantLib::Calendar>(
+                holding_period_calendar.cast<const NamedCalendar&>().calendar));
+            evolver = std::make_shared<sjd::PortfolioEvolver>(resolved.portfolio, generator, dates, calendar,
+                                                              holding_period);
+        }
+        evolver->setNettingSets(resolved.nettingSets);
+        return evolver;
     }
 
     struct Simulation
@@ -343,10 +375,10 @@ namespace
         return metadata;
     }
 
-    void require_structures(bool by_structure, const sjd::SimulatedPaths& simulated)
+    void require_structures(bool by_netting_set, const sjd::SimulatedPaths& simulated)
     {
-        if (by_structure && simulated.structures == 0)
-            throw py::value_error("by_structure needs a portfolio with regulatory-capital netting sets");
+        if (by_netting_set && simulated.structures == 0)
+            throw py::value_error("by_netting_set needs netting sets from a capital model");
     }
 
     std::mutex& pendingLogMutex()
@@ -1123,20 +1155,37 @@ PYBIND11_MODULE(_core, m)
             { return option.getOptionValue(re); }, py::arg("rates_environment"),
             "The option alone, without the premium cashflow.");
 
-    py::class_<sjd::RegCapUnderlyingFactors, std::shared_ptr<sjd::RegCapUnderlyingFactors>>(
-        m, "RegCapUnderlyingFactors")
-        .def("get_factor", &sjd::RegCapUnderlyingFactors::getFactor, py::arg("time"),
-             "Add-on factor for a time to settlement in years.");
+    py::enum_<sjd::AssetClass>(m, "AssetClass")
+        .value("INTEREST_RATE", sjd::AssetClass::InterestRate)
+        .value("FX", sjd::AssetClass::FX)
+        .value("GOLD", sjd::AssetClass::Gold)
+        .value("EQUITY", sjd::AssetClass::Equity)
+        .value("PRECIOUS_METAL", sjd::AssetClass::PreciousMetal)
+        .value("COMMODITY", sjd::AssetClass::Commodity)
+        .value("ELECTRICITY", sjd::AssetClass::Electricity)
+        .value("OIL_GAS", sjd::AssetClass::OilGas)
+        .value("METALS", sjd::AssetClass::Metals)
+        .value("AGRICULTURAL", sjd::AssetClass::Agricultural)
+        .value("OTHER_COMMODITY", sjd::AssetClass::OtherCommodity);
+
+    py::class_<sjd::SupervisoryFactors>(m, "SupervisoryFactors")
+        .def("get_factor", &sjd::SupervisoryFactors::getFactor, py::arg("time"),
+             "CEM add-on for a time to settlement in years.")
+        .def_readonly("asset_class", &sjd::SupervisoryFactors::assetClass)
+        .def_readonly("supervisory_factor", &sjd::SupervisoryFactors::supervisoryFactor);
 
     m.def(
         "reg_cap_factors", [](const std::string& description)
-        { return sjd::generateRegCapFactors(description); }, py::arg("description"));
+        { return sjd::supervisoryFactors(description); }, py::arg("description"));
 
-    py::class_<sjd::RegCapCreditParameters, std::shared_ptr<sjd::RegCapCreditParameters>>(
-        m, "RegCapCreditParameters")
-        .def(py::init<double, double>(), py::arg("counterparty_weighting"), py::arg("capital_charge"))
-        .def("counterparty_weighting", &sjd::RegCapCreditParameters::getCounterpartyWeighting)
-        .def("capital_charge", &sjd::RegCapCreditParameters::getCapitalCharge);
+    py::class_<sjd::CounterpartyCredit>(m, "CounterpartyCredit")
+        .def(py::init<double, double>(), py::arg("risk_weight"), py::arg("capital_ratio") = 0.08)
+        .def("risk_weight", [](const sjd::CounterpartyCredit& credit) { return credit.riskWeight; })
+        .def("capital_ratio", [](const sjd::CounterpartyCredit& credit) { return credit.capitalRatio; })
+        .def("counterparty_weighting",
+             [](const sjd::CounterpartyCredit& credit) { return credit.riskWeight; })
+        .def("capital_charge", [](const sjd::CounterpartyCredit& credit) { return credit.capitalRatio; });
+    m.attr("RegCapCreditParameters") = m.attr("CounterpartyCredit");
 
     auto creditCurve = py::class_<sjd::CVA, std::shared_ptr<sjd::CVA>>(
         m, "CreditCurve",
@@ -1183,14 +1232,6 @@ PYBIND11_MODULE(_core, m)
                  }),
              py::arg("anchor"), py::arg("dates"), py::arg("cumulative_pd"), py::arg("loss_given_default"));
 
-    auto regulatoryCapital =
-        py::class_<sjd::RegulatoryCapital, std::shared_ptr<sjd::RegulatoryCapital>>(m, "RegulatoryCapital");
-    bindEnvironmentValidation(regulatoryCapital);
-    regulatoryCapital.def(
-        "get_regulatory_capital",
-        [](sjd::RegulatoryCapital& capital, std::shared_ptr<sjd::RatesEnvironment> environment)
-        { return capital.getRegulatoryCapital(environment); }, py::arg("rates_environment"));
-
     auto margin = py::class_<sjd::Margin, std::shared_ptr<sjd::Margin>>(m, "Margin");
     bindValidation(margin);
     margin.def("get_margin_balance", &sjd::Margin::getMarginBalance)
@@ -1229,40 +1270,62 @@ PYBIND11_MODULE(_core, m)
             "get_margin_call", [](sjd::Portfolio& portfolio, std::shared_ptr<sjd::RatesEnvironment> re)
             { return portfolio.getMarginCall(re); }, py::arg("rates_environment"));
 
-    py::class_<sjd::PortfolioB2CEM, sjd::Portfolio, std::shared_ptr<sjd::PortfolioB2CEM>>(m, "PortfolioB2CEM")
+    py::class_<sjd::CapitalResult>(m, "CapitalResult")
+        .def_readonly("ead", &sjd::CapitalResult::ead)
+        .def_readonly("rwa", &sjd::CapitalResult::rwa)
+        .def_readonly("capital", &sjd::CapitalResult::capital)
+        .def_readonly("replacement", &sjd::CapitalResult::replacement)
+        .def_readonly("net_gross_ratio", &sjd::CapitalResult::netGrossRatio)
+        .def_property_readonly("components",
+                               [](const sjd::CapitalResult& result)
+                               {
+                                   py::list components;
+                                   for (const sjd::CapitalComponent& component : result.components)
+                                   {
+                                       py::dict entry;
+                                       entry["settlement"] = from_ql_date(component.settlement);
+                                       entry["volume"] = component.volume;
+                                       entry["capped"] = component.capped;
+                                       entry["mark_to_market"] = component.markToMarket;
+                                       entry["add_on"] = component.addOn;
+                                       components.append(entry);
+                                   }
+                                   return components;
+                               });
+
+    auto exposure = py::class_<sjd::CurrentExposureMethod, std::shared_ptr<sjd::CurrentExposureMethod>>(
+        m, "CurrentExposureMethod",
+        "Basel II current-exposure capital for one portfolio. The portfolio is not a subclass.");
+    bindEnvironmentValidation(exposure);
+    exposure
         .def(py::init(
-                 [](const py::list& contracts, std::shared_ptr<sjd::RegCapUnderlyingFactors> factors,
-                    std::shared_ptr<sjd::RegCapCreditParameters> credit, bool optimise)
-                 {
-                     return std::make_shared<sjd::PortfolioB2CEM>(contract_inputs_from(contracts), factors,
-                                                                  credit, optimise);
+                 [](std::shared_ptr<sjd::Portfolio> portfolio, const sjd::SupervisoryFactors& factors,
+                    sjd::CounterpartyCredit credit, bool optimise) {
+                     return std::make_shared<sjd::CurrentExposureMethod>(*portfolio, factors.assetClass,
+                                                                         credit, optimise);
                  }),
-             py::arg("contracts"), py::arg("factors"), py::arg("credit"), py::arg("optimise") = false)
-        .def(py::init(
-                 [](const py::list& contracts, std::shared_ptr<sjd::RegCapUnderlyingFactors> factors,
-                    std::shared_ptr<sjd::RegCapCreditParameters> credit, bool optimise,
-                    std::shared_ptr<sjd::Margin> margin)
-                 {
-                     return std::make_shared<sjd::PortfolioB2CEM>(contract_inputs_from(contracts), factors,
-                                                                  credit, optimise, margin);
-                 }),
-             py::arg("contracts"), py::arg("factors"), py::arg("credit"), py::arg("optimise"),
-             py::arg("margin"))
-        .def("regulatory_capital", &sjd::PortfolioB2CEM::regulatoryCapital)
+             py::arg("portfolio"), py::arg("factors"), py::arg("credit"), py::arg("optimise") = false)
         .def(
-            "get_regulatory_capital",
-            [](sjd::PortfolioB2CEM& portfolio, std::shared_ptr<sjd::RatesEnvironment> environment)
-            { return portfolio.getRegulatoryCapital(environment); }, py::arg("rates_environment"))
+            "capital",
+            [](const sjd::CurrentExposureMethod& model, const sjd::Portfolio& portfolio,
+               const py::object& margin, std::shared_ptr<sjd::RatesEnvironment> environment)
+            {
+                std::shared_ptr<sjd::Margin> held = margin.is_none()
+                                                        ? std::shared_ptr<sjd::Margin>()
+                                                        : margin.cast<std::shared_ptr<sjd::Margin>>();
+                return model.capital(portfolio, held.get(), environment);
+            },
+            py::arg("portfolio"), py::arg("margin"), py::arg("rates_environment"))
+        .def("netting_set_contracts", &sjd::CurrentExposureMethod::nettingSetContracts)
         .def(
             "netting_sets",
-            [](sjd::PortfolioB2CEM& portfolio)
+            [](const sjd::CurrentExposureMethod& model)
             {
-                sjd::Result<std::vector<sjd::NettingSet>> describedSets = portfolio.nettingSets();
+                sjd::Result<std::vector<sjd::NettingSet>> describedSets = model.nettingSets();
                 if (!describedSets.ok())
                     throw sjd::ValidationError(describedSets.report.toString(), describedSets.report);
-                std::vector<sjd::NettingSet> sets = describedSets.value;
                 py::list described;
-                for (const sjd::NettingSet& netting : sets)
+                for (const sjd::NettingSet& netting : describedSets.value)
                 {
                     py::dict entry;
                     entry["settlement"] = from_ql_date(netting.settlement);
@@ -1274,7 +1337,7 @@ PYBIND11_MODULE(_core, m)
                 }
                 return described;
             },
-            "Static netting sets. Mark-to-market along a path is simulation.by_structure.");
+            "Static netting sets. Mark-to-market along a path is simulation.by_netting_set.");
 
     auto pathGenerator = py::class_<sjd::SingleFactorEconomicScenarioGenerator,
                                     std::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator>>(
@@ -1305,36 +1368,39 @@ PYBIND11_MODULE(_core, m)
         .def(
             "value_spot_path",
             [](sjd::PortfolioEvolver& evolver, const std::vector<double>& spots, bool by_trade,
-               bool by_structure)
+               bool by_netting_set, const py::object& by_structure)
             {
                 FlushLogs flush;
+                const bool bySet = nettingSetsRequested(by_netting_set, by_structure);
                 const auto setupStarted = std::chrono::steady_clock::now();
                 if (!evolver.prepare())
                     throwIfNoPaths(evolver.validationReport());
                 const long long setupMs = elapsedMilliseconds(setupStarted);
                 const auto pathsStarted = std::chrono::steady_clock::now();
-                sjd::SimulatedPaths simulated = evolver.valueSpotPath(spots, by_trade, by_structure);
+                sjd::SimulatedPaths simulated = evolver.valueSpotPath(spots, by_trade, bySet);
                 const long long pathsMs = elapsedMilliseconds(pathsStarted);
                 if (simulated.paths == 0)
                     throwIfNoPaths(evolver.validationReport());
-                require_structures(by_structure, simulated);
+                require_structures(bySet, simulated);
                 Simulation result = simulation_from(simulated);
                 py::dict inputs;
                 inputs["spots"] = spots.size();
                 inputs["by_trade"] = by_trade;
-                inputs["by_structure"] = by_structure;
+                inputs["by_netting_set"] = bySet;
                 result.metadata = runMetadata(evolver, nullptr, nullptr, nullptr, inputs, setupMs, pathsMs);
                 return result;
             },
-            py::arg("spots"), py::arg("by_trade") = false, py::arg("by_structure") = false,
+            py::arg("spots"), py::arg("by_trade") = false, py::arg("by_netting_set") = false,
+            py::arg("by_structure") = py::none(),
             "Mark the book to this forward path. One spot per simulation date. "
-            "by_structure values each regulatory-capital netting set.")
+            "by_netting_set values each CEM netting set. by_structure is the same flag.")
         .def(
             "value_spot_paths",
             [](sjd::PortfolioEvolver& evolver,
                const py::array_t<double, py::array::c_style | py::array::forcecast>& spots, bool by_trade,
-               bool by_structure)
+               bool by_netting_set, const py::object& by_structure)
             {
+                const bool bySet = nettingSetsRequested(by_netting_set, by_structure);
                 FlushLogs flush;
                 if (spots.ndim() != 2)
                     throw py::value_error("spots must be shaped [paths, steps]");
@@ -1358,8 +1424,7 @@ PYBIND11_MODULE(_core, m)
                     else
                     {
                         const auto pathsStarted = std::chrono::steady_clock::now();
-                        simulated =
-                            evolver.valueSpotPaths(flat, static_cast<size_t>(paths), by_trade, by_structure);
+                        simulated = evolver.valueSpotPaths(flat, static_cast<size_t>(paths), by_trade, bySet);
                         pathsMs = elapsedMilliseconds(pathsStarted);
                     }
                 }
@@ -1367,23 +1432,24 @@ PYBIND11_MODULE(_core, m)
                     throwIfNoPaths(evolver.validationReport());
                 if (static_cast<py::ssize_t>(simulated.steps) != steps)
                     throw py::value_error("spots steps must match the evolver simulation dates");
-                require_structures(by_structure, simulated);
+                require_structures(bySet, simulated);
                 Simulation result = simulation_from(simulated);
                 py::dict inputs;
                 inputs["paths"] = paths;
                 inputs["steps"] = steps;
                 inputs["by_trade"] = by_trade;
-                inputs["by_structure"] = by_structure;
+                inputs["by_netting_set"] = bySet;
                 result.metadata = runMetadata(evolver, nullptr, nullptr, nullptr, inputs, setupMs, pathsMs);
                 return result;
             },
-            py::arg("spots"), py::arg("by_trade") = false, py::arg("by_structure") = false,
+            py::arg("spots"), py::arg("by_trade") = false, py::arg("by_netting_set") = false,
+            py::arg("by_structure") = py::none(),
             "Mark the book to many forward paths. spots is shaped [paths, steps]. "
             "Reuse the same spots across candidate portfolios for common random numbers.");
 
     py::class_<Simulation>(m, "Simulation",
                            "Simulated paths. Arrays are numpy, indexed [path, step], "
-                           "by_trade [path, step, trade] and by_structure [path, step, set].")
+                           "by_trade [path, step, trade] and by_netting_set [path, step, set].")
         .def_readonly("dates", &Simulation::dates, "Every simulated date, including margin reset dates.")
         .def_readonly("exposure_steps", &Simulation::exposure_steps,
                       "Step of each requested simulation date.")
@@ -1396,9 +1462,12 @@ PYBIND11_MODULE(_core, m)
                       "Margin balance, or None when the portfolio is not margined.")
         .def_readonly("by_trade", &Simulation::by_trade,
                       "Value of each underlying contract, or None unless by_trade was requested.")
-        .def_readonly(
-            "by_structure", &Simulation::by_structure,
-            "Value of each regulatory-capital netting set, or None unless by_structure was requested.")
+        .def_property_readonly(
+            "by_netting_set", [](const Simulation& simulation) { return simulation.by_structure; },
+            "Value of each CEM netting set, or None unless by_netting_set was requested.")
+        .def_property_readonly(
+            "by_structure", [](const Simulation& simulation) { return simulation.by_structure; },
+            "Deprecated alias of by_netting_set.")
         .def_readonly("paths", &Simulation::paths)
         .def_readonly("steps", &Simulation::steps)
         .def_readonly("trades", &Simulation::trades)
@@ -1422,11 +1491,14 @@ PYBIND11_MODULE(_core, m)
 
     m.def(
         "simulate",
-        [](std::shared_ptr<sjd::Portfolio> portfolio, std::shared_ptr<sjd::RatesEnvironment> environment,
+        [](const py::object& book, std::shared_ptr<sjd::RatesEnvironment> environment,
            const py::iterable& simulation_dates, unsigned long paths, const py::object& seed, bool antithetic,
-           bool by_trade, bool by_structure, size_t holding_period, const py::object& holding_period_calendar)
+           bool by_trade, bool by_netting_set, const py::object& by_structure, size_t holding_period,
+           const py::object& holding_period_calendar)
         {
             FlushLogs flush;
+            const bool bySet = nettingSetsRequested(by_netting_set, by_structure);
+            const ResolvedBook resolved = resolveBook(book);
             std::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator> generator(
                 std::make_shared<sjd::SingleFactorEconomicScenarioGenerator>(environment));
             if (seed.is_none())
@@ -1435,7 +1507,7 @@ PYBIND11_MODULE(_core, m)
                 generator->setRandomSeed(seed.cast<long>());
             const long usedSeed = generator->getRandomSeed();
             std::shared_ptr<sjd::PortfolioEvolver> evolver =
-                make_evolver(portfolio, generator, simulation_dates, holding_period, holding_period_calendar);
+                make_evolver(book, generator, simulation_dates, holding_period, holding_period_calendar);
             SJD_LOG_INFO("simulation start paths=" + std::to_string(paths) +
                          " dates=" + std::to_string(evolver->getSimulationDates().size()) + " antithetic=" +
                          std::string(antithetic ? "true" : "false") + " seed=" + std::to_string(usedSeed));
@@ -1454,7 +1526,7 @@ PYBIND11_MODULE(_core, m)
                 else
                 {
                     const auto pathsStarted = std::chrono::steady_clock::now();
-                    simulated = evolver->simulatePaths(paths, antithetic, by_trade, by_structure);
+                    simulated = evolver->simulatePaths(paths, antithetic, by_trade, bySet);
                     pathsMs = elapsedMilliseconds(pathsStarted);
                 }
             }
@@ -1463,7 +1535,7 @@ PYBIND11_MODULE(_core, m)
             SJD_LOG_INFO("simulation end paths=" + std::to_string(simulated.paths) + " steps=" +
                          std::to_string(simulated.steps) + " trades=" + std::to_string(simulated.trades) +
                          " setup_ms=" + std::to_string(setupMs) + " paths_ms=" + std::to_string(pathsMs));
-            require_structures(by_structure, simulated);
+            require_structures(bySet, simulated);
             Simulation result = simulation_from(simulated);
             result.seed = py::int_(usedSeed);
             py::dict inputs;
@@ -1471,16 +1543,16 @@ PYBIND11_MODULE(_core, m)
             inputs["seed"] = usedSeed;
             inputs["antithetic"] = antithetic;
             inputs["by_trade"] = by_trade;
-            inputs["by_structure"] = by_structure;
+            inputs["by_netting_set"] = bySet;
             inputs["holding_period"] = holding_period;
             result.metadata =
-                runMetadata(*evolver, portfolio, generator, environment, inputs, setupMs, pathsMs);
+                runMetadata(*evolver, resolved.portfolio, generator, environment, inputs, setupMs, pathsMs);
             return result;
         },
         py::arg("portfolio"), py::arg("rates_environment"), py::arg("simulation_dates"),
         py::arg("paths") = 10000, py::kw_only(), py::arg("seed") = py::none(), py::arg("antithetic") = true,
-        py::arg("by_trade") = false, py::arg("by_structure") = false, py::arg("holding_period") = 0,
-        py::arg("holding_period_calendar") = py::none(),
+        py::arg("by_trade") = false, py::arg("by_netting_set") = false, py::arg("by_structure") = py::none(),
+        py::arg("holding_period") = 0, py::arg("holding_period_calendar") = py::none(),
         "Simulate the portfolio along single-factor paths and return every value.\n\n"
         "The first simulation date must be the anchor date, and the forward must have a "
         "stochastic roll. With antithetic paths an odd count is rounded up. Omit seed and "

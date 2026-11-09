@@ -357,9 +357,9 @@ def structure_costs(
 def regulatory_capital(simulation, netting_sets, factors, credit):
     """Basel II current-exposure capital, shaped ``[paths, exposure dates]``.
 
-    ``netting_sets`` comes from ``PortfolioB2CEM.netting_sets()``. Each set's
-    mark-to-market is ``simulation.by_structure``, the value of that set's own
-    contracts, so the simulation must have been run with ``by_structure=True``.
+    ``netting_sets`` comes from the capital model. Each set's mark-to-market is
+    ``simulation.by_netting_set`` (``by_structure`` is the same array), so the
+    simulation must have been run with ``by_netting_set=True``.
     The add-on is spot times the set's effective volume times
     ``factors.get_factor(time)``, scaled by the net-to-gross ratio. Posted
     margin reduces the exposure. ``credit`` supplies the capital charge and
@@ -368,9 +368,12 @@ def regulatory_capital(simulation, netting_sets, factors, credit):
     Kept as the implemented capital measure. SA-CCR is the target for new
     optimiser capital terms; see the README scope note.
     """
-    if simulation.by_structure is None:
-        raise ValueError("regulatory capital needs a simulation with by_structure=True")
-    set_values = np.asarray(simulation.by_structure, dtype=float)
+    set_values = simulation.by_netting_set
+    if set_values is None:
+        set_values = simulation.by_structure
+    if set_values is None:
+        raise ValueError("regulatory capital needs a simulation with by_netting_set=True")
+    set_values = np.asarray(set_values, dtype=float)
     spot = np.asarray(simulation.spot, dtype=float)
     dates = list(simulation.dates)
     paths, steps, sets = set_values.shape

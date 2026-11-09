@@ -8,9 +8,9 @@ using namespace boost::unit_test_framework;
 using namespace boost::math;
 using namespace sjd;
 
-std::shared_ptr<RegCapUnderlyingFactors> StructureTest::getDefaultRegCapUnderlyingFactors()
+AssetClass StructureTest::getDefaultRegCapUnderlyingFactors()
 {
-    return std::shared_ptr<RegCapUnderlyingFactors>(std::make_shared<CommodityRegCapFactors>());
+    return AssetClass::Commodity;
 }
 
 void StructureTest::testGradient()
@@ -33,16 +33,16 @@ void StructureTest::testGradient()
     instruments.push_back(call2);
     instruments.push_back(call3);
 
-    double g = Structure::gradient(instruments, 60, 70);
+    double g = CemNettingSet::gradient(instruments, 60, 70);
     BOOST_CHECK(abs(g) < EPSILON_FOR_DOUBLES);
 
-    g = Structure::gradient(instruments, 80, 85);
+    g = CemNettingSet::gradient(instruments, 80, 85);
     BOOST_CHECK(abs(g - volume) < EPSILON_FOR_DOUBLES);
 
-    g = Structure::gradient(instruments, 120, 130);
+    g = CemNettingSet::gradient(instruments, 120, 130);
     BOOST_CHECK(abs(g + volume) < EPSILON_FOR_DOUBLES);
 
-    g = Structure::gradient(instruments, 160, 170);
+    g = CemNettingSet::gradient(instruments, 160, 170);
     BOOST_CHECK(abs(g) < EPSILON_FOR_DOUBLES);
 }
 
@@ -59,10 +59,10 @@ void StructureTest::testIsUncappedOnTheLeft()
     instruments.push_back(put1);
 
     double effectiveGradient;
-    bool uncapped = Structure::isUncappedOnTheLeft(instruments, effectiveGradient);
+    bool uncapped = CemNettingSet::isUncappedOnTheLeft(instruments, effectiveGradient);
     BOOST_CHECK(uncapped);
     BOOST_CHECK(abs(effectiveGradient - (-volume)) < volume * EPSILON_FOR_DOUBLES);
-    double g = Structure::gradient(instruments, 40, 50);
+    double g = CemNettingSet::gradient(instruments, 40, 50);
     BOOST_CHECK(abs(effectiveGradient - g) < volume * EPSILON_FOR_DOUBLES);
 
     std::shared_ptr<SingleInstrumentContract> put2 = GenerateContracts::getDefaultEuropeanOption(
@@ -70,10 +70,10 @@ void StructureTest::testIsUncappedOnTheLeft()
     instruments.clear();
     instruments.push_back(put1);
     instruments.push_back(put2);
-    uncapped = Structure::isUncappedOnTheLeft(instruments, effectiveGradient);
+    uncapped = CemNettingSet::isUncappedOnTheLeft(instruments, effectiveGradient);
     BOOST_CHECK(!uncapped);
     BOOST_CHECK(abs(effectiveGradient) < volume * EPSILON_FOR_DOUBLES);
-    g = Structure::gradient(instruments, 40, 50);
+    g = CemNettingSet::gradient(instruments, 40, 50);
     BOOST_CHECK(abs(effectiveGradient - g) < volume * EPSILON_FOR_DOUBLES);
 
     put2 = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement, 70, volume,
@@ -81,10 +81,10 @@ void StructureTest::testIsUncappedOnTheLeft()
     instruments.clear();
     instruments.push_back(put1);
     instruments.push_back(put2);
-    uncapped = Structure::isUncappedOnTheLeft(instruments, effectiveGradient);
+    uncapped = CemNettingSet::isUncappedOnTheLeft(instruments, effectiveGradient);
     BOOST_CHECK(uncapped);
     BOOST_CHECK(abs(effectiveGradient - (-2 * volume)) < volume * EPSILON_FOR_DOUBLES);
-    g = Structure::gradient(instruments, 40, 50);
+    g = CemNettingSet::gradient(instruments, 40, 50);
     BOOST_CHECK(abs(effectiveGradient - g) < volume * EPSILON_FOR_DOUBLES);
 
     std::shared_ptr<SingleInstrumentContract> put3 = GenerateContracts::getDefaultEuropeanOption(
@@ -93,10 +93,10 @@ void StructureTest::testIsUncappedOnTheLeft()
     instruments.push_back(put1);
     instruments.push_back(put2);
     instruments.push_back(put3);
-    uncapped = Structure::isUncappedOnTheLeft(instruments, effectiveGradient);
+    uncapped = CemNettingSet::isUncappedOnTheLeft(instruments, effectiveGradient);
     BOOST_CHECK(uncapped);
     BOOST_CHECK(abs(effectiveGradient - (-volume)) < volume * EPSILON_FOR_DOUBLES);
-    g = Structure::gradient(instruments, 40, 50);
+    g = CemNettingSet::gradient(instruments, 40, 50);
     BOOST_CHECK(abs(effectiveGradient - g) < volume * EPSILON_FOR_DOUBLES);
 }
 
@@ -114,7 +114,7 @@ void StructureTest::testGetContractsWithUncappedExposureOnTheLeft()
 
     double commonStrike;
     vector<std::shared_ptr<SingleInstrumentContract>> uncappedContracts;
-    uncappedContracts = Structure::getContractsWithUncappedExposureOnTheLeft(instruments, commonStrike);
+    uncappedContracts = CemNettingSet::getContractsWithUncappedExposureOnTheLeft(instruments, commonStrike);
     BOOST_CHECK(uncappedContracts.size() == 1);
     BOOST_CHECK(uncappedContracts[0] == put1);
 
@@ -123,7 +123,7 @@ void StructureTest::testGetContractsWithUncappedExposureOnTheLeft()
     instruments.clear();
     instruments.push_back(put1);
     instruments.push_back(put2);
-    uncappedContracts = Structure::getContractsWithUncappedExposureOnTheLeft(instruments, commonStrike);
+    uncappedContracts = CemNettingSet::getContractsWithUncappedExposureOnTheLeft(instruments, commonStrike);
     BOOST_CHECK(uncappedContracts.size() == 1);
     BOOST_CHECK(uncappedContracts[0] == put1);
 
@@ -132,7 +132,7 @@ void StructureTest::testGetContractsWithUncappedExposureOnTheLeft()
     instruments.clear();
     instruments.push_back(put1);
     instruments.push_back(put2);
-    uncappedContracts = Structure::getContractsWithUncappedExposureOnTheLeft(instruments, commonStrike);
+    uncappedContracts = CemNettingSet::getContractsWithUncappedExposureOnTheLeft(instruments, commonStrike);
     BOOST_CHECK(uncappedContracts.size() == 1);
     BOOST_CHECK(uncappedContracts[0] == put2);
 
@@ -141,7 +141,7 @@ void StructureTest::testGetContractsWithUncappedExposureOnTheLeft()
     instruments.clear();
     instruments.push_back(put1);
     instruments.push_back(put2);
-    uncappedContracts = Structure::getContractsWithUncappedExposureOnTheLeft(instruments, commonStrike);
+    uncappedContracts = CemNettingSet::getContractsWithUncappedExposureOnTheLeft(instruments, commonStrike);
     BOOST_CHECK(uncappedContracts.size() == 2);
     BOOST_CHECK(uncappedContracts[0] == put1);
     BOOST_CHECK(uncappedContracts[1] == put2);
@@ -159,28 +159,28 @@ void StructureTest::testQualifyForRegulatoryCapitalOffset()
         anchorDate, yearsToSettlement, 5, BuySell::SELL);
 
     string errorMsg;
-    BOOST_CHECK(Structure::qualifyForRegulatoryCapitalOffset(fwd, cf, errorMsg));
-    BOOST_CHECK(Structure::qualifyForRegulatoryCapitalOffset(fwd, option, errorMsg));
+    BOOST_CHECK(CemNettingSet::qualifyForRegulatoryCapitalOffset(fwd, cf, errorMsg));
+    BOOST_CHECK(CemNettingSet::qualifyForRegulatoryCapitalOffset(fwd, option, errorMsg));
 
     option = GenerateContracts::getDefaultEuropeanOption(anchorDate, yearsToSettlement + 1, 115, 45,
                                                          BuySell::SELL, PutCall::CALL, 0);
-    BOOST_CHECK(!Structure::qualifyForRegulatoryCapitalOffset(fwd, option, errorMsg));
+    BOOST_CHECK(!CemNettingSet::qualifyForRegulatoryCapitalOffset(fwd, option, errorMsg));
 
     int numberOfAveragingDates = 30;
     double volume = 47;
     std::shared_ptr<SingleDerivativeContract> asianOption =
         GenerateContracts::getDefaultAsianOption(anchorDate, yearsToSettlement, numberOfAveragingDates, 90,
                                                  volume, BuySell::BUY, PutCall::CALL, 10, true);
-    BOOST_CHECK(Structure::qualifyForRegulatoryCapitalOffset(cf, asianOption, errorMsg));
-    BOOST_CHECK(!Structure::qualifyForRegulatoryCapitalOffset(fwd, asianOption, errorMsg));
+    BOOST_CHECK(CemNettingSet::qualifyForRegulatoryCapitalOffset(cf, asianOption, errorMsg));
+    BOOST_CHECK(!CemNettingSet::qualifyForRegulatoryCapitalOffset(fwd, asianOption, errorMsg));
 
     std::shared_ptr<SingleDerivativeContract> asianFwd = GenerateContracts::getDefaultAsianForward(
         anchorDate, yearsToSettlement, numberOfAveragingDates, 90, volume, BuySell::BUY);
-    BOOST_CHECK(Structure::qualifyForRegulatoryCapitalOffset(asianFwd, asianOption, errorMsg));
+    BOOST_CHECK(CemNettingSet::qualifyForRegulatoryCapitalOffset(asianFwd, asianOption, errorMsg));
 
     std::shared_ptr<SingleDerivativeContract> asianFwd2 = GenerateContracts::getDefaultAsianForward(
         anchorDate, yearsToSettlement, numberOfAveragingDates - 1, 90, volume, BuySell::BUY);
-    BOOST_CHECK(!Structure::qualifyForRegulatoryCapitalOffset(asianFwd, asianFwd2, errorMsg));
+    BOOST_CHECK(!CemNettingSet::qualifyForRegulatoryCapitalOffset(asianFwd, asianFwd2, errorMsg));
 }
 
 void StructureTest::testMoveContracts()
@@ -204,18 +204,18 @@ void StructureTest::testMoveContracts()
 
     identifiedInstruments.push_back(call1);
 
-    bool sucess = Structure::moveContracts(identifiedInstruments, inputInstruments, outputInstruments);
+    bool sucess = CemNettingSet::moveContracts(identifiedInstruments, inputInstruments, outputInstruments);
     BOOST_REQUIRE(sucess);
     BOOST_CHECK(inputInstruments.size() == 2);
     BOOST_CHECK(outputInstruments.size() == 1);
     BOOST_CHECK(outputInstruments[0] == call1);
 
-    sucess = Structure::moveContracts(identifiedInstruments, inputInstruments, outputInstruments);
+    sucess = CemNettingSet::moveContracts(identifiedInstruments, inputInstruments, outputInstruments);
     BOOST_REQUIRE(!sucess);
 
     identifiedInstruments.clear();
     identifiedInstruments.push_back(put1);
-    sucess = Structure::moveContracts(identifiedInstruments, inputInstruments, outputInstruments);
+    sucess = CemNettingSet::moveContracts(identifiedInstruments, inputInstruments, outputInstruments);
     BOOST_REQUIRE(sucess);
     BOOST_CHECK(inputInstruments.size() == 1);
     BOOST_CHECK(outputInstruments.size() == 2);
@@ -233,13 +233,13 @@ void StructureTest::testSettlementDate()
         GenerateContracts::getDefaultEuropeanForward(anchorDate, yearsToMaturity, 112, 45, BuySell::BUY);
     std::shared_ptr<FixedCashflow> cf =
         GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, BuySell::SELL);
-    std::shared_ptr<RegCapUnderlyingFactors> factors = getDefaultRegCapUnderlyingFactors();
+    AssetClass factors = getDefaultRegCapUnderlyingFactors();
 
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
     instruments.push_back(fwd);
     instruments.push_back(cf);
 
-    Structure structure(instruments, factors);
+    CemNettingSet structure(instruments, factors);
 
     Date sd1 = fwd->getSettlementDate();
     Date sd2 = structure.getSettlementDate();
@@ -258,7 +258,7 @@ void StructureTest::testCashFlowN()
     int yearsToMaturity = 2;
     std::shared_ptr<FixedCashflow> cf =
         GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, BuySell::BUY);
-    std::shared_ptr<RegCapUnderlyingFactors> factors = getDefaultRegCapUnderlyingFactors();
+    AssetClass factors = getDefaultRegCapUnderlyingFactors();
 
     // std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
     std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
@@ -274,7 +274,7 @@ void StructureTest::testCashFlowN()
     // a) no premium
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
     instruments.push_back(cf);
-    std::shared_ptr<Structure> structure = std::make_shared<Structure>(instruments, factors);
+    std::shared_ptr<CemNettingSet> structure = std::make_shared<CemNettingSet>(instruments, factors);
 
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
@@ -288,7 +288,7 @@ void StructureTest::testCashFlowN()
     cf = GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, BuySell::BUY);
     instruments.clear();
     instruments.push_back(cf);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_REQUIRE(structure->isExposureCapped());
@@ -302,7 +302,7 @@ void StructureTest::testCashFlowN()
     cf = GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToMaturity, 5, BuySell::SELL);
     instruments.clear();
     instruments.push_back(cf);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_REQUIRE(structure->isExposureCapped());
@@ -323,7 +323,7 @@ void StructureTest::testCashFlowN()
     instruments.push_back(cf);
     instruments.push_back(cf2);
     instruments.push_back(cf3);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_REQUIRE(structure->isExposureCapped());
@@ -343,8 +343,8 @@ void StructureTest::testEuropeanForward()
     std::shared_ptr<FixedCashflow> cf =
         GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BuySell::BUY);
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
-    std::shared_ptr<Structure> structure;
-    std::shared_ptr<RegCapUnderlyingFactors> factors = getDefaultRegCapUnderlyingFactors();
+    std::shared_ptr<CemNettingSet> structure;
+    AssetClass factors = getDefaultRegCapUnderlyingFactors();
     double volume = 10000;
     double spot = re->getFRS()->getForward(re->getAnchorDate());
     double ngr = .36;
@@ -354,12 +354,12 @@ void StructureTest::testEuropeanForward()
         anchorDate, yearsToSettlement, 100, volume, BuySell::BUY);
     instruments.clear();
     instruments.push_back(ef);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(!structure->isExposureCapped());
     double expectedMtM = structure->getValue(re);
-    double expectedCommodityFactor = factors->getFactor(yearsToSettlement);
+    double expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     double expectedMtMPlusAddOn = expectedMtM + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
     BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
                 EPSILON_FOR_DOUBLES * volume);
@@ -368,13 +368,13 @@ void StructureTest::testEuropeanForward()
     instruments.clear();
     instruments.push_back(ef);
     instruments.push_back(cf);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(!structure->isExposureCapped());
 
     expectedMtM = structure->getValue(re);
-    expectedCommodityFactor = factors->getFactor(yearsToSettlement);
+    expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn = expectedMtM + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
     BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
                 EPSILON_FOR_DOUBLES * volume);
@@ -385,14 +385,14 @@ void StructureTest::testEuropeanForward()
     instruments.clear();
     instruments.push_back(ef);
     instruments.push_back(ef2);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
     BOOST_CHECK(abs(structure->getCap() - (120 - 100) * volume) < EPSILON_FOR_DOUBLES);
 
     expectedMtM = structure->getValue(re);
-    expectedCommodityFactor = factors->getFactor(yearsToSettlement);
+    expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn =
         (120 - 100) * volume; // + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
     BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
@@ -404,14 +404,14 @@ void StructureTest::testEuropeanForward()
     instruments.clear();
     instruments.push_back(ef);
     instruments.push_back(ef2);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
     BOOST_CHECK(!structure->getHasPriceExposure());
     BOOST_CHECK(abs(structure->getCap() - (80 - 100) * volume) < EPSILON_FOR_DOUBLES * volume);
     expectedMtM = structure->getValue(re);
-    expectedCommodityFactor = factors->getFactor(yearsToSettlement);
+    expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn = (80 - 100) * volume;
     BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
                 EPSILON_FOR_DOUBLES * volume);
@@ -423,13 +423,13 @@ void StructureTest::testEuropeanForward()
     instruments.push_back(ef);
     instruments.push_back(ef2);
     instruments.push_back(ef3);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(!structure->isExposureCapped());
 
     expectedMtM = structure->getValue(re);
-    expectedCommodityFactor = factors->getFactor(yearsToSettlement);
+    expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn = expectedMtM + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
     BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
                 2 * EPSILON_FOR_DOUBLES * volume);
@@ -447,9 +447,9 @@ void StructureTest::testAsianforward()
     std::shared_ptr<FixedCashflow> cf =
         GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BuySell::BUY);
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
-    std::shared_ptr<Structure> structure;
+    std::shared_ptr<CemNettingSet> structure;
     double volume = 10000;
-    std::shared_ptr<RegCapUnderlyingFactors> factors = getDefaultRegCapUnderlyingFactors();
+    AssetClass factors = getDefaultRegCapUnderlyingFactors();
 
     double spot = re->getFRS()->getForward(anchorDate);
     double ngr = .23;
@@ -466,13 +466,13 @@ void StructureTest::testAsianforward()
         anchorDate, yearsToSettlement, numberOfAveragingPoints, 100, volume, BuySell::BUY);
     instruments.clear();
     instruments.push_back(af);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(!structure->isExposureCapped());
 
     double expectedMtM = structure->getValue(re);
-    double expectedCommodityFactor = factors->getFactor(yearsToSettlement);
+    double expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     double expectedMtMPlusAddOn = expectedMtM + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
     BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
                 EPSILON_FOR_DOUBLES * volume);
@@ -481,13 +481,13 @@ void StructureTest::testAsianforward()
     instruments.clear();
     instruments.push_back(af);
     instruments.push_back(cf);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(!structure->isExposureCapped());
     expectedMtM = structure->getValue(re);
-    expectedCommodityFactor = factors->getFactor(yearsToSettlement);
+    expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn = expectedMtM + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
     BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
                 EPSILON_FOR_DOUBLES * volume);
@@ -498,14 +498,14 @@ void StructureTest::testAsianforward()
     instruments.clear();
     instruments.push_back(af);
     instruments.push_back(af2);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
     BOOST_CHECK(!structure->getHasPriceExposure());
     BOOST_CHECK(abs(structure->getCap() - (120 - 100) * volume) < EPSILON_FOR_DOUBLES);
     expectedMtM = structure->getValue(re);
-    expectedCommodityFactor = factors->getFactor(yearsToSettlement);
+    expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn =
         (120 - 100) * volume; // + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
     BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
@@ -517,14 +517,14 @@ void StructureTest::testAsianforward()
     instruments.clear();
     instruments.push_back(af);
     instruments.push_back(af2);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
     BOOST_CHECK(!structure->getHasPriceExposure());
     BOOST_CHECK(abs(structure->getCap() - (80 - 100) * volume) < EPSILON_FOR_DOUBLES * volume);
     expectedMtM = structure->getValue(re);
-    expectedCommodityFactor = factors->getFactor(yearsToSettlement);
+    expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn = (80 - 100) * volume;
     BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
                 EPSILON_FOR_DOUBLES * volume);
@@ -536,12 +536,12 @@ void StructureTest::testAsianforward()
     instruments.push_back(af);
     instruments.push_back(af2);
     instruments.push_back(af3);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(!structure->isExposureCapped());
     expectedMtM = structure->getValue(re);
-    expectedCommodityFactor = factors->getFactor(yearsToSettlement);
+    expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn = expectedMtM + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
     BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
                 2 * EPSILON_FOR_DOUBLES * volume);
@@ -560,10 +560,10 @@ void StructureTest::testEuropeanOption()
     std::shared_ptr<FixedCashflow> cf =
         GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BuySell::BUY);
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
-    std::shared_ptr<Structure> structure;
+    std::shared_ptr<CemNettingSet> structure;
     double premium = 3.4;
     double volume = 10000;
-    std::shared_ptr<RegCapUnderlyingFactors> factors = getDefaultRegCapUnderlyingFactors();
+    AssetClass factors = getDefaultRegCapUnderlyingFactors();
     std::shared_ptr<DiscountCurve> dc;
     std::shared_ptr<ForwardCurveDeterministic> fc;
     std::shared_ptr<VolatilityCurve> vc;
@@ -590,12 +590,12 @@ void StructureTest::testEuropeanOption()
     instruments.push_back(purchasedPutNoDP);
     instruments.push_back(purchasedCallDP);
     instruments.push_back(purchasedCallNoDP);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(!structure->isExposureCapped());
     double expectedMtM = structure->getValue(re);
-    double expectedCommodityFactor = factors->getFactor(yearsToSettlement);
+    double expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     double expectedMtMPlusAddOn =
         expectedMtM + (spot * (2 * volume) * expectedCommodityFactor * (0.4 + 0.6 * ngr));
     BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
@@ -612,14 +612,14 @@ void StructureTest::testEuropeanOption()
         anchorDate, yearsToSettlement, 80, volume, BuySell::SELL, PutCall::CALL, 0, false);
     instruments.clear();
     instruments.push_back(soldPutDP);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
     BOOST_CHECK(abs(structure->getCap() - (instruments[0]->getPremiumAmount() *
                                            instruments[0]->getVolume())) < EPSILON_FOR_DOUBLES);
     expectedMtM = structure->getValue(re);
-    expectedCommodityFactor = factors->getFactor(yearsToSettlement);
+    expectedCommodityFactor = cemAddOnFactor(factors, yearsToSettlement);
     expectedMtMPlusAddOn = expectedMtM + (spot * volume * expectedCommodityFactor * (0.4 + 0.6 * ngr));
     expectedMtMPlusAddOn = min(expectedMtMPlusAddOn, structure->getCap());
     BOOST_CHECK(abs(structure->getMtMPlusAddOn(re, ngr) - expectedMtMPlusAddOn) <
@@ -627,7 +627,7 @@ void StructureTest::testEuropeanOption()
 
     instruments.clear();
     instruments.push_back(soldPutNoDP);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -636,7 +636,7 @@ void StructureTest::testEuropeanOption()
 
     instruments.clear();
     instruments.push_back(soldCallDP);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -645,7 +645,7 @@ void StructureTest::testEuropeanOption()
 
     instruments.clear();
     instruments.push_back(soldCallNoDP);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -660,7 +660,7 @@ void StructureTest::testEuropeanOption()
     instruments.clear();
     instruments.push_back(soldPutDP);
     instruments.push_back(purchasedPutNoDP);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     BOOST_CHECK(structure->isExposureCapped());
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
@@ -681,7 +681,7 @@ void StructureTest::testEuropeanOption()
     instruments.push_back(soldPutNoDP);
     instruments.push_back(purchasedCallNoDP);
     instruments.push_back(soldCallNoDP);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -701,11 +701,11 @@ void StructureTest::testAsianOption()
     std::shared_ptr<FixedCashflow> cf =
         GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BuySell::BUY);
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
-    std::shared_ptr<Structure> structure;
+    std::shared_ptr<CemNettingSet> structure;
     double premium = 3.4;
     double volume = 10000;
     int numberOfAveragingPoints = 20;
-    std::shared_ptr<RegCapUnderlyingFactors> factors = getDefaultRegCapUnderlyingFactors();
+    AssetClass factors = getDefaultRegCapUnderlyingFactors();
 
     // a) purchased option
     std::shared_ptr<AsianOption> purchasedPutDP =
@@ -725,7 +725,7 @@ void StructureTest::testAsianOption()
     instruments.push_back(purchasedPutNoDP);
     instruments.push_back(purchasedCallDP);
     instruments.push_back(purchasedCallNoDP);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(!structure->isExposureCapped());
@@ -745,7 +745,7 @@ void StructureTest::testAsianOption()
                                                  volume, BuySell::SELL, PutCall::CALL, 0, false);
     instruments.clear();
     instruments.push_back(soldPutDP);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -754,7 +754,7 @@ void StructureTest::testAsianOption()
 
     instruments.clear();
     instruments.push_back(soldPutNoDP);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -763,7 +763,7 @@ void StructureTest::testAsianOption()
 
     instruments.clear();
     instruments.push_back(soldCallDP);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -772,7 +772,7 @@ void StructureTest::testAsianOption()
 
     instruments.clear();
     instruments.push_back(soldCallNoDP);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -789,7 +789,7 @@ void StructureTest::testAsianOption()
     instruments.clear();
     instruments.push_back(soldPutDP);
     instruments.push_back(purchasedPutNoDP);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     BOOST_CHECK(structure->isExposureCapped());
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
@@ -813,7 +813,7 @@ void StructureTest::testAsianOption()
     instruments.push_back(soldPutNoDP);
     instruments.push_back(purchasedCallNoDP);
     instruments.push_back(soldCallNoDP);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -833,10 +833,10 @@ void StructureTest::testMixedStructures()
     std::shared_ptr<FixedCashflow> cf =
         GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BuySell::BUY);
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
-    std::shared_ptr<Structure> structure;
+    std::shared_ptr<CemNettingSet> structure;
     [[maybe_unused]] double premium = 3.4;
     double volume = 9087;
-    std::shared_ptr<RegCapUnderlyingFactors> factors = getDefaultRegCapUnderlyingFactors();
+    AssetClass factors = getDefaultRegCapUnderlyingFactors();
 
     // a) Capped Producer forward
     std::shared_ptr<EuropeanForward> ef = GenerateContracts::getDefaultEuropeanForward(
@@ -846,7 +846,7 @@ void StructureTest::testMixedStructures()
     instruments.clear();
     instruments.push_back(ef);
     instruments.push_back(call);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -864,10 +864,10 @@ void StructureTest::testSpecialCases()
 
     int yearsToSettlement = 2;
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
-    std::shared_ptr<Structure> structure;
+    std::shared_ptr<CemNettingSet> structure;
     [[maybe_unused]] double premium = 0;
     double volume = 9087;
-    std::shared_ptr<RegCapUnderlyingFactors> factors = getDefaultRegCapUnderlyingFactors();
+    AssetClass factors = getDefaultRegCapUnderlyingFactors();
 
     // a) ______/\______
     double peakStrike = 102.73;
@@ -884,7 +884,7 @@ void StructureTest::testSpecialCases()
     instruments.push_back(c2);
     instruments.push_back(c3);
     instruments.push_back(c4);
-    structure = std::make_shared<Structure>(instruments, factors);
+    structure = std::make_shared<CemNettingSet>(instruments, factors);
     structure->validate(re);
     BOOST_REQUIRE(structure->isOK());
     BOOST_CHECK(structure->isExposureCapped());
@@ -899,9 +899,10 @@ void StructureTest::testSpecialCases()
     instruments.push_back(c1);
     instruments.push_back(c5);
     instruments.push_back(c4);
-    Result<vector<std::shared_ptr<Structure>>> built = Structure::createStructures(instruments, factors);
+    Result<vector<std::shared_ptr<CemNettingSet>>> built =
+        CemNettingSet::createStructures(instruments, factors);
     BOOST_REQUIRE(built.ok());
-    vector<std::shared_ptr<Structure>> structures = built.value;
+    vector<std::shared_ptr<CemNettingSet>> structures = built.value;
     BOOST_CHECK(structures.size() == 1);
     BOOST_CHECK(structures[0]->isExposureCapped());
     actualCap = structures[0]->getCap();
@@ -911,7 +912,7 @@ void StructureTest::testSpecialCases()
     instruments.push_back(c1);
     instruments.push_back(c4);
     instruments.push_back(c5);
-    built = Structure::createStructures(instruments, factors);
+    built = CemNettingSet::createStructures(instruments, factors);
     BOOST_REQUIRE(built.ok());
     structures = built.value;
     BOOST_CHECK(structures.size() == 1);
@@ -933,8 +934,7 @@ void StructureTest::testStructureCreation()
         anchorDate, yearsToSettlement, 112, structureVolume, BuySell::SELL);
     std::shared_ptr<SingleInstrumentContract> cf = GenerateContracts::getDefaultFixedCashflowWithPremium(
         anchorDate, yearsToSettlement, premiumRecievable, BuySell::BUY);
-    std::shared_ptr<RegCapUnderlyingFactors> regCapFactors =
-        StructureTest::getDefaultRegCapUnderlyingFactors();
+    AssetClass regCapFactors = StructureTest::getDefaultRegCapUnderlyingFactors();
     std::shared_ptr<EuropeanOption> option = GenerateContracts::getDefaultEuropeanOption(
         anchorDate, yearsToSettlement, 115, structureVolume, BuySell::BUY, PutCall::CALL, 0);
 
@@ -943,9 +943,10 @@ void StructureTest::testStructureCreation()
     contracts.push_back(cf);
     contracts.push_back(option);
 
-    Result<vector<std::shared_ptr<Structure>>> built = Structure::createStructures(contracts, regCapFactors);
+    Result<vector<std::shared_ptr<CemNettingSet>>> built =
+        CemNettingSet::createStructures(contracts, regCapFactors);
     BOOST_CHECK(built.ok());
-    vector<std::shared_ptr<Structure>> structures = built.value;
+    vector<std::shared_ptr<CemNettingSet>> structures = built.value;
     BOOST_REQUIRE(structures.size() == 1);
     BOOST_CHECK(structures[0]->isOK());
 
@@ -955,7 +956,7 @@ void StructureTest::testStructureCreation()
     contracts.push_back(fwdSale);
     contracts.push_back(cf);
     contracts.push_back(option);
-    built = Structure::createStructures(contracts, regCapFactors);
+    built = CemNettingSet::createStructures(contracts, regCapFactors);
     BOOST_CHECK(built.ok());
     structures = built.value;
     BOOST_REQUIRE(structures.size() == 1);
@@ -972,10 +973,10 @@ void StructureTest::testStructureCreation()
     threeway.push_back(put);
     threeway.push_back(purchasedCall);
     threeway.push_back(soldCall);
-    Structure manualStructure(threeway, regCapFactors);
-    structures = Structure::createStructures(threeway, regCapFactors).value;
+    CemNettingSet manualStructure(threeway, regCapFactors);
+    structures = CemNettingSet::createStructures(threeway, regCapFactors).value;
     BOOST_REQUIRE(structures.size() == 1);
-    std::shared_ptr<Structure> autoStructure = structures[0];
+    std::shared_ptr<CemNettingSet> autoStructure = structures[0];
     BOOST_CHECK(autoStructure->isOK());
     BOOST_CHECK(abs(autoStructure->getMtMPlusAddOn(re) - manualStructure.getMtMPlusAddOn(re)) <
                 EPSILON_FOR_DOUBLES * structureVolume);
@@ -1016,9 +1017,10 @@ void StructureTest::testStructureCreation()
     contracts.push_back(s1c6);
     contracts.push_back(s1c7);
 
-    Result<vector<std::shared_ptr<Structure>>> split = Structure::createStructures(contracts, regCapFactors);
+    Result<vector<std::shared_ptr<CemNettingSet>>> split =
+        CemNettingSet::createStructures(contracts, regCapFactors);
     BOOST_REQUIRE(split.ok());
-    vector<std::shared_ptr<Structure>> s1 = split.value;
+    vector<std::shared_ptr<CemNettingSet>> s1 = split.value;
     BOOST_REQUIRE(s1.size() == 2);
     BOOST_CHECK(s1[0]->isOK());
     BOOST_CHECK(s1[1]->isOK());

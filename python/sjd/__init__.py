@@ -26,6 +26,7 @@ import logging
 
 import sjd._core as _core
 from sjd._core import *  # noqa: F401,F403
+from sjd.capital import PortfolioB2CEM as PortfolioB2CEM  # noqa: F401
 
 logging.addLevelName(5, "TRACE")
 

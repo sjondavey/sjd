@@ -7,7 +7,7 @@
 #include <sjd/contracts/Cashflow.h>
 #include <sjd/contracts/EuropeanForwardContract.h>
 #include <sjd/contracts/EuropeanOptionContract.h>
-#include <sjd/contracts/Portfolio/Structures/Structure.h>
+#include <sjd/contracts/Portfolio/Structures/CemNettingSet.h>
 
 #include <support/GenerateContracts.h>
 #include <support/GenerateRatesEnvironments.h>
@@ -27,7 +27,7 @@ class StructureTest
 {
 
 public:
-    static std::shared_ptr<RegCapUnderlyingFactors> getDefaultRegCapUnderlyingFactors();
+    static AssetClass getDefaultRegCapUnderlyingFactors();
 
     static void testGradient();
     static void testIsUncappedOnTheLeft();

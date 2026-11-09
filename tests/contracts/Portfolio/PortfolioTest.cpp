@@ -1,6 +1,6 @@
 #include "PortfolioTest.h"
 
-#include <sjd/contracts/Portfolio/Structures/Structure.h>
+#include <sjd/contracts/Portfolio/Structures/CemNettingSet.h>
 #include <sjd/tools/Errors.h>
 
 using namespace std;
@@ -11,16 +11,14 @@ using namespace boost::unit_test_framework;
 using namespace boost::math;
 using namespace sjd;
 
-std::shared_ptr<RegCapUnderlyingFactors> PortfolioTest::getDefaultRegCapUnderlyingFactors()
+AssetClass PortfolioTest::getDefaultRegCapUnderlyingFactors()
 {
-    return std::shared_ptr<RegCapUnderlyingFactors>(std::make_shared<CommodityRegCapFactors>());
+    return AssetClass::Commodity;
 }
 
-std::shared_ptr<RegCapCreditParameters> PortfolioTest::getDefaultRegCreditParameters()
+CounterpartyCredit PortfolioTest::getDefaultRegCreditParameters()
 {
-    double counterpartyWeighting = 1.5;
-    double capitalCharge = .1;
-    return std::make_shared<RegCapCreditParameters>(counterpartyWeighting, capitalCharge);
+    return CounterpartyCredit{1.5, 0.1};
 }
 
 void PortfolioTest::testStructureCreation()
@@ -129,15 +127,15 @@ void PortfolioTest::testPortfolioB2CEM()
     vector<std::shared_ptr<Contract>> contracts;
     contracts.push_back(put);
 
-    std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors =
-        PortfolioTest::getDefaultRegCapUnderlyingFactors();
-    std::shared_ptr<RegCapCreditParameters> regCapCreditParameters =
-        PortfolioTest::getDefaultRegCreditParameters();
+    AssetClass regCapAssetFactors = PortfolioTest::getDefaultRegCapUnderlyingFactors();
+    CounterpartyCredit regCapCreditParameters = PortfolioTest::getDefaultRegCreditParameters();
     bool optimise = true;
 
-    std::shared_ptr<PortfolioB2CEM> unmarginedPortfolio =
-        std::make_shared<PortfolioB2CEM>(contracts, regCapAssetFactors, regCapCreditParameters, optimise);
+    std::shared_ptr<Portfolio> unmarginedPortfolio = std::make_shared<Portfolio>(contracts);
+    CurrentExposureMethod unmarginedCapital(*unmarginedPortfolio, regCapAssetFactors, regCapCreditParameters,
+                                            optimise);
     BOOST_REQUIRE(unmarginedPortfolio->isOK());
+    BOOST_REQUIRE(unmarginedCapital.isOK());
 
     bool useMyThreshold = true, useCptyThreshold = true;
     double myThreshold = 2000000.0, cptyThreshold = 1000000.0, minimumTransferAmount = 500000.0,
@@ -151,11 +149,15 @@ void PortfolioTest::testPortfolioB2CEM()
     std::shared_ptr<Calendar> calendar = std::make_shared<WeekendsOnly>();
     [[maybe_unused]] size_t holdingPeriodInBusinessDays = 10;
 
-    std::shared_ptr<PortfolioB2CEM> marginedPortfolio = std::make_shared<PortfolioB2CEM>(
-        contracts, regCapAssetFactors, regCapCreditParameters, optimise, margin);
-
-    // marginedPortfolio->setMarginParameters(margin, calendar, holdingPeriodInBusinessDays);
+    std::shared_ptr<Portfolio> marginedPortfolio = std::make_shared<Portfolio>(contracts, margin);
+    CurrentExposureMethod marginedCapital(*marginedPortfolio, regCapAssetFactors, regCapCreditParameters,
+                                          optimise);
     BOOST_REQUIRE(marginedPortfolio->isOK());
+    BOOST_REQUIRE(marginedCapital.isOK());
+    CapitalResult unmargined = unmarginedCapital.capital(*unmarginedPortfolio, nullptr, re);
+    CapitalResult margined = marginedCapital.capital(*marginedPortfolio, margin.get(), re);
+    BOOST_CHECK(unmargined.capital >= 0);
+    BOOST_CHECK(margined.capital <= unmargined.capital + EPSILON_FOR_DOUBLES);
 
     /*
     set<Date> exposureDates;
@@ -228,9 +230,8 @@ void PortfolioTest::testInvalidRegulatoryCapitalIsNaN()
     nettingSets.push_back(std::make_shared<Portfolio>(legs));
 
     bool optimise = false;
-    CurrentExposureMethod capital(nettingSets, legs, std::shared_ptr<Margin>(),
-                                  getDefaultRegCapUnderlyingFactors(), getDefaultRegCreditParameters(),
-                                  optimise);
+    CurrentExposureMethod capital(nettingSets, getDefaultRegCapUnderlyingFactors(),
+                                  getDefaultRegCreditParameters(), optimise);
     BOOST_REQUIRE(capital.isOK());
     capital.validate();
     BOOST_REQUIRE(capital.hasErrors());
@@ -243,15 +244,15 @@ void PortfolioTest::testInvalidRegulatoryCapitalIsNaN()
     capital.validate(re);
     BOOST_CHECK_EQUAL(capital.validationReport().getIssues().size(), issuesWithRates);
 #ifndef NDEBUG
-    BOOST_CHECK_THROW(capital.getRegulatoryCapital(re), sjd::Error);
+    Portfolio priced(legs);
+    BOOST_CHECK_THROW(capital.capital(priced, nullptr, re), sjd::Error);
 #endif
 
-    PortfolioB2CEM book(nettingSets, getDefaultRegCapUnderlyingFactors(), getDefaultRegCreditParameters(),
-                        optimise);
+    Portfolio book(nettingSets);
     book.validate();
-    BOOST_CHECK(!book.isOK());
+    BOOST_CHECK(book.isOK());
     book.validate(re);
-    BOOST_CHECK(!book.isOK());
+    BOOST_CHECK(book.isOK());
 }
 
 void PortfolioTest::testNullMarginAndUnknownFactors()
@@ -266,10 +267,18 @@ void PortfolioTest::testNullMarginAndUnknownFactors()
     BOOST_CHECK(emptyMessage.find("contains no contracts") != string::npos);
     BOOST_CHECK(emptyMessage.find(", contains") == string::npos);
 
-    BOOST_CHECK_THROW(generateRegCapFactors("not-an-asset-class"), ConfigurationError);
+    BOOST_CHECK_THROW(assetClassFromName("not-an-asset-class"), ConfigurationError);
+    BOOST_CHECK_CLOSE(cemAddOnFactor(AssetClass::Commodity, 2.0), 0.12, 1e-8);
+    BOOST_CHECK_CLOSE(cemAddOnFactor(AssetClass::FX, 0.5), 0.01, 1e-8);
+    BOOST_CHECK_CLOSE(cemAddOnFactor(AssetClass::Gold, 0.5), 0.01, 1e-8);
+    BOOST_CHECK_CLOSE(cemAddOnFactor(AssetClass::InterestRate, 6.0), 0.015, 1e-8);
+    BOOST_CHECK_CLOSE(cemAddOnFactor(AssetClass::Equity, 1.0), 0.06, 1e-8);
+    BOOST_CHECK_CLOSE(cemAddOnFactor(AssetClass::PreciousMetal, 3.0), 0.07, 1e-8);
+    BOOST_CHECK_CLOSE(cemAddOnFactor(AssetClass::Electricity, 2.0), 0.12, 1e-8);
+    BOOST_CHECK_CLOSE(supervisoryFactors(AssetClass::Electricity).supervisoryFactor, 0.40, 1e-8);
 
     vector<std::shared_ptr<SingleInstrumentContract>> none;
-    Structure empty(none, getDefaultRegCapUnderlyingFactors());
+    CemNettingSet empty(none, getDefaultRegCapUnderlyingFactors());
     BOOST_CHECK(!empty.isOK());
     BOOST_CHECK(empty.getSettlementDate() != Date(1, Jan, 1910));
     empty.validate();

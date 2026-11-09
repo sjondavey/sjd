@@ -1,4 +1,4 @@
-#include <sjd/contracts/Portfolio/Structures/Structure.h>
+#include <sjd/contracts/Portfolio/Structures/CemNettingSet.h>
 
 #include <sjd/tools/Errors.h>
 #include <sjd/tools/Log.h>
@@ -14,25 +14,24 @@ namespace sjd
 {
 
     /*======================================================================================
-    Structure
+    CemNettingSet
 
      =======================================================================================*/
-    Structure::Structure(std::shared_ptr<SingleInstrumentContract> underlyingContract,
-                         std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors)
+    CemNettingSet::CemNettingSet(std::shared_ptr<SingleInstrumentContract> underlyingContract,
+                                 AssetClass regCapAssetFactors)
     {
         vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts;
         underlyingContracts.push_back(underlyingContract);
         commonConstructor(underlyingContracts, regCapAssetFactors);
     }
 
-    Structure::Structure(vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts,
-                         std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors)
+    CemNettingSet::CemNettingSet(vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts,
+                                 AssetClass regCapAssetFactors)
     {
         commonConstructor(underlyingContracts, regCapAssetFactors);
     }
 
-    Structure::Structure(std::shared_ptr<Contract> underlyingContract,
-                         std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors)
+    CemNettingSet::CemNettingSet(std::shared_ptr<Contract> underlyingContract, AssetClass regCapAssetFactors)
     {
         vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts;
         bool couldNotConvert = false;
@@ -61,32 +60,32 @@ namespace sjd
         commonConstructor(underlyingContracts, regCapAssetFactors);
         if (couldNotConvert)
         {
-            recordIssue(issues::STRUCTURE_CONTRACT_CONVERSION, "Cound not convert Contract into a Structure",
-                        {});
+            recordIssue(issues::STRUCTURE_CONTRACT_CONVERSION,
+                        "Cound not convert Contract into a CemNettingSet", {});
         }
     }
 
-    Structure::Structure(const Structure& structure)
+    CemNettingSet::CemNettingSet(const CemNettingSet& structure)
     {
         commonConstructor(structure.contracts, structure.regCapAssetFactors);
     }
 
-    std::unique_ptr<Contract> Structure::clone() const
+    std::unique_ptr<Contract> CemNettingSet::clone() const
     {
-        return std::make_unique<Structure>(*this);
+        return std::make_unique<CemNettingSet>(*this);
     }
 
-    void Structure::commonConstructor(vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts,
-                                      std::shared_ptr<RegCapUnderlyingFactors> inputFactors)
+    void CemNettingSet::commonConstructor(
+        vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts, AssetClass inputFactors)
     {
-        errorTracking = std::make_shared<sjd::IssueTracker>("Structure");
+        errorTracking = std::make_shared<sjd::IssueTracker>("CemNettingSet");
         cappedExposure = false;
         cap = numeric_limits<double>::quiet_NaN();
         contracts = underlyingContracts;
         regCapAssetFactors = inputFactors;
         if (contracts.empty())
         {
-            recordIssue(issues::STRUCTURE_EMPTY, "Structure contains no contracts", {});
+            recordIssue(issues::STRUCTURE_EMPTY, "CemNettingSet contains no contracts", {});
             cappedExposure = false;
             hasPriceExposure = false;
             volume = 0;
@@ -96,24 +95,25 @@ namespace sjd
         volume = getEffectiveVolume(contracts);
     }
 
-    void Structure::runChecks()
+    void CemNettingSet::runChecks()
     {
         MultipleInstrumentContract::runChecks();
         if (contracts.empty())
         {
-            recordIssue(issues::STRUCTURE_EMPTY, "Structure contains no contracts", {});
+            recordIssue(issues::STRUCTURE_EMPTY, "CemNettingSet contains no contracts", {});
             return;
         }
         if (!isPiecewiseLinear(contracts))
         {
             recordIssue(issues::STRUCTURE_NOT_PIECEWISE_LINEAR,
-                        "Structure Design Error, Payoff function is not piecewise linear", {});
+                        "CemNettingSet Design Error, Payoff function is not piecewise linear", {});
         }
         if (volume < 1e-14 && hasPriceExposure)
         {
-            recordIssue(issues::STRUCTURE_VOLUME_WITHOUT_EXPOSURE,
-                        "Structure Design Error, the structure has no volume but it does have price exposure",
-                        {});
+            recordIssue(
+                issues::STRUCTURE_VOLUME_WITHOUT_EXPOSURE,
+                "CemNettingSet Design Error, the structure has no volume but it does have price exposure",
+                {});
         }
 
         if (contracts.size() > 1)
@@ -142,14 +142,14 @@ namespace sjd
         }
     }
 
-    void Structure::runChecks(RatesEnvironment& re)
+    void CemNettingSet::runChecks(RatesEnvironment& re)
     {
         MultipleInstrumentContract::runChecks(re);
 
         if (!isPiecewiseLinear(contracts))
         {
             recordIssue(issues::STRUCTURE_NOT_PIECEWISE_LINEAR,
-                        "Structure Design Error, Payoff function is not piecewise linear", {});
+                        "CemNettingSet Design Error, Payoff function is not piecewise linear", {});
         }
 
         if (!cappedExposure)
@@ -162,7 +162,7 @@ namespace sjd
         }
     }
 
-    Date Structure::getSettlementDate()
+    Date CemNettingSet::getSettlementDate()
     {
         if (contracts.empty())
         {
@@ -171,27 +171,27 @@ namespace sjd
         return contracts[0]->getSettlementDate();
     }
 
-    bool Structure::isExposureCapped() const
+    bool CemNettingSet::isExposureCapped() const
     {
         return cappedExposure;
     }
 
-    bool Structure::getHasPriceExposure() const
+    bool CemNettingSet::getHasPriceExposure() const
     {
         return hasPriceExposure;
     }
 
-    double Structure::getCap() const
+    double CemNettingSet::getCap() const
     {
         return cap;
     }
 
-    double Structure::getVolume() const
+    double CemNettingSet::getVolume() const
     {
         return volume;
     }
 
-    double Structure::getPayoff(double forSpot) const
+    double CemNettingSet::getPayoff(double forSpot) const
     {
         double payoff = 0;
         for (size_t i = 0; i < contracts.size(); ++i)
@@ -201,7 +201,7 @@ namespace sjd
         return payoff;
     }
 
-    double Structure::getMtMPlusAddOn(std::shared_ptr<RatesEnvironment> re, double netGrossRatio)
+    double CemNettingSet::getMtMPlusAddOn(std::shared_ptr<RatesEnvironment> re, double netGrossRatio)
     {
         double mtm = getValue(re);
         SJD_ASSERT(!errorTracking->getHasErrors());
@@ -209,9 +209,9 @@ namespace sjd
         return getMtMPlusAddOnForGivenMtM(re, mtm, netGrossRatio);
     }
 
-    double Structure::getMtMPlusAddOnForGivenMtM(std::shared_ptr<RatesEnvironment> re,
-                                                 double mtm,
-                                                 double netGrossRatio)
+    double CemNettingSet::getMtMPlusAddOnForGivenMtM(std::shared_ptr<RatesEnvironment> re,
+                                                     double mtm,
+                                                     double netGrossRatio)
     {
         if (re->getAnchorDate() > getSettlementDate())
         {
@@ -244,7 +244,7 @@ namespace sjd
 
             Date sd = getSettlementDate();
             double tts = ((double)(sd - re->getAnchorDate())) / 365.0;
-            double commodityFactor = regCapAssetFactors->getFactor(tts);
+            double commodityFactor = cemAddOnFactor(regCapAssetFactors, tts);
             double simpleAddOn = spot * volume * commodityFactor;
             addOn = simpleAddOn * (0.4 + 0.6 * netGrossRatio);
         }
@@ -257,7 +257,7 @@ namespace sjd
         return mtmPlusAddOn;
     }
 
-    set<double> Structure::getAllStrikes(
+    set<double> CemNettingSet::getAllStrikes(
         vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts)
     {
         set<double> strikes;
@@ -273,7 +273,7 @@ namespace sjd
         return strikes;
     }
 
-    vector<std::shared_ptr<SingleInstrumentContract>> Structure::getAllContractsWithStrike(
+    vector<std::shared_ptr<SingleInstrumentContract>> CemNettingSet::getAllContractsWithStrike(
         vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts, double strike)
     {
         vector<std::shared_ptr<SingleInstrumentContract>> contractsWithOneStrike;
@@ -292,9 +292,9 @@ namespace sjd
         return contractsWithOneStrike;
     }
 
-    double Structure::gradient(vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts,
-                               double x1,
-                               double x2)
+    double CemNettingSet::gradient(vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts,
+                                   double x1,
+                                   double x2)
     {
         double y1 = 0, y2 = 0;
         for (size_t i = 0; i < underlyingContracts.size(); ++i)
@@ -305,7 +305,8 @@ namespace sjd
         return (y1 - y2) / (x1 - x2);
     }
 
-    bool Structure::isPiecewiseLinear(vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts)
+    bool CemNettingSet::isPiecewiseLinear(
+        vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts)
     {
         double numericError = 1e-6;
 
@@ -361,7 +362,7 @@ namespace sjd
         return true;
     }
 
-    double Structure::getMaximumNominalVolume(
+    double CemNettingSet::getMaximumNominalVolume(
         vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts)
     {
         double maxNominalVolume = 0;
@@ -377,7 +378,7 @@ namespace sjd
         return maxNominalVolume;
     }
 
-    double Structure::getEffectiveVolume(
+    double CemNettingSet::getEffectiveVolume(
         vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts)
     {
         set<double> strikes = getAllStrikes(underlyingContracts);
@@ -413,7 +414,7 @@ namespace sjd
         return maxVolume;
     }
 
-    bool Structure::isMaximumVolumeInUncappedWing(
+    bool CemNettingSet::isMaximumVolumeInUncappedWing(
         vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts)
     {
         double maxVolume = getEffectiveVolume(underlyingContracts);
@@ -435,8 +436,9 @@ namespace sjd
         return false;
     }
 
-    bool Structure::isUncappedOnTheLeft(vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts,
-                                        double& effectiveVolumeAtLowestStrike)
+    bool CemNettingSet::isUncappedOnTheLeft(
+        vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts,
+        double& effectiveVolumeAtLowestStrike)
     {
         set<double> strikes = getAllStrikes(underlyingContracts);
         double lowerStrike = *strikes.begin();
@@ -460,7 +462,7 @@ namespace sjd
         }
     }
 
-    bool Structure::isUncappedOnTheRight(
+    bool CemNettingSet::isUncappedOnTheRight(
         vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts,
         double& effectiveVolumeAtHighestStrike)
     {
@@ -487,8 +489,9 @@ namespace sjd
         }
     }
 
-    vector<std::shared_ptr<SingleInstrumentContract>> Structure::getContractsWithUncappedExposureOnTheLeft(
-        vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts, double& commonStrike)
+    vector<std::shared_ptr<SingleInstrumentContract>> CemNettingSet::
+        getContractsWithUncappedExposureOnTheLeft(
+            vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts, double& commonStrike)
     {
         commonStrike = 0;
         vector<std::shared_ptr<SingleInstrumentContract>> uncappedContracts;
@@ -511,8 +514,9 @@ namespace sjd
         return uncappedContracts;
     }
 
-    vector<std::shared_ptr<SingleInstrumentContract>> Structure::getContractsWithUncappedExposureOnTheRight(
-        vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts, double& commonStrike)
+    vector<std::shared_ptr<SingleInstrumentContract>> CemNettingSet::
+        getContractsWithUncappedExposureOnTheRight(
+            vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts, double& commonStrike)
     {
         commonStrike = 0;
         vector<std::shared_ptr<SingleInstrumentContract>> uncappedContracts;
@@ -535,9 +539,9 @@ namespace sjd
         return uncappedContracts;
     }
 
-    bool Structure::isCapped(vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts,
-                             double& cap,
-                             bool& hasPriceExposure)
+    bool CemNettingSet::isCapped(vector<std::shared_ptr<SingleInstrumentContract>> underlyingContracts,
+                                 double& cap,
+                                 bool& hasPriceExposure)
     {
         cap = numeric_limits<double>::quiet_NaN();
         hasPriceExposure = true;
@@ -635,16 +639,16 @@ namespace sjd
         }
     }
 
-    bool Structure::qualifyForRegulatoryCapitalOffset(std::shared_ptr<SingleInstrumentContract> contract1,
-                                                      std::shared_ptr<SingleInstrumentContract> contract2)
+    bool CemNettingSet::qualifyForRegulatoryCapitalOffset(std::shared_ptr<SingleInstrumentContract> contract1,
+                                                          std::shared_ptr<SingleInstrumentContract> contract2)
     {
         string reasonIfNot;
         return qualifyForRegulatoryCapitalOffset(contract1, contract2, reasonIfNot);
     }
 
-    bool Structure::qualifyForRegulatoryCapitalOffset(std::shared_ptr<SingleInstrumentContract> contract1,
-                                                      std::shared_ptr<SingleInstrumentContract> contract2,
-                                                      string& reasonIfNot)
+    bool CemNettingSet::qualifyForRegulatoryCapitalOffset(std::shared_ptr<SingleInstrumentContract> contract1,
+                                                          std::shared_ptr<SingleInstrumentContract> contract2,
+                                                          string& reasonIfNot)
     {
         reasonIfNot = "";
 
@@ -709,9 +713,9 @@ namespace sjd
         }
     }
 
-    bool Structure::moveContracts(vector<std::shared_ptr<SingleInstrumentContract>> contractsToMove,
-                                  vector<std::shared_ptr<SingleInstrumentContract>>& fromContracts,
-                                  vector<std::shared_ptr<SingleInstrumentContract>>& toContracts)
+    bool CemNettingSet::moveContracts(vector<std::shared_ptr<SingleInstrumentContract>> contractsToMove,
+                                      vector<std::shared_ptr<SingleInstrumentContract>>& fromContracts,
+                                      vector<std::shared_ptr<SingleInstrumentContract>>& toContracts)
     {
         bool allContractsMoved = true;
         for (size_t i = 0; i < contractsToMove.size(); ++i)
@@ -731,21 +735,20 @@ namespace sjd
         return allContractsMoved;
     }
 
-    bool Structure::isContractADerivative(std::shared_ptr<SingleInstrumentContract> underlyingContract)
+    bool CemNettingSet::isContractADerivative(std::shared_ptr<SingleInstrumentContract> underlyingContract)
     {
         return (std::dynamic_pointer_cast<SingleDerivativeContract>(underlyingContract) != 0);
     }
 
-    bool Structure::isAnAsianDerivative(std::shared_ptr<SingleDerivativeContract> underlyingContract)
+    bool CemNettingSet::isAnAsianDerivative(std::shared_ptr<SingleDerivativeContract> underlyingContract)
     {
         return (std::dynamic_pointer_cast<AsianContract>(underlyingContract) != 0);
     }
 
-    Result<vector<std::shared_ptr<Structure>>> Structure::createStructures(
-        vector<std::shared_ptr<SingleInstrumentContract>> inputContracts,
-        std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors)
+    Result<vector<std::shared_ptr<CemNettingSet>>> CemNettingSet::createStructures(
+        vector<std::shared_ptr<SingleInstrumentContract>> inputContracts, AssetClass regCapAssetFactors)
     {
-        Result<vector<std::shared_ptr<Structure>>> result;
+        Result<vector<std::shared_ptr<CemNettingSet>>> result;
         if (inputContracts.size() == 0)
         {
             result.report =
@@ -774,8 +777,8 @@ namespace sjd
         bool hasExposure;
         if (isCapped(inputContracts, cap, hasExposure) || isMaximumVolumeInUncappedWing(inputContracts))
         {
-            std::shared_ptr<Structure> built =
-                std::make_shared<Structure>(inputContracts, regCapAssetFactors);
+            std::shared_ptr<CemNettingSet> built =
+                std::make_shared<CemNettingSet>(inputContracts, regCapAssetFactors);
             if (built->hasErrors())
             {
                 result.report = built->validationReport();
@@ -808,10 +811,10 @@ namespace sjd
             return result;
         }
 
-        std::shared_ptr<Structure> cappedStructure =
-            std::make_shared<Structure>(split.value.capped, regCapAssetFactors);
-        std::shared_ptr<Structure> uncappedStructure =
-            std::make_shared<Structure>(split.value.uncapped, regCapAssetFactors);
+        std::shared_ptr<CemNettingSet> cappedStructure =
+            std::make_shared<CemNettingSet>(split.value.capped, regCapAssetFactors);
+        std::shared_ptr<CemNettingSet> uncappedStructure =
+            std::make_shared<CemNettingSet>(split.value.uncapped, regCapAssetFactors);
         if (cappedStructure->hasErrors() || uncappedStructure->hasErrors())
         {
             result.report = cappedStructure->validationReport().merge(uncappedStructure->validationReport());
@@ -826,7 +829,7 @@ namespace sjd
         return result;
     }
 
-    Result<Structure::ExposureSplit> Structure::decomposeIntoCappedAndUncapped(
+    Result<CemNettingSet::ExposureSplit> CemNettingSet::decomposeIntoCappedAndUncapped(
         const vector<std::shared_ptr<SingleInstrumentContract>>& allContracts)
     {
         Result<ExposureSplit> result;
@@ -934,7 +937,7 @@ namespace sjd
         return result;
     }
 
-    Result<bool> Structure::optimiseCashflow(
+    Result<bool> CemNettingSet::optimiseCashflow(
         vector<std::shared_ptr<SingleInstrumentContract>>& cappedContracts,
         vector<std::shared_ptr<SingleInstrumentContract>>& unCappedContracts)
     {
@@ -988,13 +991,13 @@ namespace sjd
         return result;
     }
 
-    string Structure::toString(std::shared_ptr<RatesEnvironment> re)
+    string CemNettingSet::toString(std::shared_ptr<RatesEnvironment> re)
     {
         validate(re);
         stringstream description;
         if (!isOK())
         {
-            description << "Structure has errors,";
+            description << "CemNettingSet has errors,";
             vector<string> errorMessages = getErrorMessages();
             for (size_t i = 0; i < errorMessages.size(); ++i)
             {
@@ -1002,7 +1005,7 @@ namespace sjd
             }
             return description.str();
         }
-        description << "Structure MtM," << fixed << setprecision(4) << getValue(re);
+        description << "CemNettingSet MtM," << fixed << setprecision(4) << getValue(re);
         if (!hasPriceExposure)
         {
             description << ",No Price Exposure," << fixed << setprecision(2) << cap;

@@ -159,7 +159,7 @@ def minimise_collar_put_moneyness(
     ``spots``, and scores ``structure_costs[objective]`` plus
     ``premium_weight * net option premium`` (premium is today's value, not
     path-averaged). When ``use_b2cem`` is true, capital uses CEM netting sets
-    from ``PortfolioB2CEM`` and needs ``factors`` and ``credit``.
+    from a ``Portfolio`` and a ``CurrentExposureMethod`` and needs ``factors`` and ``credit``.
 
     Returns the best ``strategy``, ``costs``, ``premium``, ``score``, and the
     full ``trials`` list.

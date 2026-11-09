@@ -11,11 +11,10 @@ add_library(sjd STATIC
     contracts/Portfolio/Insurance/PortfolioInsurance.cpp
     contracts/Portfolio/Margin/Margin.cpp
     contracts/Portfolio/Portfolio.cpp
-    contracts/Portfolio/RegulatoryCapital.cpp
+    contracts/Portfolio/CapitalModel.cpp
     contracts/Portfolio/PortfolioEvolver.cpp
-    contracts/Portfolio/RegCap/RegCapCreditParameters.cpp
-    contracts/Portfolio/RegCap/RegCapUnderlyingFactors.cpp
-    contracts/Portfolio/Structures/Structure.cpp
+    contracts/Portfolio/SupervisoryParameters.cpp
+    contracts/Portfolio/Structures/CemNettingSet.cpp
     maths/maths.cpp
     maths/TwoDimensionalInterpolation.cpp
     pricing/AsianOptionFormula.cpp

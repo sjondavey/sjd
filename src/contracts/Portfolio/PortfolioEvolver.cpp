@@ -125,6 +125,11 @@ namespace sjd
         return subset;
     }
 
+    void PortfolioEvolver::setNettingSets(vector<std::shared_ptr<Contract>> sets)
+    {
+        nettingSets = std::move(sets);
+    }
+
     SimulatedPaths PortfolioEvolver::prepareResult(size_t paths,
                                                    bool antithetic,
                                                    bool byTrade,
@@ -139,7 +144,7 @@ namespace sjd
         }
         if (byStructure)
         {
-            structures = portfolio->regulatoryStructures();
+            structures = nettingSets;
         }
         result.dates = simulationDates;
         result.exposureSteps = exposureDatesIndex;

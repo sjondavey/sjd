@@ -5,8 +5,8 @@
 #include <boost/test/unit_test.hpp>
 #include <math.h>
 
+#include <sjd/contracts/Portfolio/CapitalModel.h>
 #include <sjd/contracts/Portfolio/Portfolio.h>
-#include <sjd/contracts/Portfolio/RegulatoryCapital.h>
 
 #include <support/GenerateContracts.h>
 #include <support/GenerateRatesEnvironments.h>
@@ -20,8 +20,8 @@ class PortfolioTest
 {
 
 public:
-    static std::shared_ptr<RegCapUnderlyingFactors> getDefaultRegCapUnderlyingFactors();
-    static std::shared_ptr<RegCapCreditParameters> getDefaultRegCreditParameters();
+    static AssetClass getDefaultRegCapUnderlyingFactors();
+    static CounterpartyCredit getDefaultRegCreditParameters();
 
     static void testStructureCreation();
 

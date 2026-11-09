@@ -6,11 +6,11 @@ Option formulas stay unitless. They take a discount factor and a standard deviat
 
 ## Scope: capital and costs
 
-Regulatory capital today is Basel II Current Exposure Method (CEM). The C++ `Structure` / `CurrentExposureMethod` / `PortfolioB2CEM` path and the matching `sjd.stats.regulatory_capital` along a simulation are kept: CEM is a substantial, tested piece of the library and remains available for comparison and for books that still report under that measure.
+Regulatory capital today is Basel II Current Exposure Method (CEM). `CurrentExposureMethod` implements `CapitalModel`, and `sjd.stats.regulatory_capital` applies the same add-ons along a simulation. CEM stays available for comparison and for books that still report under that measure. SA-CCR will be a second `CapitalModel`.
 
 For a structuring optimiser, the intended capital term is SA-CCR (Basel III). CEM add-ons are notional-based and ignore option delta, so they steer collar-versus-outright decisions the wrong way. SA-CCR for a single asset in one hedging set needs supervisory delta (Black-76 delta is already on the pricing formulas), adjusted notional, maturity factor, and a PFE multiplier from MtM and collateral — all of which can live in Python on `simulate(..., by_trade=True)` output without replacing the CEM code. Until that lands, `sjd.stats.structure_costs` uses CEM when netting-set capital is requested, and treats SA-CCR as the target measure to add beside it rather than instead of it.
 
-Naming: a user-facing parametrised book is a **strategy** (`sjd.strategy`). C++ `Structure` and simulation `by_structure` still mean a regulatory-capital netting set.
+Naming: a user-facing parametrised book is a **strategy** (`sjd.strategy`). A CEM netting set is `CemNettingSet`. `simulation.by_netting_set` is the value of each set, and `by_structure` is the same array.
 
 ## Dependencies
 

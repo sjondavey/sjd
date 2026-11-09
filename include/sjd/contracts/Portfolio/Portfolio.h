@@ -9,9 +9,9 @@ namespace sjd
     /*======================================================================================
     Portfolio
 
-    A portfolio consists of one or more single instrument contracts. A Portfolio only
-    addresses issues of forward valuation of the instruments. Regulatory capital is
-    calculated by a RegulatoryCapital model that sits behind the portfolio.
+    A portfolio consists of one or more single instrument contracts, and an optional
+    margin account. It prices the book. Regulatory capital is a CapitalModel, which
+    is not a portfolio.
     =======================================================================================*/
     class Portfolio : public MultipleInstrumentContract
     {
@@ -37,9 +37,6 @@ namespace sjd
         double getMarginBalance() const;
         double getMarginCall(std::shared_ptr<RatesEnvironment> re);
         void updateMarginBalanceWithCall(double marginCall);
-
-        // Empty unless this portfolio owns regulatory-capital netting sets.
-        virtual std::vector<std::shared_ptr<Contract>> regulatoryStructures() const { return {}; }
 
     protected:
         virtual void setInputVariables();

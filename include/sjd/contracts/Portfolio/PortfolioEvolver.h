@@ -10,7 +10,7 @@ namespace sjd
 {
     // Every simulated value. Statistics are computed outside the evolver.
     // The arrays are flat and row-major: spot, mtm and margin are [path][step],
-    // byTrade is [path][step][trade] and byStructure is [path][step][set].
+    // byTrade is [path][step][trade] and byStructure is [path][step][netting set].
     // margin is empty unless the portfolio is margined. byTrade and
     // byStructure are empty unless they were requested. A failed
     // simulation has paths == 0. With a holding period, dates also hold the
@@ -56,6 +56,9 @@ namespace sjd
         std::vector<QuantLib::Date> getSimulationDates();
         std::vector<QuantLib::Date> getExposureDates();
 
+        // Priced when a path is requested by netting set. The portfolio does not hold them.
+        void setNettingSets(std::vector<std::shared_ptr<Contract>> sets);
+
         // With antithetic paths, path i and path i + paths/2 use opposite normals, and an
         // odd request is rounded up.
         SimulatedPaths simulatePaths(unsigned long numberOfPaths,
@@ -100,6 +103,7 @@ namespace sjd
         bool prepared = false;
 
         std::shared_ptr<Portfolio> portfolio;
+        std::vector<std::shared_ptr<Contract>> nettingSets;
 
         std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGenerator;
         std::shared_ptr<QuantLib::Calendar> calendarForHoldingPeriod;

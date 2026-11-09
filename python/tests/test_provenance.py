@@ -61,7 +61,7 @@ def test_metadata_records_the_run():
         "seed": 4,
         "antithetic": False,
         "by_trade": False,
-        "by_structure": False,
+        "by_netting_set": False,
         "holding_period": 0,
     }
 
