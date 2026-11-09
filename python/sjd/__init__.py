@@ -44,7 +44,7 @@ def require_valid(obj, env=None):
     return report
 
 
-def set_log_level(level):
+def set_log_level(level):  # type: ignore[no-redef]
     """Set the C++ logger and the ``sjd`` logger to the same level.
 
     ``level`` is ``"TRACE"``, ``"DEBUG"``, ``"INFO"``, ``"WARNING"`` or

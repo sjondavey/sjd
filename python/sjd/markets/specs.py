@@ -19,15 +19,16 @@ Each currency has one discount curve, shared by every quote that settles in
 that currency.
 """
 
+import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any
 
-try:
+if sys.version_info >= (3, 11):
     import tomllib
-except ModuleNotFoundError:  # Python 3.10
+else:
     import tomli as tomllib
 
 
@@ -488,7 +489,7 @@ def _build(
         raise CatalogueError(f"{where}: {error}") from None
 
 
-def _enum_member(enum: type, value: Any, where: str):
+def _enum_member(enum: type[Enum], value: Any, where: str) -> Enum:
     try:
         return enum[value]
     except (KeyError, TypeError):

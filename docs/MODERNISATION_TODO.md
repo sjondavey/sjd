@@ -856,6 +856,17 @@ and 0.34 s for 10,000 paths. Debug `ctest` passed.
 - Accept `numpy.datetime64` and `pandas.Timestamp` as dates in `to_ql_date`,
   not only objects with `year`, `month` and `day` attributes.
 
+**Status.** Done. The design is `docs/python-packaging.md`. `pip install .` and
+`pip install -e .` compile `_core` from the root `pyproject.toml`. The source
+tree does not receive the extension. Preset tests import
+`build/<preset>/python`. The wheel version is read from
+`project(sjd VERSION ...)`. cibuildwheel builds CPython 3.10 wheels for
+Windows and manylinux. `pybind11-stubgen` writes `_core.pyi`, `py.typed`
+ships, and mypy checks the staged package. `to_ql_date` accepts
+`numpy.datetime64` and `pandas.Timestamp`. Debug `ctest` passed: 159 pytest
+tests, one skipped because pandas is not installed, and `sjdTest`. A temporary
+virtualenv imported the installed wheel and the editable install.
+
 ---
 
 ### Step 19. Bind the outstanding C++ functionality

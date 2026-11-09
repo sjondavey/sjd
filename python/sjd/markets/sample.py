@@ -195,6 +195,7 @@ def _insert_discounts(connection: sqlite3.Connection, anchor: str, catalogue: Ca
 def _insert_volatilities(connection: sqlite3.Connection, anchor: str, quotes: list[QuoteSpec]) -> None:
     rows = []
     for quote in quotes:
+        strikes: tuple[float, ...]
         if isinstance(quote.volatility, CalendarMonthMoneynessVol):
             dates = [day for day, _value in _sample(FORWARDS, quote, "forward pillars")]
             strikes = MONEYNESS

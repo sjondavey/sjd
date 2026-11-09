@@ -1,9 +1,25 @@
 cmake_minimum_required(VERSION 3.24)
+
+# pip install does not use a preset. Take vcpkg from the environment, and do not
+# fall through to vcpkg's x64-windows triplet (that one links the static CRT).
+# A preset sets both variables, so this block does not replace them.
+if(NOT CMAKE_TOOLCHAIN_FILE AND DEFINED ENV{VCPKG_ROOT})
+    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        CACHE FILEPATH "vcpkg toolchain" FORCE)
+endif()
+# WIN32 is not set until project(), so the host variables are the ones that exist here.
+if(NOT VCPKG_TARGET_TRIPLET AND NOT DEFINED ENV{VCPKG_TARGET_TRIPLET})
+    if(CMAKE_HOST_WIN32)
+        set(VCPKG_TARGET_TRIPLET "x64-windows-static-md" CACHE STRING "vcpkg triplet")
+    elseif(CMAKE_HOST_UNIX)
+        set(VCPKG_TARGET_TRIPLET "x64-linux" CACHE STRING "vcpkg triplet")
+    endif()
+endif()
+
 project(sjd VERSION 0.1.0 LANGUAGES CXX)
 
-# The project version is the single source for sjd.__version__ and build_info.
-# The wheel version in python/pyproject.toml is kept equal to it until packaging
-# reads this value itself.
+# This version is the wheel version (pyproject.toml reads this line), sjd.__version__,
+# and build_info.
 find_package(Git QUIET)
 set(SJD_GIT_COMMIT "unknown")
 set(SJD_GIT_DIRTY 0)
@@ -122,29 +138,58 @@ if(SJD_BUILD_PYTHON)
         target_compile_options(sjd_python PRIVATE /bigobj)
     endif()
 
-    # The compiled core lives inside the source package, so the editable install
-    # (pip install -e python) and the tests import the same file for Debug and Release.
-    set(SJD_PYTHON_PACKAGE_DIR "${PROJECT_SOURCE_DIR}/python/sjd")
-    add_custom_command(TARGET sjd_python POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+    execute_process(
+        COMMAND "${Python3_EXECUTABLE}" -c "import pybind11_stubgen"
+        RESULT_VARIABLE _sjd_stubgen_rc
+    )
+    if(NOT _sjd_stubgen_rc EQUAL 0)
+        message(FATAL_ERROR
+            "pybind11-stubgen is not installed for ${Python3_EXECUTABLE}. "
+            "Run: python -m pip install pybind11-stubgen")
+    endif()
+
+    # import sjd loads _core from the package directory. The source tree stays
+    # free of the binary. Preset tests import this stage. A scikit-build install
+    # puts the same binary, and the stub, into the wheel's sjd package.
+    set(SJD_PYTHON_STAGE "${CMAKE_BINARY_DIR}/python")
+    add_custom_target(sjd_python_stage ALL
+        COMMAND "${CMAKE_COMMAND}" -E rm -rf "${SJD_PYTHON_STAGE}/sjd"
+        COMMAND "${CMAKE_COMMAND}" -E copy_directory
+            "${PROJECT_SOURCE_DIR}/python/sjd"
+            "${SJD_PYTHON_STAGE}/sjd"
+        COMMAND "${CMAKE_COMMAND}" -E copy
             "$<TARGET_FILE:sjd_python>"
-            "${SJD_PYTHON_PACKAGE_DIR}/$<TARGET_FILE_NAME:sjd_python>"
-        COMMENT "Staging sjd._core into python/sjd"
+            "${SJD_PYTHON_STAGE}/sjd/$<TARGET_FILE_NAME:sjd_python>"
+        COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/python/generate_core_stub.py"
+            "${SJD_PYTHON_STAGE}" "${PROJECT_SOURCE_DIR}"
+        DEPENDS sjd_python
+        COMMENT "Staging sjd and generating _core.pyi"
         VERBATIM
     )
 
-    add_test(
-        NAME sjdPython
-        COMMAND "${CMAKE_COMMAND}" -E env
-                "PYTHONPATH=${PROJECT_SOURCE_DIR}/python"
-                "SJD_NO_DEBUG_DIALOGS=1"
-                "${Python3_EXECUTABLE}" -m pytest "${PROJECT_SOURCE_DIR}/python/tests"
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/python"
-    )
+    if(SKBUILD)
+        # COMPONENT applies only to the artifact group it follows. A Windows
+        # module is one of these two, so both groups name the python component.
+        install(TARGETS sjd_python
+            LIBRARY DESTINATION sjd COMPONENT python
+            RUNTIME DESTINATION sjd COMPONENT python)
+        install(CODE
+            "file(INSTALL \"${SJD_PYTHON_STAGE}/sjd/_core.pyi\" DESTINATION \"\${CMAKE_INSTALL_PREFIX}/sjd\")"
+            COMPONENT python)
+    else()
+        add_test(
+            NAME sjdPython
+            COMMAND "${CMAKE_COMMAND}" -E env
+                    "PYTHONPATH=${SJD_PYTHON_STAGE}"
+                    "SJD_NO_DEBUG_DIALOGS=1"
+                    "${Python3_EXECUTABLE}" -m pytest "${PROJECT_SOURCE_DIR}/python/tests"
+            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        )
+    endif()
 
     message(STATUS "Python bindings: ${Python3_EXECUTABLE}")
     message(STATUS "pybind11: ${pybind11_DIR}")
-    message(STATUS "Python package: ${SJD_PYTHON_PACKAGE_DIR}")
+    message(STATUS "Python stage: ${SJD_PYTHON_STAGE}")
 endif()
 
 # ---------------------------------------------------------------------------

@@ -95,14 +95,86 @@ namespace
 #endif
     }
 
+    // numpy.datetime64 has no year/month/day. The type objects are cached so a
+    // datetime.date does not import numpy on every call. They are not pybind11
+    // objects: those are destroyed during interpreter finalisation and crash.
+    struct NumpyDates
+    {
+        PyObject* datetime64 = nullptr;
+        PyObject* isnat = nullptr;
+
+        static const NumpyDates& get()
+        {
+            static const NumpyDates cached = []
+            {
+                NumpyDates dates;
+                try
+                {
+                    py::module_ numpy = py::module_::import("numpy");
+                    py::object type = numpy.attr("datetime64");
+                    py::object nat = numpy.attr("isnat");
+                    dates.datetime64 = type.ptr();
+                    dates.isnat = nat.ptr();
+                    Py_INCREF(dates.datetime64);
+                    Py_INCREF(dates.isnat);
+                }
+                catch (const py::error_already_set&)
+                {
+                    // numpy is a dependency. A missing import leaves the year/month/day path.
+                }
+                return dates;
+            }();
+            return cached;
+        }
+    };
+
     QuantLib::Date to_ql_date(const py::object& value)
     {
         if (value.is_none())
             throw py::type_error("date is None");
-        const int year = value.attr("year").cast<int>();
-        const int month = value.attr("month").cast<int>();
-        const int day = value.attr("day").cast<int>();
-        return QuantLib::Date(day, static_cast<QuantLib::Month>(month), year);
+
+        const NumpyDates& numpy = NumpyDates::get();
+        if (numpy.datetime64 != nullptr && py::isinstance(value, py::handle(numpy.datetime64)))
+        {
+            if (py::handle(numpy.isnat)(value).cast<bool>())
+                throw py::value_error("date is numpy.datetime64 NaT");
+            // A finer unit (hours, minutes) is the UTC day that contains it.
+            const auto days = value.attr("astype")("datetime64[D]").attr("astype")("int64").cast<long long>();
+            const QuantLib::Date epoch(1, QuantLib::January, 1970);
+            return epoch + static_cast<QuantLib::BigInteger>(days);
+        }
+
+        // pandas.NaT exposes year, but reading it throws. pandas is not imported.
+        const std::string type_name = py::cast<std::string>(py::type::of(value).attr("__name__"));
+        if (type_name == "NaTType")
+            throw py::value_error("date is pandas.NaT");
+
+        py::object year;
+        py::object month;
+        py::object day;
+        try
+        {
+            year = value.attr("year");
+            month = value.attr("month");
+            day = value.attr("day");
+        }
+        catch (const py::error_already_set&)
+        {
+            throw py::type_error("date must be a datetime.date, pandas.Timestamp, or numpy.datetime64");
+        }
+        try
+        {
+            return QuantLib::Date(day.cast<int>(), static_cast<QuantLib::Month>(month.cast<int>()),
+                                  year.cast<int>());
+        }
+        catch (const py::cast_error&)
+        {
+            throw py::value_error("date year, month, and day must be integers");
+        }
+        catch (const py::error_already_set&)
+        {
+            throw py::value_error("date is not a calendar day");
+        }
     }
 
     std::vector<QuantLib::Date> to_ql_dates(const py::iterable& values)
@@ -706,7 +778,11 @@ class ValidationError(SjdError, ValueError):
 
     def __init__(self, message, report):
         super().__init__(message, "VALIDATION")
-        self.report = report
+        self._report = report
+
+    @property
+    def report(self):
+        return self._report
 )py",
              module.attr("__dict__"));
 

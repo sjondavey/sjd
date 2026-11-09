@@ -1,0 +1,55 @@
+[build-system]
+requires = ["scikit-build-core>=1.0", "pybind11", "numpy", "pybind11-stubgen"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "sjd"
+dynamic = ["version"]
+description = "Commodity derivative pricing and Monte Carlo statistics"
+requires-python = ">=3.10"
+dependencies = ["numpy", "tomli; python_version < '3.11'"]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "mypy", "pybind11-stubgen"]
+
+[[tool.dynamic-metadata]]
+provider = "scikit_build_core.metadata.regex"
+field = "version"
+input = "CMakeLists.txt"
+regex = 'project\(sjd VERSION (?P<value>\d+\.\d+\.\d+)'
+
+[tool.scikit-build]
+minimum-version = "1.0"
+cmake.build-type = "Release"
+install.components = ["python"]
+# The debug tree under build/ is not part of the source distribution.
+sdist.exclude = ["build", "dist", ".venv", "**/__pycache__"]
+
+[tool.scikit-build.cmake.define]
+SJD_BUILD_TESTS = false
+
+[tool.pytest.ini_options]
+testpaths = ["python/tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+src = ["python"]
+extend-exclude = ["python/notebooks", "python/notebooks/**"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+# Line length is the formatter's job.
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+
+[tool.cibuildwheel]
+build = "cp310-*"
+skip = "*musllinux* pp* *i686* *aarch64* *macosx* *win32*"
+archs = ["auto64"]
+test-requires = ["pytest"]
+# {project} is the unpacked sdist. The installed package is what gets imported.
+test-command = "pytest {project}/python/tests -q"

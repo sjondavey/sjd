@@ -29,8 +29,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - run: python -m pip install ruff
       - name: ruff check
-        working-directory: python
-        run: ruff check .
+        run: ruff check python
       - name: clang-format
         run: |
           python -m pip install clang-format==18.1.8
@@ -57,7 +56,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Python tools
-        run: python -m pip install ninja pybind11 numpy pytest
+        run: python -m pip install ninja pybind11 numpy pytest pybind11-stubgen mypy
 
       - name: MSVC environment
         if: runner.os == 'Windows'
@@ -104,6 +103,13 @@ jobs:
           UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
         run: ctest --preset ${{ matrix.preset }}
 
+      # The staged package has the generated _core.pyi. The source tree does not.
+      - name: mypy
+        if: matrix.preset != 'linux-asan'
+        env:
+          MYPYPATH: ${{ github.workspace }}/build/${{ matrix.preset }}/python
+        run: python -m mypy --package sjd
+
       - name: Linux coverage report
         if: matrix.preset == 'linux-debug'
         run: |
@@ -148,3 +154,42 @@ jobs:
             build/${{ matrix.preset }}/Testing/Temporary/LastTest.log
             build/${{ matrix.preset }}/vcpkg-manifest-install.log
           if-no-files-found: ignore
+
+  # Release wheels. QuantLib is built again inside this job. CPython 3.10 only.
+  wheels:
+    name: wheel ${{ matrix.build }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-2022, build: cp310-win_amd64, vcpkg_root: "C:/vcpkg", bootstrap: "C:/vcpkg/bootstrap-vcpkg.bat" }
+          - { os: ubuntu-24.04, build: cp310-manylinux_x86_64, vcpkg_root: "/tmp/vcpkg", bootstrap: "/tmp/vcpkg/bootstrap-vcpkg.sh" }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: cibuildwheel
+        run: python -m pip install cibuildwheel
+
+      # The Linux build runs inside the manylinux container, so vcpkg is cloned
+      # there. CIBW_BEFORE_ALL is that container's shell on Linux and cmd on Windows.
+      - name: Point the wheel build at vcpkg
+        shell: bash
+        run: |
+          root="${{ matrix.vcpkg_root }}"
+          boot="${{ matrix.bootstrap }}"
+          echo "CIBW_BUILD=${{ matrix.build }}" >> "$GITHUB_ENV"
+          echo "CIBW_ENVIRONMENT=VCPKG_ROOT=$root" >> "$GITHUB_ENV"
+          echo "CIBW_BEFORE_ALL=git clone https://github.com/microsoft/vcpkg.git $root && git -C $root checkout $VCPKG_COMMIT && $boot -disableMetrics" >> "$GITHUB_ENV"
+
+      - name: Build wheels
+        run: python -m cibuildwheel
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.build }}
+          path: wheelhouse/*.whl

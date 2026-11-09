@@ -1,16 +1,15 @@
 # Teaching notebooks
 
-Build the compiled core, which is copied into the package as `python/sjd/_core.pyd`,
-and install the package in editable mode once:
+From the repository root, install the package once. That compiles `_core`:
 
 ```
-cmake --build --preset debug --target sjd_python
-python -m pip install -e python
+python -m pip install -e .
 ```
 
-After that `import sjd` works from any directory, and a rebuild is picked up
-without reinstalling. Shut the notebook kernel down before rebuilding so Windows
-can replace `_core.pyd`.
+After that `import sjd` works from any directory. This is a Release build, separate
+from `cmake --build --preset debug`, which is what `ctest` runs. A later C++ change
+is picked up by installing again. Shut the notebook kernel down before that so
+Windows can replace the extension.
 
 The sample market and book come from `sjd.examples` (`sample_market`,
 `sample_contracts`), so every notebook works on the same trades.

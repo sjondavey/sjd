@@ -29,7 +29,7 @@ cmake --build --preset debug
 ctest --preset debug
 ```
 
-`ctest` runs `sjdTest` (Boost) and `sjdPythonValidation`. Binaries land in `build/debug`. The Python module is also copied to `python/sjd_runtime` so notebooks do not import from the build tree.
+`ctest` runs `sjdTest` (Boost) and `sjdPython`. Binaries land in `build/debug`. The Python tests import the package staged at `build/debug/python`.
 
 Release uses the `release` preset. Set `-DSJD_BUILD_PYTHON=OFF` to skip the bindings.
 
@@ -62,6 +62,6 @@ if (contract.isOK()) {
 }
 ```
 
-From Python the same steps are `validate`, `is_ok`, and `get_value`. See `python/notebooks` for worked examples. Build the bindings so `_core` is copied into `python/sjd`, then `pip install -e python` and `import sjd`.
+From Python the same steps are `validate`, `is_ok`, and `get_value`. See `python/notebooks` for worked examples. From the repository root, `pip install -e .` compiles `_core` and `import sjd` works.
 
 CMake is the supported build. The old Excel add-in layers (`sjdObjects`, `sjdXllObjects`, and the Visual Studio solutions) have been removed.
