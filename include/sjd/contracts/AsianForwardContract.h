@@ -27,9 +27,9 @@ namespace sjd
                      double volume,
                      BuySell buySell);
 
-        AsianForward(AsianForward& forward);
+        AsianForward(const AsianForward& forward);
 
-        std::unique_ptr<Contract> clone() override;
+        std::unique_ptr<Contract> clone() const override;
 
         virtual ~AsianForward() {};
 
@@ -37,14 +37,12 @@ namespace sjd
         void runChecks(RatesEnvironment& re) override;
         virtual std::string validationRoot() const { return "asian_forward"; }
 
-        virtual void setAveragingDates(std::set<QuantLib::Date> averagingDates);
-
-        virtual double getValue(std::shared_ptr<RatesEnvironment> re);
+        virtual double getValue(const std::shared_ptr<RatesEnvironment>& re) const;
         // Overwrite to ensure fwdFwdFactors are Multiplicative to the *average* of the Averaging Rates
         virtual void getFixingAndForwardRates(QuantLib::Date valuationDate,
                                               std::vector<double>& fixingRates,
                                               std::vector<double>& forwardRates,
-                                              std::shared_ptr<RatesEnvironment> re);
+                                              std::shared_ptr<RatesEnvironment> re) const;
 
         virtual std::string toStringRates(std::shared_ptr<RatesEnvironment> re);
 

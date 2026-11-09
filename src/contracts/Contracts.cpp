@@ -148,32 +148,34 @@ namespace sjd
         return premiumPaymentDate;
     }
 
-    void SingleInstrumentContract::setPremiumPaymentDate(Date paymentDate)
+    void SingleInstrumentContract::initialise(
+        Date maturity, Date settlement, double newVolume, BuySell bs, Date premiumDate, double premium)
     {
-        premiumPaymentDate = paymentDate;
-        if (premiumAmount > 1e-14)
-        {
-            hasPremium = true;
-        }
-        else
-        {
-            hasPremium = false;
-        }
-        valueCalculated = false;
+        maturityDate = maturity;
+        settlementDate = settlement;
+        volume = abs(newVolume);
+        buySell = bs;
+        premiumPaymentDate = premiumDate;
+        premiumAmount = abs(premium);
+        hasPremium = premiumAmount > 1e-14;
     }
 
-    void SingleInstrumentContract::setPremiumAmount(double premium)
+    std::shared_ptr<SingleInstrumentContract> SingleInstrumentContract::withVolume(double newVolume) const
     {
-        premiumAmount = abs(premium);
-        if (premiumAmount > 1e-14)
-        {
-            hasPremium = true;
-        }
-        else
-        {
-            hasPremium = false;
-        }
-        valueCalculated = false;
+        std::shared_ptr<SingleInstrumentContract> copy(
+            static_cast<SingleInstrumentContract*>(clone().release()));
+        copy->volume = abs(newVolume);
+        return copy;
+    }
+
+    std::shared_ptr<SingleInstrumentContract> SingleInstrumentContract::withPremiumAmount(
+        double premium) const
+    {
+        std::shared_ptr<SingleInstrumentContract> copy(
+            static_cast<SingleInstrumentContract*>(clone().release()));
+        copy->premiumAmount = abs(premium);
+        copy->hasPremium = copy->premiumAmount > 1e-14;
+        return copy;
     }
 
     double SingleInstrumentContract::getPremiumAmount() const
@@ -181,32 +183,14 @@ namespace sjd
         return premiumAmount;
     }
 
-    void SingleInstrumentContract::setMaturityDate(Date date)
-    {
-        maturityDate = date;
-        valueCalculated = false;
-    }
-
     Date SingleInstrumentContract::getMaturityDate() const
     {
         return maturityDate;
     }
 
-    void SingleInstrumentContract::setSettlementDate(Date date)
-    {
-        settlementDate = date;
-        valueCalculated = false;
-    }
-
     Date SingleInstrumentContract::getSettlementDate() const
     {
         return settlementDate;
-    }
-
-    void SingleInstrumentContract::setBuySell(BuySell bs)
-    {
-        buySell = bs;
-        valueCalculated = false;
     }
 
     BuySell SingleInstrumentContract::getBuySell() const
@@ -222,12 +206,6 @@ namespace sjd
     double SingleInstrumentContract::getVolume() const
     {
         return volume;
-    }
-
-    void SingleInstrumentContract::setVolume(double N)
-    {
-        volume = abs(N);
-        valueCalculated = false;
     }
 
     string SingleInstrumentContract::toStringContract()
@@ -292,10 +270,9 @@ namespace sjd
         }
     }
 
-    void SingleDerivativeContract::setStrike(double X)
+    void SingleDerivativeContract::initialiseStrike(double newStrike)
     {
-        strike = X;
-        valueCalculated = false;
+        strike = newStrike;
     }
 
     double SingleDerivativeContract::getStrike() const
@@ -355,7 +332,7 @@ namespace sjd
         }
     }
 
-    double SingleOptionContract::getPayoff(double forSpot)
+    double SingleOptionContract::getPayoff(double forSpot) const
     {
         double premium = 0;
         if (getPremiumPaymentDate() > getMaturityDate())
@@ -373,12 +350,8 @@ namespace sjd
         }
     }
 
-    double SingleOptionContract::getValue(std::shared_ptr<RatesEnvironment> re)
+    double SingleOptionContract::getValue(const std::shared_ptr<RatesEnvironment>& re) const
     {
-        if (valueCalculated && (re == cachedRE) && (re->marketRevision() == cachedMarketRevision))
-        {
-            return cachedContractValue;
-        }
         Date valueDate = (re->getAnchorDate());
         if (valueDate > getSettlementDate())
         {
@@ -390,17 +363,12 @@ namespace sjd
             double df = (re->getDRS())->getDiscountFactor(getPremiumPaymentDate());
             premium -= getPremiumAmount() * getVolume() * df;
         }
-        cachedRE = re;
-        cachedMarketRevision = re->marketRevision();
-        valueCalculated = true;
-        cachedContractValue = getBuySellAsDouble() * premium;
-        return cachedContractValue;
+        return getBuySellAsDouble() * premium;
     }
 
-    void SingleOptionContract::setType(PutCall pc)
+    void SingleOptionContract::initialiseType(PutCall pc)
     {
         type = pc;
-        valueCalculated = false;
     }
 
     PutCall SingleOptionContract::getType() const
@@ -483,7 +451,7 @@ namespace sjd
         }
     }
 
-    void AsianContract::setAveragingDates(set<Date> dates)
+    void AsianContract::storeAveragingDates(set<Date> dates)
     {
         orderedAveragingDates = vector<Date>(dates.begin(), dates.end());
     }
@@ -516,7 +484,7 @@ namespace sjd
 
     void AsianContract::getFixingAndForwardDates(Date valuationDate,
                                                  vector<Date>& fixingDates,
-                                                 vector<Date>& forwardDates)
+                                                 vector<Date>& forwardDates) const
     {
         if (valuationDate < orderedAveragingDates[0])
         {
@@ -542,7 +510,7 @@ namespace sjd
     void AsianContract::getFixingAndForwardRates(Date valueDate,
                                                  vector<double>& fixingRates,
                                                  vector<double>& forwardRates,
-                                                 std::shared_ptr<RatesEnvironment> re)
+                                                 std::shared_ptr<RatesEnvironment> re) const
     {
         vector<Date> fixingDates, forwardDates;
         getFixingAndForwardDates(valueDate, fixingDates, forwardDates);
@@ -557,13 +525,13 @@ namespace sjd
      Base class for derivatives may contain more than one underlying contract
      =======================================================================================*/
     MultipleInstrumentContract::MultipleInstrumentContract(
-        MultipleInstrumentContract& multipleInstrumentContract)
+        const MultipleInstrumentContract& multipleInstrumentContract)
     {
         setInputVariables();
         contracts = multipleInstrumentContract.contracts;
     }
 
-    std::unique_ptr<Contract> MultipleInstrumentContract::clone()
+    std::unique_ptr<Contract> MultipleInstrumentContract::clone() const
     {
         return std::make_unique<MultipleInstrumentContract>(*this);
     }
@@ -633,7 +601,7 @@ namespace sjd
         }
     }
 
-    double MultipleInstrumentContract::getValue(std::shared_ptr<RatesEnvironment> re)
+    double MultipleInstrumentContract::getValue(const std::shared_ptr<RatesEnvironment>& re) const
     {
         double value = 0;
         for (size_t i = 0; i < contracts.size(); ++i)
@@ -683,7 +651,7 @@ namespace sjd
     }
 
     vector<std::shared_ptr<SingleInstrumentContract>> MultipleInstrumentContract::
-        getUnderlyingSingleInstrumentContracts()
+        getUnderlyingSingleInstrumentContracts() const
     {
         return contracts;
     }

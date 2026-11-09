@@ -21,8 +21,8 @@ namespace sjd
         virtual ~ForwardContract() {};
 
         // Implemented for European Forwards
-        virtual double getValue(std::shared_ptr<RatesEnvironment> re);
-        virtual double getPayoff(double forSpot);
+        virtual double getValue(const std::shared_ptr<RatesEnvironment>& re) const;
+        virtual double getPayoff(double forSpot) const;
     };
 
     /*======================================================================================
@@ -46,9 +46,9 @@ namespace sjd
         // If the forward is an exchange of the asset for cash we do not need a rate std::set date
         EuropeanForward(QuantLib::Date settlementDate, double strike, double volume, BuySell buySell);
 
-        EuropeanForward(EuropeanForward& forward);
+        EuropeanForward(const EuropeanForward& forward);
 
-        std::unique_ptr<Contract> clone() override;
+        std::unique_ptr<Contract> clone() const override;
 
         virtual ~EuropeanForward() {};
         virtual std::string validationRoot() const { return "european_forward"; }

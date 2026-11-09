@@ -4,9 +4,19 @@
 #include <pybind11/stl.h>
 
 #include <algorithm>
+#include <cctype>
+#include <chrono>
+#include <mutex>
+#include <random>
 #include <set>
 #include <sstream>
 #include <string>
+#include <vector>
+
+#include <boost/version.hpp>
+#include <ql/version.hpp>
+
+#include "sjd_build_info.h"
 
 #if defined(_MSC_VER) && defined(_DEBUG)
 #include <crtdbg.h>
@@ -41,6 +51,7 @@
 #include <sjd/tools/Calendars.h>
 #include <sjd/tools/Common.h>
 #include <sjd/tools/Errors.h>
+#include <sjd/tools/Log.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -196,6 +207,9 @@ namespace
         size_t trades = 0;
         size_t structures = 0;
         bool antithetic = false;
+        // None when the paths were marked to supplied spots rather than drawn.
+        py::object seed = py::none();
+        py::dict metadata;
     };
 
     py::array_t<double> to_array(const std::vector<double>& values, const std::vector<py::ssize_t>& shape)
@@ -244,16 +258,199 @@ namespace
         return result;
     }
 
+    long long elapsedMilliseconds(std::chrono::steady_clock::time_point started)
+    {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
+                                                                     started)
+            .count();
+    }
+
+    std::string boostVersionText()
+    {
+        const int version = BOOST_VERSION;
+        return std::to_string(version / 100000) + "." + std::to_string((version / 100) % 1000) + "." +
+               std::to_string(version % 100);
+    }
+
+    py::dict libraryBuildInfo()
+    {
+        py::dict info;
+        info["version"] = SJD_VERSION;
+        info["compiler"] = SJD_COMPILER;
+        info["build_type"] = SJD_BUILD_TYPE;
+        info["quantlib"] = QL_VERSION;
+        info["boost"] = boostVersionText();
+        info["git_commit"] = SJD_GIT_COMMIT;
+        info["git_dirty"] = SJD_GIT_DIRTY != 0;
+        return info;
+    }
+
+    void appendWarningLines(std::vector<std::string>& lines, const sjd::ValidationReport& report)
+    {
+        const std::string text = report.warnings().toString();
+        std::istringstream stream(text);
+        std::string line;
+        while (std::getline(stream, line))
+        {
+            if (!line.empty() && std::find(lines.begin(), lines.end(), line) == lines.end())
+                lines.push_back(line);
+        }
+    }
+
+    void appendSourceWarnings(std::vector<std::string>& lines,
+                              const std::shared_ptr<sjd::RatesEnvironment>& environment)
+    {
+        if (!environment)
+            return;
+        appendWarningLines(lines, environment->validationReport());
+        if (environment->hasDRS())
+            appendWarningLines(lines, environment->getDRS()->validationReport());
+        if (environment->hasForeignDRS())
+            appendWarningLines(lines, environment->getForeignDRS()->validationReport());
+        if (environment->hasFRS())
+            appendWarningLines(lines, environment->getFRS()->validationReport());
+        if (environment->hasVRS())
+            appendWarningLines(lines, environment->getVRS()->validationReport());
+        if (environment->hasFixingRS())
+            appendWarningLines(lines, environment->getFixingRS()->validationReport());
+    }
+
+    py::dict runMetadata(const sjd::PortfolioEvolver& evolver,
+                         const std::shared_ptr<sjd::Portfolio>& portfolio,
+                         const std::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator>& generator,
+                         const std::shared_ptr<sjd::RatesEnvironment>& environment,
+                         const py::dict& inputs,
+                         long long setupMs,
+                         long long pathsMs)
+    {
+        std::vector<std::string> lines;
+        appendWarningLines(lines, evolver.validationReport());
+        if (portfolio)
+            appendWarningLines(lines, portfolio->validationReport());
+        if (generator)
+            appendWarningLines(lines, generator->validationReport());
+        appendSourceWarnings(lines, environment);
+        py::list warnings;
+        for (const std::string& line : lines)
+            warnings.append(line);
+        py::dict timings;
+        timings["setup_ms"] = setupMs;
+        timings["paths_ms"] = pathsMs;
+        py::dict metadata = libraryBuildInfo();
+        metadata["timings"] = timings;
+        metadata["warnings"] = warnings;
+        metadata["inputs"] = inputs;
+        return metadata;
+    }
+
     void require_structures(bool by_structure, const sjd::SimulatedPaths& simulated)
     {
         if (by_structure && simulated.structures == 0)
             throw py::value_error("by_structure needs a portfolio with regulatory-capital netting sets");
     }
 
+    std::mutex& pendingLogMutex()
+    {
+        static std::mutex mutex;
+        return mutex;
+    }
+
+    std::vector<std::pair<sjd::log::Level, std::string>>& pendingLogs()
+    {
+        static std::vector<std::pair<sjd::log::Level, std::string>> pending;
+        return pending;
+    }
+
+    int pythonLogLevel(sjd::log::Level level)
+    {
+        switch (level)
+        {
+        case sjd::log::Level::Trace:
+            return 5;
+        case sjd::log::Level::Debug:
+            return 10;
+        case sjd::log::Level::Info:
+            return 20;
+        case sjd::log::Level::Warn:
+            return 30;
+        case sjd::log::Level::Error:
+            return 40;
+        case sjd::log::Level::Off:
+            return 0;
+        }
+        return 20;
+    }
+
+    void emitPythonLog(sjd::log::Level level, const std::string& message)
+    {
+        py::module_::import("logging")
+            .attr("getLogger")("sjd._core")
+            .attr("log")(pythonLogLevel(level), message);
+    }
+
+    void handleLogRecord(sjd::log::Level level, const std::string& message)
+    {
+        if (PyGILState_Check())
+        {
+            emitPythonLog(level, message);
+            return;
+        }
+        std::lock_guard<std::mutex> lock(pendingLogMutex());
+        pendingLogs().emplace_back(level, message);
+    }
+
+    void flushPythonLogs()
+    {
+        std::vector<std::pair<sjd::log::Level, std::string>> local;
+        {
+            std::lock_guard<std::mutex> lock(pendingLogMutex());
+            local.swap(pendingLogs());
+        }
+        for (const auto& record : local)
+            emitPythonLog(record.first, record.second);
+    }
+
+    struct FlushLogs
+    {
+        ~FlushLogs()
+        {
+            try
+            {
+                flushPythonLogs();
+            }
+            catch (...)
+            {
+            }
+        }
+    };
+
+    sjd::log::Level levelFromName(const std::string& name)
+    {
+        std::string upper = name;
+        for (char& character : upper)
+            character = static_cast<char>(std::toupper(static_cast<unsigned char>(character)));
+        if (upper == "TRACE")
+            return sjd::log::Level::Trace;
+        if (upper == "DEBUG")
+            return sjd::log::Level::Debug;
+        if (upper == "INFO")
+            return sjd::log::Level::Info;
+        if (upper == "WARN" || upper == "WARNING")
+            return sjd::log::Level::Warn;
+        if (upper == "ERROR")
+            return sjd::log::Level::Error;
+        if (upper == "OFF")
+            return sjd::log::Level::Off;
+        throw py::value_error("Unknown log level " + name);
+    }
+
     void throwIfNoPaths(const sjd::ValidationReport& report)
     {
         if (!report.isOK())
+        {
+            SJD_LOG_DEBUG(report.toString());
             throw sjd::ValidationError(report.toString(), report);
+        }
         const sjd::ValidationReport failed =
             sjd::ValidationReport::failure("SIMULATION_EMPTY", "The simulation produced no paths");
         throw sjd::ValidationError(failed.toString(), failed);
@@ -483,6 +680,8 @@ class ValidationError(SjdError, ValueError):
 PYBIND11_MODULE(_core, m)
 {
     report_debug_checks_to_stderr();
+    sjd::log::setRecordHandler(&handleLogRecord);
+    py::module_::import("logging").attr("addLevelName")(5, "TRACE");
     m.doc() = "sjd derivative pricing (compiled core; import sjd rather than sjd._core)";
 
     py::enum_<sjd::BuySell>(m, "BuySell").value("BUY", sjd::BuySell::BUY).value("SELL", sjd::BuySell::SELL);
@@ -787,7 +986,13 @@ PYBIND11_MODULE(_core, m)
              "Deltas outside the grid read the nearest wing; extrapolate only extends time.")
         .def("get_volatility",
              [](const sjd::VolatilitySurfaceDelta& surface, const py::object& to, double strike,
-                double forward) { return surface.getVolatility(to_ql_date(to), strike, forward); });
+                double forward) { return surface.getVolatility(to_ql_date(to), strike, forward); })
+        .def(
+            "strike_from_delta",
+            [](const sjd::VolatilitySurfaceDelta& surface, const py::object& day, double delta,
+               double forward) { return surface.calculateStrikeFromDelta(to_ql_date(day), delta, forward); },
+            py::arg("day"), py::arg("delta"), py::arg("forward"),
+            "Strike whose put delta, in percent, matches delta. Raises NumericalError when the solve fails.");
 
     py::class_<sjd::VolatilitySurfaceMoneynessCMA, sjd::VolatilityRateSource,
                std::shared_ptr<sjd::VolatilitySurfaceMoneynessCMA>>(m, "VolatilitySurfaceMoneynessCMA")
@@ -1102,13 +1307,24 @@ PYBIND11_MODULE(_core, m)
             [](sjd::PortfolioEvolver& evolver, const std::vector<double>& spots, bool by_trade,
                bool by_structure)
             {
+                FlushLogs flush;
+                const auto setupStarted = std::chrono::steady_clock::now();
                 if (!evolver.prepare())
                     throwIfNoPaths(evolver.validationReport());
+                const long long setupMs = elapsedMilliseconds(setupStarted);
+                const auto pathsStarted = std::chrono::steady_clock::now();
                 sjd::SimulatedPaths simulated = evolver.valueSpotPath(spots, by_trade, by_structure);
+                const long long pathsMs = elapsedMilliseconds(pathsStarted);
                 if (simulated.paths == 0)
                     throwIfNoPaths(evolver.validationReport());
                 require_structures(by_structure, simulated);
-                return simulation_from(simulated);
+                Simulation result = simulation_from(simulated);
+                py::dict inputs;
+                inputs["spots"] = spots.size();
+                inputs["by_trade"] = by_trade;
+                inputs["by_structure"] = by_structure;
+                result.metadata = runMetadata(evolver, nullptr, nullptr, nullptr, inputs, setupMs, pathsMs);
+                return result;
             },
             py::arg("spots"), py::arg("by_trade") = false, py::arg("by_structure") = false,
             "Mark the book to this forward path. One spot per simulation date. "
@@ -1119,6 +1335,7 @@ PYBIND11_MODULE(_core, m)
                const py::array_t<double, py::array::c_style | py::array::forcecast>& spots, bool by_trade,
                bool by_structure)
             {
+                FlushLogs flush;
                 if (spots.ndim() != 2)
                     throw py::value_error("spots must be shaped [paths, steps]");
                 const py::ssize_t paths = spots.shape(0);
@@ -1127,16 +1344,23 @@ PYBIND11_MODULE(_core, m)
                 const double* data = spots.data();
                 std::copy(data, data + flat.size(), flat.begin());
                 sjd::SimulatedPaths simulated;
+                long long setupMs = 0;
+                long long pathsMs = 0;
                 {
                     py::gil_scoped_release release;
-                    if (!evolver.prepare())
+                    const auto setupStarted = std::chrono::steady_clock::now();
+                    const bool ready = evolver.prepare();
+                    setupMs = elapsedMilliseconds(setupStarted);
+                    if (!ready)
                     {
                         simulated.paths = 0;
                     }
                     else
                     {
+                        const auto pathsStarted = std::chrono::steady_clock::now();
                         simulated =
                             evolver.valueSpotPaths(flat, static_cast<size_t>(paths), by_trade, by_structure);
+                        pathsMs = elapsedMilliseconds(pathsStarted);
                     }
                 }
                 if (simulated.paths == 0)
@@ -1144,7 +1368,14 @@ PYBIND11_MODULE(_core, m)
                 if (static_cast<py::ssize_t>(simulated.steps) != steps)
                     throw py::value_error("spots steps must match the evolver simulation dates");
                 require_structures(by_structure, simulated);
-                return simulation_from(simulated);
+                Simulation result = simulation_from(simulated);
+                py::dict inputs;
+                inputs["paths"] = paths;
+                inputs["steps"] = steps;
+                inputs["by_trade"] = by_trade;
+                inputs["by_structure"] = by_structure;
+                result.metadata = runMetadata(evolver, nullptr, nullptr, nullptr, inputs, setupMs, pathsMs);
+                return result;
             },
             py::arg("spots"), py::arg("by_trade") = false, py::arg("by_structure") = false,
             "Mark the book to many forward paths. spots is shaped [paths, steps]. "
@@ -1174,6 +1405,12 @@ PYBIND11_MODULE(_core, m)
         .def_readonly("structures", &Simulation::structures)
         .def_readonly("antithetic", &Simulation::antithetic,
                       "Path i and path i + paths // 2 use opposite normals.")
+        .def_readonly("seed", &Simulation::seed,
+                      "Seed used to draw the paths. None when the spots were supplied. "
+                      "Pass it back to simulate to repeat the arrays.")
+        .def_readonly("metadata", &Simulation::metadata,
+                      "Version, git commit, build type, setup and path timings, validation "
+                      "warnings, and the inputs of this run.")
         .def("__repr__",
              [](const Simulation& simulation)
              {
@@ -1189,28 +1426,56 @@ PYBIND11_MODULE(_core, m)
            const py::iterable& simulation_dates, unsigned long paths, const py::object& seed, bool antithetic,
            bool by_trade, bool by_structure, size_t holding_period, const py::object& holding_period_calendar)
         {
+            FlushLogs flush;
             std::shared_ptr<sjd::SingleFactorEconomicScenarioGenerator> generator(
                 std::make_shared<sjd::SingleFactorEconomicScenarioGenerator>(environment));
-            if (!seed.is_none())
+            if (seed.is_none())
+                generator->setRandomSeed(static_cast<long>(std::random_device{}()));
+            else
                 generator->setRandomSeed(seed.cast<long>());
+            const long usedSeed = generator->getRandomSeed();
             std::shared_ptr<sjd::PortfolioEvolver> evolver =
                 make_evolver(portfolio, generator, simulation_dates, holding_period, holding_period_calendar);
+            SJD_LOG_INFO("simulation start paths=" + std::to_string(paths) +
+                         " dates=" + std::to_string(evolver->getSimulationDates().size()) + " antithetic=" +
+                         std::string(antithetic ? "true" : "false") + " seed=" + std::to_string(usedSeed));
             sjd::SimulatedPaths simulated;
+            long long setupMs = 0;
+            long long pathsMs = 0;
             {
                 py::gil_scoped_release release;
-                if (!evolver->prepare())
+                const auto setupStarted = std::chrono::steady_clock::now();
+                const bool ready = evolver->prepare();
+                setupMs = elapsedMilliseconds(setupStarted);
+                if (!ready)
                 {
                     simulated.paths = 0;
                 }
                 else
                 {
+                    const auto pathsStarted = std::chrono::steady_clock::now();
                     simulated = evolver->simulatePaths(paths, antithetic, by_trade, by_structure);
+                    pathsMs = elapsedMilliseconds(pathsStarted);
                 }
             }
             if (simulated.paths == 0)
                 throwIfNoPaths(evolver->validationReport());
+            SJD_LOG_INFO("simulation end paths=" + std::to_string(simulated.paths) + " steps=" +
+                         std::to_string(simulated.steps) + " trades=" + std::to_string(simulated.trades) +
+                         " setup_ms=" + std::to_string(setupMs) + " paths_ms=" + std::to_string(pathsMs));
             require_structures(by_structure, simulated);
-            return simulation_from(simulated);
+            Simulation result = simulation_from(simulated);
+            result.seed = py::int_(usedSeed);
+            py::dict inputs;
+            inputs["paths"] = paths;
+            inputs["seed"] = usedSeed;
+            inputs["antithetic"] = antithetic;
+            inputs["by_trade"] = by_trade;
+            inputs["by_structure"] = by_structure;
+            inputs["holding_period"] = holding_period;
+            result.metadata =
+                runMetadata(*evolver, portfolio, generator, environment, inputs, setupMs, pathsMs);
+            return result;
         },
         py::arg("portfolio"), py::arg("rates_environment"), py::arg("simulation_dates"),
         py::arg("paths") = 10000, py::kw_only(), py::arg("seed") = py::none(), py::arg("antithetic") = true,
@@ -1218,8 +1483,19 @@ PYBIND11_MODULE(_core, m)
         py::arg("holding_period_calendar") = py::none(),
         "Simulate the portfolio along single-factor paths and return every value.\n\n"
         "The first simulation date must be the anchor date, and the forward must have a "
-        "stochastic roll. With antithetic paths an odd count is rounded up. A seed makes "
-        "the paths repeatable. A holding period on a margined portfolio adds a margin "
-        "reset date holding_period business days before each simulation date. Raises "
+        "stochastic roll. With antithetic paths an odd count is rounded up. Omit seed and "
+        "one is drawn from the system; simulation.seed is the value that repeats the "
+        "arrays. simulation.metadata records the build, timings, warnings and inputs. "
+        "A holding period on a margined portfolio adds a margin reset date "
+        "holding_period business days before each simulation date. Raises "
         "ValidationError if the portfolio or market cannot be simulated.");
+
+    m.def(
+        "set_log_level", [](const std::string& level) { sjd::log::logger().setLevel(levelFromName(level)); },
+        py::arg("level"),
+        "Set the C++ logger. Python code should call sjd.set_log_level, which also sets the sjd logger.");
+
+    m.attr("__version__") = SJD_VERSION;
+    m.def("build_info", &libraryBuildInfo,
+          "Compiler, build type, QuantLib and Boost versions, and the git commit at configure time.");
 }

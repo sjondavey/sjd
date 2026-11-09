@@ -1,5 +1,7 @@
 #include "AsianOptionTest.h"
 
+#include <sjd/pricing/AsianOptionFormula.h>
+
 using namespace std;
 using namespace QuantLib;
 
@@ -61,12 +63,7 @@ void AsianOptionContractTest::testMaturityDate()
     BOOST_TEST_MESSAGE("Testing AsianOption ...");
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<AsianOption> contract = getDefaultAsianOption(anchorDate);
-    Date d = contract->getMaturityDate();
-    Date d2 = d + 1;
-    // inconsistent maturity date
-    contract->setMaturityDate(d2);
-    contract->validate();
-    BOOST_CHECK(!contract->isOK());
+    BOOST_CHECK(contract->getMaturityDate() == contract->getAveragingDates().back());
 }
 
 void AsianOptionContractTest::testAveragingDates()
@@ -85,7 +82,10 @@ void AsianOptionContractTest::testAveragingDates()
         averagingDates.insert(d);
         d = nullCalendar->advance(d, 1, Days);
     }
-    contract->setAveragingDates(averagingDates);
+    contract = std::make_shared<AsianOption>(averagingDates, contract->getSettlementDate(),
+                                             contract->getStrike(), contract->getType(),
+                                             contract->getVolume(), contract->getPremiumPaymentDate(),
+                                             contract->getPremiumAmount(), contract->getBuySell());
     contract->validate();
     BOOST_CHECK(!contract->isOK()); // averaging past settlement
     d = nullCalendar->advance(d, -1, Days);
@@ -98,30 +98,30 @@ void AsianOptionContractTest::testType()
     std::shared_ptr<AsianOption> contract = getDefaultAsianOption(anchorDate);
     BOOST_CHECK(contract->isOK());
 
-    contract->setType(PutCall::PUT);
     BOOST_CHECK(contract->getType() == PutCall::PUT);
-
-    contract->setType(PutCall::CALL);
-    BOOST_CHECK(contract->getType() == PutCall::CALL);
+    auto dates = contract->getAveragingDates();
+    std::shared_ptr<AsianOption> call = std::make_shared<AsianOption>(
+        set<Date>(dates.begin(), dates.end()), contract->getSettlementDate(), contract->getStrike(),
+        PutCall::CALL, contract->getVolume(), contract->getPremiumPaymentDate(), contract->getPremiumAmount(),
+        contract->getBuySell());
+    BOOST_CHECK(call->getType() == PutCall::CALL);
 }
 
 void AsianOptionContractTest::testPutCallParity()
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<AsianOption> put = getDefaultAsianOption(anchorDate);
-    std::shared_ptr<AsianOption> call = getDefaultAsianOption(anchorDate);
-    put->setType(PutCall::PUT);
-    put->setBuySell(BuySell::BUY);
-    call->setType(PutCall::CALL);
-    call->setBuySell(BuySell::SELL);
+    auto dates = put->getAveragingDates();
+    set<Date> averagingDates(dates.begin(), dates.end());
+    std::shared_ptr<AsianOption> call = std::make_shared<AsianOption>(
+        averagingDates, put->getSettlementDate(), put->getStrike(), PutCall::CALL, put->getVolume(),
+        put->getPremiumPaymentDate(), put->getPremiumAmount(), BuySell::SELL);
 
     GenerateRates gr = GenerateRates();
     std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
 
-    vector<Date> averagingDates = put->getAveragingDates();
-    set<Date> averagingDatesAsSet = set<Date>(averagingDates.begin(), averagingDates.end());
     std::shared_ptr<AsianForward> forward = std::make_shared<AsianForward>(
-        averagingDatesAsSet, put->getSettlementDate(), put->getStrike(), put->getVolume(), BuySell::SELL);
+        averagingDates, put->getSettlementDate(), put->getStrike(), put->getVolume(), BuySell::SELL);
 
     BOOST_CHECK(abs(put->getValue(re) + call->getValue(re) - forward->getValue(re)) < 1e-10);
 }
@@ -135,8 +135,12 @@ void AsianOptionContractTest::testValue()
     std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
     std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
 
-    std::shared_ptr<AsianOption> call = getDefaultAsianOption(anchorDate);
-    call->setType(PutCall::CALL);
+    std::shared_ptr<AsianOption> base = getDefaultAsianOption(anchorDate);
+    auto callDates = base->getAveragingDates();
+    std::shared_ptr<AsianOption> call = std::make_shared<AsianOption>(
+        set<Date>(callDates.begin(), callDates.end()), base->getSettlementDate(), base->getStrike(),
+        PutCall::CALL, base->getVolume(), base->getPremiumPaymentDate(), base->getPremiumAmount(),
+        base->getBuySell());
 
     // 1) Before maturity
     vector<Date> fixingDates, forwardDates;
@@ -199,9 +203,11 @@ void AsianOptionContractTest::testGetPayoffAfterMaturity()
     std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
 
     std::shared_ptr<AsianOption> option = getAsianOptionWithMoneynessVol(anchorDate);
-    option->setType(PutCall::PUT);
-    std::shared_ptr<AsianOption> option2 = getAsianOptionWithMoneynessVol(anchorDate);
-    option2->setType(PutCall::CALL);
+    auto payoffDates = option->getAveragingDates();
+    std::shared_ptr<AsianOption> option2 = std::make_shared<AsianOption>(
+        set<Date>(payoffDates.begin(), payoffDates.end()), option->getSettlementDate(), option->getStrike(),
+        PutCall::CALL, option->getVolume(), option->getPremiumPaymentDate(), option->getPremiumAmount(),
+        option->getBuySell());
 
     double v1 = option->getVolume();
     double p1 = option->getPremiumAmount();
@@ -226,11 +232,18 @@ void AsianOptionContractTest::testEuropeanOptionWithMoneynessVol()
     std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
     std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
 
-    std::shared_ptr<AsianOption> call = getAsianOptionWithMoneynessVol(anchorDate);
-    std::shared_ptr<AsianOption> callATM = getDefaultAsianOption(anchorDate);
-
-    call->setType(PutCall::CALL);
-    callATM->setType(PutCall::CALL);
+    std::shared_ptr<AsianOption> callBase = getAsianOptionWithMoneynessVol(anchorDate);
+    auto moneynessDates = callBase->getAveragingDates();
+    std::shared_ptr<AsianOption> call = std::make_shared<AsianOption>(
+        set<Date>(moneynessDates.begin(), moneynessDates.end()), callBase->getSettlementDate(),
+        callBase->getStrike(), PutCall::CALL, callBase->getVolume(), callBase->getPremiumPaymentDate(),
+        callBase->getPremiumAmount(), callBase->getBuySell());
+    std::shared_ptr<AsianOption> atmBase = getDefaultAsianOption(anchorDate);
+    auto atmDates = atmBase->getAveragingDates();
+    std::shared_ptr<AsianOption> callATM = std::make_shared<AsianOption>(
+        set<Date>(atmDates.begin(), atmDates.end()), atmBase->getSettlementDate(), atmBase->getStrike(),
+        PutCall::CALL, atmBase->getVolume(), atmBase->getPremiumPaymentDate(), atmBase->getPremiumAmount(),
+        atmBase->getBuySell());
 
     // 1) Before maturity
     vector<Date> fixingDates, forwardDates;

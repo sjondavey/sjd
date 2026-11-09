@@ -1,5 +1,7 @@
 #include <sjd/rates/RateSource.h>
 
+#include <sjd/tools/Log.h>
+
 using namespace std;
 using namespace QuantLib;
 
@@ -30,11 +32,13 @@ namespace sjd
             recordWarning(issues::RATE_SOURCE_FLAT_BACKFILL,
                           "Anchor has no observation; values are flat through the first observation",
                           {"anchor_date"});
+            SJD_LOG_WARN("Anchor has no observation; values are flat through the first observation");
         }
         if (!hasErrors() && allowExtrapolation)
         {
             recordWarning(issues::RATE_SOURCE_EXTRAPOLATION, "Extrapolation past the last pillar is allowed",
                           {"final_date"});
+            SJD_LOG_WARN("Extrapolation past the last pillar is allowed");
         }
         return;
     }

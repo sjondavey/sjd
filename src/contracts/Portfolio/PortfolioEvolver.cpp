@@ -1,6 +1,7 @@
 #include <sjd/contracts/Portfolio/PortfolioEvolver.h>
 
 #include <sjd/tools/Errors.h>
+#include <sjd/tools/Log.h>
 
 #include <sstream>
 
@@ -194,9 +195,13 @@ namespace sjd
         for (size_t i = 0; i < draws; ++i)
         {
             recordPath(result, i, pathGenerator->getRandomPath(), trades, structures);
+            SJD_LOG_TRACE("path " + std::to_string(i) + " mtm " +
+                          std::to_string(result.mtm[i * result.steps]));
             if (antithetic)
             {
                 recordPath(result, draws + i, pathGenerator->getAntitheticPath(), trades, structures);
+                SJD_LOG_TRACE("path " + std::to_string(draws + i) + " mtm " +
+                              std::to_string(result.mtm[(draws + i) * result.steps]));
             }
         }
         return result;
@@ -250,7 +255,31 @@ namespace sjd
                                       const vector<std::shared_ptr<SingleInstrumentContract>>& trades,
                                       const vector<std::shared_ptr<Contract>>& structures)
     {
-        evolvePortfolioAlongPath(path);
+        // Price each trade once. The sum is the portfolio value, and by_trade stores
+        // those same numbers instead of pricing the book a second time.
+        if (trades.empty())
+        {
+            evolvePortfolioAlongPath(path);
+        }
+        else
+        {
+            spotPath = getSpotAlongAPath(path);
+            mtmOnPath.assign(path->getNumberOfSteps(), 0.0);
+            for (size_t j = 0; j < result.steps; ++j)
+            {
+                std::shared_ptr<RatesEnvironment> environment = path->getRatesEnvironment(j);
+                double sum = 0;
+                for (size_t k = 0; k < trades.size(); ++k)
+                {
+                    const double value = trades[k]->getValue(environment);
+                    sum += value;
+                    result.byTrade[(row * result.steps + j) * trades.size() + k] = value;
+                }
+                mtmOnPath[j] = sum;
+            }
+            if (portfolioIsMargined)
+                portfolio->getMargin()->getFutureMarginBalancesAlongPath(mtmOnPath, marginOnPath);
+        }
         size_t offset = row * result.steps;
         for (size_t j = 0; j < result.steps; ++j)
         {
@@ -260,10 +289,6 @@ namespace sjd
             if (portfolioIsMargined)
             {
                 result.margin[offset + j] = marginOnPath[j];
-            }
-            for (size_t k = 0; k < trades.size(); ++k)
-            {
-                result.byTrade[(offset + j) * trades.size() + k] = trades[k]->getValue(environment);
             }
             for (size_t k = 0; k < structures.size(); ++k)
             {

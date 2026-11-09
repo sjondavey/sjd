@@ -45,11 +45,10 @@ void ForwardContractTest::testBuySell()
     BOOST_TEST_MESSAGE("Testing ForwardContract ...");
 
     Date anchorDate(1, Jan, 2013);
-    std::shared_ptr<EuropeanForward> fc = getDefaultEuropeanForward(anchorDate);
-    BuySell bs = BuySell::SELL;
-    fc->setBuySell(bs);
-    BuySell bs2 = fc->getBuySell();
-    BOOST_CHECK(bs == bs2);
+    std::shared_ptr<EuropeanForward> base = getDefaultEuropeanForward(anchorDate);
+    EuropeanForward sold(base->getMaturityDate(), base->getSettlementDate(), base->getStrike(),
+                         base->getVolume(), BuySell::SELL);
+    BOOST_CHECK(sold.getBuySell() == BuySell::SELL);
 }
 
 void ForwardContractTest::testStrike()
@@ -60,11 +59,11 @@ void ForwardContractTest::testStrike()
     std::shared_ptr<ForwardCurveDeterministic> fc;
     contract->validate();
     BOOST_CHECK(contract->isOK());
-    double strike = -1;
-    contract->setStrike(strike);
-    contract->validate();
-    BOOST_CHECK(!contract->isOK());
-    BOOST_CHECK(abs(contract->getStrike() - strike) < EPSILON_FOR_DOUBLES);
+    EuropeanForward negative(contract->getMaturityDate(), contract->getSettlementDate(), -1.0,
+                             contract->getVolume(), contract->getBuySell());
+    negative.validate();
+    BOOST_CHECK(!negative.isOK());
+    BOOST_CHECK(abs(negative.getStrike() + 1.0) < EPSILON_FOR_DOUBLES);
 }
 
 void ForwardContractTest::testVolume()
@@ -75,11 +74,11 @@ void ForwardContractTest::testVolume()
     std::shared_ptr<ForwardCurveDeterministic> fc;
     contract->validate();
     BOOST_CHECK(contract->isOK());
-    double volume = -1;
-    contract->setVolume(volume);
-    contract->validate();
-    BOOST_CHECK(contract->isOK());
-    BOOST_CHECK(abs(contract->getVolume() + volume) < EPSILON_FOR_DOUBLES);
+    EuropeanForward negative(contract->getMaturityDate(), contract->getSettlementDate(),
+                             contract->getStrike(), -1.0, contract->getBuySell());
+    negative.validate();
+    BOOST_CHECK(negative.isOK());
+    BOOST_CHECK(abs(negative.getVolume() - 1.0) < EPSILON_FOR_DOUBLES);
 }
 
 void ForwardContractTest::testMaturityDate()
@@ -92,10 +91,11 @@ void ForwardContractTest::testMaturityDate()
     BOOST_CHECK(contract->isOK());
     std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
     Date maturityDate = nullCalendar->advance(anchorDate, 3, Years);
-    contract->setMaturityDate(maturityDate);
-    contract->validate();
-    BOOST_CHECK(!contract->isOK());
-    BOOST_CHECK(contract->getMaturityDate() == maturityDate);
+    EuropeanForward later(maturityDate, contract->getSettlementDate(), contract->getStrike(),
+                          contract->getVolume(), contract->getBuySell());
+    later.validate();
+    BOOST_CHECK(!later.isOK());
+    BOOST_CHECK(later.getMaturityDate() == maturityDate);
 }
 
 void ForwardContractTest::testSettlementDate()
@@ -108,10 +108,11 @@ void ForwardContractTest::testSettlementDate()
     BOOST_CHECK(contract->isOK());
     std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
     Date settlementDate = nullCalendar->advance(anchorDate, 1, Years);
-    contract->setSettlementDate(settlementDate);
-    contract->validate();
-    BOOST_CHECK(!contract->isOK());
-    BOOST_CHECK(contract->getSettlementDate() == settlementDate);
+    EuropeanForward earlier(contract->getMaturityDate(), settlementDate, contract->getStrike(),
+                            contract->getVolume(), contract->getBuySell());
+    earlier.validate();
+    BOOST_CHECK(!earlier.isOK());
+    BOOST_CHECK(earlier.getSettlementDate() == settlementDate);
 }
 
 void ForwardContractTest::testValidationReport()
@@ -119,12 +120,13 @@ void ForwardContractTest::testValidationReport()
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<EuropeanForward> contract = getDefaultEuropeanForward(anchorDate);
 
-    // A snapshot does not validate or mutate the contract.
-    contract->setStrike(-1.0);
     ValidationReport snapshot = contract->validationReport();
     BOOST_CHECK(snapshot.isOK());
     BOOST_CHECK(snapshot.getIssues().empty());
 
+    EuropeanForward invalid(contract->getMaturityDate(), contract->getSettlementDate(), -1.0,
+                            contract->getVolume(), contract->getBuySell());
+    contract = std::make_shared<EuropeanForward>(invalid);
     ValidationReport invalidReport = contract->validateReport();
     BOOST_REQUIRE(!invalidReport.isOK());
     BOOST_REQUIRE(invalidReport.getIssues().size() == 1);
@@ -135,15 +137,15 @@ void ForwardContractTest::testValidationReport()
     BOOST_CHECK(invalidReport.getIssues()[0].message == "Strike is negative");
     BOOST_CHECK(contract->getErrorMessagesAsString() == "EuropeanForward: Strike is negative");
 
-    // Revalidation after correcting the input clears stale issues.
-    contract->setStrike(100.0);
-    ValidationReport correctedReport = contract->validateReport();
+    EuropeanForward corrected(contract->getMaturityDate(), contract->getSettlementDate(), 100.0,
+                              contract->getVolume(), contract->getBuySell());
+    ValidationReport correctedReport = corrected.validateReport();
     BOOST_CHECK(correctedReport.isOK());
     BOOST_CHECK(correctedReport.getIssues().empty());
-    BOOST_CHECK(contract->getErrorMessages().empty());
+    BOOST_CHECK(corrected.getErrorMessages().empty());
 
     std::shared_ptr<RatesEnvironment> emptyEnvironment(std::make_shared<RatesEnvironment>(anchorDate));
-    ValidationReport marketReport = contract->validateReport(emptyEnvironment);
+    ValidationReport marketReport = corrected.validateReport(emptyEnvironment);
     BOOST_REQUIRE(!marketReport.isOK());
     BOOST_REQUIRE(marketReport.getIssues().size() == 3);
     BOOST_CHECK(marketReport.getIssues()[0].code == "RATES_ENVIRONMENT_NO_RATES");
@@ -189,8 +191,7 @@ void ForwardContractTest::testValue()
     double volume = 50;
 
     EuropeanForward contract(rateSetDate, settlement, strike, volume, BuySell::BUY);
-    EuropeanForward contract2(contract);
-    contract2.setBuySell(BuySell::SELL);
+    EuropeanForward contract2(rateSetDate, settlement, strike, volume, BuySell::SELL);
 
     contract.validate(re);
     BOOST_REQUIRE(contract.isOK());
@@ -255,7 +256,9 @@ void ForwardContractTest::testAsianAveragingDates()
         averagingDates.insert(d);
         d = nullCalendar->advance(d, 1, Days);
     }
-    contract->setAveragingDates(averagingDates);
+    contract =
+        std::make_shared<AsianForward>(averagingDates, contract->getSettlementDate(), contract->getStrike(),
+                                       contract->getVolume(), contract->getBuySell());
     contract->validate();
     BOOST_CHECK(!contract->isOK());
 }
@@ -326,8 +329,7 @@ void ForwardContractTest::testAsianForward()
     double volume = 50;
 
     AsianForward contract(averagingDates, settlement, strike, volume, BuySell::BUY);
-    AsianForward contract2(contract);
-    contract2.setBuySell(BuySell::SELL);
+    AsianForward contract2(averagingDates, settlement, strike, volume, BuySell::SELL);
 
     contract.validate(re);
     BOOST_REQUIRE(contract.isOK());

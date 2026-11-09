@@ -1,6 +1,44 @@
 cmake_minimum_required(VERSION 3.24)
 project(sjd VERSION 0.1.0 LANGUAGES CXX)
 
+# The project version is the single source for sjd.__version__ and build_info.
+# The wheel version in python/pyproject.toml is kept equal to it until packaging
+# reads this value itself.
+find_package(Git QUIET)
+set(SJD_GIT_COMMIT "unknown")
+set(SJD_GIT_DIRTY 0)
+if(Git_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+    execute_process(
+        COMMAND "${GIT_EXECUTABLE}" rev-parse HEAD
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        OUTPUT_VARIABLE SJD_GIT_COMMIT
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+        RESULT_VARIABLE _sjd_git_rc
+    )
+    if(NOT _sjd_git_rc EQUAL 0 OR SJD_GIT_COMMIT STREQUAL "")
+        set(SJD_GIT_COMMIT "unknown")
+    endif()
+    execute_process(
+        COMMAND "${GIT_EXECUTABLE}" status --porcelain
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        OUTPUT_VARIABLE _sjd_git_status
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+        RESULT_VARIABLE _sjd_git_status_rc
+    )
+    if(_sjd_git_status_rc EQUAL 0 AND NOT _sjd_git_status STREQUAL "")
+        set(SJD_GIT_DIRTY 1)
+    endif()
+endif()
+if(CMAKE_BUILD_TYPE)
+    set(SJD_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
+else()
+    set(SJD_BUILD_TYPE "unknown")
+endif()
+set(SJD_COMPILER "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
+configure_file(cmake/sjd_build_info.h.in "${CMAKE_CURRENT_BINARY_DIR}/sjd_build_info.h" @ONLY)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -11,6 +49,7 @@ option(SJD_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 option(SJD_SANITIZERS "Build with AddressSanitizer and UndefinedBehaviorSanitizer (GCC/Clang)" OFF)
 
 find_package(QuantLib CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 include(GNUInstallDirs)
 
@@ -69,6 +108,7 @@ if(SJD_BUILD_PYTHON)
 
     pybind11_add_module(sjd_python MODULE python/sjd_module.cpp)
     set_target_properties(sjd_python PROPERTIES OUTPUT_NAME _core)
+    target_include_directories(sjd_python PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
     target_link_libraries(sjd_python PRIVATE sjd::sjd sjd_warnings)
     if(MSVC)
         target_compile_options(sjd_python PRIVATE /bigobj)

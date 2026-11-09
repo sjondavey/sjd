@@ -18,9 +18,9 @@ namespace sjd
     public:
         FixedCashflow(QuantLib::Date cashFlowDate, double volume, BuySell buySellAmount);
 
-        FixedCashflow(FixedCashflow& cf);
+        FixedCashflow(const FixedCashflow& cf);
 
-        std::unique_ptr<Contract> clone() override;
+        std::unique_ptr<Contract> clone() const override;
 
         void commonConstructor(QuantLib::Date cashFlowDate, double volume, BuySell buySellAmount);
 
@@ -29,15 +29,8 @@ namespace sjd
         void runChecks() override;
         void runChecks(RatesEnvironment& re) override;
 
-        // Cash flows have no premium so these will std::set and return 0;
-        virtual void setPremiumAmount(double premium);
-
-        // These always need to be the same
-        virtual void setMaturityDate(QuantLib::Date maturityDate);
-        virtual void setSettlementDate(QuantLib::Date settlementDate);
-
-        virtual double getValue(std::shared_ptr<RatesEnvironment> re);
-        virtual double getPayoff(double forSpot);
+        virtual double getValue(const std::shared_ptr<RatesEnvironment>& re) const;
+        virtual double getPayoff(double forSpot) const;
     };
 
 }

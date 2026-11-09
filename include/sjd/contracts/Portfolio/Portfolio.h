@@ -22,9 +22,9 @@ namespace sjd
                   std::shared_ptr<Margin> margin);
         Portfolio(std::vector<std::shared_ptr<Contract>> input);
         Portfolio(std::vector<std::shared_ptr<Contract>> input, std::shared_ptr<Margin> margin);
-        Portfolio(Portfolio& Portfolio);
+        Portfolio(const Portfolio& portfolio);
         // Keeps a reference the the same underlying contracts
-        std::unique_ptr<Contract> clone() override;
+        std::unique_ptr<Contract> clone() const override;
         virtual ~Portfolio() {};
 
         void runChecks() override;

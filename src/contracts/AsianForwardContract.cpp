@@ -22,13 +22,10 @@ namespace sjd
                                          BuySell buySellInput)
     {
         ForwardContract::errorTracking = std::make_shared<sjd::IssueTracker>("AsianForward");
-        setAveragingDates(averagingDatesInput);
-        setSettlementDate(settlementInput);
-        setStrike(strikeInput);
-        setVolume(volumeInput);
-        setBuySell(buySellInput);
-        setPremiumAmount(0);
-        setPremiumPaymentDate(settlementInput);
+        storeAveragingDates(averagingDatesInput);
+        Date maturity = orderedAveragingDates.empty() ? settlementInput : orderedAveragingDates.back();
+        initialise(maturity, settlementInput, volumeInput, buySellInput, settlementInput, 0);
+        initialiseStrike(strikeInput);
     }
 
     AsianForward::AsianForward(
@@ -49,14 +46,14 @@ namespace sjd
         constructorCommon(averagingDates, settlement, strike, volume, buySell);
     }
 
-    AsianForward::AsianForward(AsianForward& forward)
+    AsianForward::AsianForward(const AsianForward& forward)
     {
         vector<Date> tmpDatesVector = forward.getAveragingDates();
         set<Date> dates = set<Date>(tmpDatesVector.begin(), tmpDatesVector.end());
         constructorCommon(dates, forward.settlementDate, forward.strike, forward.volume, forward.buySell);
     }
 
-    std::unique_ptr<Contract> AsianForward::clone()
+    std::unique_ptr<Contract> AsianForward::clone() const
     {
         return std::make_unique<AsianForward>(*this);
     }
@@ -96,13 +93,7 @@ namespace sjd
         AsianContract::checkAveraging(re);
     }
 
-    void AsianForward::setAveragingDates(set<Date> averagingDatesInput)
-    {
-        AsianContract::setAveragingDates(averagingDatesInput);
-        setMaturityDate(orderedAveragingDates.back());
-    }
-
-    double AsianForward::getValue(std::shared_ptr<RatesEnvironment> re)
+    double AsianForward::getValue(const std::shared_ptr<RatesEnvironment>& re) const
     {
         Date valueDate = re->getAnchorDate();
         if (valueDate > getSettlementDate())
@@ -150,7 +141,7 @@ namespace sjd
     void AsianForward::getFixingAndForwardRates(Date valueDate,
                                                 vector<double>& fixingRates,
                                                 vector<double>& forwardRates,
-                                                std::shared_ptr<RatesEnvironment> re)
+                                                std::shared_ptr<RatesEnvironment> re) const
     {
         fixingRates.clear();
         forwardRates.clear();

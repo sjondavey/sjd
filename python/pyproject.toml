@@ -7,6 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sjd"
+# Keep equal to project(sjd VERSION ...) in the repository CMakeLists.txt.
 version = "0.1.0"
 description = "Commodity derivative pricing and Monte Carlo statistics"
 requires-python = ">=3.10"

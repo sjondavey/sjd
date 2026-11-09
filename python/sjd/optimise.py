@@ -8,6 +8,7 @@ over the put wing of a collar.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
 
 import numpy as np
@@ -15,6 +16,8 @@ import numpy as np
 import sjd
 from sjd import stats
 from sjd.strategy import CollarStrategy
+
+logger = logging.getLogger(__name__)
 
 
 def draw_spot_paths(
@@ -208,6 +211,7 @@ def minimise_collar_put_moneyness(
             )
         premium = strategy.premium(rates_environment)
         score = float(costs[objective]) + float(premium_weight) * float(premium)
+        logger.info("optimiser trial put_moneyness=%s score=%s", float(put_m), score)
         trial = {
             "put_moneyness": float(put_m),
             "strategy": strategy,

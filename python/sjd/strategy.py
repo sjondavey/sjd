@@ -7,11 +7,14 @@ set, and simulation ``by_structure`` still means the same.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
 
 import sjd
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -97,6 +100,7 @@ class CollarStrategy:
     def portfolio(self, margin=None):
         """A portfolio of the collar contracts, optionally with a CSA."""
         contracts = self.contracts()
+        logger.info("built collar portfolio contracts=%s", len(contracts))
         if margin is None:
             return sjd.Portfolio(contracts)
         return sjd.Portfolio(contracts, margin)
@@ -104,6 +108,7 @@ class CollarStrategy:
     def portfolio_b2cem(self, factors, credit, optimise=True, margin=None):
         """Collar as a Basel II current-exposure portfolio."""
         contracts = self.contracts()
+        logger.info("built collar portfolio contracts=%s optimise=%s", len(contracts), optimise)
         if margin is None:
             return sjd.PortfolioB2CEM(contracts, factors, credit, optimise)
         return sjd.PortfolioB2CEM(contracts, factors, credit, optimise, margin)

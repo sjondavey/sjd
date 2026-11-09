@@ -23,10 +23,9 @@ void CashflowTest::testBuySell()
     BOOST_CHECK(cf1->getBuySell() == cf2->getBuySell());
     BOOST_CHECK(cf1->getBuySell() == BuySell::BUY);
 
-    BuySell bs2 = BuySell::SELL;
-    cf1->setBuySell(bs2);
-    BuySell bs3 = cf1->getBuySell();
-    BOOST_CHECK(bs2 == bs3);
+    std::shared_ptr<FixedCashflow> sold =
+        GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, BuySell::SELL);
+    BOOST_CHECK(sold->getBuySell() == BuySell::SELL);
 }
 
 void CashflowTest::testVolume()
@@ -42,51 +41,36 @@ void CashflowTest::testVolume()
 
     BOOST_CHECK(cf1->isOK());
     BOOST_CHECK(cf2->isOK());
-    double newVolume = -1;
-    cf1->setVolume(newVolume);
-    BOOST_CHECK(cf1->isOK());
-    BOOST_CHECK(abs(cf1->getVolume() + newVolume) < EPSILON_FOR_DOUBLES);
+    std::shared_ptr<FixedCashflow> negative =
+        GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, -1, bs);
+    BOOST_CHECK(negative->isOK());
+    BOOST_CHECK(abs(negative->getVolume() - 1.0) < EPSILON_FOR_DOUBLES);
 }
 
 void CashflowTest::testMaturityDate()
 {
     Date anchorDate(1, Jan, 2013);
-    int yearsToSettlement = 2;
     double volume = 1000;
     BuySell bs = BuySell::BUY;
-    std::shared_ptr<FixedCashflow> cf1 =
-        GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
-    std::shared_ptr<FixedCashflow> cf2 =
-        GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
-
     std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
     Date maturityDate = nullCalendar->advance(anchorDate, 3, Years);
-
-    cf1->setMaturityDate(maturityDate);
-    BOOST_CHECK(cf1->isOK());
-
-    BOOST_CHECK(cf1->getMaturityDate() == maturityDate);
-    BOOST_CHECK(cf1->getSettlementDate() == maturityDate);
+    FixedCashflow moved(maturityDate, volume, bs);
+    BOOST_CHECK(moved.isOK());
+    BOOST_CHECK(moved.getMaturityDate() == maturityDate);
+    BOOST_CHECK(moved.getSettlementDate() == maturityDate);
 }
 
 void CashflowTest::testSettlementDate()
 {
     Date anchorDate(1, Jan, 2013);
-    int yearsToSettlement = 2;
     double volume = 1000;
     BuySell bs = BuySell::BUY;
-    [[maybe_unused]] double premium = 900;
-    std::shared_ptr<FixedCashflow> cf1 =
-        GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
-    std::shared_ptr<FixedCashflow> cf2 =
-        GenerateContracts::getDefaultFixedCashflow(anchorDate, yearsToSettlement, volume, bs);
-
     std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
     Date settlementDate = nullCalendar->advance(anchorDate, 1, Years);
-    cf2->setSettlementDate(settlementDate);
-    BOOST_CHECK(cf2->isOK());
-    BOOST_CHECK(cf2->getSettlementDate() == settlementDate);
-    BOOST_CHECK(cf2->getMaturityDate() == settlementDate);
+    FixedCashflow moved(settlementDate, volume, bs);
+    BOOST_CHECK(moved.isOK());
+    BOOST_CHECK(moved.getSettlementDate() == settlementDate);
+    BOOST_CHECK(moved.getMaturityDate() == settlementDate);
 }
 
 void CashflowTest::testValue()
@@ -114,8 +98,7 @@ void CashflowTest::testValue()
     [[maybe_unused]] double premiumAmount = 45;
 
     FixedCashflow cf1(settlement, volume, BuySell::BUY);
-    FixedCashflow cf2(cf1);
-    cf2.setBuySell(BuySell::SELL);
+    FixedCashflow cf2(settlement, volume, BuySell::SELL);
 
     cf1.validate(re);
     BOOST_REQUIRE(cf1.isOK());

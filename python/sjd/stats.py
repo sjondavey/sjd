@@ -10,7 +10,11 @@ Credit and debit valuation adjustments, cost of funding, and regulatory capital
 along a path are computed here. The simulation itself stays in C++.
 """
 
+import logging
+
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 def exposure(simulation):
@@ -103,14 +107,15 @@ def standard_error(values, antithetic=False):
     return values.std(axis=0, ddof=1) / np.sqrt(values.shape[0])
 
 
-def summary(simulation, level=0.95, holding_period=False):
+def summary(simulation, level=0.95, holding_period=False, *, metadata=False):
     """Statistics for each requested simulation date, as a dict of equal-length columns.
 
     The keys are ``dates``, ``spot``, ``mtm``, ``margin`` (only when the
     portfolio is margined), ``ee``, ``nee``, ``pfe``, ``negative_pfe`` and
     ``ee_standard_error``. With ``holding_period``, the exposures use
     ``holding_period_exposure``. ``pd.DataFrame(summary(simulation))`` gives a
-    table.
+    table. ``metadata=True`` adds ``metadata``, the simulation's provenance,
+    which is not one value per date.
     """
     steps = simulation.exposure_steps
     if holding_period:
@@ -129,6 +134,9 @@ def summary(simulation, level=0.95, holding_period=False):
     table["pfe"] = potential_future_exposure(values, level)
     table["negative_pfe"] = negative_potential_future_exposure(values, level)
     table["ee_standard_error"] = standard_error(np.maximum(values, 0.0), simulation.antithetic)
+    if metadata:
+        table["metadata"] = simulation.metadata
+    logger.info("summary dates=%s", len(table["dates"]))
     return table
 
 
@@ -261,6 +269,7 @@ def structure_costs(
     capital_cost_rate=0.0,
     funding_spread_discount_factors=None,
     funding_position=None,
+    metadata=False,
 ):
     """Aggregate CVA, DVA, funding and optional CEM capital cost for a simulation.
 
@@ -279,7 +288,8 @@ def structure_costs(
     Returns a dict with ``cva``, ``dva``, ``funding``, ``capital``,
     ``capital_cost``, ``total`` and the exposure-date profiles ``ee``, ``nee``
     and ``expected_capital`` (the last only when capital was requested).
-    ``total`` is ``cva + dva + funding + capital_cost``.
+    ``total`` is ``cva + dva + funding + capital_cost``. ``metadata=True``
+    adds the simulation's provenance under ``metadata``.
     """
     steps = simulation.exposure_steps
     values = exposure(simulation)[:, steps]
@@ -339,6 +349,8 @@ def structure_costs(
     }
     if capital_profile is not None:
         result["expected_capital"] = capital_profile
+    if metadata:
+        result["metadata"] = simulation.metadata
     return result
 
 

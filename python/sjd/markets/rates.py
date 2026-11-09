@@ -2,6 +2,7 @@
 
 import calendar as calendar_module
 import functools
+import logging
 import math
 import sqlite3
 from datetime import date, timedelta
@@ -31,6 +32,8 @@ from .store import (
     spot,
     volatility_grid,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def rates_environment(
@@ -65,6 +68,7 @@ def rates_environment(
     environment.set_frs(forward)
     environment.set_drs(discount)
     environment.set_vrs(volatility)
+    logger.info("loaded market %s/%s anchor %s roll %s", market, currency, anchor.isoformat(), roll.name)
     return environment
 
 

@@ -112,8 +112,8 @@ namespace sjd
                        bool optimise,
                        std::shared_ptr<Margin> margin);
 
-        PortfolioB2CEM(PortfolioB2CEM& portfolio);
-        std::unique_ptr<Contract> clone() override;
+        PortfolioB2CEM(const PortfolioB2CEM& portfolio);
+        std::unique_ptr<Contract> clone() const override;
 
         void runChecks() override;
         void runChecks(RatesEnvironment& re) override;

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <boost/math/special_functions/round.hpp>
-#include <sjd/pricing/Black76Formula.h>
 
 #include "Contracts.h"
 
@@ -28,14 +27,12 @@ namespace sjd
                        double premiumAmount,
                        BuySell buySell);
 
-        EuropeanOption(EuropeanOption& option);
-        std::unique_ptr<Contract> clone() override;
+        EuropeanOption(const EuropeanOption& option);
+        std::unique_ptr<Contract> clone() const override;
         virtual ~EuropeanOption() {};
 
-        virtual double getOptionValue(std::shared_ptr<RatesEnvironment> re);
+        virtual double getOptionValue(const std::shared_ptr<RatesEnvironment>& re) const;
         virtual std::string validationRoot() const { return "european_option"; }
-
-        virtual void setType(PutCall pc);
 
     protected:
         void constructorCommon(QuantLib::Date optionMaturity,
@@ -46,8 +43,6 @@ namespace sjd
                                QuantLib::Date premiumPaymentDate,
                                double premiumAmount,
                                BuySell buySell);
-
-        std::shared_ptr<Black76Option> option;
     };
 
 }

@@ -1,5 +1,6 @@
 
 #include <sjd/contracts/AsianOptionContract.h>
+#include <sjd/pricing/AsianOptionFormula.h>
 
 #include <sjd/tools/Errors.h>
 
@@ -26,14 +27,11 @@ namespace sjd
                                         BuySell bs)
     {
         SingleOptionContract::errorTracking = std::make_shared<sjd::IssueTracker>("AsianOption");
-        setAveragingDates(averagingDatesInput);
-        setSettlementDate(optionSettlement);
-        setPremiumPaymentDate(pDate);
-        setPremiumAmount(pAmount);
-        setStrike(X);
-        setVolume(N);
-        setBuySell(bs);
-        setType(pc);
+        storeAveragingDates(averagingDatesInput);
+        Date maturity = orderedAveragingDates.empty() ? optionSettlement : orderedAveragingDates.back();
+        initialise(maturity, optionSettlement, N, bs, pDate, pAmount);
+        initialiseStrike(X);
+        initialiseType(pc);
     }
 
     AsianOption::AsianOption(set<Date> averagingDates,
@@ -65,7 +63,7 @@ namespace sjd
                           premiumAmount, buySellInput);
     }
 
-    AsianOption::AsianOption(AsianOption& optionInput)
+    AsianOption::AsianOption(const AsianOption& optionInput)
     {
         vector<Date> tmpDatesVector = optionInput.getAveragingDates();
         set<Date> dates = set<Date>(tmpDatesVector.begin(), tmpDatesVector.end());
@@ -74,30 +72,9 @@ namespace sjd
                           optionInput.getPremiumAmount(), optionInput.getBuySell());
     }
 
-    std::unique_ptr<Contract> AsianOption::clone()
+    std::unique_ptr<Contract> AsianOption::clone() const
     {
         return std::make_unique<AsianOption>(*this);
-    }
-
-    void AsianOption::setAveragingDates(set<Date> averagingDatesInput)
-    {
-        AsianContract::setAveragingDates(averagingDatesInput);
-        setMaturityDate(orderedAveragingDates.back());
-    }
-
-    void AsianOption::setType(PutCall pc)
-    {
-        SingleOptionContract::setType(pc);
-        if (pc == PutCall::PUT)
-        {
-            option = std::make_shared<AverageRatePut>(UncheckedFormulaInputs{}, vector<double>(1, 0),
-                                                      vector<double>(1, 0), 0, vector<double>(1, 0), 0);
-        }
-        else
-        {
-            option = std::make_shared<AverageRateCall>(UncheckedFormulaInputs{}, vector<double>(1, 0),
-                                                       vector<double>(1, 0), 0, vector<double>(1, 0), 0);
-        }
     }
 
     void AsianOption::recordAsianIssue(std::string_view code,
@@ -146,7 +123,7 @@ namespace sjd
         }
     }
 
-    double AsianOption::getOptionValue(std::shared_ptr<RatesEnvironment> re)
+    double AsianOption::getOptionValue(const std::shared_ptr<RatesEnvironment>& re) const
     {
         Date onDate = re->getAnchorDate();
         if (onDate > getSettlementDate())
@@ -164,23 +141,39 @@ namespace sjd
 
         if (onDate < maturityDate)
         {
-            option->setParameters(forwards, fixes, strike, sds, df);
-            premium = option->getPremium();
+            if (type == PutCall::PUT)
+            {
+                AverageRatePut put(UncheckedFormulaInputs{}, forwards, fixes, strike, sds, df);
+                premium = put.getPremium();
+            }
+            else
+            {
+                AverageRateCall call(UncheckedFormulaInputs{}, forwards, fixes, strike, sds, df);
+                premium = call.getPremium();
+            }
         }
         else if ((onDate >= maturityDate) && (onDate <= settlementDate))
         {
-            double averageFwd = 0;
-            option->setParameters(forwards, fixes, strike, sds, df);
             if (fixes.size() == 0)
             {
                 return 0;
             }
+            double averageFwd = 0;
             for (size_t i = 0; i < fixes.size(); ++i)
             {
                 averageFwd += fixes[i];
             }
             averageFwd /= fixes.size();
-            premium = option->getPremiumAfterMaturity(averageFwd, df);
+            if (type == PutCall::PUT)
+            {
+                AverageRatePut put(UncheckedFormulaInputs{}, forwards, fixes, strike, sds, df);
+                premium = put.getPremiumAfterMaturity(averageFwd, df);
+            }
+            else
+            {
+                AverageRateCall call(UncheckedFormulaInputs{}, forwards, fixes, strike, sds, df);
+                premium = call.getPremiumAfterMaturity(averageFwd, df);
+            }
         }
         return premium * volume;
     }
@@ -190,7 +183,7 @@ namespace sjd
                                vector<double>& forwards,
                                vector<double>& sd,
                                vector<double>& vol,
-                               std::shared_ptr<RatesEnvironment> re)
+                               std::shared_ptr<RatesEnvironment> re) const
     {
         vector<Date> fixingDates, forwardDates;
         AsianContract::getFixingAndForwardDates(valueDate, fixingDates, forwardDates);

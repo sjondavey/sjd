@@ -1,6 +1,7 @@
 #include <sjd/contracts/Portfolio/Structures/Structure.h>
 
 #include <sjd/tools/Errors.h>
+#include <sjd/tools/Log.h>
 
 #include <algorithm>
 #include <iomanip>
@@ -65,12 +66,12 @@ namespace sjd
         }
     }
 
-    Structure::Structure(Structure& structure)
+    Structure::Structure(const Structure& structure)
     {
         commonConstructor(structure.contracts, structure.regCapAssetFactors);
     }
 
-    std::unique_ptr<Contract> Structure::clone()
+    std::unique_ptr<Contract> Structure::clone() const
     {
         return std::make_unique<Structure>(*this);
     }
@@ -190,7 +191,7 @@ namespace sjd
         return volume;
     }
 
-    double Structure::getPayoff(double forSpot)
+    double Structure::getPayoff(double forSpot) const
     {
         double payoff = 0;
         for (size_t i = 0; i < contracts.size(); ++i)
@@ -749,6 +750,7 @@ namespace sjd
         {
             result.report =
                 ValidationReport::failure(issues::STRUCTURE_EMPTY, "No contracts to build a structure");
+            SJD_LOG_DEBUG(result.report.toString());
             return result;
         }
 
@@ -762,6 +764,7 @@ namespace sjd
                     result.report =
                         ValidationReport::failure(issues::STRUCTURE_REGCAP_OFFSET,
                                                   "Contracts do not qualify for regulatory capital offset");
+                    SJD_LOG_DEBUG(result.report.toString());
                     return result;
                 }
             }
@@ -774,9 +777,18 @@ namespace sjd
             std::shared_ptr<Structure> built =
                 std::make_shared<Structure>(inputContracts, regCapAssetFactors);
             if (built->hasErrors())
+            {
                 result.report = built->validationReport();
+                SJD_LOG_DEBUG(result.report.toString());
+            }
             else
+            {
+                SJD_LOG_DEBUG(
+                    "createStructures kept one structure contracts=" + std::to_string(inputContracts.size()) +
+                    " capped=" + std::string(built->isExposureCapped() ? "true" : "false") +
+                    " volume=" + std::to_string(built->getVolume()));
                 result.value.push_back(built);
+            }
             return result;
         }
 
@@ -785,6 +797,7 @@ namespace sjd
         if (!split.ok())
         {
             result.report = split.report;
+            SJD_LOG_DEBUG(result.report.toString());
             return result;
         }
 
@@ -802,9 +815,12 @@ namespace sjd
         if (cappedStructure->hasErrors() || uncappedStructure->hasErrors())
         {
             result.report = cappedStructure->validationReport().merge(uncappedStructure->validationReport());
+            SJD_LOG_DEBUG(result.report.toString());
             return result;
         }
 
+        SJD_LOG_DEBUG("createStructures split capped_volume=" + std::to_string(cappedStructure->getVolume()) +
+                      " uncapped_volume=" + std::to_string(uncappedStructure->getVolume()));
         result.value.push_back(cappedStructure);
         result.value.push_back(uncappedStructure);
         return result;
@@ -836,21 +852,27 @@ namespace sjd
             if (abs(effectiveVolumeAtStrike) - abs(gradientOfUncappedContracts) > -1e-10)
             {
                 // remove all from capped and place into uncapped contracts
+                SJD_LOG_DEBUG("decompose moves the left wing at strike " + std::to_string(commonStrike) +
+                              " into the uncapped structure");
                 moveContracts(uncappedContractsWithOneStrike, cappedContracts, uncappedContracts);
             }
             else
             {
                 // clone the contracts, scale down the volume and split between capped and uncapped
+                SJD_LOG_DEBUG("decompose scales the left wing at strike " + std::to_string(commonStrike) +
+                              " between the capped and uncapped structures");
                 for (size_t i = 0; i < uncappedContractsWithOneStrike.size(); ++i)
                 {
-                    std::shared_ptr<SingleInstrumentContract> contractToMove =
-                        cloneInstrument(uncappedContractsWithOneStrike[i]);
-                    double scaledVolume =
-                        contractToMove->getVolume() * effectiveVolumeAtStrike / gradientOfUncappedContracts;
-                    contractToMove->setVolume(scaledVolume);
-                    uncappedContracts.push_back(contractToMove);
-                    double residualvolume = uncappedContractsWithOneStrike[i]->getVolume() - scaledVolume;
-                    uncappedContractsWithOneStrike[i]->setVolume(residualvolume);
+                    const double original = uncappedContractsWithOneStrike[i]->getVolume();
+                    const double scaledVolume =
+                        original * effectiveVolumeAtStrike / gradientOfUncappedContracts;
+                    uncappedContracts.push_back(uncappedContractsWithOneStrike[i]->withVolume(scaledVolume));
+                    auto reduced = uncappedContractsWithOneStrike[i]->withVolume(original - scaledVolume);
+                    for (auto& held : cappedContracts)
+                    {
+                        if (held == uncappedContractsWithOneStrike[i])
+                            held = reduced;
+                    }
                 }
             }
         }
@@ -859,6 +881,7 @@ namespace sjd
             result.report = ValidationReport::failure(issues::STRUCTURE_BUILD_FAILED,
                                                       "Could not split capped and uncapped exposure");
             result.value = {};
+            SJD_LOG_DEBUG(result.report.toString());
             return result;
         }
         infiniteLoopBreaker = static_cast<int>(cappedContracts.size()) + 1;
@@ -876,21 +899,27 @@ namespace sjd
             if (effectiveVolumeAtStrike - gradientOfUncappedContracts > -1e-10)
             {
                 // remove all from capped and place into uncapped contracts
+                SJD_LOG_DEBUG("decompose moves the right wing at strike " + std::to_string(commonStrike) +
+                              " into the uncapped structure");
                 moveContracts(uncappedContractsWithOneStrike, cappedContracts, uncappedContracts);
             }
             else
             {
                 // clone the contracts, scale down the volume and split between capped and uncapped
+                SJD_LOG_DEBUG("decompose scales the right wing at strike " + std::to_string(commonStrike) +
+                              " between the capped and uncapped structures");
                 for (size_t i = 0; i < uncappedContractsWithOneStrike.size(); ++i)
                 {
-                    std::shared_ptr<SingleInstrumentContract> contractToMove =
-                        cloneInstrument(uncappedContractsWithOneStrike[i]);
-                    double scaledVolume =
-                        contractToMove->getVolume() * effectiveVolumeAtStrike / gradientOfUncappedContracts;
-                    contractToMove->setVolume(scaledVolume);
-                    uncappedContracts.push_back(contractToMove);
-                    double residualvolume = uncappedContractsWithOneStrike[i]->getVolume() - scaledVolume;
-                    uncappedContractsWithOneStrike[i]->setVolume(residualvolume);
+                    const double original = uncappedContractsWithOneStrike[i]->getVolume();
+                    const double scaledVolume =
+                        original * effectiveVolumeAtStrike / gradientOfUncappedContracts;
+                    uncappedContracts.push_back(uncappedContractsWithOneStrike[i]->withVolume(scaledVolume));
+                    auto reduced = uncappedContractsWithOneStrike[i]->withVolume(original - scaledVolume);
+                    for (auto& held : cappedContracts)
+                    {
+                        if (held == uncappedContractsWithOneStrike[i])
+                            held = reduced;
+                    }
                 }
             }
         }
@@ -899,6 +928,7 @@ namespace sjd
             result.report = ValidationReport::failure(issues::STRUCTURE_BUILD_FAILED,
                                                       "Could not split capped and uncapped exposure");
             result.value = {};
+            SJD_LOG_DEBUG(result.report.toString());
             return result;
         }
         return result;
@@ -934,7 +964,7 @@ namespace sjd
                 (cappedContracts[i]->getBuySell() == BuySell::BUY))
             {
                 double payable = cappedContracts[i]->getPremiumAmount() * cappedContracts[i]->getVolume();
-                cappedContracts[i]->setPremiumAmount(0);
+                cappedContracts[i] = cappedContracts[i]->withPremiumAmount(0);
                 Date premiumDate = cappedContracts[i]->getPremiumPaymentDate();
                 std::shared_ptr<FixedCashflow> cashflowPayable =
                     std::make_shared<FixedCashflow>(premiumDate, payable, BuySell::SELL);
@@ -948,7 +978,7 @@ namespace sjd
             {
                 double receivable =
                     unCappedContracts[i]->getPremiumAmount() * unCappedContracts[i]->getVolume();
-                unCappedContracts[i]->setPremiumAmount(0);
+                unCappedContracts[i] = unCappedContracts[i]->withPremiumAmount(0);
                 Date premiumDate = unCappedContracts[i]->getPremiumPaymentDate();
                 std::shared_ptr<FixedCashflow> cashflowReceivable =
                     std::make_shared<FixedCashflow>(premiumDate, receivable, BuySell::SELL);

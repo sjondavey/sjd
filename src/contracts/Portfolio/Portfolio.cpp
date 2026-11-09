@@ -71,7 +71,7 @@ namespace sjd
         margin = marginInput;
     }
 
-    Portfolio::Portfolio(Portfolio& portfolio)
+    Portfolio::Portfolio(const Portfolio& portfolio)
     {
         setInputVariables();
         contracts = portfolio.contracts;
@@ -87,7 +87,7 @@ namespace sjd
         }
     }
 
-    std::unique_ptr<Contract> Portfolio::clone()
+    std::unique_ptr<Contract> Portfolio::clone() const
     {
         return std::make_unique<Portfolio>(*this);
     }

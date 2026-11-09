@@ -1,4 +1,5 @@
 #include <sjd/contracts/EuropeanOptionContract.h>
+#include <sjd/pricing/Black76Formula.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -25,7 +26,7 @@ namespace sjd
                           premiumAmount, buySellInput);
     }
 
-    EuropeanOption::EuropeanOption(EuropeanOption& optionInput)
+    EuropeanOption::EuropeanOption(const EuropeanOption& optionInput)
     {
         constructorCommon(optionInput.maturityDate, optionInput.settlementDate, optionInput.strike,
                           optionInput.type, optionInput.volume, optionInput.premiumPaymentDate,
@@ -42,52 +43,43 @@ namespace sjd
                                            BuySell bs)
     {
         errorTracking = std::make_shared<sjd::IssueTracker>("EuropeanOption");
-        setMaturityDate(optionMaturity);
-        setSettlementDate(optionSettlement);
-        setStrike(X);
-        setVolume(N);
-        setPremiumPaymentDate(pDate);
-        setPremiumAmount(pAmount);
-        setBuySell(bs);
-        setType(pc);
+        initialise(optionMaturity, optionSettlement, N, bs, pDate, pAmount);
+        initialiseStrike(X);
+        initialiseType(pc);
     }
 
-    std::unique_ptr<Contract> EuropeanOption::clone()
+    std::unique_ptr<Contract> EuropeanOption::clone() const
     {
         return std::make_unique<EuropeanOption>(*this);
     }
 
-    void EuropeanOption::setType(PutCall pc)
-    {
-        SingleOptionContract::setType(pc);
-        if (getType() == PutCall::PUT)
-        {
-            option = std::make_shared<Black76Put>(UncheckedFormulaInputs{}, 0, 0, 0, 0);
-        }
-        else
-        {
-            option = std::make_shared<Black76Call>(UncheckedFormulaInputs{}, 0, 0, 0, 0);
-        }
-    }
-
-    double EuropeanOption::getOptionValue(std::shared_ptr<RatesEnvironment> re)
+    double EuropeanOption::getOptionValue(const std::shared_ptr<RatesEnvironment>& re) const
     {
         Date valueDate = re->getAnchorDate();
         if (valueDate > getSettlementDate())
         {
             return 0;
         }
-        double premium = 0;
         double F = (re->getFRS())->getForward(getSettlementDate());
         double df = (re->getDRS()->getDiscountFactor(getSettlementDate()));
         if (valueDate < getMaturityDate())
         {
             double sd = (re->getVRS())->getStandardDeviation(getMaturityDate(), getStrike(), F);
-            option->setParameters(F, strike, sd, df);
-            premium += option->getPremium();
-            return premium * getVolume();
+            if (type == PutCall::PUT)
+            {
+                Black76Put put(UncheckedFormulaInputs{}, F, strike, sd, df);
+                return put.getPremium() * getVolume();
+            }
+            Black76Call call(UncheckedFormulaInputs{}, F, strike, sd, df);
+            return call.getPremium() * getVolume();
         }
-        return option->getPremiumAfterMaturity(F, df) * volume;
+        if (type == PutCall::PUT)
+        {
+            Black76Put put(UncheckedFormulaInputs{}, 0, strike, 0, df);
+            return put.getPremiumAfterMaturity(F, df) * volume;
+        }
+        Black76Call call(UncheckedFormulaInputs{}, 0, strike, 0, df);
+        return call.getPremiumAfterMaturity(F, df) * volume;
     }
 
 }

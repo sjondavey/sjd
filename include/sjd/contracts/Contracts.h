@@ -20,23 +20,15 @@ namespace sjd
      * SingleInstrumentContract. A group inherits MultipleInstrumentContract.
      *
      * validate() records issues. isOK() only reports whether any are stored.
-     * getValue() assumes validate() has already succeeded.
-     *
-     * getValue() may reuse a number cached against the RatesEnvironment pointer
-     * and that environment's market revision. Replacing a curve on the environment
-     * advances the revision, and the next getValue reprices. Editing the numbers
-     * inside a curve object that is already attached does not.
+     * getValue() assumes validate() has already succeeded. It does not store
+     * the result. See docs/immutable-contracts.md.
      */
     class Contract : public Validatable
     {
     public:
-        Contract()
-        {
-            valueCalculated = false;
-            cachedMarketRevision = 0;
-        };
+        Contract() = default;
         virtual ~Contract() {};
-        virtual std::unique_ptr<Contract> clone() = 0;
+        virtual std::unique_ptr<Contract> clone() const = 0;
 
         // validate() clears the tracker, runs the checks, and returns the report.
         // isOK() only reads that report.
@@ -50,7 +42,7 @@ namespace sjd
 
         void runChecks() override;
         virtual void runChecks(RatesEnvironment& re);
-        virtual double getValue(std::shared_ptr<RatesEnvironment> re) = 0;
+        virtual double getValue(const std::shared_ptr<RatesEnvironment>& re) const = 0;
 
         virtual std::string toString();
         virtual std::string toString(std::shared_ptr<RatesEnvironment> re);
@@ -59,15 +51,6 @@ namespace sjd
         // are no errors
         virtual std::string toStringContract() = 0;
         virtual std::string toStringRates(std::shared_ptr<RatesEnvironment> re) = 0;
-
-    protected:
-        // When we get into a MC simulaiton, especially with Regulatory capital, we will
-        // often call the same getValue(re) multiple times; The following variables allow
-        // a slow class to cache the contract value for a given rates environement
-        bool valueCalculated;
-        std::shared_ptr<RatesEnvironment> cachedRE;
-        std::size_t cachedMarketRevision;
-        double cachedContractValue;
     };
 
     /**
@@ -81,33 +64,29 @@ namespace sjd
     {
     public:
         virtual ~SingleInstrumentContract() {};
-        std::unique_ptr<Contract> clone() override = 0;
+        std::unique_ptr<Contract> clone() const override = 0;
 
         void runChecks() override;
         void runChecks(RatesEnvironment& re) override;
 
         bool getHasPremium() const;
-        virtual void setPremiumPaymentDate(QuantLib::Date premiumPaymentDate);
         QuantLib::Date getPremiumPaymentDate() const;
-        virtual void setPremiumAmount(double premium);
         double getPremiumAmount() const;
 
-        virtual void setMaturityDate(QuantLib::Date maturityDate);
         QuantLib::Date getMaturityDate() const;
-
-        virtual void setSettlementDate(QuantLib::Date settlementDate);
         QuantLib::Date getSettlementDate() const;
 
-        void setBuySell(BuySell bs);
         BuySell getBuySell() const;
         double getBuySellAsDouble() const;
 
         double getVolume() const;
-        virtual void setVolume(double volume);
+        // A new contract. This one is unchanged.
+        std::shared_ptr<SingleInstrumentContract> withVolume(double volume) const;
+        std::shared_ptr<SingleInstrumentContract> withPremiumAmount(double premium) const;
 
         // Used to decide if a particular structure's MtM is capped. This theoretical method
         // should be implemented to be independent of a rates environment
-        virtual double getPayoff(double forSpot) = 0;
+        virtual double getPayoff(double forSpot) const = 0;
 
         virtual std::string toStringContract();
         virtual std::string toStringRates(std::shared_ptr<RatesEnvironment> re);
@@ -123,6 +102,13 @@ namespace sjd
         BuySell buySell = BuySell::BUY;
 
         bool hasPremium = false;
+
+        void initialise(QuantLib::Date maturity,
+                        QuantLib::Date settlement,
+                        double volume,
+                        BuySell buySell,
+                        QuantLib::Date premiumPaymentDate,
+                        double premiumAmount);
     };
 
     /**
@@ -133,13 +119,12 @@ namespace sjd
     class SingleDerivativeContract : public SingleInstrumentContract
     {
     public:
-        std::unique_ptr<Contract> clone() override = 0;
+        std::unique_ptr<Contract> clone() const override = 0;
         virtual ~SingleDerivativeContract() {};
 
         void runChecks() override;
         void runChecks(RatesEnvironment& re) override;
 
-        virtual void setStrike(double strike);
         double getStrike() const;
 
         virtual std::string toStringContract();
@@ -147,6 +132,8 @@ namespace sjd
 
     protected:
         double strike = 0.0;
+
+        void initialiseStrike(double strike);
     };
 
     /**
@@ -164,12 +151,11 @@ namespace sjd
         void runChecks() override;
         void runChecks(RatesEnvironment& re) override;
 
-        virtual double getPayoff(double forSpot);
-        virtual double getOptionValue(std::shared_ptr<RatesEnvironment> re) = 0;
+        virtual double getPayoff(double forSpot) const;
+        virtual double getOptionValue(const std::shared_ptr<RatesEnvironment>& re) const = 0;
 
-        virtual double getValue(std::shared_ptr<RatesEnvironment> re);
+        virtual double getValue(const std::shared_ptr<RatesEnvironment>& re) const;
 
-        virtual void setType(PutCall pc);
         PutCall getType() const;
 
         virtual std::string toStringContract();
@@ -177,6 +163,8 @@ namespace sjd
 
     protected:
         PutCall type = PutCall::CALL;
+
+        void initialiseType(PutCall type);
     };
 
     /**
@@ -195,7 +183,6 @@ namespace sjd
         virtual void checkAveraging();
         virtual void checkAveraging(RatesEnvironment& re);
 
-        virtual void setAveragingDates(std::set<QuantLib::Date> averagingDates);
         std::vector<QuantLib::Date> getAveragingDates() const;
 
         std::set<QuantLib::Date> getAllBusinessDaysBetween(QuantLib::Date startDate,
@@ -206,12 +193,12 @@ namespace sjd
         // forwardDates
         virtual void getFixingAndForwardDates(QuantLib::Date valuationDate,
                                               std::vector<QuantLib::Date>& fixingDates,
-                                              std::vector<QuantLib::Date>& forwardDates);
+                                              std::vector<QuantLib::Date>& forwardDates) const;
 
         virtual void getFixingAndForwardRates(QuantLib::Date valuationDate,
                                               std::vector<double>& fixingRates,
                                               std::vector<double>& forwardRates,
-                                              std::shared_ptr<RatesEnvironment> re);
+                                              std::shared_ptr<RatesEnvironment> re) const;
 
     protected:
         // The instrument writes these onto its own tracker, prefixed once.
@@ -222,6 +209,8 @@ namespace sjd
                                        const std::vector<std::string>& prefix) = 0;
 
         std::vector<QuantLib::Date> orderedAveragingDates;
+
+        void storeAveragingDates(std::set<QuantLib::Date> averagingDates);
     };
 
     /**
@@ -238,15 +227,15 @@ namespace sjd
         MultipleInstrumentContract() {};
         MultipleInstrumentContract(std::vector<std::shared_ptr<SingleInstrumentContract>> input);
         MultipleInstrumentContract(std::vector<std::shared_ptr<Contract>> input);
-        MultipleInstrumentContract(MultipleInstrumentContract& multipleInstrumentContract);
+        MultipleInstrumentContract(const MultipleInstrumentContract& multipleInstrumentContract);
         // Keeps a reference the the same underlying contracts
-        std::unique_ptr<Contract> clone() override;
+        std::unique_ptr<Contract> clone() const override;
         virtual ~MultipleInstrumentContract() {};
 
         void runChecks() override;
         void runChecks(RatesEnvironment& re) override;
 
-        virtual double getValue(std::shared_ptr<RatesEnvironment> re);
+        virtual double getValue(const std::shared_ptr<RatesEnvironment>& re) const;
 
         virtual std::string toString(std::shared_ptr<RatesEnvironment> re);
         virtual std::string toStringContract();
@@ -255,7 +244,7 @@ namespace sjd
         // The instruments this group holds. Callers that change volume or premium
         // must clone first. Building a regulatory-capital structure does that.
         virtual std::vector<std::shared_ptr<SingleInstrumentContract>>
-        getUnderlyingSingleInstrumentContracts();
+        getUnderlyingSingleInstrumentContracts() const;
 
     protected:
         virtual void setInputVariables();

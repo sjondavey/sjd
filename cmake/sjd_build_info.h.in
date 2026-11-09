@@ -1,0 +1,8 @@
+#pragma once
+
+// Written by CMake from the project version and the git worktree at configure time.
+#define SJD_VERSION "@PROJECT_VERSION@"
+#define SJD_GIT_COMMIT "@SJD_GIT_COMMIT@"
+#define SJD_GIT_DIRTY @SJD_GIT_DIRTY@
+#define SJD_BUILD_TYPE "@SJD_BUILD_TYPE@"
+#define SJD_COMPILER "@SJD_COMPILER@"

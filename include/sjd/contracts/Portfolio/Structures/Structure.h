@@ -58,8 +58,8 @@ namespace sjd
         Structure(std::shared_ptr<Contract> underlyingContract,
                   std::shared_ptr<RegCapUnderlyingFactors> regCapAssetFactors);
 
-        Structure(Structure& structure);
-        std::unique_ptr<Contract> clone() override;
+        Structure(const Structure& structure);
+        std::unique_ptr<Contract> clone() const override;
         virtual ~Structure() {};
 
         void runChecks() override;
@@ -71,7 +71,7 @@ namespace sjd
         virtual double getCap() const;
         // Effective volume used in the add-on, Spot x Volume x factor(t).
         virtual double getVolume() const;
-        virtual double getPayoff(double forSpot);
+        virtual double getPayoff(double forSpot) const;
 
         // To get the structure's reg cap, multiply the value returned from this function my
         // The couterparty weight and the capital charge

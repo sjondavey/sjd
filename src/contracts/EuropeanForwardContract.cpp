@@ -10,7 +10,7 @@ namespace sjd
     ForwardContract
 
      =======================================================================================*/
-    double ForwardContract::getValue(std::shared_ptr<RatesEnvironment> re)
+    double ForwardContract::getValue(const std::shared_ptr<RatesEnvironment>& re) const
     {
         Date valueDate = re->getAnchorDate();
         if (valueDate > settlementDate)
@@ -25,7 +25,7 @@ namespace sjd
         return premium * volume * sign(buySell);
     }
 
-    double ForwardContract::getPayoff(double forSpot)
+    double ForwardContract::getPayoff(double forSpot) const
     {
         return (forSpot - strike) * volume * sign(buySell);
     }
@@ -38,13 +38,8 @@ namespace sjd
     void EuropeanForward::constructorCommon(Date maturity, Date settlement, double X, double N, BuySell bs)
     {
         errorTracking = std::make_shared<sjd::IssueTracker>("EuropeanForward");
-        setMaturityDate(maturity);
-        setSettlementDate(settlement);
-        setStrike(X);
-        setVolume(N);
-        setBuySell(bs);
-        setPremiumAmount(0);
-        setPremiumPaymentDate(settlement);
+        initialise(maturity, settlement, N, bs, settlement, 0);
+        initialiseStrike(X);
     }
 
     EuropeanForward::EuropeanForward(
@@ -58,13 +53,13 @@ namespace sjd
         constructorCommon(settlementDate, settlementDate, strike, volume, buySell);
     }
 
-    EuropeanForward::EuropeanForward(EuropeanForward& forward)
+    EuropeanForward::EuropeanForward(const EuropeanForward& forward)
     {
         constructorCommon(forward.maturityDate, forward.settlementDate, forward.strike, forward.volume,
                           forward.buySell);
     }
 
-    std::unique_ptr<Contract> EuropeanForward::clone()
+    std::unique_ptr<Contract> EuropeanForward::clone() const
     {
         return std::make_unique<EuropeanForward>(*this);
     }

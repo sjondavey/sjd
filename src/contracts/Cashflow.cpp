@@ -13,12 +13,7 @@ namespace sjd
     void FixedCashflow::commonConstructor(Date cashFlowDate, double amount, BuySell bs)
     {
         errorTracking = std::make_shared<sjd::IssueTracker>("FixedCashflow");
-        setMaturityDate(cashFlowDate);
-        setSettlementDate(cashFlowDate);
-        setVolume(abs(amount));
-        setBuySell(bs);
-        setPremiumPaymentDate(cashFlowDate);
-        setPremiumAmount(0);
+        initialise(cashFlowDate, cashFlowDate, amount, bs, cashFlowDate, 0);
     }
 
     FixedCashflow::FixedCashflow(Date cashFlowDate, double amount, BuySell bs)
@@ -26,12 +21,12 @@ namespace sjd
         commonConstructor(cashFlowDate, amount, bs);
     }
 
-    FixedCashflow::FixedCashflow(FixedCashflow& cf)
+    FixedCashflow::FixedCashflow(const FixedCashflow& cf)
     {
         commonConstructor(cf.getMaturityDate(), cf.getVolume(), cf.getBuySell());
     }
 
-    std::unique_ptr<Contract> FixedCashflow::clone()
+    std::unique_ptr<Contract> FixedCashflow::clone() const
     {
         return std::make_unique<FixedCashflow>(*this);
     }
@@ -51,24 +46,7 @@ namespace sjd
         SingleInstrumentContract::runChecks(re);
     }
 
-    void FixedCashflow::setMaturityDate(Date maturity)
-    {
-        SingleInstrumentContract::setMaturityDate(maturity);
-        SingleInstrumentContract::setSettlementDate(maturity);
-    }
-
-    void FixedCashflow::setSettlementDate(Date settlement)
-    {
-        SingleInstrumentContract::setMaturityDate(settlement);
-        SingleInstrumentContract::setSettlementDate(settlement);
-    }
-
-    void FixedCashflow::setPremiumAmount(double /*premium*/)
-    {
-        premiumAmount = 0;
-    }
-
-    double FixedCashflow::getValue(std::shared_ptr<RatesEnvironment> re)
+    double FixedCashflow::getValue(const std::shared_ptr<RatesEnvironment>& re) const
     {
         Date valueDate = re->getAnchorDate();
         if (valueDate > settlementDate)
@@ -80,7 +58,7 @@ namespace sjd
         return sign(buySell) * (pvCashFlows);
     }
 
-    double FixedCashflow::getPayoff(double /*forSpot*/)
+    double FixedCashflow::getPayoff(double /*forSpot*/) const
     {
         return sign(buySell) * volume;
     }

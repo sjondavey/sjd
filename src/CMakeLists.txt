@@ -58,6 +58,7 @@ add_library(sjd STATIC
     tools/Curve.cpp
     tools/DatedCurve.cpp
     tools/Errors.cpp
+    tools/Log.cpp
     tools/Validation.cpp
 )
 add_library(sjd::sjd ALIAS sjd)
@@ -77,6 +78,7 @@ target_link_libraries(sjd
     PUBLIC
         QuantLib::QuantLib
     PRIVATE
+        spdlog::spdlog
         "$<BUILD_INTERFACE:sjd_warnings>"
 )
 

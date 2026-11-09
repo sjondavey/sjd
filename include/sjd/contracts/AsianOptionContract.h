@@ -2,7 +2,6 @@
 
 #include <boost/math/special_functions/round.hpp>
 #include <ql/time/calendar.hpp>
-#include <sjd/pricing/AsianOptionFormula.h>
 #include <sjd/rates/Fixing/FixingRateSource.h>
 
 #include "EuropeanOptionContract.h"
@@ -38,9 +37,9 @@ namespace sjd
                     double premiumAmount,
                     BuySell buySell);
 
-        AsianOption(AsianOption& option);
+        AsianOption(const AsianOption& option);
 
-        std::unique_ptr<Contract> clone() override;
+        std::unique_ptr<Contract> clone() const override;
 
         virtual ~AsianOption() {};
 
@@ -48,18 +47,14 @@ namespace sjd
         virtual std::string validationRoot() const { return "asian_option"; }
         void runChecks(RatesEnvironment& re) override;
 
-        virtual void setAveragingDates(std::set<QuantLib::Date> averagingDates);
-        virtual void setType(PutCall pc);
-
-        // virtual double getOptionValue(QuantLib::Date valueDate, std::vector<double> sds);
-        virtual double getOptionValue(std::shared_ptr<RatesEnvironment> re);
+        virtual double getOptionValue(const std::shared_ptr<RatesEnvironment>& re) const;
 
         virtual void getRates(QuantLib::Date valuationDate,
                               std::vector<double>& fixingRates,
                               std::vector<double>& forwardRates,
                               std::vector<double>& sd,
                               std::vector<double>& vol,
-                              std::shared_ptr<RatesEnvironment> re);
+                              std::shared_ptr<RatesEnvironment> re) const;
 
         virtual std::string toStringRates(std::shared_ptr<RatesEnvironment> re);
 
@@ -77,7 +72,5 @@ namespace sjd
                               const std::vector<std::string>& path) override;
         void absorbAsianReport(const ValidationReport& child,
                                const std::vector<std::string>& prefix) override;
-
-        std::shared_ptr<AverageRateOption> option;
     };
 }

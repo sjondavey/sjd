@@ -1,9 +1,9 @@
 #include <sjd/rates/Volatility/VolatilitySurfaceDelta.h>
 
 #include <sjd/tools/Errors.h>
+#include <sjd/tools/Log.h>
 
 #include <boost/algorithm/string.hpp>
-#include <sjd/tools/Errors.h>
 
 using namespace std;
 using namespace QuantLib;
@@ -113,6 +113,7 @@ namespace sjd
             }
             catch (const std::exception&)
             {
+                SJD_LOG_WARN("Could not convert a strike to a delta on the volatility surface");
                 throw NumericalError("Could not convert a strike to a delta on the volatility surface");
             }
             sd1 = vol1 * sqrtttm;
@@ -121,6 +122,8 @@ namespace sjd
             diff = abs(guess1 - guess2);
             ++counter;
         }
+        if (diff > accuracy)
+            SJD_LOG_WARN("Could not convert a strike to a delta on the volatility surface");
         return guess2;
     }
 
@@ -143,6 +146,7 @@ namespace sjd
         }
         catch (const std::exception&)
         {
+            SJD_LOG_WARN("Could not convert a delta to a strike on the volatility surface");
             throw NumericalError("Could not convert a delta to a strike on the volatility surface");
         }
         return strike;
@@ -335,6 +339,8 @@ namespace sjd
             diff = abs(guess1 - guess2);
             ++counter;
         }
+        if (diff > accuracy)
+            SJD_LOG_WARN("Could not convert a strike to a delta on the volatility surface");
         return guess2;
     }
 }

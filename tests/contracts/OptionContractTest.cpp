@@ -26,56 +26,45 @@ void OptionContractTest::testBuySell()
 {
     BOOST_TEST_MESSAGE("Testing OptionContract ...");
     Date anchorDate(1, Jan, 2013);
-    std::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
-    BuySell bs = BuySell::SELL;
-    contract->setBuySell(bs);
-    BuySell bs2 = contract->getBuySell();
-    BOOST_CHECK(bs == bs2);
+    std::shared_ptr<EuropeanOption> base = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<EuropeanOption> contract = std::make_shared<EuropeanOption>(
+        base->getMaturityDate(), base->getSettlementDate(), base->getStrike(), base->getType(),
+        base->getVolume(), base->getPremiumPaymentDate(), base->getPremiumAmount(), BuySell::SELL);
+    BOOST_CHECK(contract->getBuySell() == BuySell::SELL);
 }
 
 void OptionContractTest::testStrike()
 {
     Date anchorDate(1, Jan, 2013);
-    GenerateRates gr = GenerateRates();
-
-    std::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
-    std::shared_ptr<RatesEnvironment> re =
-        gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
-    BOOST_CHECK(contract->isOK());
-    double strike = -1;
-    contract->setStrike(strike);
+    std::shared_ptr<EuropeanOption> base = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<EuropeanOption> contract = std::make_shared<EuropeanOption>(
+        base->getMaturityDate(), base->getSettlementDate(), -1.0, base->getType(), base->getVolume(),
+        base->getPremiumPaymentDate(), base->getPremiumAmount(), base->getBuySell());
     contract->validate();
     BOOST_CHECK(!contract->isOK());
-    BOOST_CHECK(abs(contract->getStrike() - strike) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK(abs(contract->getStrike() + 1.0) < EPSILON_FOR_DOUBLES);
 }
 
 void OptionContractTest::testVolume()
 {
     Date anchorDate(1, Jan, 2013);
-    GenerateRates gr = GenerateRates();
-
-    std::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
-    std::shared_ptr<RatesEnvironment> re =
-        gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
+    std::shared_ptr<EuropeanOption> base = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<EuropeanOption> contract = std::make_shared<EuropeanOption>(
+        base->getMaturityDate(), base->getSettlementDate(), base->getStrike(), base->getType(), -1.0,
+        base->getPremiumPaymentDate(), base->getPremiumAmount(), base->getBuySell());
     BOOST_CHECK(contract->isOK());
-    double volume = -1;
-    contract->setVolume(volume);
-    BOOST_CHECK(contract->isOK());
-    BOOST_CHECK(abs(contract->getVolume() + volume) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK(abs(contract->getVolume() - 1.0) < EPSILON_FOR_DOUBLES);
 }
 
 void OptionContractTest::testMaturityDate()
 {
     Date anchorDate(1, Jan, 2013);
-    GenerateRates gr = GenerateRates();
-
-    std::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
-    std::shared_ptr<RatesEnvironment> re =
-        gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
-    BOOST_CHECK(contract->isOK());
+    std::shared_ptr<EuropeanOption> base = getDefaultEuropeanOption(anchorDate);
     std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
     Date optionMaturity = nullCalendar->advance(anchorDate, 3, Years);
-    contract->setMaturityDate(optionMaturity);
+    std::shared_ptr<EuropeanOption> contract = std::make_shared<EuropeanOption>(
+        optionMaturity, base->getSettlementDate(), base->getStrike(), base->getType(), base->getVolume(),
+        base->getPremiumPaymentDate(), base->getPremiumAmount(), base->getBuySell());
     contract->validate();
     BOOST_CHECK(!contract->isOK());
     BOOST_CHECK(contract->getMaturityDate() == optionMaturity);
@@ -84,16 +73,11 @@ void OptionContractTest::testMaturityDate()
 void OptionContractTest::testPremiumAmount()
 {
     Date anchorDate(1, Jan, 2013);
-    GenerateRates gr = GenerateRates();
-
-    std::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
-    std::shared_ptr<RatesEnvironment> re =
-        gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
-    BOOST_CHECK(contract->isOK());
-
-    double ppAmount = -10;
-    contract->setPremiumAmount(ppAmount);
-    BOOST_CHECK(abs(contract->getPremiumAmount() + ppAmount) < EPSILON_FOR_DOUBLES);
+    std::shared_ptr<EuropeanOption> base = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<EuropeanOption> contract = std::make_shared<EuropeanOption>(
+        base->getMaturityDate(), base->getSettlementDate(), base->getStrike(), base->getType(),
+        base->getVolume(), base->getPremiumPaymentDate(), -10.0, base->getBuySell());
+    BOOST_CHECK(abs(contract->getPremiumAmount() - 10.0) < EPSILON_FOR_DOUBLES);
 }
 
 void OptionContractTest::testType()
@@ -101,17 +85,16 @@ void OptionContractTest::testType()
     Date anchorDate(1, Jan, 2013);
     GenerateRates gr = GenerateRates();
 
-    std::shared_ptr<EuropeanOption> contract = getDefaultEuropeanOption(anchorDate);
+    std::shared_ptr<EuropeanOption> put = getDefaultEuropeanOption(anchorDate);
     std::shared_ptr<RatesEnvironment> re =
         gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
-    BOOST_CHECK(contract->getType() == PutCall::PUT);
-    double valuePut = contract->getValue(re);
-    contract->setType(PutCall::CALL);
-    BOOST_CHECK(contract->getType() == PutCall::CALL);
-    double valueCall = contract->getValue(re);
-    std::shared_ptr<EuropeanOption> freshCall = getDefaultEuropeanOption(anchorDate);
-    freshCall->setType(PutCall::CALL);
-    BOOST_CHECK(abs(valueCall - freshCall->getValue(re)) < EPSILON_FOR_DOUBLES);
+    BOOST_CHECK(put->getType() == PutCall::PUT);
+    double valuePut = put->getValue(re);
+    std::shared_ptr<EuropeanOption> call = std::make_shared<EuropeanOption>(
+        put->getMaturityDate(), put->getSettlementDate(), put->getStrike(), PutCall::CALL, put->getVolume(),
+        put->getPremiumPaymentDate(), put->getPremiumAmount(), put->getBuySell());
+    BOOST_CHECK(call->getType() == PutCall::CALL);
+    double valueCall = call->getValue(re);
     BOOST_CHECK(abs(valuePut - valueCall) > EPSILON_FOR_DOUBLES);
 }
 
@@ -121,9 +104,9 @@ void OptionContractTest::testPutCallParity()
     GenerateRates gr = GenerateRates();
 
     std::shared_ptr<EuropeanOption> put = getDefaultEuropeanOption(anchorDate);
-    std::shared_ptr<EuropeanOption> call = getDefaultEuropeanOption(anchorDate);
-    call->setType(PutCall::CALL);
-    call->setBuySell(BuySell::SELL);
+    std::shared_ptr<EuropeanOption> call = std::make_shared<EuropeanOption>(
+        put->getMaturityDate(), put->getSettlementDate(), put->getStrike(), PutCall::CALL, put->getVolume(),
+        put->getPremiumPaymentDate(), put->getPremiumAmount(), BuySell::SELL);
     std::shared_ptr<RatesEnvironment> re =
         gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
 
@@ -208,8 +191,10 @@ void OptionContractTest::testGetPayoffAfterMaturity()
     Date anchorDate(1, Jan, 2013);
 
     std::shared_ptr<EuropeanOption> option = getDefaultEuropeanOption(anchorDate);
-    std::shared_ptr<EuropeanOption> option2 = getDefaultEuropeanOption(anchorDate);
-    option2->setType(PutCall::CALL);
+    std::shared_ptr<EuropeanOption> option2 = std::make_shared<EuropeanOption>(
+        option->getMaturityDate(), option->getSettlementDate(), option->getStrike(), PutCall::CALL,
+        option->getVolume(), option->getPremiumPaymentDate(), option->getPremiumAmount(),
+        option->getBuySell());
 
     double v1 = option->getVolume();
     double p1 = option->getPremiumAmount();

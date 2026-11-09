@@ -1,6 +1,7 @@
 #include <sjd/contracts/Portfolio/RegulatoryCapital.h>
 
 #include <sjd/tools/Errors.h>
+#include <sjd/tools/Log.h>
 
 #include <algorithm>
 #include <iomanip>
@@ -74,6 +75,23 @@ namespace sjd
             {
                 conversionDetailText = built.report.toString();
                 errorTracking->absorb(built.report, {"regulatory_capital", "structures"});
+                SJD_LOG_DEBUG(built.report.toString());
+            }
+            else
+            {
+                size_t capped = 0;
+                std::ostringstream volumes;
+                for (const std::shared_ptr<Structure>& structure : built.value)
+                {
+                    if (structure->isExposureCapped())
+                        ++capped;
+                    if (!volumes.str().empty())
+                        volumes << ',';
+                    volumes << structure->getVolume();
+                }
+                SJD_LOG_INFO("CEM optimisation netting_sets=" + std::to_string(built.value.size()) +
+                             " capped=" + std::to_string(capped) + " uncapped=" +
+                             std::to_string(built.value.size() - capped) + " volumes=" + volumes.str());
             }
         }
         else
@@ -296,13 +314,23 @@ namespace sjd
     double CurrentExposureMethod::getRegulatoryCapital(std::shared_ptr<RatesEnvironment> re)
     {
         SJD_ASSERT(!hasErrors());
+        vector<double> values(nettingStructures.size(), 0.0);
         double mtm = 0;
-        double ngr = getNGR(re, mtm);
+        double grossValue = 0;
+        for (size_t i = 0; i < nettingStructures.size(); ++i)
+        {
+            values[i] = nettingStructures[i]->getValue(re);
+            mtm += values[i];
+            grossValue += max(0.0, values[i]);
+        }
+        double ngr = 0;
+        if (mtm >= 0 && grossValue > 1e-14)
+            ngr = mtm / grossValue;
 
         double regCap = 0;
         for (size_t i = 0; i < nettingStructures.size(); ++i)
         {
-            regCap += nettingStructures[i]->getMtMPlusAddOn(re, ngr);
+            regCap += nettingStructures[i]->getMtMPlusAddOnForGivenMtM(re, values[i], ngr);
         }
         if (hasMargin)
         {
@@ -337,7 +365,7 @@ namespace sjd
         attachCapital(inputs, regCapAssetFactorsInput, regCapCreditParametersInput, optimise);
     }
 
-    PortfolioB2CEM::PortfolioB2CEM(PortfolioB2CEM& portfolio)
+    PortfolioB2CEM::PortfolioB2CEM(const PortfolioB2CEM& portfolio)
     {
         setInputVariables();
         vector<std::shared_ptr<SingleInstrumentContract>> tmpContracts =
@@ -354,7 +382,7 @@ namespace sjd
         }
     }
 
-    std::unique_ptr<Contract> PortfolioB2CEM::clone()
+    std::unique_ptr<Contract> PortfolioB2CEM::clone() const
     {
         return std::make_unique<PortfolioB2CEM>(*this);
     }
