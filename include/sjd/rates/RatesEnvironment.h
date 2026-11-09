@@ -28,24 +28,24 @@ namespace sjd
         void runChecks() override;
         virtual std::string validationRoot() const;
 
-        void setFRS(std::shared_ptr<ForwardRateSource> frs);
-        bool hasFRS();
+        void setFRS(const std::shared_ptr<ForwardRateSource>& frs);
+        bool hasFRS() const;
         std::shared_ptr<ForwardRateSource> getFRS();
 
-        void setDRS(std::shared_ptr<DiscountRateSource> drs);
-        bool hasDRS();
+        void setDRS(const std::shared_ptr<DiscountRateSource>& drs);
+        bool hasDRS() const;
         std::shared_ptr<DiscountRateSource> getDRS();
 
-        void setForeignDRS(std::shared_ptr<DiscountRateSource> foreighDRS);
-        bool hasForeignDRS();
+        void setForeignDRS(const std::shared_ptr<DiscountRateSource>& foreighDRS);
+        bool hasForeignDRS() const;
         std::shared_ptr<DiscountRateSource> getForeignDRS();
 
-        void setVRS(std::shared_ptr<VolatilityRateSource> vrs);
-        bool hasVRS();
+        void setVRS(const std::shared_ptr<VolatilityRateSource>& vrs);
+        bool hasVRS() const;
         std::shared_ptr<VolatilityRateSource> getVRS();
 
-        void setFixingRS(std::shared_ptr<FixingRateSource> fixingrs);
-        bool hasFixingRS();
+        void setFixingRS(const std::shared_ptr<FixingRateSource>& fixingrs);
+        bool hasFixingRS() const;
         std::shared_ptr<FixingRateSource> getFixingRS();
 
         // Advances when a curve pointer on this environment is replaced.
@@ -55,15 +55,10 @@ namespace sjd
         void updateDataAfterSettingRate();
 
         std::shared_ptr<ForwardRateSource> frs;
-        bool frsSet;
         std::shared_ptr<VolatilityRateSource> vrs;
-        bool vrsSet;
         std::shared_ptr<DiscountRateSource> drs;
-        bool drsSet;
         std::shared_ptr<DiscountRateSource> foreigndrs;
-        bool foreignDrsSet;
         std::shared_ptr<FixingRateSource> fixingrs;
-        bool fixingrsSet;
-        std::size_t marketRevision_;
+        std::size_t marketRevision_ = 0;
     };
 }

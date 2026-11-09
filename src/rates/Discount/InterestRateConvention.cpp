@@ -10,16 +10,14 @@ namespace sjd
 
      =======================================================================================*/
 
-    InterestRateConvention::InterestRateConvention(std::shared_ptr<DayCounter> dayCounterInput,
+    InterestRateConvention::InterestRateConvention(const DayCounter& dayCounterInput,
                                                    Compounding compoundingInput,
                                                    Frequency frequencyInput)
+        : dayCounter(dayCounterInput), compounding(compoundingInput), frequency(frequencyInput)
     {
-        dayCounter = dayCounterInput;
-        compounding = compoundingInput;
-        frequency = frequencyInput;
     }
 
-    std::shared_ptr<DayCounter> InterestRateConvention::getDayCounter()
+    DayCounter InterestRateConvention::getDayCounter() const
     {
         return dayCounter;
     }
@@ -34,9 +32,9 @@ namespace sjd
         return frequency;
     }
 
-    double InterestRateConvention::dfToRate(double df, Date fromDate, Date toDate)
+    double InterestRateConvention::dfToRate(double df, Date fromDate, Date toDate) const
     {
-        double time = dayCounter->yearFraction(fromDate, toDate);
+        double time = dayCounter.yearFraction(fromDate, toDate);
         double accumulationFactor = 1 / df;
         [[maybe_unused]] double r = 0;
         switch (compounding)
@@ -52,9 +50,9 @@ namespace sjd
         }
     }
 
-    double InterestRateConvention::rateToDF(double rate, Date fromDate, Date toDate)
+    double InterestRateConvention::rateToDF(double rate, Date fromDate, Date toDate) const
     {
-        double time = dayCounter->yearFraction(fromDate, toDate);
+        double time = dayCounter.yearFraction(fromDate, toDate);
         double accumulationFactor;
         switch (compounding)
         {

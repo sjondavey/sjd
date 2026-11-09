@@ -36,9 +36,9 @@ namespace sjd
         std::vector<QuantLib::Date> getObservationDates() const;
         ArrayInterpolatorType getType();
 
-        virtual std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> getMarketRateStresses();
-        virtual std::shared_ptr<DiscountRateSource> parallelBump(double spread,
-                                                                 std::shared_ptr<InterestRateConvention> irc);
+        std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> marketStresses() override;
+        std::shared_ptr<DiscountRateSource> parallelBump(double spread,
+                                                         const InterestRateConvention& irc) override;
 
         virtual std::shared_ptr<DiscountRateSource> rollForward(QuantLib::Date toDate);
 

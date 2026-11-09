@@ -36,8 +36,8 @@ public:
     GenerateRates();
 
     std::shared_ptr<DiscountCurve> getDiscountCurve(
-        std::shared_ptr<QuantLib::DayCounter> dayCounter,
-        std::shared_ptr<QuantLib::Calendar> calendar,
+        const QuantLib::DayCounter& dayCounter,
+        const QuantLib::Calendar& calendar,
         QuantLib::Date anchorDate,
         size_t years,
         double flatNACCRate,
@@ -46,8 +46,8 @@ public:
     std::shared_ptr<DiscountCurve> getDefaultDiscountCurve(QuantLib::Date anchorDate);
 
     std::shared_ptr<ForwardCurveDeterministic> getSimpleForwardCurve(
-        std::shared_ptr<QuantLib::DayCounter> dayCounter,
-        std::shared_ptr<QuantLib::Calendar> calendar,
+        const QuantLib::DayCounter& dayCounter,
+        const QuantLib::Calendar& calendar,
         QuantLib::Date anchorDate,
         size_t years,
         double spot,
@@ -55,8 +55,8 @@ public:
         std::vector<QuantLib::Date> manditoryDates = std::vector<QuantLib::Date>());
 
     std::shared_ptr<ForwardCurveCMAStochasticFwdVol> getCalendarMonthAverageCurve(
-        std::shared_ptr<QuantLib::DayCounter> dayCounter,
-        std::shared_ptr<QuantLib::Calendar> calendar,
+        const QuantLib::DayCounter& dayCounter,
+        const QuantLib::Calendar& calendar,
         QuantLib::Date anchorDate,
         size_t years,
         double spot,
@@ -64,8 +64,8 @@ public:
         std::vector<QuantLib::Date> manditoryDates = std::vector<QuantLib::Date>());
 
     std::shared_ptr<VolatilityCurve> getVolatilityCurve(
-        std::shared_ptr<QuantLib::DayCounter> dayCounter,
-        std::shared_ptr<QuantLib::Calendar> calendar,
+        const QuantLib::DayCounter& dayCounter,
+        const QuantLib::Calendar& calendar,
         QuantLib::Date anchorDate,
         size_t years,
         double flatNACCVolaitlity,
@@ -107,13 +107,13 @@ public:
                                                        std::vector<QuantLib::Date> fixingDates);
 
     std::vector<QuantLib::Date> getDatesVector(
-        std::shared_ptr<QuantLib::Calendar> calendar,
+        const QuantLib::Calendar& calendar,
         QuantLib::Date anchorDate,
         size_t years,
         std::vector<QuantLib::Date> manditoryDates = std::vector<QuantLib::Date>());
 
-    std::shared_ptr<QuantLib::DayCounter> defaultDayCounter;
-    std::shared_ptr<QuantLib::Calendar> defaultCalendar;
+    QuantLib::DayCounter defaultDayCounter;
+    QuantLib::Calendar defaultCalendar;
     QuantLib::Date defaultAnchorDate;
     size_t defaultYears;
     double defaultNACCRate;

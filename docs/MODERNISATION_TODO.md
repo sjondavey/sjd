@@ -792,6 +792,16 @@ the debug heap. `threads=0` still means the hardware count.
   `parallelBump` methods) consistent across all rate sources, ready for Python
   scenario analysis and for SA-CCR sensitivity checks.
 
+**Status.** Done. The design is `docs/rates-layer.md`. `RatesEnvironment`
+tests the curve pointers, and an empty pointer clears that slot. There is no
+builder. The concrete forward classes stay, and so do
+`LinearArrayInterpolator`, `CubicSplineInterpolator` and
+`TwoDimensionalInterpolation`. Calendars and day counters are held by value.
+Every `RateSource` has `marketStresses()`; `IHaveMarketRateStresses` is gone.
+Discount bumps still convert through an `InterestRateConvention`. Debug
+`ctest` passed and pytest reported 156 passed. Golden paths were not
+regenerated.
+
 ---
 
 ### Step 17. Modernise the C++ test suite

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <sjd/rates/Forward/ForwardRateSource.h>
-#include <sjd/rates/IHaveMarketRateStresses.h>
 
 namespace sjd
 {
@@ -15,12 +14,12 @@ namespace sjd
             the bumped curve negative because there are no default checks for this; and
         - roll the curve to a future date
     =======================================================================================*/
-    class ForwardRateSourceDeterministic : public ForwardRateSource, public IHaveMarketRateStresses
+    class ForwardRateSourceDeterministic : public ForwardRateSource
     {
     public:
         void runChecks() override;
 
-        virtual std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> getMarketRateStresses();
+        std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> marketStresses() override;
         virtual std::shared_ptr<ForwardRateSource> parallelBump(double spread) = 0;
 
         // Roll forward to one date

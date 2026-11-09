@@ -119,9 +119,9 @@ namespace
             .attr("date")(static_cast<int>(date.year()), static_cast<int>(date.month()), date.dayOfMonth());
     }
 
-    std::shared_ptr<QuantLib::DayCounter> actual365()
+    QuantLib::DayCounter actual365()
     {
-        return std::make_shared<QuantLib::Actual365Fixed>();
+        return QuantLib::Actual365Fixed();
     }
 
     std::vector<std::shared_ptr<sjd::SingleInstrumentContract>> contracts_from(const py::list& contracts)
@@ -215,8 +215,7 @@ namespace
         {
             if (holding_period_calendar.is_none())
                 throw py::value_error("holding_period needs a holding_period_calendar");
-            std::shared_ptr<QuantLib::Calendar> calendar(std::make_shared<QuantLib::Calendar>(
-                holding_period_calendar.cast<const NamedCalendar&>().calendar));
+            const QuantLib::Calendar calendar = holding_period_calendar.cast<const NamedCalendar&>().calendar;
             evolver = std::make_shared<sjd::PortfolioEvolver>(resolved.portfolio, generator, dates, calendar,
                                                               holding_period);
         }

@@ -297,8 +297,8 @@ void GoldenValuesTest::testSimpleInsurance()
     BOOST_TEST_MESSAGE("Testing golden values for SimpleInsurance");
 
     GenerateRates gr = GenerateRates();
-    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
-    std::shared_ptr<Calendar> calendar = std::make_shared<NullCalendar>();
+    Actual365Fixed dayCounter;
+    NullCalendar calendar;
     Date anchorDate = Date(27, Jan, 2013);
     size_t years = 10;
     std::shared_ptr<DiscountCurve> standbyCurve =
@@ -314,7 +314,7 @@ void GoldenValuesTest::testSimpleInsurance()
     std::vector<double> mtm;
     for (size_t i = 0; i < years; ++i)
     {
-        dates.push_back(calendar->advance(anchorDate, static_cast<Integer>(i), Years));
+        dates.push_back(calendar.advance(anchorDate, static_cast<Integer>(i), Years));
         mtm.push_back((years / 2.0 - i) * 20000.0);
     }
     std::vector<double> payments(years, 0.0);

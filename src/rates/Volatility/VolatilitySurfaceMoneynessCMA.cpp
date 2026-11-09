@@ -69,8 +69,8 @@ namespace sjd
 
         allowExtrapolation = extrapolateInput;
         anchorDate = anchorDateInput;
-        dayCounter = std::make_shared<Actual365Fixed>();
-        simpleDayCounter = std::make_shared<SimpleDayCounter>();
+        dayCounter = Actual365Fixed();
+        simpleDayCounter = SimpleDayCounter();
 
         strikeDimension = moneynessInput;
         observationDates = observationDatesInput;
@@ -99,7 +99,7 @@ namespace sjd
         {
             Date monthStart = Date(1, observationDates[i].month(), observationDates[i].year());
             // observationDates.push_back(beginningOfMonth);
-            double yf = simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, monthStart);
+            double yf = simpleDayCounter.yearFraction(beginningOfAnchorDateMonth, monthStart);
             int monthsAsInt = static_cast<int>(std::lround(yf * 12));
             time.push_back((double)monthsAsInt); // Note that if there is more than one observation date per
                                                  // month the time vector will not be strictly increasing
@@ -116,9 +116,9 @@ namespace sjd
 
     double VolatilitySurfaceMoneynessCMA::getMonthsAheadOfAnchorDate(Date toDate) const
     {
-        double t1 = dayCounter->yearFraction(beginningOfAnchorDateMonth, toDate);
+        double t1 = dayCounter.yearFraction(beginningOfAnchorDateMonth, toDate);
         [[maybe_unused]] int t2 = static_cast<int>(std::lround(12 * t1));
-        return (double)std::lround(12 * simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, toDate));
+        return (double)std::lround(12 * simpleDayCounter.yearFraction(beginningOfAnchorDateMonth, toDate));
     }
 
     bool VolatilitySurfaceMoneynessCMA::isInRange(QuantLib::Date date) const
@@ -149,7 +149,7 @@ namespace sjd
         SJD_ASSERT(isInRange(toDate));
 
         Date beginningOfMonth = Date(1, toDate.month(), toDate.year());
-        double yf = simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, beginningOfMonth);
+        double yf = simpleDayCounter.yearFraction(beginningOfAnchorDateMonth, beginningOfMonth);
         int monthsAsInt = static_cast<int>(std::lround(yf * 12)); // need to keep whole number of months ahead
         double monthAsDouble = ((double)monthsAsInt);
 
@@ -161,7 +161,7 @@ namespace sjd
         SJD_ASSERT(isInRange(toDate, strike, forward));
 
         Date beginningOfMonth = Date(1, toDate.month(), toDate.year());
-        double yf = simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, beginningOfMonth);
+        double yf = simpleDayCounter.yearFraction(beginningOfAnchorDateMonth, beginningOfMonth);
         int monthsAsInt = static_cast<int>(std::lround(yf * 12)); // need to keep whole number of months ahead
         double monthAsDouble = ((double)monthsAsInt);
 
@@ -173,7 +173,7 @@ namespace sjd
     double VolatilitySurfaceMoneynessCMA::getStandardDeviation(Date toDate) const
     {
         double vol = getVolatility(toDate);
-        double actualDt = dayCounter->yearFraction(anchorDate, toDate);
+        double actualDt = dayCounter.yearFraction(anchorDate, toDate);
         return vol * sqrt(actualDt);
     };
 
@@ -182,7 +182,7 @@ namespace sjd
                                                                double forward) const
     {
         double vol = getVolatility(toDate, strike, forward);
-        double actualDt = dayCounter->yearFraction(anchorDate, toDate);
+        double actualDt = dayCounter.yearFraction(anchorDate, toDate);
         return vol * sqrt(actualDt);
     };
 
@@ -190,7 +190,7 @@ namespace sjd
         Date toDate, double strike, double forward, double& vol, double& sd) const
     {
         vol = getVolatility(toDate, strike, forward);
-        double actualDt = dayCounter->yearFraction(anchorDate, toDate);
+        double actualDt = dayCounter.yearFraction(anchorDate, toDate);
         sd = vol * sqrt(actualDt);
     };
 
@@ -214,7 +214,7 @@ namespace sjd
             if (refDate.month() == toDates[counter].month() && refDate.year() == toDates[counter].year())
             {
                 vols[counter] = vols[counter - 1];
-                double actualDt = dayCounter->yearFraction(anchorDate, toDates[counter]);
+                double actualDt = dayCounter.yearFraction(anchorDate, toDates[counter]);
                 sds[counter] = vols[counter] * sqrt(actualDt);
             }
             else
@@ -273,10 +273,10 @@ namespace sjd
             size_t offset = 0;
             for (size_t i = 0; i < observationDates.size(); ++i)
             {
-                double t1 = simpleDayCounter->yearFraction(beginningOfRollToDateMonth, observationDates[i]);
+                double t1 = simpleDayCounter.yearFraction(beginningOfRollToDateMonth, observationDates[i]);
                 [[maybe_unused]] int t2 = static_cast<int>(std::lround(12 * t1));
                 double monthsFromAnchor = (double)std::lround(
-                    12 * simpleDayCounter->yearFraction(beginningOfAnchorDateMonth, toDate));
+                    12 * simpleDayCounter.yearFraction(beginningOfAnchorDateMonth, toDate));
                 if (monthsFromAnchor >= 0)
                 {
                     newDates.push_back(observationDates[i]);

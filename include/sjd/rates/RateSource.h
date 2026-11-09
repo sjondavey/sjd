@@ -1,6 +1,8 @@
 #pragma once
 
 #include <set>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include <memory>
@@ -42,6 +44,9 @@ namespace sjd
         virtual bool extendsTo(QuantLib::Date date) const;
 
         bool getAllowsExtrapolation() const;
+
+        // Named copies of this source. Empty when the source has no stresses.
+        virtual std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> marketStresses();
 
     protected:
         std::string validationRoot() const override;

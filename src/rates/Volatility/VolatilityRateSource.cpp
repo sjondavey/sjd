@@ -12,14 +12,14 @@ namespace sjd
     void VolatilityRateSource::runChecks()
     {
         RateSource::runChecks();
-        if (dayCounter == NULL)
+        if (dayCounter.empty())
         {
             recordIssue(issues::VOLATILITY_DAY_COUNTER_MISSING, "Day counter not set", {"day_counter"});
         }
         return;
     }
 
-    std::shared_ptr<QuantLib::DayCounter> VolatilityRateSource::getDayCounter() const
+    QuantLib::DayCounter VolatilityRateSource::getDayCounter() const
     {
         return dayCounter;
     }
@@ -58,14 +58,14 @@ namespace sjd
     double VolatilityRateSource::getStandardDeviation(Date toDate) const
     {
         double vol = getVolatility(toDate);
-        double dt = dayCounter->yearFraction(anchorDate, toDate);
+        double dt = dayCounter.yearFraction(anchorDate, toDate);
         return vol * sqrt(dt);
     }
 
     double VolatilityRateSource::getStandardDeviation(Date toDate, double strike, double forward) const
     {
         double vol = getVolatility(toDate, strike, forward);
-        double dt = dayCounter->yearFraction(anchorDate, toDate);
+        double dt = dayCounter.yearFraction(anchorDate, toDate);
         return vol * sqrt(dt);
     }
 

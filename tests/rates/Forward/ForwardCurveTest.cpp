@@ -136,7 +136,7 @@ void ForwardCurveTest::testConsistencyBetweenGetMethods()
         observationDates.push_back(date);
         futures.push_back(110 - (double)i / 10.0);
     }
-    std::shared_ptr<DayCounter> dcPtr = std::make_shared<Actual365Fixed>();
+    Actual365Fixed dcPtr;
     bool allowExtrapolation = false;
     ForwardCurveDeterministic* fcd = new ForwardCurveDeterministic(
         anchorDate, observationDates, futures, sjd::ArrayInterpolatorType::LINEAR, allowExtrapolation);
@@ -193,7 +193,7 @@ void ForwardCurveTest::testValues()
     vector<double> observationDatesSerialNumbers;
     vector<double> futures;
     // vector<double> time;
-    std::shared_ptr<DayCounter> dcPtr = std::make_shared<Actual365Fixed>();
+    Actual365Fixed dcPtr;
     size_t i;
     for (i = 1; i <= 12; ++i)
     {
@@ -209,7 +209,7 @@ void ForwardCurveTest::testValues()
     LinearArrayInterpolator la(observationDatesSerialNumbers, futures, false);
 
     Date date1 = Date(13, Mar, 2012);
-    // double yf = dcPtr->yearFraction(anchorDate, date1);
+    // double yf = dcPtr.yearFraction(anchorDate, date1);
     double interpolatedValue = la.getRate(date1.serialNumber());
 
     double fwd = sfc->getForward(date1);

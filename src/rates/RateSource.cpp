@@ -8,6 +8,11 @@ using namespace QuantLib;
 namespace sjd
 {
 
+    std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> RateSource::marketStresses()
+    {
+        return {};
+    }
+
     std::string RateSource::validationRoot() const
     {
         return "rate_source";

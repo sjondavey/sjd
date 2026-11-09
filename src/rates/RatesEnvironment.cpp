@@ -11,24 +11,18 @@ namespace sjd
         anchorDate = anchorDateInput;
         finalDate = anchorDate;
         allowExtrapolation = false;
-        frsSet = false;
-        vrsSet = false;
-        drsSet = false;
-        foreignDrsSet = false;
-        fixingrsSet = false;
         marketRevision_ = 0;
     }
 
     void RatesEnvironment::runChecks()
     {
         resetErrorMessages();
-        if (frsSet == false && vrsSet == false && drsSet == false && foreignDrsSet == false &&
-            fixingrsSet == false)
+        if (!frs && !vrs && !drs && !foreigndrs && !fixingrs)
         {
             recordIssue(issues::RATES_ENVIRONMENT_NO_RATES, "No rates set", {});
             return;
         }
-        if (drsSet)
+        if (drs)
         {
             if (drs->getAnchorDate() != anchorDate)
             {
@@ -43,7 +37,7 @@ namespace sjd
                 return;
             }
         }
-        if (foreignDrsSet)
+        if (foreigndrs)
         {
             if (foreigndrs->getAnchorDate() != anchorDate)
             {
@@ -58,7 +52,7 @@ namespace sjd
                 return;
             }
         }
-        if (frsSet)
+        if (frs)
         {
             if (frs->getAnchorDate() != anchorDate)
             {
@@ -73,7 +67,7 @@ namespace sjd
                 return;
             }
         }
-        if (vrsSet)
+        if (vrs)
         {
             if (vrs->getAnchorDate() != anchorDate)
             {
@@ -88,7 +82,7 @@ namespace sjd
                 return;
             }
         }
-        if (fixingrsSet)
+        if (fixingrs)
         {
             if (!fixingrs->validate().isOK())
             {
@@ -104,16 +98,15 @@ namespace sjd
         return "rates_environment";
     }
 
-    void RatesEnvironment::setFRS(std::shared_ptr<ForwardRateSource> frsInput)
+    void RatesEnvironment::setFRS(const std::shared_ptr<ForwardRateSource>& frsInput)
     {
         frs = frsInput;
-        frsSet = true;
         updateDataAfterSettingRate();
     }
 
-    bool RatesEnvironment::hasFRS()
+    bool RatesEnvironment::hasFRS() const
     {
-        return frsSet;
+        return static_cast<bool>(frs);
     }
 
     std::shared_ptr<ForwardRateSource> RatesEnvironment::getFRS()
@@ -121,16 +114,15 @@ namespace sjd
         return frs;
     }
 
-    void RatesEnvironment::setDRS(std::shared_ptr<DiscountRateSource> drsInput)
+    void RatesEnvironment::setDRS(const std::shared_ptr<DiscountRateSource>& drsInput)
     {
         drs = drsInput;
-        drsSet = true;
         updateDataAfterSettingRate();
     }
 
-    bool RatesEnvironment::hasDRS()
+    bool RatesEnvironment::hasDRS() const
     {
-        return drsSet;
+        return static_cast<bool>(drs);
     }
 
     std::shared_ptr<DiscountRateSource> RatesEnvironment::getDRS()
@@ -138,16 +130,15 @@ namespace sjd
         return drs;
     }
 
-    void RatesEnvironment::setForeignDRS(std::shared_ptr<DiscountRateSource> foreigndrsInput)
+    void RatesEnvironment::setForeignDRS(const std::shared_ptr<DiscountRateSource>& foreigndrsInput)
     {
         foreigndrs = foreigndrsInput;
-        foreignDrsSet = true;
         updateDataAfterSettingRate();
     }
 
-    bool RatesEnvironment::hasForeignDRS()
+    bool RatesEnvironment::hasForeignDRS() const
     {
-        return foreignDrsSet;
+        return static_cast<bool>(foreigndrs);
     }
 
     std::shared_ptr<DiscountRateSource> RatesEnvironment::getForeignDRS()
@@ -155,16 +146,15 @@ namespace sjd
         return foreigndrs;
     }
 
-    void RatesEnvironment::setVRS(std::shared_ptr<VolatilityRateSource> vrsInput)
+    void RatesEnvironment::setVRS(const std::shared_ptr<VolatilityRateSource>& vrsInput)
     {
         vrs = vrsInput;
-        vrsSet = true;
         updateDataAfterSettingRate();
     }
 
-    bool RatesEnvironment::hasVRS()
+    bool RatesEnvironment::hasVRS() const
     {
-        return vrsSet;
+        return static_cast<bool>(vrs);
     }
 
     std::shared_ptr<VolatilityRateSource> RatesEnvironment::getVRS()
@@ -172,16 +162,15 @@ namespace sjd
         return vrs;
     }
 
-    void RatesEnvironment::setFixingRS(std::shared_ptr<FixingRateSource> fixingrsInput)
+    void RatesEnvironment::setFixingRS(const std::shared_ptr<FixingRateSource>& fixingrsInput)
     {
         fixingrs = fixingrsInput;
-        fixingrsSet = true;
         ++marketRevision_;
     }
 
-    bool RatesEnvironment::hasFixingRS()
+    bool RatesEnvironment::hasFixingRS() const
     {
-        return fixingrsSet;
+        return static_cast<bool>(fixingrs);
     }
 
     std::shared_ptr<FixingRateSource> RatesEnvironment::getFixingRS()
@@ -200,22 +189,22 @@ namespace sjd
         allowExtrapolation = true;
         finalDate = anchorDate;
         set<Date> allFinalDates;
-        if (drsSet)
+        if (drs)
         {
             allFinalDates.insert(drs->getFinalDate());
             allowExtrapolation = allowExtrapolation && drs->getAllowsExtrapolation();
         }
-        if (foreignDrsSet)
+        if (foreigndrs)
         {
             allFinalDates.insert(foreigndrs->getFinalDate());
             allowExtrapolation = allowExtrapolation && foreigndrs->getAllowsExtrapolation();
         }
-        if (frsSet)
+        if (frs)
         {
             allFinalDates.insert(frs->getFinalDate());
             allowExtrapolation = allowExtrapolation && frs->getAllowsExtrapolation();
         }
-        if (vrsSet)
+        if (vrs)
         {
             allFinalDates.insert(vrs->getFinalDate());
             allowExtrapolation = allowExtrapolation && vrs->getAllowsExtrapolation();

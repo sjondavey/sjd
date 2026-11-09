@@ -146,7 +146,7 @@ void PortfolioTest::testPortfolioB2CEM()
     margin->setMarginBalance(0);
     margin->updateBalanceForGivenMtM(unmarginedPortfolio->getValue(re));
 
-    std::shared_ptr<Calendar> calendar = std::make_shared<WeekendsOnly>();
+    WeekendsOnly calendar;
     [[maybe_unused]] size_t holdingPeriodInBusinessDays = 10;
 
     std::shared_ptr<Portfolio> marginedPortfolio = std::make_shared<Portfolio>(contracts, margin);
@@ -163,14 +163,14 @@ void PortfolioTest::testPortfolioB2CEM()
     set<Date> exposureDates;
     for (size_t i = 1; i < 13; ++i)
     {
-        exposureDates.insert(calendar->advance(anchorDate, static_cast<int>(i), Months));
+        exposureDates.insert(calendar.advance(anchorDate, static_cast<int>(i), Months));
     }
     set<Date>::iterator exposureDateIt;
     set<Date> simulationDates;
 
     for (exposureDateIt = exposureDates.begin(); exposureDateIt != exposureDates.end(); ++exposureDateIt)
     {
-        Date simDate = calendar->advance(*exposureDateIt, - ((int) holdingPeriodInBusinessDays), Days);
+        Date simDate = calendar.advance(*exposureDateIt, - ((int) holdingPeriodInBusinessDays), Days);
         if (simDate < anchorDate)
         {
             simDate = anchorDate;

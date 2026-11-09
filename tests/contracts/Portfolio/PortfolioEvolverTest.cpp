@@ -64,7 +64,7 @@ void PortfolioEvolverTest::testPortfolioEvovler()
 
     Date anchor(27, Jan, 2013);
     GenerateRates gr;
-    Date oneYear = gr.defaultCalendar->advance(anchor, 1, Years);
+    Date oneYear = gr.defaultCalendar.advance(anchor, 1, Years);
     std::shared_ptr<EuropeanOption> calendarOption = soldPut(anchor, 100.0);
 
     vector<Date> manditoryDates;

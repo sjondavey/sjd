@@ -14,7 +14,7 @@ void DiscountCurvesTest::testConstruction()
     Date anchorDate = Date(27, Jan, 2012);
     vector<Date> observationDates, incorrectObservationDates;
     vector<double> df;
-    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
+    Actual365Fixed dayCounter;
     bool allowExtrapolation = false;
     size_t i;
     for (i = 1; i <= 12; ++i)
@@ -22,7 +22,7 @@ void DiscountCurvesTest::testConstruction()
         Date date = calendar.advance(anchorDate, static_cast<int>(i), Months);
         observationDates.push_back(date);
         incorrectObservationDates.push_back(date);
-        df.push_back(exp(-0.065 * dayCounter->yearFraction(anchorDate, date)));
+        df.push_back(exp(-0.065 * dayCounter.yearFraction(anchorDate, date)));
     }
     incorrectObservationDates.push_back(calendar.advance(anchorDate, static_cast<int>(i + 1), Months));
 
@@ -107,20 +107,20 @@ void DiscountCurvesTest::testParallelBump()
     Date anchorDate = Date(27, Jan, 2012);
     vector<Date> observationDates;
     vector<double> df;
-    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
+    Actual365Fixed dayCounter;
     bool allowExtrapolation = false;
     size_t i;
     for (i = 1; i <= 12; ++i)
     {
         Date date = calendar.advance(anchorDate, static_cast<int>(i), Months);
         observationDates.push_back(date);
-        df.push_back(exp(-0.065 * dayCounter->yearFraction(anchorDate, date)));
+        df.push_back(exp(-0.065 * dayCounter.yearFraction(anchorDate, date)));
     }
     std::shared_ptr<DiscountCurve> dc2 = std::make_shared<DiscountCurve>(
         anchorDate, observationDates, df, ArrayInterpolatorType::LINEAR, allowExtrapolation);
     std::shared_ptr<InterestRateConvention> irc =
         std::make_shared<InterestRateConvention>(dayCounter, Continuous, Annual);
-    std::shared_ptr<DiscountRateSource> dc3 = dc2->parallelBump(0.01, irc);
+    std::shared_ptr<DiscountRateSource> dc3 = dc2->parallelBump(0.01, *irc);
     BOOST_REQUIRE(dc3->validate().isOK());
     double dfTest = dc2->getDiscountFactor(observationDates[2]);
     InterestRateConvention convention(dayCounter, Continuous, Annual);
@@ -136,23 +136,23 @@ void DiscountCurvesTest::testConsistencyOfGetMethods()
 
     GenerateRates re = GenerateRates();
     Date anchorDate = re.defaultAnchorDate;
-    std::shared_ptr<Calendar> defaultCalendar = re.defaultCalendar;
+    Calendar defaultCalendar = re.defaultCalendar;
     std::shared_ptr<DiscountCurve> testDiscountCurve = re.getDefaultDiscountCurve(anchorDate);
 
-    Date fromDate = defaultCalendar->advance(anchorDate, 1, Months);
+    Date fromDate = defaultCalendar.advance(anchorDate, 1, Months);
     double fromDF = testDiscountCurve->getDiscountFactor(fromDate);
 
-    Date toDate = defaultCalendar->advance(anchorDate, 9, Months);
+    Date toDate = defaultCalendar.advance(anchorDate, 9, Months);
     double toDF = testDiscountCurve->getDiscountFactor(toDate);
 
     BOOST_CHECK(abs(testDiscountCurve->getDiscountFactor(fromDate, toDate) - toDF / fromDF) <
                 EPSILON_FOR_DOUBLES);
 
     vector<Date> toDates;
-    toDates.push_back(defaultCalendar->advance(anchorDate, 6, Months));
-    toDates.push_back(defaultCalendar->advance(anchorDate, 7, Months));
-    toDates.push_back(defaultCalendar->advance(anchorDate, 8, Months));
-    toDates.push_back(defaultCalendar->advance(anchorDate, 9, Months));
+    toDates.push_back(defaultCalendar.advance(anchorDate, 6, Months));
+    toDates.push_back(defaultCalendar.advance(anchorDate, 7, Months));
+    toDates.push_back(defaultCalendar.advance(anchorDate, 8, Months));
+    toDates.push_back(defaultCalendar.advance(anchorDate, 9, Months));
 
     vector<double> dfs = testDiscountCurve->getDiscountFactor(toDates);
     vector<double> dfs1 = testDiscountCurve->getDiscountFactor(fromDate, toDates);
@@ -170,7 +170,7 @@ void DiscountCurvesTest::testValues()
 
     GenerateRates re = GenerateRates();
     Date defaultAnchorDate = re.defaultAnchorDate;
-    std::shared_ptr<DayCounter> defaultDayCounter = re.defaultDayCounter;
+    DayCounter defaultDayCounter = re.defaultDayCounter;
     vector<Date> defaultDates = re.defaultCurveDates;
     double defaultNACCRate = re.defaultNACCRate;
     std::shared_ptr<DiscountCurve> testDiscountCurve = re.getDefaultDiscountCurve(defaultAnchorDate);
@@ -178,7 +178,7 @@ void DiscountCurvesTest::testValues()
     Date date1 = defaultDates[0];
 
     double df = testDiscountCurve->getDiscountFactor(date1);
-    double time1 = defaultDayCounter->yearFraction(defaultAnchorDate, date1);
+    double time1 = defaultDayCounter.yearFraction(defaultAnchorDate, date1);
     BOOST_CHECK(abs(df - exp(-defaultNACCRate * time1)) < EPSILON_FOR_DOUBLES);
 }
 
@@ -187,12 +187,12 @@ void DiscountCurvesTest::testRollForward()
     BOOST_TEST_MESSAGE("Testing Discount Curve roll forward ...");
 
     GenerateRates re = GenerateRates();
-    std::shared_ptr<Calendar> defaultCalendar = re.defaultCalendar;
+    Calendar defaultCalendar = re.defaultCalendar;
     Date defaultAnchorDate = re.defaultAnchorDate;
     std::shared_ptr<DiscountCurve> testDiscountCurve = re.getDefaultDiscountCurve(defaultAnchorDate);
 
-    Date rollDate = defaultCalendar->advance(defaultAnchorDate, 1, Years);
-    Date checkDate = defaultCalendar->advance(defaultAnchorDate, 2, Years);
+    Date rollDate = defaultCalendar.advance(defaultAnchorDate, 1, Years);
+    Date checkDate = defaultCalendar.advance(defaultAnchorDate, 2, Years);
 
     std::shared_ptr<DiscountRateSource> rolledCurve = testDiscountCurve->rollForward(rollDate);
     BOOST_REQUIRE(rolledCurve->validate().isOK());

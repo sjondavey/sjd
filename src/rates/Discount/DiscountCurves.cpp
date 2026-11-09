@@ -72,8 +72,8 @@ namespace sjd
         return type;
     }
 
-    std::shared_ptr<DiscountRateSource> DiscountCurve::parallelBump(
-        double spread, std::shared_ptr<InterestRateConvention> convention)
+    std::shared_ptr<DiscountRateSource> DiscountCurve::parallelBump(double spread,
+                                                                    const InterestRateConvention& convention)
     {
         vector<Date> curveDates = getObservationDates();
         vector<double> bumpedDiscountFactors = vector<double>(curveDates.size());
@@ -86,8 +86,8 @@ namespace sjd
         for (size_t i = startIndex; i < curveDates.size(); ++i)
         {
             double df = getDiscountFactor(curveDates[i]);
-            double rate = convention->dfToRate(df, anchorDate, curveDates[i]);
-            bumpedDiscountFactors[i] = convention->rateToDF(rate + spread, anchorDate, curveDates[i]);
+            double rate = convention.dfToRate(df, anchorDate, curveDates[i]);
+            bumpedDiscountFactors[i] = convention.rateToDF(rate + spread, anchorDate, curveDates[i]);
         }
 
         return std::make_shared<DiscountCurve>(anchorDate, curveDates, bumpedDiscountFactors,
@@ -128,12 +128,12 @@ namespace sjd
                                                datedCurve->getType(), allowExtrapolation);
     }
 
-    vector<pair<string, std::shared_ptr<RateSource>>> DiscountCurve::getMarketRateStresses()
+    vector<pair<string, std::shared_ptr<RateSource>>> DiscountCurve::marketStresses()
     {
         vector<pair<string, std::shared_ptr<RateSource>>> marketStress =
-            DeterministicDiscountRateSource::getMarketRateStresses();
+            DeterministicDiscountRateSource::marketStresses();
 
-        std::shared_ptr<Calendar> calendar = std::make_shared<NullCalendar>();
+        NullCalendar calendar;
         vector<Date> threeMonthDates;
         vector<double> threeMonthDF;
         Date dateToAdd = anchorDate;
@@ -143,7 +143,7 @@ namespace sjd
             threeMonthDates.push_back(dateToAdd);
             df = getDiscountFactor(dateToAdd);
             threeMonthDF.push_back(df);
-            dateToAdd = calendar->advance(dateToAdd, 3, Months);
+            dateToAdd = calendar.advance(dateToAdd, 3, Months);
         }
         if (threeMonthDates.back() < finalDate)
         {
@@ -157,12 +157,11 @@ namespace sjd
 
         marketStress.push_back(make_pair("ZC Stress base", dc));
 
-        std::shared_ptr<DayCounter> act360 = std::make_shared<Actual360>();
-        InterestRateConvention irc(act360, Compounded, Annual);
+        InterestRateConvention irc(Actual360(), Compounded, Annual);
 
         for (size_t i = 1; i < threeMonthDates.size(); ++i)
         {
-            dateToAdd = calendar->advance(dateToAdd, 3, Months);
+            dateToAdd = calendar.advance(dateToAdd, 3, Months);
             if (dateToAdd == threeMonthDates[i])
             {
                 double originalDF = threeMonthDF[i];

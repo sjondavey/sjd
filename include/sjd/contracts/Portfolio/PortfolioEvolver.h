@@ -76,7 +76,7 @@ namespace sjd
         PortfolioEvolver(std::shared_ptr<Portfolio> portfolio,
                          std::shared_ptr<GbmPathGenerator> pathGenerator,
                          std::set<QuantLib::Date> forwardDates,
-                         std::shared_ptr<QuantLib::Calendar> calendarForHoldingPeriodCalcuation,
+                         const QuantLib::Calendar& calendarForHoldingPeriodCalcuation,
                          size_t holdingPeriodInBusinessDays);
 
         void runChecks() override;
@@ -150,7 +150,7 @@ namespace sjd
         std::vector<std::shared_ptr<Contract>> nettingSets;
 
         std::shared_ptr<GbmPathGenerator> pathGenerator;
-        std::shared_ptr<QuantLib::Calendar> calendarForHoldingPeriod;
+        QuantLib::Calendar calendarForHoldingPeriod;
         size_t holdingPeriod;
 
         std::vector<QuantLib::Date> simulationDates;

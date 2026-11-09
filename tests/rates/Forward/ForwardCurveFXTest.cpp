@@ -38,7 +38,7 @@ void ForwardCurveFXTest::getDefaultDatesAndDF(Date anchorDate,
                                                  ArrayInterpolatorType::LINEAR, false);
 
     vector<double> volatility = vector<double>(domesticObservationDates.size(), 0.2);
-    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
+    Actual365Fixed dayCounter;
     vrs = std::make_shared<VolatilityCurve>(anchorDate, domesticObservationDates, volatility, dayCounter,
                                             ArrayInterpolatorType::LINEAR, false);
 }

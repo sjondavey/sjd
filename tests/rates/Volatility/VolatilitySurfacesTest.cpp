@@ -23,8 +23,8 @@ void VolatilitySurfacesTest::testEuropeanMoneynessConstruction()
     vector<double> moneyness;
     Matrix volatility;
 
-    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    DayCounter dayCounter = gr.defaultDayCounter;
+    Calendar nullCalendar = gr.defaultCalendar;
     std::shared_ptr<ForwardRateSource> frs =
         gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, 100, .01, vector<Date>(0));
 
@@ -73,13 +73,13 @@ void VolatilitySurfacesTest::testEuropeanMoneynessConsistencyBetweenVolAndSD()
 {
     BOOST_TEST_MESSAGE("Testing VolatilitySurfaceMoneyness for consistency between stdev and vol ...");
     GenerateRates re = GenerateRates();
-    std::shared_ptr<Calendar> calendar = re.defaultCalendar;
+    Calendar calendar = re.defaultCalendar;
     Date anchorDate = re.defaultAnchorDate;
     // double flatVol = re.defaultVolatiltiy;
 
     std::shared_ptr<VolatilitySurfaceMoneyness> volSurface = re.getDefaultMoneynessSurface(anchorDate);
 
-    Date d = calendar->advance(anchorDate, 3, Months);
+    Date d = calendar.advance(anchorDate, 3, Months);
     double vol = volSurface->getVolatility(d, 1, 1);
     BOOST_CHECK(abs(vol - .205) < EPSILON_FOR_DOUBLES);
     BOOST_CHECK(abs(vol - volSurface->getVolatility(d)) < EPSILON_FOR_DOUBLES);
@@ -103,13 +103,13 @@ void VolatilitySurfacesTest::testEuropeanMoneynessRoll()
     BOOST_TEST_MESSAGE("Testing VolatilitySurfaceMoneyness roll ...");
 
     GenerateRates re = GenerateRates();
-    std::shared_ptr<Calendar> calendar = re.defaultCalendar;
+    Calendar calendar = re.defaultCalendar;
     Date anchorDate = re.defaultAnchorDate;
 
     std::shared_ptr<VolatilitySurfaceMoneyness> volSurface = re.getDefaultMoneynessSurface(anchorDate);
 
-    Date d1 = calendar->advance(anchorDate, 3, Months);
-    Date d2 = calendar->advance(anchorDate, 6, Months);
+    Date d1 = calendar.advance(anchorDate, 3, Months);
+    Date d2 = calendar.advance(anchorDate, 6, Months);
     double fwd = 1.0;
 
     std::shared_ptr<VolatilityRateSource> rolledSurface = volSurface->rollForward(d1);
@@ -124,9 +124,9 @@ void VolatilitySurfacesTest::testEuropeanMoneynessRoll()
     BOOST_CHECK(abs(rolledVol - originalVol) < EPSILON_FOR_DOUBLES);
 
     SurfaceInterpolatorType interpolatorType = BILINEAR;
-    vector<Date> surfaceDates = boost::assign::list_of(calendar->advance(anchorDate, 1, Years))(
-        calendar->advance(anchorDate, 2, Years))(calendar->advance(anchorDate, 3, Years))(
-        calendar->advance(anchorDate, 4, Years))(calendar->advance(anchorDate, 5, Years));
+    vector<Date> surfaceDates = boost::assign::list_of(calendar.advance(anchorDate, 1, Years))(
+        calendar.advance(anchorDate, 2, Years))(calendar.advance(anchorDate, 3, Years))(
+        calendar.advance(anchorDate, 4, Years))(calendar.advance(anchorDate, 5, Years));
     vector<double> moneyness;
     moneyness += -.5, 0, .5;
 
@@ -155,10 +155,10 @@ void VolatilitySurfacesTest::testEuropeanMoneynessRoll()
 
     BOOST_CHECK(abs(rolledCurve->getVolatility(surfaceDates[1], 1, 1) -
                     manualCurve->getVolatility(surfaceDates[1], 1, 1)) < EPSILON_FOR_DOUBLES);
-    Date anotherDate = calendar->advance(surfaceDates[0], 18, Months);
+    Date anotherDate = calendar.advance(surfaceDates[0], 18, Months);
     BOOST_CHECK(abs(rolledCurve->getVolatility(anotherDate, 1, 1) -
                     manualCurve->getVolatility(anotherDate, 1, 1)) < EPSILON_FOR_DOUBLES);
-    anotherDate = calendar->advance(surfaceDates[0], 20, Months);
+    anotherDate = calendar.advance(surfaceDates[0], 20, Months);
     BOOST_CHECK(abs(rolledCurve->getVolatility(anotherDate, .75, 1) -
                     manualCurve->getVolatility(anotherDate, .75, 1)) < EPSILON_FOR_DOUBLES);
     BOOST_CHECK(abs(rolledCurve->getVolatility(anotherDate, 1.25, 1) -
@@ -179,8 +179,8 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessConstruction()
     vector<double> moneyness;
     Matrix volatility;
 
-    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    DayCounter dayCounter = gr.defaultDayCounter;
+    Calendar nullCalendar = gr.defaultCalendar;
     std::shared_ptr<ForwardRateSource> frs =
         gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, 100, .01, vector<Date>(0));
 
@@ -239,13 +239,13 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessConsistencyBetweenVolAndS
     BOOST_TEST_MESSAGE("Testing VolatilitySurfaceMoneynessCMA for consistency between stdev and vol ...");
 
     GenerateRates re = GenerateRates();
-    std::shared_ptr<Calendar> calendar = re.defaultCalendar;
+    Calendar calendar = re.defaultCalendar;
     Date anchorDate = re.defaultAnchorDate;
 
     std::shared_ptr<VolatilitySurfaceMoneynessCMA> volSurface =
         re.getDefaultCalendarMonthAverageMoneynessSurface(anchorDate);
 
-    Date d = calendar->advance(anchorDate, 3, Months);
+    Date d = calendar.advance(anchorDate, 3, Months);
     double fwd = 1.0;
 
     double vol = volSurface->getVolatility(d, fwd, fwd);
@@ -271,14 +271,14 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessRoll()
     BOOST_TEST_MESSAGE("Testing VolatilitySurfaceMoneynessCMA roll ...");
 
     GenerateRates re = GenerateRates();
-    std::shared_ptr<Calendar> calendar = re.defaultCalendar;
+    Calendar calendar = re.defaultCalendar;
     Date anchorDate = re.defaultAnchorDate;
 
     std::shared_ptr<VolatilitySurfaceMoneynessCMA> volSurface =
         re.getDefaultCalendarMonthAverageMoneynessSurface(anchorDate);
 
-    Date d1 = calendar->advance(anchorDate, 3, Months);
-    Date d2 = calendar->advance(anchorDate, 18, Months);
+    Date d1 = calendar.advance(anchorDate, 3, Months);
+    Date d2 = calendar.advance(anchorDate, 18, Months);
     double fwd = 1.0;
 
     std::shared_ptr<VolatilityRateSource> rolledSurface = volSurface->rollForward(d1);
@@ -295,9 +295,9 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessRoll()
     BOOST_CHECK(abs(rolledVol - originalVol) < EPSILON_FOR_DOUBLES);
 
     SurfaceInterpolatorType interpolatorType = BILINEAR;
-    vector<Date> surfaceDates = boost::assign::list_of(calendar->advance(anchorDate, 1, Years))(
-        calendar->advance(anchorDate, 2, Years))(calendar->advance(anchorDate, 3, Years))(
-        calendar->advance(anchorDate, 4, Years))(calendar->advance(anchorDate, 5, Years));
+    vector<Date> surfaceDates = boost::assign::list_of(calendar.advance(anchorDate, 1, Years))(
+        calendar.advance(anchorDate, 2, Years))(calendar.advance(anchorDate, 3, Years))(
+        calendar.advance(anchorDate, 4, Years))(calendar.advance(anchorDate, 5, Years));
     vector<double> moneyness;
     moneyness += -.5, 0, .5;
 
@@ -328,10 +328,10 @@ void VolatilitySurfacesTest::testCalendarMonthMoneynessRoll()
 
     BOOST_CHECK(abs(rolledCurve->getVolatility(surfaceDates[1], 1, 1) -
                     manualCurve->getVolatility(surfaceDates[1], 1, 1)) < EPSILON_FOR_DOUBLES);
-    Date anotherDate = calendar->advance(surfaceDates[0], 18, Months);
+    Date anotherDate = calendar.advance(surfaceDates[0], 18, Months);
     BOOST_CHECK(abs(rolledCurve->getVolatility(anotherDate, 1, 1) -
                     manualCurve->getVolatility(anotherDate, 1, 1)) < EPSILON_FOR_DOUBLES);
-    anotherDate = calendar->advance(surfaceDates[0], 20, Months);
+    anotherDate = calendar.advance(surfaceDates[0], 20, Months);
     BOOST_CHECK(abs(rolledCurve->getVolatility(anotherDate, .75, 1) -
                     manualCurve->getVolatility(anotherDate, .75, 1)) < EPSILON_FOR_DOUBLES);
     BOOST_CHECK(abs(rolledCurve->getVolatility(anotherDate, 1.25, 1) -
@@ -347,15 +347,15 @@ void VolatilitySurfacesTest::testForwardDeltaVolatilitySurfaceConstruction()
     Date anchorDate = Date(27, Jan, 2012);
     std::shared_ptr<RatesEnvironment> re;
     GenerateRates gr = GenerateRates();
-    std::shared_ptr<Calendar> calendar = gr.defaultCalendar;
+    Calendar calendar = gr.defaultCalendar;
 
     vector<Date> observationDates;
-    observationDates.push_back(calendar->advance(anchorDate, 1, Months));
-    observationDates.push_back(calendar->advance(anchorDate, 2, Months));
-    observationDates.push_back(calendar->advance(anchorDate, 3, Months));
-    observationDates.push_back(calendar->advance(anchorDate, 6, Months));
-    observationDates.push_back(calendar->advance(anchorDate, 1, Years));
-    observationDates.push_back(calendar->advance(anchorDate, 2, Years));
+    observationDates.push_back(calendar.advance(anchorDate, 1, Months));
+    observationDates.push_back(calendar.advance(anchorDate, 2, Months));
+    observationDates.push_back(calendar.advance(anchorDate, 3, Months));
+    observationDates.push_back(calendar.advance(anchorDate, 6, Months));
+    observationDates.push_back(calendar.advance(anchorDate, 1, Years));
+    observationDates.push_back(calendar.advance(anchorDate, 2, Years));
 
     vector<double> delta;
     delta += 10, 25, 50, 75, 90;
@@ -370,15 +370,15 @@ void VolatilitySurfacesTest::testForwardDeltaVolatilitySurfaceConstruction()
     vector<vector<double>> volatility;
     volatility += v1, v2, v3, v4, v5;
 
-    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
+    Actual365Fixed dayCounter;
+    NullCalendar nullCalendar;
     std::shared_ptr<ForwardRateSource> frs =
         gr.getSimpleForwardCurve(dayCounter, nullCalendar, anchorDate, 10, 100, .01, vector<Date>(0));
 
     VolatilitySurfaceDelta vs(anchorDate, observationDates, delta, volatility, BICUBIC, false);
     BOOST_REQUIRE(vs.validate().isOK());
 
-    Date d1 = calendar->advance(anchorDate, 1, Years);
+    Date d1 = calendar.advance(anchorDate, 1, Years);
     double fwd = frs->getForward(d1);
     double strike1 = vs.calculateStrikeFromDelta(d1, 50, fwd);
     BOOST_REQUIRE(vs.isInRange(d1, strike1, fwd));
@@ -390,9 +390,9 @@ void VolatilitySurfacesTest::testForwardDeltaVolatilitySurfaceConstruction()
     // swallow the solver failure and return a zero strike.
     BOOST_CHECK_THROW(vs.calculateStrikeFromDelta(d1, -1.0, fwd), NumericalError);
 
-    dayCounter = std::make_shared<Actual365Fixed>();
-    nullCalendar = std::make_shared<NullCalendar>();
-    Date tPlus2 = nullCalendar->advance(anchorDate, 2, Days);
+    dayCounter = Actual365Fixed();
+    nullCalendar = NullCalendar();
+    Date tPlus2 = nullCalendar.advance(anchorDate, 2, Days);
     [[maybe_unused]] double spot = 100;
     [[maybe_unused]] double naccRFR = 0.065;
     [[maybe_unused]] double naccIRDiff = 0.045;

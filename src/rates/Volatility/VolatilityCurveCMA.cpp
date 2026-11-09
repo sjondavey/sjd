@@ -12,7 +12,7 @@ namespace sjd
     VolatilityCurveCMA::VolatilityCurveCMA(Date anchorDateInput,
                                            vector<Date> observationDatesInput,
                                            vector<double> volatilityInput,
-                                           std::shared_ptr<DayCounter> dayCounterInput,
+                                           const DayCounter& dayCounterInput,
                                            ArrayInterpolatorType typeInput,
                                            bool allowExtrapolationInput)
     {
@@ -98,7 +98,7 @@ namespace sjd
 
     double VolatilityCurveCMA::getStandardDeviation(Date toDate) const
     {
-        double yearFraction = dayCounter->yearFraction(anchorDate, toDate);
+        double yearFraction = dayCounter.yearFraction(anchorDate, toDate);
         return curve->getRate(toDate) * sqrt(yearFraction);
     }
 
@@ -110,7 +110,7 @@ namespace sjd
     void VolatilityCurveCMA::getVolAndSD(Date toDate, double& vol, double& sd) const
     {
         vol = curve->getRate(toDate);
-        double yearFraction = dayCounter->yearFraction(anchorDate, toDate);
+        double yearFraction = dayCounter.yearFraction(anchorDate, toDate);
         sd = vol * sqrt(yearFraction);
         return;
     }

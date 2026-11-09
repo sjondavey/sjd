@@ -69,7 +69,7 @@ namespace sjd
         ArrayInterpolatorType type;
         std::shared_ptr<ArrayInterpolator> interpolator;
         bool allowExtrapolation;
-        std::shared_ptr<QuantLib::DayCounter> dayCounter;
-        std::shared_ptr<QuantLib::DayCounter> a365DayCounter;
+        QuantLib::DayCounter dayCounter;
+        QuantLib::DayCounter a365DayCounter;
     };
 }

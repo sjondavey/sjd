@@ -28,7 +28,7 @@ namespace sjd
         VolatilityCurve(QuantLib::Date anchorDate,
                         std::vector<QuantLib::Date> observationDates,
                         std::vector<double> volatility,
-                        std::shared_ptr<QuantLib::DayCounter> dayCounter,
+                        const QuantLib::DayCounter& dayCounter,
                         ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
                         bool allowExtrapolation = false);
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <sjd/rates/IHaveMarketRateStresses.h>
 #include <sjd/rates/Volatility/VolatilityRateSource.h>
 
 namespace sjd
@@ -13,12 +12,12 @@ namespace sjd
         - bump (arithmetically) the source by a fixed volatility at all observation points; and
         - roll the curve to a future date
     =======================================================================================*/
-    class DeterministicVolatilityRateSource : public VolatilityRateSource, public IHaveMarketRateStresses
+    class DeterministicVolatilityRateSource : public VolatilityRateSource
     {
     public:
         void runChecks() override;
 
-        virtual std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> getMarketRateStresses();
+        std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> marketStresses() override;
         virtual std::shared_ptr<VolatilityRateSource> parallelBump(double spread) = 0;
 
         // Roll forward to one date

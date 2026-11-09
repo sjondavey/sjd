@@ -52,8 +52,8 @@ void CashflowTest::testMaturityDate()
     Date anchorDate(1, Jan, 2013);
     double volume = 1000;
     BuySell bs = BuySell::BUY;
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date maturityDate = nullCalendar->advance(anchorDate, 3, Years);
+    NullCalendar nullCalendar;
+    Date maturityDate = nullCalendar.advance(anchorDate, 3, Years);
     FixedCashflow moved(maturityDate, volume, bs);
     BOOST_CHECK(moved.isOK());
     BOOST_CHECK(moved.getMaturityDate() == maturityDate);
@@ -65,8 +65,8 @@ void CashflowTest::testSettlementDate()
     Date anchorDate(1, Jan, 2013);
     double volume = 1000;
     BuySell bs = BuySell::BUY;
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date settlementDate = nullCalendar->advance(anchorDate, 1, Years);
+    NullCalendar nullCalendar;
+    Date settlementDate = nullCalendar.advance(anchorDate, 1, Years);
     FixedCashflow moved(settlementDate, volume, bs);
     BOOST_CHECK(moved.isOK());
     BOOST_CHECK(moved.getSettlementDate() == settlementDate);
@@ -77,12 +77,12 @@ void CashflowTest::testValue()
 {
     GenerateRates gr = GenerateRates();
 
-    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    DayCounter dayCounter = gr.defaultDayCounter;
+    Calendar nullCalendar = gr.defaultCalendar;
 
     Date anchorDate(1, Jan, 2013);
-    Date tPlus2 = nullCalendar->advance(anchorDate, 2, Days);
-    Date settlement = nullCalendar->advance(anchorDate, 2, Years);
+    Date tPlus2 = nullCalendar.advance(anchorDate, 2, Days);
+    Date settlement = nullCalendar.advance(anchorDate, 2, Years);
 
     vector<Date> manditoryDates;
     manditoryDates.push_back(tPlus2);
@@ -105,7 +105,7 @@ void CashflowTest::testValue()
     cf2.validate(re);
     BOOST_REQUIRE(cf2.isOK());
 
-    [[maybe_unused]] double yts = dayCounter->yearFraction(anchorDate, settlement);
+    [[maybe_unused]] double yts = dayCounter.yearFraction(anchorDate, settlement);
     double df = dc->getDiscountFactor(settlement);
 
     // 1) Before maturity
@@ -115,7 +115,7 @@ void CashflowTest::testValue()
     // 2) After maturity with ContractStatus = Excecised
 
     // 3) After settlement
-    Date dayAfterSettlement = nullCalendar->advance(settlement, 1, Days);
+    Date dayAfterSettlement = nullCalendar.advance(settlement, 1, Days);
     manditoryDates.clear();
     re = gr.getRatesEnvironmentForCashflow(dayAfterSettlement, manditoryDates);
     BOOST_CHECK(abs(cf2.getValue(re)) < EPSILON_FOR_DOUBLES);
@@ -123,8 +123,8 @@ void CashflowTest::testValue()
 
 void CashflowTest::testGetPayoffAfterMaturity()
 {
-    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
+    Actual365Fixed dayCounter;
+    NullCalendar nullCalendar;
 
     Date anchorDate(1, Jan, 2013);
     int yearsToSettlement = 2;

@@ -15,7 +15,7 @@ namespace sjd
     VolatilityCurve::VolatilityCurve(Date anchorDateInput,
                                      vector<Date> observationDatesInput,
                                      vector<double> volatilityInput,
-                                     std::shared_ptr<DayCounter> dayCounterInput,
+                                     const DayCounter& dayCounterInput,
                                      ArrayInterpolatorType typeInput,
                                      bool allowExtrapolationInput)
     {
@@ -36,7 +36,7 @@ namespace sjd
             }
             else
             {
-                double yearFraction = dayCounter->yearFraction(anchorDateInput, observationDatesInput[i]);
+                double yearFraction = dayCounter.yearFraction(anchorDateInput, observationDatesInput[i]);
                 // Total variance, not standard deviation. Linear interpolation of variance
                 // keeps a flat volatility flat between the anchor and the first pillar.
                 double variance = volatilityInput[i] * volatilityInput[i] * std::max(yearFraction, 0.0);
@@ -103,7 +103,7 @@ namespace sjd
         {
             return anchorVolatility;
         }
-        double yearFraction = dayCounter->yearFraction(anchorDate, toDate);
+        double yearFraction = dayCounter.yearFraction(anchorDate, toDate);
         if (yearFraction <= 0.0)
         {
             return anchorVolatility;

@@ -30,7 +30,7 @@ namespace sjd
         return;
     }
 
-    vector<pair<string, std::shared_ptr<RateSource>>> ForwardRateSourceDeterministic::getMarketRateStresses()
+    vector<pair<string, std::shared_ptr<RateSource>>> ForwardRateSourceDeterministic::marketStresses()
     {
         vector<pair<string, std::shared_ptr<RateSource>>> marketStress;
         marketStress.push_back(make_pair("Fwd + 1unit", parallelBump(1.0)));

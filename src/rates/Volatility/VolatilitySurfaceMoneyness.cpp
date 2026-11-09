@@ -47,7 +47,7 @@ namespace sjd
 
     bool VolatilitySurfaceMoneyness::isInRange(QuantLib::Date date) const
     {
-        return timeInRange(dayCounter->yearFraction(anchorDate, date));
+        return timeInRange(dayCounter.yearFraction(anchorDate, date));
     }
 
     bool VolatilitySurfaceMoneyness::isInRange(QuantLib::Date date,
@@ -60,14 +60,14 @@ namespace sjd
     double VolatilitySurfaceMoneyness::getVolatility(Date toDate) const
     {
         SJD_ASSERT(isInRange(toDate));
-        double yf = dayCounter->yearFraction(anchorDate, toDate);
+        double yf = dayCounter.yearFraction(anchorDate, toDate);
         return surfaceVolatility(yf, 0.0);
     }
 
     double VolatilitySurfaceMoneyness::getVolatility(Date toDate, double strike, double forward) const
     {
         SJD_ASSERT(isInRange(toDate, strike, forward));
-        double yf = dayCounter->yearFraction(anchorDate, toDate);
+        double yf = dayCounter.yearFraction(anchorDate, toDate);
         double moneyness = (strike - forward) / forward;
         return surfaceVolatility(yf, moneyness);
     }

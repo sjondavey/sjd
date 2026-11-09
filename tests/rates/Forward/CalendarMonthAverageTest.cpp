@@ -128,7 +128,7 @@ void CalendarMonthAverageTest::testRoll_CMA()
 
     GenerateRates re = GenerateRates();
 
-    std::shared_ptr<Calendar> calendar = re.defaultCalendar;
+    Calendar calendar = re.defaultCalendar;
     Date anchorDate = re.defaultAnchorDate;
     vector<Date> observationDates = re.defaultCurveDates;
     vector<double> futures;
@@ -150,7 +150,7 @@ void CalendarMonthAverageTest::testRoll_CMA()
 
     double sqrtDt = sqrt((observationDates[1] - anchorDate) / 365.0);
     // std::shared_ptr<ForwardRateSource> bumpedCurve = rolledFwd->bumpStochastically(sqrtDt, vrs, rn);
-    Date dateToCheck = observationDates[3]; // calendar->advance(anchorDate, 39, Months);
+    Date dateToCheck = observationDates[3]; // calendar.advance(anchorDate, 39, Months);
 
     double manualRolledForward = fc->getForward(dateToCheck);
     double vol = vrs->getVolatility(dateToCheck);

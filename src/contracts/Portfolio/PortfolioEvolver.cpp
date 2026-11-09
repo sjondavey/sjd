@@ -189,7 +189,7 @@ namespace sjd
         std::shared_ptr<Portfolio> portfolioInput,
         std::shared_ptr<SingleFactorEconomicScenarioGenerator> pathGeneratorInput,
         set<Date> forwardDatesSet,
-        std::shared_ptr<Calendar> calendarForHoldingPeriodInput,
+        const Calendar& calendarForHoldingPeriodInput,
         size_t holdingPeriodInput)
     {
         errorTracking = std::make_shared<sjd::IssueTracker>("PortfolioEvolver");
@@ -209,7 +209,7 @@ namespace sjd
     void PortfolioEvolver::runChecks()
     {
         errorTracking->clear();
-        if ((holdingPeriod > 0) && !calendarForHoldingPeriod)
+        if ((holdingPeriod > 0) && calendarForHoldingPeriod.empty())
         {
             recordIssue(issues::HOLDING_PERIOD_CALENDAR_MISSING,
                         "A holding period needs a calendar to count its business days", {"holding_period"});
@@ -687,7 +687,7 @@ namespace sjd
         exposureSteps = 0;
         simulationDates = vector<Date>(dates.begin(), dates.end());
 
-        if ((holdingPeriod == 0) || !portfolioIsMargined || !calendarForHoldingPeriod)
+        if ((holdingPeriod == 0) || !portfolioIsMargined || calendarForHoldingPeriod.empty())
         {
             for (size_t i = 0; i < simulationDates.size(); ++i)
             {
@@ -704,7 +704,7 @@ namespace sjd
             set<Date>::iterator it;
             for (it = exposureDatesSet.begin(); it != exposureDatesSet.end(); ++it)
             {
-                Date marginResetDate = calendarForHoldingPeriod->advance(*it, -numDays, Days);
+                Date marginResetDate = calendarForHoldingPeriod.advance(*it, -numDays, Days);
                 if (marginResetDate < portfolio->getMargin()->getAnchorDate())
                 {
                     marginResetDate = portfolio->getMargin()->getAnchorDate();

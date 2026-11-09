@@ -17,20 +17,20 @@ namespace sjd
     class InterestRateConvention
     {
     public:
-        InterestRateConvention(std::shared_ptr<QuantLib::DayCounter> dayCounter,
+        InterestRateConvention(const QuantLib::DayCounter& dayCounter,
                                QuantLib::Compounding compounding,
                                QuantLib::Frequency frequency);
 
-        std::shared_ptr<QuantLib::DayCounter> getDayCounter();
+        QuantLib::DayCounter getDayCounter() const;
         QuantLib::Compounding getCompounding();
         QuantLib::Frequency getFrequency();
 
-        double dfToRate(double df, QuantLib::Date fromDate, QuantLib::Date toDate);
+        double dfToRate(double df, QuantLib::Date fromDate, QuantLib::Date toDate) const;
 
-        double rateToDF(double rate, QuantLib::Date fromDate, QuantLib::Date toDate);
+        double rateToDF(double rate, QuantLib::Date fromDate, QuantLib::Date toDate) const;
 
     protected:
-        std::shared_ptr<QuantLib::DayCounter> dayCounter;
+        QuantLib::DayCounter dayCounter;
         QuantLib::Compounding compounding;
         QuantLib::Frequency frequency;
     };

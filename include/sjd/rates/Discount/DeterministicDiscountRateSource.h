@@ -3,7 +3,6 @@
 #include <ql/time/daycounters/actual360.hpp>
 #include <sjd/rates/Discount/DiscountRateSource.h>
 #include <sjd/rates/Discount/InterestRateConvention.h>
-#include <sjd/rates/IHaveMarketRateStresses.h>
 
 namespace sjd
 {
@@ -16,14 +15,14 @@ namespace sjd
         - bump the curve by a fixed interest rate at all observation points; and
         - roll the curve to a future date by preserving the forward forward discount factors
     =======================================================================================*/
-    class DeterministicDiscountRateSource : public DiscountRateSource, public IHaveMarketRateStresses
+    class DeterministicDiscountRateSource : public DiscountRateSource
     {
     public:
         void runChecks() override;
 
-        virtual std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> getMarketRateStresses();
-        virtual std::shared_ptr<DiscountRateSource> parallelBump(
-            double spread, std::shared_ptr<InterestRateConvention> irc) = 0;
+        std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> marketStresses() override;
+        virtual std::shared_ptr<DiscountRateSource> parallelBump(double spread,
+                                                                 const InterestRateConvention& irc) = 0;
 
         // Roll forward to one date
         virtual std::shared_ptr<DiscountRateSource> rollForward(QuantLib::Date toDate) = 0;

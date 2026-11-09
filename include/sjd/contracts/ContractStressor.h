@@ -6,7 +6,6 @@
 #include "Contracts.h"
 #include <sjd/rates/Forward/ForwardCurveFX.h>
 #include <sjd/rates/Forward/UsesInterestRateDifferential.h>
-#include <sjd/rates/IHaveMarketRateStresses.h>
 #include <sjd/rates/RatesEnvironment.h>
 
 namespace sjd

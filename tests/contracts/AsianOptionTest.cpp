@@ -12,18 +12,18 @@ using namespace sjd;
 
 std::shared_ptr<AsianOption> AsianOptionContractTest::getDefaultAsianOption(Date anchorDate)
 {
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date optionMaturity = nullCalendar->advance(anchorDate, 2, Years);
+    NullCalendar nullCalendar;
+    Date optionMaturity = nullCalendar.advance(anchorDate, 2, Years);
     set<Date> averagingDates;
     Date d = Date(1, optionMaturity.month(), optionMaturity.year());
-    Date nextMonth = nullCalendar->advance(d, 1, Months);
+    Date nextMonth = nullCalendar.advance(d, 1, Months);
     while (d < nextMonth)
     {
         averagingDates.insert(d);
-        d = nullCalendar->advance(d, 1, Days);
+        d = nullCalendar.advance(d, 1, Days);
     }
     vector<Date> averagingDatesAsVector = vector<Date>(averagingDates.begin(), averagingDates.end());
-    Date settlement = nullCalendar->advance(averagingDatesAsVector.back(), 2, Days);
+    Date settlement = nullCalendar.advance(averagingDatesAsVector.back(), 2, Days);
 
     double strike = 100;
     PutCall type = PutCall::PUT;
@@ -36,18 +36,18 @@ std::shared_ptr<AsianOption> AsianOptionContractTest::getDefaultAsianOption(Date
 
 std::shared_ptr<AsianOption> AsianOptionContractTest::getAsianOptionWithMoneynessVol(Date anchorDate)
 {
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date optionMaturity = nullCalendar->advance(anchorDate, 2, Years);
+    NullCalendar nullCalendar;
+    Date optionMaturity = nullCalendar.advance(anchorDate, 2, Years);
     set<Date> averagingDates;
     Date d = Date(1, optionMaturity.month(), optionMaturity.year());
-    Date nextMonth = nullCalendar->advance(d, 1, Months);
+    Date nextMonth = nullCalendar.advance(d, 1, Months);
     while (d < nextMonth)
     {
         averagingDates.insert(d);
-        d = nullCalendar->advance(d, 1, Days);
+        d = nullCalendar.advance(d, 1, Days);
     }
     vector<Date> averagingDatesAsVector = vector<Date>(averagingDates.begin(), averagingDates.end());
-    Date settlement = nullCalendar->advance(averagingDatesAsVector.back(), 2, Days);
+    Date settlement = nullCalendar.advance(averagingDatesAsVector.back(), 2, Days);
 
     double strike = 100;
     PutCall type = PutCall::PUT;
@@ -72,15 +72,15 @@ void AsianOptionContractTest::testAveragingDates()
     std::shared_ptr<AsianOption> contract = getDefaultAsianOption(anchorDate);
     BOOST_CHECK(contract->isOK());
 
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date rateSetDate = nullCalendar->advance(anchorDate, 3, Years); // after settlement
+    NullCalendar nullCalendar;
+    Date rateSetDate = nullCalendar.advance(anchorDate, 3, Years); // after settlement
     set<Date> averagingDates;
     Date d = Date(1, rateSetDate.month(), rateSetDate.year());
-    Date nextMonth = nullCalendar->advance(d, 1, Months);
+    Date nextMonth = nullCalendar.advance(d, 1, Months);
     while (d < nextMonth)
     {
         averagingDates.insert(d);
-        d = nullCalendar->advance(d, 1, Days);
+        d = nullCalendar.advance(d, 1, Days);
     }
     contract = std::make_shared<AsianOption>(averagingDates, contract->getSettlementDate(),
                                              contract->getStrike(), contract->getType(),
@@ -88,7 +88,7 @@ void AsianOptionContractTest::testAveragingDates()
                                              contract->getPremiumAmount(), contract->getBuySell());
     contract->validate();
     BOOST_CHECK(!contract->isOK()); // averaging past settlement
-    d = nullCalendar->advance(d, -1, Days);
+    d = nullCalendar.advance(d, -1, Days);
     BOOST_CHECK(contract->getMaturityDate() == d);
 }
 
@@ -132,8 +132,8 @@ void AsianOptionContractTest::testValue()
     GenerateRates gr = GenerateRates();
     std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
 
-    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    DayCounter dayCounter = gr.defaultDayCounter;
+    Calendar nullCalendar = gr.defaultCalendar;
 
     std::shared_ptr<AsianOption> base = getDefaultAsianOption(anchorDate);
     auto callDates = base->getAveragingDates();
@@ -165,8 +165,8 @@ void AsianOptionContractTest::testValue()
     BOOST_CHECK(abs(call->getValue(re) - optionFormulaValue) < 1e-10);
 
     // 2) In Averaging Month
-    Date newAnchorDate = nullCalendar->advance(anchorDate, 2, Years);
-    newAnchorDate = nullCalendar->advance(anchorDate, 10, Days);
+    Date newAnchorDate = nullCalendar.advance(anchorDate, 2, Years);
+    newAnchorDate = nullCalendar.advance(anchorDate, 10, Days);
     re = gr.getRatesEnvironmentForAsianOption(newAnchorDate, vector<Date>(0));
 
     call->getFixingAndForwardDates(anchorDate, fixingDates, forwardDates);
@@ -188,7 +188,7 @@ void AsianOptionContractTest::testValue()
     BOOST_CHECK(abs(call->getValue(re) - optionFormulaValue) < 1e-10);
 
     // 4) After settlement
-    Date dayAfterSettlement = nullCalendar->advance(call->getSettlementDate(), 1, Days);
+    Date dayAfterSettlement = nullCalendar.advance(call->getSettlementDate(), 1, Days);
     re = gr.getRatesEnvironmentForAsianOption(dayAfterSettlement, vector<Date>(0));
     BOOST_CHECK(abs(call->getOptionValue(re)) < EPSILON_FOR_DOUBLES);
 }
@@ -199,8 +199,8 @@ void AsianOptionContractTest::testGetPayoffAfterMaturity()
     GenerateRates gr = GenerateRates();
     std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
 
-    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    DayCounter dayCounter = gr.defaultDayCounter;
+    Calendar nullCalendar = gr.defaultCalendar;
 
     std::shared_ptr<AsianOption> option = getAsianOptionWithMoneynessVol(anchorDate);
     auto payoffDates = option->getAveragingDates();
@@ -229,8 +229,8 @@ void AsianOptionContractTest::testEuropeanOptionWithMoneynessVol()
     GenerateRates gr = GenerateRates();
     std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianOption(anchorDate, vector<Date>(0));
 
-    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    DayCounter dayCounter = gr.defaultDayCounter;
+    Calendar nullCalendar = gr.defaultCalendar;
 
     std::shared_ptr<AsianOption> callBase = getAsianOptionWithMoneynessVol(anchorDate);
     auto moneynessDates = callBase->getAveragingDates();
@@ -269,8 +269,8 @@ void AsianOptionContractTest::testEuropeanOptionWithMoneynessVol()
     BOOST_CHECK(abs(call->getValue(re) - optionFormulaValue) < 1e-10);
 
     // 2) In Averaging Month
-    Date newAnchorDate = nullCalendar->advance(anchorDate, 2, Years);
-    newAnchorDate = nullCalendar->advance(anchorDate, 10, Days);
+    Date newAnchorDate = nullCalendar.advance(anchorDate, 2, Years);
+    newAnchorDate = nullCalendar.advance(anchorDate, 10, Days);
     re = gr.getRatesEnvironmentForAsianOption(newAnchorDate, vector<Date>(0));
 
     call->getFixingAndForwardDates(anchorDate, fixingDates, forwardDates);
@@ -294,7 +294,7 @@ void AsianOptionContractTest::testEuropeanOptionWithMoneynessVol()
     BOOST_CHECK(abs(call->getValue(re) - optionFormulaValue) < 1e-10);
 
     // 4) After settlement
-    Date dayAfterSettlement = nullCalendar->advance(call->getSettlementDate(), 1, Days);
+    Date dayAfterSettlement = nullCalendar.advance(call->getSettlementDate(), 1, Days);
     re = gr.getRatesEnvironmentForAsianOption(dayAfterSettlement, vector<Date>(0));
     BOOST_CHECK(abs(call->getOptionValue(re)) < EPSILON_FOR_DOUBLES);
 }

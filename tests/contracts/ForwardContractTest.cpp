@@ -10,9 +10,9 @@ using namespace sjd;
 
 std::shared_ptr<EuropeanForward> ForwardContractTest::getDefaultEuropeanForward(Date anchorDate)
 {
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date rateSetDate = nullCalendar->advance(anchorDate, 2, Years);
-    Date settlement = nullCalendar->advance(rateSetDate, 2, Days);
+    NullCalendar nullCalendar;
+    Date rateSetDate = nullCalendar.advance(anchorDate, 2, Years);
+    Date settlement = nullCalendar.advance(rateSetDate, 2, Days);
 
     double strike = 100.0;
     double volume = 150;
@@ -21,18 +21,18 @@ std::shared_ptr<EuropeanForward> ForwardContractTest::getDefaultEuropeanForward(
 
 std::shared_ptr<AsianForward> ForwardContractTest::getDefaultAsianForward(Date anchorDate)
 {
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date rateSetDate = nullCalendar->advance(anchorDate, 2, Years);
+    NullCalendar nullCalendar;
+    Date rateSetDate = nullCalendar.advance(anchorDate, 2, Years);
     set<Date> averagingDates;
     Date d = Date(1, rateSetDate.month(), rateSetDate.year());
-    Date nextMonth = nullCalendar->advance(d, 1, Months);
+    Date nextMonth = nullCalendar.advance(d, 1, Months);
     while (d < nextMonth)
     {
         averagingDates.insert(d);
-        d = nullCalendar->advance(d, 1, Days);
+        d = nullCalendar.advance(d, 1, Days);
     }
     vector<Date> averagingDatesAsVector = vector<Date>(averagingDates.begin(), averagingDates.end());
-    Date settlement = nullCalendar->advance(averagingDatesAsVector.back(), 2, Days);
+    Date settlement = nullCalendar.advance(averagingDatesAsVector.back(), 2, Days);
 
     double strike = 100;
     double volume = 50;
@@ -89,8 +89,8 @@ void ForwardContractTest::testMaturityDate()
     std::shared_ptr<ForwardCurveDeterministic> fc;
     contract->validate();
     BOOST_CHECK(contract->isOK());
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date maturityDate = nullCalendar->advance(anchorDate, 3, Years);
+    NullCalendar nullCalendar;
+    Date maturityDate = nullCalendar.advance(anchorDate, 3, Years);
     EuropeanForward later(maturityDate, contract->getSettlementDate(), contract->getStrike(),
                           contract->getVolume(), contract->getBuySell());
     later.validate();
@@ -106,8 +106,8 @@ void ForwardContractTest::testSettlementDate()
     std::shared_ptr<ForwardCurveDeterministic> fc;
     contract->validate();
     BOOST_CHECK(contract->isOK());
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date settlementDate = nullCalendar->advance(anchorDate, 1, Years);
+    NullCalendar nullCalendar;
+    Date settlementDate = nullCalendar.advance(anchorDate, 1, Years);
     EuropeanForward earlier(contract->getMaturityDate(), settlementDate, contract->getStrike(),
                             contract->getVolume(), contract->getBuySell());
     earlier.validate();
@@ -161,13 +161,13 @@ void ForwardContractTest::testValue()
     std::shared_ptr<RatesEnvironment> re;
     GenerateRates gr = GenerateRates();
 
-    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    DayCounter dayCounter = gr.defaultDayCounter;
+    Calendar nullCalendar = gr.defaultCalendar;
 
     Date anchorDate(1, Jan, 2013);
-    Date tPlus2 = nullCalendar->advance(anchorDate, 2, Days);
-    Date rateSetDate = nullCalendar->advance(anchorDate, 2, Years);
-    Date settlement = nullCalendar->advance(rateSetDate, 2, Days);
+    Date tPlus2 = nullCalendar.advance(anchorDate, 2, Days);
+    Date rateSetDate = nullCalendar.advance(anchorDate, 2, Years);
+    Date settlement = nullCalendar.advance(rateSetDate, 2, Days);
 
     vector<Date> manditoryDates;
     manditoryDates.push_back(tPlus2);
@@ -198,8 +198,8 @@ void ForwardContractTest::testValue()
     contract2.validate(re);
     BOOST_REQUIRE(contract2.isOK());
 
-    [[maybe_unused]] double yte = dayCounter->yearFraction(anchorDate, rateSetDate);
-    [[maybe_unused]] double yts = dayCounter->yearFraction(anchorDate, settlement);
+    [[maybe_unused]] double yte = dayCounter.yearFraction(anchorDate, rateSetDate);
+    [[maybe_unused]] double yts = dayCounter.yearFraction(anchorDate, settlement);
     double F = fc->getForward(settlement);
     double df = dc->getDiscountFactor(settlement);
 
@@ -208,7 +208,7 @@ void ForwardContractTest::testValue()
     BOOST_CHECK(abs(contract.getValue(re) - volume * (F - strike) * df) / volume < EPSILON_FOR_DOUBLES);
 
     // 3) After settlement
-    Date dayAfterSettlement = nullCalendar->advance(settlement, 1, Days);
+    Date dayAfterSettlement = nullCalendar.advance(settlement, 1, Days);
     manditoryDates.clear();
     dc = gr.getDiscountCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, naccRFR);
     fc = gr.getSimpleForwardCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, spot, naccIRDiff);
@@ -221,8 +221,8 @@ void ForwardContractTest::testValue()
 
 void ForwardContractTest::testGetPayoffAfterMaturity()
 {
-    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
+    Actual365Fixed dayCounter;
+    NullCalendar nullCalendar;
 
     Date anchorDate(1, Jan, 2013);
 
@@ -246,15 +246,15 @@ void ForwardContractTest::testAsianAveragingDates()
     std::shared_ptr<DailyFixingCurve> fixingCurve, fixingCurve2;
     BOOST_CHECK(contract->isOK());
 
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date rateSetDate = nullCalendar->advance(anchorDate, 3, Years); // after settlement
+    NullCalendar nullCalendar;
+    Date rateSetDate = nullCalendar.advance(anchorDate, 3, Years); // after settlement
     set<Date> averagingDates;
     Date d = Date(1, rateSetDate.month(), rateSetDate.year());
-    Date nextMonth = nullCalendar->advance(d, 1, Months);
+    Date nextMonth = nullCalendar.advance(d, 1, Months);
     while (d < nextMonth)
     {
         averagingDates.insert(d);
-        d = nullCalendar->advance(d, 1, Days);
+        d = nullCalendar.advance(d, 1, Days);
     }
     contract =
         std::make_shared<AsianForward>(averagingDates, contract->getSettlementDate(), contract->getStrike(),
@@ -289,11 +289,11 @@ void ForwardContractTest::testAsianForward()
     std::shared_ptr<RatesEnvironment> re;
     GenerateRates gr = GenerateRates();
 
-    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
+    DayCounter dayCounter = gr.defaultDayCounter;
+    NullCalendar nullCalendar;
 
     Date anchorDate(1, Jan, 2013);
-    Date tPlus2 = nullCalendar->advance(anchorDate, 2, Days);
+    Date tPlus2 = nullCalendar.advance(anchorDate, 2, Days);
 
     set<Date> averagingDates;
     vector<Date> manditoryDates;
@@ -304,10 +304,10 @@ void ForwardContractTest::testAsianForward()
     {
         averagingDates.insert(d);
         manditoryDates.push_back(d);
-        d = nullCalendar->advance(d, 1, Days);
+        d = nullCalendar.advance(d, 1, Days);
     }
     vector<Date> averagingDatesAsVector = vector<Date>(averagingDates.begin(), averagingDates.end());
-    Date settlement = nullCalendar->advance(averagingDatesAsVector.back(), 2, Days);
+    Date settlement = nullCalendar.advance(averagingDatesAsVector.back(), 2, Days);
     manditoryDates.push_back(settlement);
 
     [[maybe_unused]] double spot = 100;
@@ -336,8 +336,8 @@ void ForwardContractTest::testAsianForward()
     contract2.validate(re);
     BOOST_REQUIRE(contract2.isOK());
 
-    // double yte = dayCounter->yearFraction(anchorDate, rateSetDate);
-    [[maybe_unused]] double yts = dayCounter->yearFraction(anchorDate, settlement);
+    // double yte = dayCounter.yearFraction(anchorDate, rateSetDate);
+    [[maybe_unused]] double yts = dayCounter.yearFraction(anchorDate, settlement);
     double averageFwd = 0;
     for (size_t i = 0; i < averagingDatesAsVector.size(); ++i)
     {
@@ -353,7 +353,7 @@ void ForwardContractTest::testAsianForward()
                 EPSILON_FOR_DOUBLES);
 
     // 3) After settlement
-    Date dayAfterSettlement = nullCalendar->advance(settlement, 1, Days);
+    Date dayAfterSettlement = nullCalendar.advance(settlement, 1, Days);
     manditoryDates.clear();
     dc = gr.getDiscountCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, naccRFR);
     fc = gr.getSimpleForwardCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, spot, naccIRDiff);
@@ -365,8 +365,8 @@ void ForwardContractTest::testAsianForward()
 
 void ForwardContractTest::testAsianGetPayoffAfterMaturity()
 {
-    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
+    Actual365Fixed dayCounter;
+    NullCalendar nullCalendar;
 
     Date anchorDate(1, Jan, 2013);
 

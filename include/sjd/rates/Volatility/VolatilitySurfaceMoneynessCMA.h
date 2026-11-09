@@ -70,6 +70,6 @@ namespace sjd
 
     protected:
         QuantLib::Date beginningOfAnchorDateMonth;
-        std::shared_ptr<QuantLib::DayCounter> simpleDayCounter;
+        QuantLib::DayCounter simpleDayCounter;
     };
 }

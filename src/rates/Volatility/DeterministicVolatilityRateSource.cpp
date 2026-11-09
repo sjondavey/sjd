@@ -30,8 +30,7 @@ namespace sjd
         return;
     }
 
-    vector<pair<string, std::shared_ptr<RateSource>>> DeterministicVolatilityRateSource::
-        getMarketRateStresses()
+    vector<pair<string, std::shared_ptr<RateSource>>> DeterministicVolatilityRateSource::marketStresses()
     {
         vector<pair<string, std::shared_ptr<RateSource>>> marketStress;
         marketStress.push_back(make_pair("Vol + 1% ", parallelBump(0.01)));

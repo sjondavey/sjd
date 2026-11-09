@@ -69,168 +69,144 @@ namespace sjd
 
         if (baseRates->hasDRS())
         {
-            std::shared_ptr<IHaveMarketRateStresses> stressableDRS =
-                std::dynamic_pointer_cast<IHaveMarketRateStresses>(baseDRS);
-            if (stressableDRS != 0)
+            vector<pair<string, std::shared_ptr<RateSource>>> stressedDRSS = baseDRS->marketStresses();
+            for (size_t i = 0; i < stressedDRSS.size(); ++i)
             {
-                vector<pair<string, std::shared_ptr<RateSource>>> stressedDRSS =
-                    stressableDRS->getMarketRateStresses();
-                for (size_t i = 0; i < stressedDRSS.size(); ++i)
+                std::shared_ptr<RatesEnvironment> re =
+                    std::make_shared<RatesEnvironment>(baseRates->getAnchorDate());
+                std::shared_ptr<DiscountRateSource> stressDRS =
+                    std::dynamic_pointer_cast<DiscountRateSource>(stressedDRSS[i].second);
+                re->setDRS(stressDRS);
+                if (baseRates->hasFRS())
                 {
-                    std::shared_ptr<RatesEnvironment> re =
-                        std::make_shared<RatesEnvironment>(baseRates->getAnchorDate());
-                    std::shared_ptr<DiscountRateSource> stressDRS =
-                        std::dynamic_pointer_cast<DiscountRateSource>(stressedDRSS[i].second);
-                    re->setDRS(stressDRS);
-                    if (baseRates->hasFRS())
+                    if (frsUsesIRD)
                     {
-                        if (frsUsesIRD)
-                        {
-                            Date anchorDate = baseFRS->getAnchorDate();
-                            double spotAtT0 = irdFRS->getSpotAtT0();
-                            std::shared_ptr<ForwardCurveFX> stressFRS = std::make_shared<ForwardCurveFX>(
-                                anchorDate, spotAtT0, stressDRS, baseForeignDRS);
-                            re->setFRS(stressFRS);
-                        }
-                        else
-                        {
-                            re->setFRS(baseFRS);
-                        }
+                        Date anchorDate = baseFRS->getAnchorDate();
+                        double spotAtT0 = irdFRS->getSpotAtT0();
+                        std::shared_ptr<ForwardCurveFX> stressFRS =
+                            std::make_shared<ForwardCurveFX>(anchorDate, spotAtT0, stressDRS, baseForeignDRS);
+                        re->setFRS(stressFRS);
                     }
-                    if (baseRates->hasForeignDRS())
+                    else
                     {
-                        re->setForeignDRS(baseForeignDRS);
+                        re->setFRS(baseFRS);
                     }
-                    if (baseRates->hasVRS())
-                    {
-                        re->setVRS(baseVRS);
-                    }
-                    if (baseRates->hasFixingRS())
-                    {
-                        re->setFixingRS(baseFixingRS);
-                    }
-                    stressedMarketRates.push_back(make_pair("Domestic " + stressedDRSS[i].first, re));
                 }
+                if (baseRates->hasForeignDRS())
+                {
+                    re->setForeignDRS(baseForeignDRS);
+                }
+                if (baseRates->hasVRS())
+                {
+                    re->setVRS(baseVRS);
+                }
+                if (baseRates->hasFixingRS())
+                {
+                    re->setFixingRS(baseFixingRS);
+                }
+                stressedMarketRates.push_back(make_pair("Domestic " + stressedDRSS[i].first, re));
             }
         }
 
         if (baseRates->hasForeignDRS())
         {
-            std::shared_ptr<IHaveMarketRateStresses> stressableForeignDRS =
-                std::dynamic_pointer_cast<IHaveMarketRateStresses>(baseForeignDRS);
-            if (stressableForeignDRS != 0)
+            vector<pair<string, std::shared_ptr<RateSource>>> stressedForeignDRSS =
+                baseForeignDRS->marketStresses();
+            for (size_t i = 0; i < stressedForeignDRSS.size(); ++i)
             {
-                vector<pair<string, std::shared_ptr<RateSource>>> stressedForeignDRSS =
-                    stressableForeignDRS->getMarketRateStresses();
-                for (size_t i = 0; i < stressedForeignDRSS.size(); ++i)
+                std::shared_ptr<RatesEnvironment> re =
+                    std::make_shared<RatesEnvironment>(baseRates->getAnchorDate());
+                std::shared_ptr<DiscountRateSource> stressForeignDRS =
+                    std::dynamic_pointer_cast<DiscountRateSource>(stressedForeignDRSS[i].second);
+                re->setForeignDRS(stressForeignDRS);
+                if (baseRates->hasFRS())
                 {
-                    std::shared_ptr<RatesEnvironment> re =
-                        std::make_shared<RatesEnvironment>(baseRates->getAnchorDate());
-                    std::shared_ptr<DiscountRateSource> stressForeignDRS =
-                        std::dynamic_pointer_cast<DiscountRateSource>(stressedForeignDRSS[i].second);
-                    re->setForeignDRS(stressForeignDRS);
-                    if (baseRates->hasFRS())
+                    if (frsUsesIRD)
                     {
-                        if (frsUsesIRD)
-                        {
-                            Date anchorDate = baseFRS->getAnchorDate();
-                            double spotAtT0 = irdFRS->getSpotAtT0();
-                            std::shared_ptr<ForwardCurveFX> stressForeignFRS =
-                                std::make_shared<ForwardCurveFX>(anchorDate, spotAtT0, baseDRS,
-                                                                 stressForeignDRS);
-                            re->setFRS(stressForeignFRS);
-                        }
-                        else
-                        {
-                            re->setFRS(baseFRS);
-                        }
+                        Date anchorDate = baseFRS->getAnchorDate();
+                        double spotAtT0 = irdFRS->getSpotAtT0();
+                        std::shared_ptr<ForwardCurveFX> stressForeignFRS =
+                            std::make_shared<ForwardCurveFX>(anchorDate, spotAtT0, baseDRS, stressForeignDRS);
+                        re->setFRS(stressForeignFRS);
                     }
-                    if (baseRates->hasDRS())
+                    else
                     {
-                        re->setDRS(baseDRS);
+                        re->setFRS(baseFRS);
                     }
-                    if (baseRates->hasVRS())
-                    {
-                        re->setVRS(baseVRS);
-                    }
-                    if (baseRates->hasFixingRS())
-                    {
-                        re->setFixingRS(baseFixingRS);
-                    }
-                    stressedMarketRates.push_back(make_pair("Foreign " + stressedForeignDRSS[i].first, re));
                 }
+                if (baseRates->hasDRS())
+                {
+                    re->setDRS(baseDRS);
+                }
+                if (baseRates->hasVRS())
+                {
+                    re->setVRS(baseVRS);
+                }
+                if (baseRates->hasFixingRS())
+                {
+                    re->setFixingRS(baseFixingRS);
+                }
+                stressedMarketRates.push_back(make_pair("Foreign " + stressedForeignDRSS[i].first, re));
             }
         }
 
         if (baseRates->hasVRS())
         {
-            std::shared_ptr<IHaveMarketRateStresses> stressableVRS =
-                std::dynamic_pointer_cast<IHaveMarketRateStresses>(baseVRS);
-            if (stressableVRS != 0)
+            vector<pair<string, std::shared_ptr<RateSource>>> stressedVRSS = baseVRS->marketStresses();
+            for (size_t i = 0; i < stressedVRSS.size(); ++i)
             {
-                vector<pair<string, std::shared_ptr<RateSource>>> stressedVRSS =
-                    stressableVRS->getMarketRateStresses();
-                for (size_t i = 0; i < stressedVRSS.size(); ++i)
+                std::shared_ptr<RatesEnvironment> re =
+                    std::make_shared<RatesEnvironment>(baseRates->getAnchorDate());
+                std::shared_ptr<VolatilityRateSource> stressVRS =
+                    std::dynamic_pointer_cast<VolatilityRateSource>(stressedVRSS[i].second);
+                re->setVRS(stressVRS);
+                if (baseRates->hasFRS())
                 {
-                    std::shared_ptr<RatesEnvironment> re =
-                        std::make_shared<RatesEnvironment>(baseRates->getAnchorDate());
-                    std::shared_ptr<VolatilityRateSource> stressVRS =
-                        std::dynamic_pointer_cast<VolatilityRateSource>(stressedVRSS[i].second);
-                    re->setVRS(stressVRS);
-                    if (baseRates->hasFRS())
-                    {
-                        re->setFRS(baseFRS);
-                    }
-                    if (baseRates->hasDRS())
-                    {
-                        re->setDRS(baseDRS);
-                    }
-                    if (baseRates->hasForeignDRS())
-                    {
-                        re->setForeignDRS(baseForeignDRS);
-                    }
-                    if (baseRates->hasFixingRS())
-                    {
-                        re->setFixingRS(baseFixingRS);
-                    }
-                    stressedMarketRates.push_back(make_pair(stressedVRSS[i].first, re));
+                    re->setFRS(baseFRS);
                 }
+                if (baseRates->hasDRS())
+                {
+                    re->setDRS(baseDRS);
+                }
+                if (baseRates->hasForeignDRS())
+                {
+                    re->setForeignDRS(baseForeignDRS);
+                }
+                if (baseRates->hasFixingRS())
+                {
+                    re->setFixingRS(baseFixingRS);
+                }
+                stressedMarketRates.push_back(make_pair(stressedVRSS[i].first, re));
             }
         }
 
         if (baseRates->hasFRS())
         {
-            std::shared_ptr<IHaveMarketRateStresses> stressableFRS =
-                std::dynamic_pointer_cast<IHaveMarketRateStresses>(baseFRS);
-            if (stressableFRS != 0)
+            vector<pair<string, std::shared_ptr<RateSource>>> stressedFRSS = baseFRS->marketStresses();
+            for (size_t i = 0; i < stressedFRSS.size(); ++i)
             {
-                vector<pair<string, std::shared_ptr<RateSource>>> stressedFRSS =
-                    stressableFRS->getMarketRateStresses();
-                for (size_t i = 0; i < stressedFRSS.size(); ++i)
+                std::shared_ptr<RatesEnvironment> re =
+                    std::make_shared<RatesEnvironment>(baseRates->getAnchorDate());
+                std::shared_ptr<ForwardRateSource> stressFRS =
+                    std::dynamic_pointer_cast<ForwardRateSource>(stressedFRSS[i].second);
+                re->setFRS(stressFRS);
+                if (baseRates->hasVRS())
                 {
-                    std::shared_ptr<RatesEnvironment> re =
-                        std::make_shared<RatesEnvironment>(baseRates->getAnchorDate());
-                    std::shared_ptr<ForwardRateSource> stressFRS =
-                        std::dynamic_pointer_cast<ForwardRateSource>(stressedFRSS[i].second);
-                    re->setFRS(stressFRS);
-                    if (baseRates->hasVRS())
-                    {
-                        re->setVRS(baseVRS);
-                    }
-                    if (baseRates->hasDRS())
-                    {
-                        re->setDRS(baseDRS);
-                    }
-                    if (baseRates->hasForeignDRS())
-                    {
-                        re->setForeignDRS(baseForeignDRS);
-                    }
-                    if (baseRates->hasFixingRS())
-                    {
-                        re->setFixingRS(baseFixingRS);
-                    }
-                    stressedMarketRates.push_back(make_pair(stressedFRSS[i].first, re));
+                    re->setVRS(baseVRS);
                 }
+                if (baseRates->hasDRS())
+                {
+                    re->setDRS(baseDRS);
+                }
+                if (baseRates->hasForeignDRS())
+                {
+                    re->setForeignDRS(baseForeignDRS);
+                }
+                if (baseRates->hasFixingRS())
+                {
+                    re->setFixingRS(baseFixingRS);
+                }
+                stressedMarketRates.push_back(make_pair(stressedFRSS[i].first, re));
             }
         }
 

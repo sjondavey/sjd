@@ -10,9 +10,9 @@ using namespace sjd;
 
 std::shared_ptr<EuropeanOption> OptionContractTest::getDefaultEuropeanOption(Date anchorDate)
 {
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date optionMaturity = nullCalendar->advance(anchorDate, 2, Years);
-    Date optionSettlement = nullCalendar->advance(optionMaturity, 2, Days);
+    NullCalendar nullCalendar;
+    Date optionMaturity = nullCalendar.advance(anchorDate, 2, Years);
+    Date optionSettlement = nullCalendar.advance(optionMaturity, 2, Days);
     double strike = 100;
     PutCall type = PutCall::PUT;
     double defPremium = 3.4;
@@ -60,8 +60,8 @@ void OptionContractTest::testMaturityDate()
 {
     Date anchorDate(1, Jan, 2013);
     std::shared_ptr<EuropeanOption> base = getDefaultEuropeanOption(anchorDate);
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date optionMaturity = nullCalendar->advance(anchorDate, 3, Years);
+    NullCalendar nullCalendar;
+    Date optionMaturity = nullCalendar.advance(anchorDate, 3, Years);
     std::shared_ptr<EuropeanOption> contract = std::make_shared<EuropeanOption>(
         optionMaturity, base->getSettlementDate(), base->getStrike(), base->getType(), base->getVolume(),
         base->getPremiumPaymentDate(), base->getPremiumAmount(), base->getBuySell());
@@ -120,13 +120,13 @@ void OptionContractTest::testValue()
     Date anchorDate(1, Jan, 2013);
     GenerateRates gr = GenerateRates();
 
-    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
+    DayCounter dayCounter = gr.defaultDayCounter;
     ;
-    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    Calendar nullCalendar = gr.defaultCalendar;
 
-    Date tPlus2 = nullCalendar->advance(anchorDate, 2, Days);
-    Date optionMaturity = nullCalendar->advance(anchorDate, 2, Years);
-    Date optionSettlement = nullCalendar->advance(optionMaturity, 2, Days);
+    Date tPlus2 = nullCalendar.advance(anchorDate, 2, Days);
+    Date optionMaturity = nullCalendar.advance(anchorDate, 2, Years);
+    Date optionSettlement = nullCalendar.advance(optionMaturity, 2, Days);
 
     vector<Date> manditoryDates;
     manditoryDates.push_back(tPlus2);
@@ -149,7 +149,7 @@ void OptionContractTest::testValue()
     EuropeanOption deferredPremiumContract2(optionMaturity, optionSettlement, strike, type, 2,
                                             optionSettlement, defPremium, BuySell::BUY);
 
-    double yts = dayCounter->yearFraction(anchorDate, optionSettlement);
+    double yts = dayCounter.yearFraction(anchorDate, optionSettlement);
     double fwd = re->getFRS()->getForward(optionSettlement);
     // Maturity is a pillar, so the input volatility is recovered. The premium uses
     // the curve's standard deviation, which is that volatility times sqrt(time).
@@ -176,7 +176,7 @@ void OptionContractTest::testValue()
                 EPSILON_FOR_DOUBLES);
 
     // 3) After settlement
-    Date dayAfterSettlement = nullCalendar->advance(optionSettlement, 1, Days);
+    Date dayAfterSettlement = nullCalendar.advance(optionSettlement, 1, Days);
     manditoryDates.clear();
     re = gr.getRatesEnvironmentForEuropeanOption(dayAfterSettlement, manditoryDates);
     BOOST_CHECK(abs(contract2.getOptionValue(re)) < EPSILON_FOR_DOUBLES);
@@ -185,8 +185,8 @@ void OptionContractTest::testValue()
 
 void OptionContractTest::testGetPayoffAfterMaturity()
 {
-    std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
+    Actual365Fixed dayCounter;
+    NullCalendar nullCalendar;
 
     Date anchorDate(1, Jan, 2013);
 
@@ -215,13 +215,13 @@ void OptionContractTest::testEuropeanOptionWithMoneynessVol()
     std::shared_ptr<RatesEnvironment> re;
     GenerateRates gr = GenerateRates();
 
-    std::shared_ptr<DayCounter> dayCounter = gr.defaultDayCounter;
-    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    DayCounter dayCounter = gr.defaultDayCounter;
+    Calendar nullCalendar = gr.defaultCalendar;
 
     Date anchorDate = gr.defaultAnchorDate;
-    Date tPlus2 = nullCalendar->advance(anchorDate, 2, Days);
-    Date optionMaturity = nullCalendar->advance(anchorDate, 1, Years);
-    Date optionSettlement = nullCalendar->advance(optionMaturity, 2, Days);
+    Date tPlus2 = nullCalendar.advance(anchorDate, 2, Days);
+    Date optionMaturity = nullCalendar.advance(anchorDate, 1, Years);
+    Date optionSettlement = nullCalendar.advance(optionMaturity, 2, Days);
 
     vector<Date> manditoryDates;
     manditoryDates.push_back(tPlus2);
@@ -251,8 +251,8 @@ void OptionContractTest::testEuropeanOptionWithMoneynessVol()
     EuropeanOption deferredPremiumContract(optionMaturity, optionSettlement, strike, type, volume,
                                            optionSettlement, defPremium, BuySell::BUY);
 
-    [[maybe_unused]] double yte = dayCounter->yearFraction(anchorDate, optionMaturity);
-    [[maybe_unused]] double yts = dayCounter->yearFraction(anchorDate, optionSettlement);
+    [[maybe_unused]] double yte = dayCounter.yearFraction(anchorDate, optionMaturity);
+    [[maybe_unused]] double yts = dayCounter.yearFraction(anchorDate, optionSettlement);
     double fwd = fc->getForward(optionSettlement);
     double df = dc->getDiscountFactor(optionSettlement);
     double sd = vs->getStandardDeviation(optionMaturity, strike, fwd);
@@ -269,7 +269,7 @@ void OptionContractTest::testEuropeanOptionWithMoneynessVol()
                 EPSILON_FOR_DOUBLES);
 
     // 3) After settlement
-    Date dayAfterSettlement = nullCalendar->advance(optionSettlement, 1, Days);
+    Date dayAfterSettlement = nullCalendar.advance(optionSettlement, 1, Days);
     re = std::make_shared<RatesEnvironment>(dayAfterSettlement);
     manditoryDates.clear();
     dc = gr.getDiscountCurve(dayCounter, nullCalendar, dayAfterSettlement, 10, naccRFR);

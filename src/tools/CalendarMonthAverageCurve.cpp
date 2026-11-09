@@ -35,8 +35,8 @@ namespace sjd
         type = typeInput;
         observationDates = observationDatesInput;
         observedRates = observedRatesInput;
-        dayCounter = std::make_shared<SimpleDayCounter>();
-        a365DayCounter = std::make_shared<Actual365Fixed>();
+        dayCounter = SimpleDayCounter();
+        a365DayCounter = Actual365Fixed();
         anchorDate = anchorDateInput;
         beginningOfAnchorDateMonth = Date(1, anchorDateInput.month(), anchorDateInput.year());
         allowExtrapolation = allowExtrapolationInput;
@@ -182,8 +182,8 @@ namespace sjd
     {
         Date beginningOfFromMonth = Date(1, fromDate.month(), fromDate.year());
         Date beginningOfToMonth = Date(1, toDate.month(), toDate.year());
-        std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
-        double yf = dayCounter->yearFraction(beginningOfFromMonth, beginningOfToMonth);
+        Actual365Fixed dayCounter;
+        double yf = dayCounter.yearFraction(beginningOfFromMonth, beginningOfToMonth);
         int monthsAsInt = static_cast<int>(std::lround(yf * 12)); // need to keep whole number of months ahead
         return monthsAsInt;
     }
@@ -191,7 +191,7 @@ namespace sjd
     int CalendarMonthAverageCurve::getNumberOfMonthsAheadOfAnchorDate(Date date) const
     {
         Date beginningOfMonth = Date(1, date.month(), date.year());
-        double yf = a365DayCounter->yearFraction(beginningOfAnchorDateMonth, beginningOfMonth);
+        double yf = a365DayCounter.yearFraction(beginningOfAnchorDateMonth, beginningOfMonth);
         int monthsAsInt = static_cast<int>(std::lround(yf * 12)); // need to keep whole number of months ahead
         return monthsAsInt;
     }

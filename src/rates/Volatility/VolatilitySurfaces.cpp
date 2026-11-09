@@ -110,7 +110,7 @@ namespace sjd
             return;
         }
         anchorDate = anchorDateInput;
-        dayCounter = std::make_shared<Actual365Fixed>();
+        dayCounter = Actual365Fixed();
 
         strikeDimension = strikeDimensionInput;
         observationDates = observationDatesInput;
@@ -135,7 +135,7 @@ namespace sjd
         time.clear();
         for (size_t i = 0; i < observationDates.size(); ++i)
         {
-            double yf = dayCounter->yearFraction(anchorDate, observationDates[i]);
+            double yf = dayCounter.yearFraction(anchorDate, observationDates[i]);
             time.push_back(yf);
         }
 
@@ -197,7 +197,7 @@ namespace sjd
             size_t offset = 0;
             for (size_t i = 0; i < observationDates.size(); ++i)
             {
-                double yearFraction = dayCounter->yearFraction(toDate, observationDates[i]);
+                double yearFraction = dayCounter.yearFraction(toDate, observationDates[i]);
                 if (yearFraction >= 0)
                 {
                     newDates.push_back(observationDates[i]);

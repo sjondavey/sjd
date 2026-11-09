@@ -10,8 +10,8 @@ std::shared_ptr<FixedCashflow> GenerateContracts::getDefaultFixedCashflow(Date a
                                                                           double volume,
                                                                           BuySell bs)
 {
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date cashFlowDate = nullCalendar->advance(anchorDate, yearsToSettlement, Years);
+    NullCalendar nullCalendar;
+    Date cashFlowDate = nullCalendar.advance(anchorDate, yearsToSettlement, Years);
     Date premiumDate = cashFlowDate;
 
     return std::make_shared<FixedCashflow>(cashFlowDate, volume, bs);
@@ -20,9 +20,9 @@ std::shared_ptr<FixedCashflow> GenerateContracts::getDefaultFixedCashflow(Date a
 std::shared_ptr<EuropeanForward> GenerateContracts::getDefaultEuropeanForward(
     Date anchorDate, int yearsToSettlement, double strike, double volume, BuySell bs)
 {
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date settlement = nullCalendar->advance(anchorDate, yearsToSettlement, Years);
-    Date rateSetDate = nullCalendar->advance(settlement, -2, Days);
+    NullCalendar nullCalendar;
+    Date settlement = nullCalendar.advance(anchorDate, yearsToSettlement, Years);
+    Date rateSetDate = nullCalendar.advance(settlement, -2, Days);
 
     return std::make_shared<EuropeanForward>(rateSetDate, settlement, abs(strike), abs(volume), bs);
 }
@@ -34,15 +34,15 @@ std::shared_ptr<AsianForward> GenerateContracts::getDefaultAsianForward(Date anc
                                                                         double volume,
                                                                         BuySell bs)
 {
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date settlement = nullCalendar->advance(anchorDate, yearsToSettlement, Years);
-    Date d = nullCalendar->advance(settlement, -5, Days);
+    NullCalendar nullCalendar;
+    Date settlement = nullCalendar.advance(anchorDate, yearsToSettlement, Years);
+    Date d = nullCalendar.advance(settlement, -5, Days);
     set<Date> averagingDates;
     unsigned int total = (unsigned int)abs(numberOfAveragingDates);
     for (size_t i = 0; i < total; ++i)
     {
         averagingDates.insert(d);
-        d = nullCalendar->advance(d, -1, Days);
+        d = nullCalendar.advance(d, -1, Days);
     }
     vector<Date> averagingDatesAsVector = vector<Date>(averagingDates.begin(), averagingDates.end());
 
@@ -58,9 +58,9 @@ std::shared_ptr<EuropeanOption> GenerateContracts::getDefaultEuropeanOption(Date
                                                                             double premium,
                                                                             bool dp)
 {
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date settlement = nullCalendar->advance(anchorDate, yearsToSettlement, Years);
-    Date rateSetDate = nullCalendar->advance(settlement, -2, Days);
+    NullCalendar nullCalendar;
+    Date settlement = nullCalendar.advance(anchorDate, yearsToSettlement, Years);
+    Date rateSetDate = nullCalendar.advance(settlement, -2, Days);
 
     Date dpDate;
     if (dp == true)
@@ -81,15 +81,15 @@ std::shared_ptr<AsianOption> GenerateContracts::getDefaultAsianOption(Date ancho
                                                                       double premium,
                                                                       bool dp)
 {
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date settlement = nullCalendar->advance(anchorDate, yearsToSettlement, Years);
-    Date d = nullCalendar->advance(settlement, -5, Days);
+    NullCalendar nullCalendar;
+    Date settlement = nullCalendar.advance(anchorDate, yearsToSettlement, Years);
+    Date d = nullCalendar.advance(settlement, -5, Days);
     set<Date> averagingDates;
     unsigned int total = (unsigned int)abs(numberOfAveragingDates);
     for (size_t i = 0; i < total; ++i)
     {
         averagingDates.insert(d);
-        d = nullCalendar->advance(d, -1, Days);
+        d = nullCalendar.advance(d, -1, Days);
     }
     vector<Date> averagingDatesAsVector = vector<Date>(averagingDates.begin(), averagingDates.end());
 
@@ -111,11 +111,11 @@ std::shared_ptr<FixedCashflow> GenerateContracts::getDefaultFixedCashflowWithPre
                                                                                      double volume,
                                                                                      BuySell bs)
 {
-    std::shared_ptr<Calendar> nullCalendar = std::make_shared<NullCalendar>();
-    Date cashFlowDate = nullCalendar->advance(anchorDate, yearsToSettlement,
-                                              Years); // I want this to have the same settlement as the other
-                                                      // ontracts if I intput the same year fraction
-    Date maturity = nullCalendar->advance(cashFlowDate, -2, Days);
+    NullCalendar nullCalendar;
+    Date cashFlowDate = nullCalendar.advance(anchorDate, yearsToSettlement,
+                                             Years); // I want this to have the same settlement as the other
+                                                     // ontracts if I intput the same year fraction
+    Date maturity = nullCalendar.advance(cashFlowDate, -2, Days);
 
     std::shared_ptr<FixedCashflow> fcf;
     Date dpDate;

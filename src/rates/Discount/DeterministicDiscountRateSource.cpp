@@ -30,11 +30,9 @@ namespace sjd
         return;
     }
 
-    vector<pair<string, std::shared_ptr<RateSource>>> DeterministicDiscountRateSource::getMarketRateStresses()
+    vector<pair<string, std::shared_ptr<RateSource>>> DeterministicDiscountRateSource::marketStresses()
     {
-        std::shared_ptr<QuantLib::DayCounter> dayCounter = std::make_shared<Actual360>();
-        std::shared_ptr<InterestRateConvention> irc =
-            std::make_shared<InterestRateConvention>(dayCounter, Compounded, Annual);
+        InterestRateConvention irc(Actual360(), Compounded, Annual);
         vector<pair<string, std::shared_ptr<RateSource>>> marketStress;
         marketStress.push_back(make_pair("DF + 1% NACA a/360", parallelBump(0.01, irc)));
         return marketStress;

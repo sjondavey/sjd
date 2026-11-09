@@ -261,12 +261,12 @@ void StructureTest::testCashFlowN()
     AssetClass factors = getDefaultRegCapUnderlyingFactors();
 
     // std::shared_ptr<DayCounter> dayCounter = std::make_shared<Actual365Fixed>();
-    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
+    Calendar nullCalendar = gr.defaultCalendar;
     // std::shared_ptr<DiscountCurve> dc = gr.getDiscountCurve(dayCounter, nullCalendar, anchorDate, 5, 0.05);
     double ngr = .36;
     set<Date> forwardDates;
-    forwardDates.insert(nullCalendar->advance(anchorDate, 1, Years));
-    forwardDates.insert(nullCalendar->advance(anchorDate, 2, Years));
+    forwardDates.insert(nullCalendar.advance(anchorDate, 1, Years));
+    forwardDates.insert(nullCalendar.advance(anchorDate, 2, Years));
     vector<double> forwardSpots1 = vector<double>(2, 80.0);
     vector<double> forwardSpots2 = vector<double>(2, 100.0);
     vector<double> forwardNgrs = vector<double>(2, ngr);
@@ -338,8 +338,8 @@ void StructureTest::testEuropeanForward()
         gr.getRatesEnvironmentForEuropeanForward(anchorDate, vector<Date>(0));
 
     int yearsToSettlement = 2;
-    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
-    Date sd = nullCalendar->advance(anchorDate, 2, Years);
+    Calendar nullCalendar = gr.defaultCalendar;
+    Date sd = nullCalendar.advance(anchorDate, 2, Years);
     std::shared_ptr<FixedCashflow> cf =
         GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BuySell::BUY);
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
@@ -442,8 +442,8 @@ void StructureTest::testAsianforward()
     std::shared_ptr<RatesEnvironment> re = gr.getRatesEnvironmentForAsianForward(anchorDate, vector<Date>(0));
 
     int yearsToSettlement = 2;
-    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
-    Date sd = nullCalendar->advance(anchorDate, yearsToSettlement, Years);
+    Calendar nullCalendar = gr.defaultCalendar;
+    Date sd = nullCalendar.advance(anchorDate, yearsToSettlement, Years);
     std::shared_ptr<FixedCashflow> cf =
         GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BuySell::BUY);
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
@@ -454,7 +454,7 @@ void StructureTest::testAsianforward()
     double spot = re->getFRS()->getForward(anchorDate);
     double ngr = .23;
     set<Date> forwardDates;
-    forwardDates.insert(nullCalendar->advance(anchorDate, 1, Years));
+    forwardDates.insert(nullCalendar.advance(anchorDate, 1, Years));
     forwardDates.insert(sd);
     vector<double> forwardSpots1 = vector<double>(2, 80.0);
     vector<double> forwardSpots2 = vector<double>(2, 100.0);
@@ -555,8 +555,8 @@ void StructureTest::testEuropeanOption()
         gr.getRatesEnvironmentForEuropeanOption(anchorDate, vector<Date>(0));
 
     int yearsToSettlement = 2;
-    std::shared_ptr<Calendar> nullCalendar = gr.defaultCalendar;
-    Date sd = nullCalendar->advance(anchorDate, yearsToSettlement, Years);
+    Calendar nullCalendar = gr.defaultCalendar;
+    Date sd = nullCalendar.advance(anchorDate, yearsToSettlement, Years);
     std::shared_ptr<FixedCashflow> cf =
         GenerateContracts::getDefaultFixedCashflowWithPremium(anchorDate, yearsToSettlement, 5, BuySell::BUY);
     vector<std::shared_ptr<SingleInstrumentContract>> instruments;
@@ -570,7 +570,7 @@ void StructureTest::testEuropeanOption()
     double spot = re->getFRS()->getForward(anchorDate);
     double ngr = .23;
     set<Date> forwardDates;
-    forwardDates.insert(nullCalendar->advance(anchorDate, 1, Years));
+    forwardDates.insert(nullCalendar.advance(anchorDate, 1, Years));
     forwardDates.insert(sd);
     vector<double> forwardSpots1 = vector<double>(2, 80.0);
     vector<double> forwardSpots2 = vector<double>(2, 100.0);

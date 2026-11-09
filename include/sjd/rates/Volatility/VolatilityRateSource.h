@@ -19,7 +19,7 @@ namespace sjd
 
         void runChecks() override;
 
-        std::shared_ptr<QuantLib::DayCounter> getDayCounter() const;
+        QuantLib::DayCounter getDayCounter() const;
 
         using RateSource::isInRange;
         virtual bool isInRange(QuantLib::Date date, double strike, double forward) const = 0;
@@ -48,7 +48,7 @@ namespace sjd
                                  std::vector<double>& sds) const;
 
     protected:
-        std::shared_ptr<QuantLib::DayCounter> dayCounter;
+        QuantLib::DayCounter dayCounter;
     };
 
 }

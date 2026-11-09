@@ -54,7 +54,7 @@ namespace sjd
 
     bool VolatilitySurfaceDelta::isInRange(QuantLib::Date date) const
     {
-        return timeInRange(dayCounter->yearFraction(anchorDate, date));
+        return timeInRange(dayCounter.yearFraction(anchorDate, date));
     }
 
     double VolatilitySurfaceDelta::getVolatility(Date toDate) const
@@ -65,7 +65,7 @@ namespace sjd
     double VolatilitySurfaceDelta::getVolatility(Date toDate, double strike, double forward) const
     {
         double delta = calculateDeltaFromStrike(toDate, strike, forward);
-        double yf = dayCounter->yearFraction(anchorDate, toDate);
+        double yf = dayCounter.yearFraction(anchorDate, toDate);
         return surfaceVolatility(yf, delta);
     }
 
@@ -77,13 +77,13 @@ namespace sjd
     double VolatilitySurfaceDelta::getStandardDeviation(Date toDate, double strike, double forward) const
     {
         double vol = getVolatility(toDate, strike, forward);
-        double yf = dayCounter->yearFraction(anchorDate, toDate);
+        double yf = dayCounter.yearFraction(anchorDate, toDate);
         return vol * sqrt(yf);
     }
 
     double VolatilitySurfaceDelta::calculateDeltaFromStrike(Date date, double strike, double forward) const
     {
-        double yf = dayCounter->yearFraction(anchorDate, date);
+        double yf = dayCounter.yearFraction(anchorDate, date);
         if (yf <= 0.0)
         {
             // With no time left the put delta is a step at the strike.
@@ -131,7 +131,7 @@ namespace sjd
     {
         QuantLib::Real accuracy = 1.0e-12;
         QuantLib::Bisection solver;
-        double yf = dayCounter->yearFraction(anchorDate, date);
+        double yf = dayCounter.yearFraction(anchorDate, date);
         double vol = surfaceVolatility(yf, delta);
         double sd = vol * sqrt(yf);
         double strike;
