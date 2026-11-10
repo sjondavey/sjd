@@ -7,8 +7,10 @@ Subpackages and modules, imported on first use:
 
 - ``sjd.markets``: market catalogue, pillar store and rates environments.
 - ``sjd.stats``: exposure, CVA, DVA, funding, CEM capital and structure costs.
-- ``sjd.strategy``: parametrised books (for example a collar) that build contracts.
+- ``sjd.strategy``: parametrised books (collar, strip, seagull, participating forward).
 - ``sjd.optimise``: revalue strategies on fixed spot paths and search parameters.
+- ``sjd.book``: load a TOML book into contracts. ``python -m sjd run`` prices one.
+- ``sjd.reports``: pandas tables for prices, exposure, costs and capital.
 - ``sjd.examples``: the sample market and book used by the notebooks and tests.
 
 ``SjdError`` is the base exception. ``ConfigurationError`` and ``ValidationError``

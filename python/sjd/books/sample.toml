@@ -1,0 +1,23 @@
+[book]
+name = "sample"
+
+[[trades]]
+kind = "collar"
+schedule = "collar"
+put_moneyness = 0.97
+call_moneyness = 1.03
+volume = 1000000
+
+[[trades]]
+kind = "european_forward"
+schedule = "forward"
+strike_moneyness = 0.98
+volume = 1000000
+buy_sell = "BUY"
+
+[[trades]]
+kind = "asian_forward"
+schedule = "asian"
+strike_moneyness = 0.99
+volume = 500000
+buy_sell = "BUY"

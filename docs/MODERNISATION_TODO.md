@@ -923,6 +923,18 @@ skipped because pandas is not installed, and `sjdTest`.
   multi-parameter optimiser (`scipy.optimize` over strategy parameters with
   common random numbers).
 
+**Status.** Done. The design is `docs/python-front-end.md`. A TOML book loads
+into contracts, including the shipped `python/sjd/books/sample.toml`.
+`sjd.reports` writes prices, exposure, costs, and capital as pandas frames,
+CSV, and Excel when openpyxl is installed. `python -m sjd run` prices the
+sample market and writes that folder. Strips, seagulls, and participating
+forwards sit beside the collar, and `minimise_strategy` searches their
+parameters with scipy on one set of paths. pandas, openpyxl, and scipy are
+the `front` extra. Notebooks run once, on the linux-release job, with
+nbmake. The collar check calls Black-76 directly, and the validation
+notebook expects the interpolator's dimension code. Debug `ctest` passed:
+177 pytest tests and `sjdTest`.
+
 ---
 
 ### Step 21. Documentation
@@ -939,6 +951,15 @@ skipped because pandas is not installed, and `sjdTest`.
   issue codes (from Step 8).
 - A methodology page for CEM capital as implemented (netting-set decomposition,
   net-to-gross ratio, margin treatment), which Step 22 will extend with SA-CCR.
+
+**Status.** Done. The design is `docs/documentation.md`. MkDocs builds the
+architecture page, the CEM methodology, error handling, the issue-code
+table, and the Python API from the docstrings. The binding index is
+generated from `_core.pyi`. Doxygen writes the C++ reference from
+`include/sjd`. `generate_issue_codes.py --check` keeps the table aligned
+with the header. The linux-release job builds both. Debug `ctest` passed:
+178 pytest tests and `sjdTest`. `mkdocs build --strict` and Doxygen both
+succeeded locally.
 
 ---
 

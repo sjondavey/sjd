@@ -29,7 +29,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - run: python -m pip install ruff
       - name: ruff check
-        run: ruff check python
+        run: ruff check python docs
       - name: clang-format
         run: |
           python -m pip install clang-format==18.1.8
@@ -56,7 +56,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Python tools
-        run: python -m pip install ninja pybind11 numpy pytest pybind11-stubgen mypy
+        run: python -m pip install ninja pybind11 numpy pytest pybind11-stubgen mypy pandas openpyxl scipy nbmake matplotlib ipykernel
 
       - name: MSVC environment
         if: runner.os == 'Windows'
@@ -103,12 +103,30 @@ jobs:
           UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
         run: ctest --preset ${{ matrix.preset }}
 
+      # One job executes the teaching notebooks against the staged package.
+      - name: Notebooks
+        if: matrix.preset == 'linux-release'
+        env:
+          PYTHONPATH: ${{ github.workspace }}/build/linux-release/python
+          MPLBACKEND: Agg
+        run: python -m pytest --nbmake python/notebooks -q --nbmake-timeout=180
+
       # The staged package has the generated _core.pyi. The source tree does not.
       - name: mypy
         if: matrix.preset != 'linux-asan'
         env:
           MYPYPATH: ${{ github.workspace }}/build/${{ matrix.preset }}/python
         run: python -m mypy --package sjd
+
+      # One job builds the MkDocs site and the Doxygen reference.
+      - name: Documentation
+        if: matrix.preset == 'linux-release'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen
+          python -m pip install mkdocs 'mkdocstrings[python]' 'pymdown-extensions>=10.13,<10.15'
+          SJD_PYTHON_STAGE=${{ github.workspace }}/build/linux-release/python python -m mkdocs build --strict
+          doxygen docs/Doxyfile
 
       - name: Linux coverage report
         if: matrix.preset == 'linux-debug'

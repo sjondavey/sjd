@@ -33,6 +33,18 @@ ctest --preset debug
 
 Release uses the `release` preset. Set `-DSJD_BUILD_PYTHON=OFF` to skip the bindings.
 
+## Documentation
+
+The guide is the MkDocs site. The C++ reference is Doxygen. Both read a preset build, because the Python pages import the staged package.
+
+```
+SJD_PYTHON_STAGE=build/debug/python mkdocs build
+doxygen docs/Doxyfile
+```
+
+The site is written to `site/`. The C++ HTML is `build/docs/doxygen/html`. `mkdocs` and `mkdocstrings` are dev dependencies. Doxygen is not.
+
+
 ## Layout
 
 | Path | What it is |

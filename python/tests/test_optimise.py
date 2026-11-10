@@ -126,5 +126,56 @@ class CollarSearchTest(unittest.TestCase):
         self.assertEqual(result["score"], min(scores))
 
 
+class ParameterSearchTest(unittest.TestCase):
+    def test_scipy_search_keeps_the_supplied_spots(self):
+        try:
+            import scipy.optimize  # noqa: F401
+        except ImportError:
+            self.skipTest("scipy is not installed")
+        market = examples.sample_market(stochastic=True)
+        environment = market["environment"]
+        dates = market["simulation_dates"]
+        reference = strategy.sample_collar(market, market["forward"]).portfolio()
+        spots = optimise.draw_spot_paths(
+            reference, environment, dates, paths=8, seed=11, antithetic=False
+        )
+        discount = [market["discount"].get_discount_factor(day) for day in dates]
+        probability = stats.flat_default_probability(market["anchor"], dates, 0.02)
+        loss = [0.6] * len(dates)
+        forward = market["forward"].get_forward(market["collar_settlement"])
+
+        def build(parameters):
+            return strategy.CollarStrategy.from_moneyness(
+                maturity=market["collar_maturity"],
+                settlement=market["collar_settlement"],
+                forward=forward,
+                put_moneyness=float(parameters[0]),
+                call_moneyness=1.05,
+                volume=1_000.0,
+            )
+
+        found = optimise.minimise_strategy(
+            build,
+            [0.95],
+            environment,
+            dates,
+            spots,
+            discount,
+            probability,
+            loss,
+            bounds=[(0.80, 0.99)],
+            objective="total",
+            options={"maxiter": 4},
+        )
+        self.assertTrue(np.isfinite(found["score"]))
+        self.assertGreaterEqual(found["parameters"][0], 0.80)
+        self.assertLessEqual(found["parameters"][0], 0.99)
+        marked = optimise.value_on_spots(
+            found["strategy"].portfolio(), environment, dates, spots
+        )
+        self.assertEqual(marked.paths, spots.shape[0])
+        np.testing.assert_allclose(marked.spot, spots)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -50,6 +50,70 @@ class CollarStrategyTest(unittest.TestCase):
                 volume=1.0,
             )
 
+    def test_strip_seagull_and_participating_forward_price(self):
+        environment = self.environment
+        forward = self.forward
+        settlement = self.market["forward_settlement"]
+        strip = strategy.StripStrategy.from_moneyness(
+            [self.market["collar_settlement"], settlement], forward, 1.0, 10.0
+        )
+        self.assertEqual(len(strip.contracts()), 2)
+        self.assertEqual(strip.premium(environment), 0.0)
+        strip_book = strip.portfolio()
+        report = strip_book.validate_report(environment)
+        self.assertTrue(report.ok, [issue.message for issue in report.issues])
+        self.assertAlmostEqual(
+            strip_book.get_value(environment),
+            sum(contract.get_value(environment) for contract in strip.contracts()),
+        )
+
+        atm = forward.get_forward(self.market["collar_settlement"])
+        seagull = strategy.SeagullStrategy.from_moneyness(
+            self.market["collar_maturity"],
+            self.market["collar_settlement"],
+            atm,
+            0.90,
+            0.97,
+            1.03,
+            1_000_000.0,
+        )
+        collar = strategy.sample_collar(self.market, forward)
+        self.assertEqual(len(seagull.contracts()), 3)
+        self.assertAlmostEqual(
+            seagull.premium(environment),
+            sum(option.get_option_value(environment) for option in seagull.contracts()),
+        )
+        # get_option_value ignores buy/sell. The sold floor put reduces the book.
+        self.assertLess(
+            seagull.portfolio().get_value(environment),
+            collar.portfolio().get_value(environment),
+        )
+        self.assertTrue(seagull.portfolio().validate_report(environment).ok)
+
+        participating = strategy.ParticipatingForwardStrategy.from_moneyness(
+            self.market["collar_maturity"],
+            self.market["collar_settlement"],
+            atm,
+            0.97,
+            1.03,
+            1_000.0,
+            0.5,
+        )
+        self.assertAlmostEqual(participating.call_volume(), 500.0)
+        self.assertEqual(participating.contracts()[1].volume, 500.0)
+        self.assertTrue(participating.portfolio().validate_report(environment).ok)
+
+        with self.assertRaises(ValueError):
+            strategy.SeagullStrategy.from_moneyness(
+                self.market["collar_maturity"],
+                self.market["collar_settlement"],
+                atm,
+                0.97,
+                0.90,
+                1.03,
+                1.0,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

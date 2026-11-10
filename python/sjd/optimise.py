@@ -230,3 +230,100 @@ def minimise_collar_put_moneyness(
         "score": best["score"],
         "trials": trials,
     }
+
+
+_OBJECTIVES = {"total", "cva", "dva", "funding", "capital_cost", "capital"}
+
+
+def minimise_strategy(
+    build,
+    x0,
+    rates_environment,
+    simulation_dates,
+    spots,
+    discount_factors,
+    default_probability,
+    loss_given_default,
+    *,
+    bounds=None,
+    objective: str = "total",
+    premium_weight: float = 0.0,
+    factors=None,
+    credit=None,
+    capital_cost_rate=0.0,
+    funding_spread_discount_factors=None,
+    margin=None,
+    use_b2cem: bool = False,
+    method: str = "L-BFGS-B",
+    options=None,
+) -> dict:
+    """Search strategy parameters with ``scipy.optimize`` on fixed spot paths.
+
+    ``build(parameters)`` returns a strategy. Every trial is marked to
+    ``spots``, so the Monte Carlo noise is common across the search. The score
+    is ``structure_costs[objective]`` plus ``premium_weight * premium``.
+    ``method`` defaults to ``L-BFGS-B``, which honours ``bounds``.
+    """
+    try:
+        from scipy.optimize import minimize
+    except ImportError as error:
+        raise ImportError(
+            "scipy is required for minimise_strategy; install the sjd front extra"
+        ) from error
+    if objective not in _OBJECTIVES:
+        raise ValueError(f"unknown objective {objective!r}")
+
+    def score_of(parameters):
+        strategy = build(np.asarray(parameters, dtype=float))
+        if use_b2cem:
+            if factors is None or credit is None:
+                raise ValueError("use_b2cem needs factors and credit")
+            portfolio = strategy.portfolio_b2cem(factors, credit, True, margin)
+            costs = evaluate_strategy_cost(
+                portfolio,
+                rates_environment,
+                simulation_dates,
+                spots,
+                discount_factors,
+                default_probability,
+                loss_given_default,
+                by_structure=True,
+                netting_sets=portfolio.netting_sets(),
+                factors=factors,
+                credit=credit,
+                capital_cost_rate=capital_cost_rate,
+                funding_spread_discount_factors=funding_spread_discount_factors,
+            )
+        else:
+            portfolio = strategy.portfolio(margin)
+            costs = evaluate_strategy_cost(
+                portfolio,
+                rates_environment,
+                simulation_dates,
+                spots,
+                discount_factors,
+                default_probability,
+                loss_given_default,
+                funding_spread_discount_factors=funding_spread_discount_factors,
+            )
+        premium = strategy.premium(rates_environment)
+        score = float(costs[objective]) + float(premium_weight) * float(premium)
+        logger.info("optimiser parameters=%s score=%s", np.asarray(parameters), score)
+        return score, strategy, costs, premium
+
+    searched = minimize(
+        lambda parameters: score_of(parameters)[0],
+        np.asarray(x0, dtype=float),
+        method=method,
+        bounds=bounds,
+        options=options,
+    )
+    score, strategy, costs, premium = score_of(searched.x)
+    return {
+        "strategy": strategy,
+        "parameters": np.asarray(searched.x, dtype=float),
+        "costs": costs,
+        "premium": premium,
+        "score": score,
+        "result": searched,
+    }
