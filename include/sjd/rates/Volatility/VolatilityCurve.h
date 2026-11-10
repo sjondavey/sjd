@@ -52,6 +52,7 @@ namespace sjd
             QuantLib::Date toDate, double strike, double forward, double& vol, double& sd) const;
 
         std::vector<QuantLib::Date> getObservationDates() const;
+        const std::vector<double>& getInputVolatilities() const { return inputVolatilities; }
         ArrayInterpolatorType getType();
 
         virtual std::shared_ptr<VolatilityRateSource> parallelBump(double spread);

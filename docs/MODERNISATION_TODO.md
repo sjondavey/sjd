@@ -889,6 +889,19 @@ virtualenv imported the installed wheel and the editable install.
   can be sent to `multiprocessing` workers and saved.
 - `__repr__` on every bound class.
 
+**Status.** Done. The design is `docs/python-bindings.md`. `Cashflow` is
+`FixedCashflow`. FX books use `set_foreign_drs` with `ForwardCurveFX`,
+`ForwardCurveDeterministicFX`, and `ForwardCurveStochasticFX`.
+`ContractStressor.stressed_values()` is a dict. Both insurance types,
+`VolatilitySurfaceMoneyness`, `InterestRateConvention` (Actual/365),
+`DiscountCurve.parallel_bump`, and `AverageRateCall` / `AverageRatePut` are
+bound. `set_margin_parameters` stores both initial margins and still prices
+the call from variation margin. `CapitalResult` already exposed its
+breakdown; it now has a text form. Contracts, curves, forwards, portfolios,
+and rate environments pickle from the inputs they were built with, and every
+bound class has `__repr__`. Debug `ctest` passed: 169 pytest tests, one
+skipped because pandas is not installed, and `sjdTest`.
+
 ---
 
 ### Step 20. Python front end in place of Excel

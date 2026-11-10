@@ -6,6 +6,8 @@
 
 namespace sjd
 {
+    class ForwardCurve;
+
     /**
      * A forward or futures curve: an interpolated curve, a calendar-month average,
      * or a spot plus two discount curves (FX).
@@ -19,6 +21,9 @@ namespace sjd
     {
     public:
         virtual ~ForwardRateSource() {};
+
+        // The quotes this curve was built from. Null when a subclass has none.
+        virtual const ForwardCurve* quoteState() const { return nullptr; }
 
         virtual double getForward(QuantLib::Date toDate) const = 0;
         virtual std::vector<double> getForward(std::vector<QuantLib::Date> toDate) const;

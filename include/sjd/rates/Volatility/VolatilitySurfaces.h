@@ -47,6 +47,21 @@ namespace sjd
                        bool extrapolate);
 
         virtual SurfaceInterpolatorType getInterpolatorType();
+        const std::vector<double>& strikeGrid() const { return strikeDimension; }
+        std::vector<std::vector<double>> volatilityGrid() const
+        {
+            const QuantLib::Size rows = volatility.rows();
+            const QuantLib::Size columns = volatility.columns();
+            std::vector<std::vector<double>> grid(static_cast<std::size_t>(rows));
+            for (QuantLib::Size row = 0; row < rows; ++row)
+            {
+                std::vector<double>& line = grid[static_cast<std::size_t>(row)];
+                line.resize(static_cast<std::size_t>(columns));
+                for (QuantLib::Size column = 0; column < columns; ++column)
+                    line[static_cast<std::size_t>(column)] = volatility(row, column);
+            }
+            return grid;
+        }
         virtual void setInterpolatorType(SurfaceInterpolatorType interpolatorType);
 
         virtual void getRolledVariables(QuantLib::Date rolltoDate,

@@ -39,6 +39,8 @@ namespace sjd
 
         void runChecks() override;
 
+        const ForwardCurve* quoteState() const override { return &quotes; }
+
         virtual double getForward(QuantLib::Date toDate) const;
         using ForwardRateSource::getForward;
 

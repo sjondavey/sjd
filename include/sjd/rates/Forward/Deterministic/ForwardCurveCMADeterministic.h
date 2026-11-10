@@ -28,6 +28,8 @@ namespace sjd
         virtual bool isInRange(QuantLib::Date date) const;
         virtual bool extendsTo(QuantLib::Date date) const;
 
+        const ForwardCurve* quoteState() const override { return &quotes; }
+
         std::vector<QuantLib::Date> getObservationDates();
         virtual double getForward(QuantLib::Date toDate) const;
         double getForward(QuantLib::Month month, QuantLib::Year year) const;

@@ -40,6 +40,17 @@ namespace sjd
         void setAnchorDate(QuantLib::Date anchorDate);
         QuantLib::Date getAnchorDate() const;
 
+        bool usesMyThreshold() const { return useMyThreshold; }
+        double myThresholdAmount() const { return myThreshold; }
+        bool requiresInitialMargin() const { return iRequireInitialMargin; }
+        double initialMargin() const { return myRequiredInitialMargin; }
+        bool usesCounterpartyThreshold() const { return useCptyThreshold; }
+        double counterpartyThresholdAmount() const { return cptyThreshold; }
+        bool counterpartyRequiresInitialMargin() const { return cptyRequiresInitialMargin; }
+        double counterpartyInitialMargin() const { return cptyRequiredInitialMargin; }
+        double minimumTransferAmount() const { return mta; }
+        double roundingAmount() const { return rounding; }
+
         virtual void setMarginBalance(double balanceInput);
         virtual double getMarginBalance() const;
         virtual void updateBalanceForGivenMtM(double mtm);

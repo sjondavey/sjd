@@ -35,6 +35,8 @@ namespace sjd
                            ArrayInterpolatorType type = ArrayInterpolatorType::LINEAR,
                            bool allowExtrapolation = false);
 
+        const ForwardCurve* quoteState() const override { return &quotes; }
+
         virtual double getForward(QuantLib::Date toDate) const;
         using ForwardRateSource::getForward;
 

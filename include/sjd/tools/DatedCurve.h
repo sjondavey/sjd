@@ -37,9 +37,9 @@ namespace sjd
         QuantLib::Date getAnchorDate() const;
         QuantLib::Date getFinalDate();
         ArrayInterpolatorType getType();
-        bool getAllowsExtrapolation();
+        bool getAllowsExtrapolation() const;
 
-        std::vector<double> getRates();
+        std::vector<double> getRates() const;
         void setRates(std::vector<double> updatedRates);
 
         bool containsRateOnAnchorDate();

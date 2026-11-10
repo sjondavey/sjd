@@ -67,6 +67,11 @@ namespace sjd
         return datedCurve->getObservationDates();
     }
 
+    vector<double> DiscountCurve::getDiscountFactors() const
+    {
+        return datedCurve->getRates();
+    }
+
     ArrayInterpolatorType DiscountCurve::getType()
     {
         return type;

@@ -127,12 +127,12 @@ namespace sjd
         return observationDates;
     }
 
-    vector<double> DatedCurve::getRates()
+    vector<double> DatedCurve::getRates() const
     {
         return observedRates;
     }
 
-    bool DatedCurve::getAllowsExtrapolation()
+    bool DatedCurve::getAllowsExtrapolation() const
     {
         return allowExtrapolation;
     }

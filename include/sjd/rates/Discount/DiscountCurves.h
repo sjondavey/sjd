@@ -34,6 +34,7 @@ namespace sjd
         using DiscountRateSource::getDiscountFactor;
 
         std::vector<QuantLib::Date> getObservationDates() const;
+        std::vector<double> getDiscountFactors() const;
         ArrayInterpolatorType getType();
 
         std::vector<std::pair<std::string, std::shared_ptr<RateSource>>> marketStresses() override;

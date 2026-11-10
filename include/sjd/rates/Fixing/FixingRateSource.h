@@ -33,6 +33,9 @@ namespace sjd
         // toDates must be strictly increasing
         virtual std::vector<double> getRateSetOn(std::vector<QuantLib::Date> toDates) const;
 
+        const std::vector<QuantLib::Date>& getFixingDates() const { return fixingDates; }
+        const std::vector<double>& getFixingRates() const { return fixingRates; }
+
     protected:
         std::string validationRoot() const override;
         QuantLib::Date firstDate;
