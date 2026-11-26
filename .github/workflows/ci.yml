@@ -126,6 +126,8 @@ jobs:
           sudo apt-get install -y doxygen
           python -m pip install mkdocs 'mkdocstrings[python]' 'pymdown-extensions>=10.13,<10.15'
           SJD_PYTHON_STAGE=${{ github.workspace }}/build/linux-release/python python -m mkdocs build --strict
+          # Current Doxygen does not create the parent of OUTPUT_DIRECTORY.
+          mkdir -p build/docs/doxygen
           doxygen docs/Doxyfile
 
       - name: Linux coverage report
