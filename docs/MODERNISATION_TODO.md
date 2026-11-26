@@ -2,7 +2,10 @@
 
 This is a to-do list for modernising the `sjd` C++ engine and finishing the move
 from Excel to Python. Each step says what to do, why, which files it touches,
-and how to tell when it is done. Nothing here has been executed yet.
+and how to tell when it is done. Steps 0 to 21 are done; each has a status
+paragraph. The work done after Step 21 is recorded in
+[Changes after Step 21](#changes-after-step-21). Phase 6 (Steps 22 to 24) is
+open.
 
 The early steps are detailed because they are mechanical and low-risk, and they
 build the safety net the later steps rely on. The later steps are deliberately
@@ -616,7 +619,9 @@ queued while the GIL is released, then flushed when `simulate` or
 `value_spot_paths` returns. `TRACE` and `DEBUG` compile out of Release.
 `pytest` asserts only `INFO` and `WARNING`. A debug 10,000-path run was
 1.20 / 1.13 / 1.11 s before logging and 1.16 / 1.13 / 1.17 s after. Release
-was not timed.
+was not timed. Since Step 21, `set_log_level(level, dedupe_warnings=True)`
+passes each distinct `sjd._core` warning once, and `set_log_level("OFF")`
+silences the library.
 
 ---
 
@@ -800,7 +805,9 @@ builder. The concrete forward classes stay, and so do
 Every `RateSource` has `marketStresses()`; `IHaveMarketRateStresses` is gone.
 Discount bumps still convert through an `InterestRateConvention`. Debug
 `ctest` passed and pytest reported 156 passed. Golden paths were not
-regenerated.
+regenerated. Since Step 21, `frs()`, `drs()`, `vrs()` and `fixing_rs()` read
+the slots back from Python and return `None` when a slot is empty.
+`docs/rates-layer.md` does not mention them yet.
 
 ---
 
@@ -902,6 +909,13 @@ and rate environments pickle from the inputs they were built with, and every
 bound class has `__repr__`. Debug `ctest` passed: 169 pytest tests, one
 skipped because pandas is not installed, and `sjdTest`.
 
+Since Step 21, more contract terms can be read back from Python, beside the
+existing `volume`, `buy_sell`, `maturity_date()` and `settlement_date()`. All
+four options and forwards have a `strike` property. `EuropeanOption` and `AsianOption` also
+have `type`, `premium_amount`, and `premium_payment_date()`. These are binding
+properties only; the C++ library is unchanged. Simulations and validation
+reports still do not pickle.
+
 ---
 
 ### Step 20. Python front end in place of Excel
@@ -935,6 +949,12 @@ nbmake. The collar check calls Black-76 directly, and the validation
 notebook expects the interpolator's dimension code. Debug `ctest` passed:
 177 pytest tests and `sjdTest`.
 
+The strategies, the schedule-based strips in `sjd.structuring`, and the
+notebooks were reworked after Step 21; see
+[Changes after Step 21](#changes-after-step-21). The original notebooks were
+replaced by the tutorials `01_getting_started` to `11_logging_and_provenance`.
+Books can be loaded but not written.
+
 ---
 
 ### Step 21. Documentation
@@ -959,7 +979,78 @@ generated from `_core.pyi`. Doxygen writes the C++ reference from
 `include/sjd`. `generate_issue_codes.py --check` keeps the table aligned
 with the header. The linux-release job builds both. Debug `ctest` passed:
 178 pytest tests and `sjdTest`. `mkdocs build --strict` and Doxygen both
-succeeded locally.
+succeeded locally. The notebook plan, `docs/notebook-plan.md`, is excluded
+from the site like the other design notes. `docs/api/python.md` does not yet
+document `sjd.structuring` or `sjd.markets.strip`.
+
+---
+
+## Changes after Step 21
+
+Work done after Step 21 to remove limits found while writing the tutorial
+notebooks. It changes Phase 6, below.
+
+**Bank-side convention.** Every strategy prices the bank's side. `Client` is
+`PRODUCER` (the default) or `CONSUMER` on `CollarStrategy`, `SeagullStrategy`
+and `ParticipatingForwardStrategy`, and on books as `client = "producer"`.
+Against a producer the bank sells the put and buys the call. In a seagull it
+also buys the floor put. In a participating forward it sells the put on the
+full volume and buys the call on `volume * (1 - participation)`. A consumer
+reverses each side. A strip's `buy_sell` is the bank's side. `premium()` is
+the signed option value, so sold options count as negative. The sample collar
+is now a sold put and a bought call. The sample portfolio is worth 435,989.15
+(410,941.59 before), and `golden.json` was regenerated.
+
+**CEM and the convention.** For the producer collar, netting raises CEM
+capital: 77,638.63 with the legs in separate netting sets and 141,001.90
+netted (FX 15,001.90). For a consumer collar, netting lowers it, from
+72,554.97 to 56,000. The test is `test_commodity_capital_exceeds_fx`. CEM
+nets gross notionals and has no delta, so this is a reason to add SA-CCR
+(Step 22).
+
+**Markets.** Store schema 3 keys every pillar table by a *rates label*: a
+name plus an `as_of` time, with one fixed anchor per label. A trigger enforces
+the single anchor. `sjd.markets` adds:
+
+- `rates_label`, `rates_labels`, `ensure_label` and `resolve_label`;
+- the writers `save_spot`, `save_discount_pillars`, `save_forward_pillars`,
+  `save_volatility_pillars` and `save_market_pillars`;
+- `open_market` and `load_market`, which return a `LoadedMarket`. A
+  `LoadedMarket` holds the curves and environment and builds calendars,
+  pricing dates, settlement and monthly schedules. `with_roll` swaps the roll.
+- `build_market`, which builds a market in memory, with `also=` for FX crosses;
+- the catalogue kinds `lease_rate`, `gofo_rate` and `cross` (forwards) and
+  `flat` and `moneyness` (volatility), plus `load_catalogue(path, base=)`,
+  which merges a catalogue onto another one.
+
+`sjd.markets.strip` builds markets from quotes: USD deposits and discount
+curves, GOFO to lease rates, and delta smiles from risk reversals and
+butterflies. It needs QuantLib through the `rates` extra, which CI installs.
+
+**Structuring.** `sjd.structuring` builds strategies across a schedule.
+`Schedule.monthly` and `Schedule.from_tenors` make the schedule, and
+`step_ladder` makes stepped strikes or volumes. `ForwardStrip`, `CollarStrip`,
+`SeagullStrip` and `ParticipatingForwardStrip` each have `build` and
+`from_moneyness` and take a `client`. A `StructureStrip` returns its
+contracts, a portfolio, the PV, per-period PVs, the payoff, and schedule and
+group tables. `solve_pv` finds the parameter that gives a target PV, using
+`brentq` on today's prices. `compare_structures` and `plot_structures` put
+several strips side by side. `sjd.strategy` re-exports these names, and
+`optimise.solve_pv` delegates to `structuring.solve_pv`. `reports.prices`
+gains `strike` and `put_call` columns.
+
+**Notebooks.** The tutorials `01` to `11` follow `docs/notebook-plan.md`.
+`xau_usd_rates` strips a gold market into a local store, and `xau_usd_3y`
+structures a three-year gold hedge on it.
+
+**Still open from the notebook plan.** Books cannot be written back to TOML.
+Simulations and validation reports do not pickle. DEBUG netting decisions are
+compiled out of Release builds. Strips have no capital: `StructureStrip` has
+no counterpart to `portfolio_b2cem`, and `solve_pv` prices today only, with no
+CVA, funding or capital. The only public way to pair a portfolio with
+capital for `simulate(by_netting_set=True)` is the deprecated
+`PortfolioB2CEM` shim. The strategies' `portfolio_b2cem` and the optimiser's
+`use_b2cem` use it, and `python -m sjd run` has its own private wrapper.
 
 ---
 
@@ -972,9 +1063,18 @@ counterparty credit risk (BCBS 279, now Basel Framework CRE52) alongside CEM,
 both today and along simulated paths, and use it as the capital term in the
 strategy optimiser.
 
-**Prerequisites.** Step 14 (`CapitalModel` and supervisory tables). Steps 13
-and 15 make it fast enough to call inside the optimiser, but are not strictly
-required for a first version.
+**Prerequisites.** Step 14 (`CapitalModel` and the `AssetClass` table, which
+already lists the SA-CCR commodity sub-classes). Steps 13 and 15 make it fast
+enough to call inside the optimiser, but a first version does not need them.
+
+**What already exists.** Contracts expose almost all of the trade terms
+SA-CCR needs (see the first task), and `RatesEnvironment` slots can be read
+back. The bank-side convention fixes the sign that supervisory delta
+needs: a bought option is the bank's long position, and `Client` says which
+legs those are. `sjd.structuring` already holds each leg's period, settlement,
+volume, strike and side. The CEM result in
+[Changes after Step 21](#changes-after-step-21), where the producer collar
+costs more netted than separate, is the case this step should explain.
 
 **Method summary** — check each parameter against the CRE52 text when
 implementing:
@@ -1007,9 +1107,24 @@ implementing:
 
 **Tasks (outline)**
 
-- [ ] Expose trade descriptors from C++ to Python (instrument type, buy/sell,
-      put/call, strike, volume, maturity, settlement, last averaging date,
-      asset class) — the equivalent of `netting_sets()` for CEM.
+- [ ] Finish the trade descriptors (instrument type, buy/sell, put/call,
+      strike, volume, maturity, settlement, last averaging date, asset class),
+      the equivalent of `netting_sets()` for CEM. Most are already readable:
+      every single-instrument contract has `volume`, `buy_sell`,
+      `maturity_date()` and `settlement_date()`. Options and forwards have
+      `strike`, options have `type`, and Asian contracts have
+      `averaging_dates()`. The class gives the instrument type. Write
+      `sjd.capital.trade_descriptors(portfolio)` to collect them into one
+      table. The asset class is still missing: catalogue specs have none
+      today. Add one (for example `asset_class = "metals"`, mapped onto
+      `AssetClass`) so a loaded market labels its trades. Give
+      `StructureStrip` a `descriptors()` table built from its legs.
+- [ ] Replace the deprecated `PortfolioB2CEM` route with a public pairing of a
+      `Portfolio` and a `CapitalModel` that `simulate(by_netting_set=True)`
+      accepts. The strategies' `portfolio_b2cem`, the optimiser's `use_b2cem`
+      and the private wrapper in `python -m sjd run` should all use it, and
+      `StructureStrip` should get the same method. SA-CCR then plugs in as a
+      second model without another shim.
 - [ ] Write a pure-Python reference implementation, `sjd.capital.saccr`, that
       takes a `Simulation` run with `by_trade=True` plus the trade descriptors
       and returns RC, PFE, multiplier and EAD shaped `[paths, exposure dates]`,
@@ -1018,16 +1133,24 @@ implementing:
       volatility.
 - [ ] Test against the worked examples in the BCBS 279 annex (there is a
       commodity example) and against hand calculations for a single forward,
-      a single option, and a collar.
-- [ ] Add `capital_model="cem" | "saccr"` to `stats.structure_costs` and the
-      optimiser, with SA-CCR as the default once tested. Keep CEM available for
-      comparison, as the README already promises.
+      a single option, and a collar, each for both a producer and a consumer.
+- [ ] Add `capital_model="cem" | "saccr"` to `stats.structure_costs`,
+      `minimise_strategy` and the collar optimiser, replacing `use_b2cem`, with
+      SA-CCR as the default once tested. Keep CEM available for comparison, as
+      the README already promises. Let `structuring.solve_pv` target a cost
+      that includes capital as well as today's PV, so a strip can be solved
+      to a margin after capital.
 - [ ] If the Python version is too slow inside the optimiser, port it to C++ as
       a second `CapitalModel` implementation and keep the Python version as the
       test oracle.
-- [ ] Add a notebook comparing CEM and SA-CCR for outright, collar and seagull
-      strategies, showing why delta-aware capital changes the optimiser's
-      choice.
+- [ ] Add a tutorial notebook in the `NN_topic` series comparing CEM and
+      SA-CCR for forward, collar and seagull strips, for producer and consumer
+      clients. Show that the producer collar's capital falls under SA-CCR
+      where CEM raised it, and how that changes the optimiser's choice.
+      Register it in `docs/notebook-plan.md` and the notebooks README.
+- [ ] Extend `docs/cem.md` with the SA-CCR methodology (the plan for that page
+      in Step 21), and add `sjd.capital.saccr`, `sjd.structuring` and
+      `sjd.markets.strip` to `docs/api/python.md`.
 
 ---
 
@@ -1045,7 +1168,11 @@ implementing:
   these against the MAR50 text when implementing.
 - Optional: the leverage-ratio exposure measure, which also uses SA-CCR.
 - Feed total capital (counterparty plus CVA) into the KVA term of
-  `structure_costs`.
+  `structure_costs`, and through it into `minimise_strategy` and the strip
+  solver from Step 22.
+- Put the counterparty risk weight and capital ratio somewhere a book or a
+  market can carry them. Today they come from `RegCapCreditParameters` built
+  in code.
 - Document the methodology and its limits (single asset class, one netting set
   per portfolio, no SA-CVA, no IMM).
 
@@ -1056,4 +1183,8 @@ implementing:
 Once SA-CCR has been in use for a while, decide whether to keep CEM as a
 comparison model, freeze it, or remove it. If it stays, keep its golden tests;
 if it goes, remove `CemNettingSet` and its decomposition logic (about 2,000
-lines including tests) in one commit.
+lines including tests) in one commit. Removing it also removes the deprecated
+`PortfolioB2CEM` shim, the `portfolio_b2cem` methods, `by_structure`, and
+`client`-dependent CEM tests such as `test_commodity_capital_exceeds_fx`.
+Sample books, the golden capital numbers and the CEM notebook material would
+then need to move to SA-CCR.

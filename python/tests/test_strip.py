@@ -1,5 +1,6 @@
 """Bootstrap USD deposits, gold lease rates, and delta smiles."""
 
+import importlib.util
 import unittest
 from datetime import date
 
@@ -58,16 +59,22 @@ class StripTest(unittest.TestCase):
         self.assertAlmostEqual(call - put, -0.010)
         self.assertAlmostEqual(0.5 * (put + call) - 0.140, 0.003)
 
+    @unittest.skipUnless(importlib.util.find_spec("QuantLib"), "QuantLib is not installed")
     def test_usd_deposits_match_the_notebook_pillars(self):
         curve = strip_usd_deposits(ANCHOR, DEPOSITS)
         self.assertAlmostEqual(curve.df(date(2026, 9, 25)), 0.998926, places=6)
         self.assertLess(curve.df(date(2027, 9, 16)), curve.df(date(2026, 10, 19)))
 
+    @unittest.skipUnless(importlib.util.find_spec("QuantLib"), "QuantLib is not installed")
     def test_swaps_extend_the_same_bootstrap(self):
         curve = strip_discount_curve(ANCHOR, deposits={"3M": 0.0428}, swaps={"2Y": 0.0385})
         self.assertGreater(curve.df(date(2028, 9, 18)), 0.8)
         self.assertLess(curve.df(date(2028, 9, 18)), 1.0)
 
+    @unittest.skipUnless(
+        importlib.util.find_spec("QuantLib") and importlib.util.find_spec("pandas"),
+        "QuantLib and pandas are not installed",
+    )
     def test_gofo_becomes_a_lease_and_keeps_the_forward(self):
         discount = strip_usd_deposits(ANCHOR, DEPOSITS)
         stripped = strip_gofo_to_lease(ANCHOR, 2400.0, GOFO, discount, CATALOGUE.quote_spec("XAU", "USD"))

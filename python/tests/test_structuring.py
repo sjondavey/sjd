@@ -1,5 +1,6 @@
 """Multi-period strips, the present-value solve, and comparison tables."""
 
+import importlib.util
 import unittest
 from datetime import date
 
@@ -46,6 +47,8 @@ class StructuringTest(unittest.TestCase):
         built = ForwardStrip.build(self.schedule, 2300.0, 100.0)
         self.assertEqual(len(built.contracts()), 2)
         self.assertGreater(built.pv(self.loaded), 0.0)
+        if importlib.util.find_spec("scipy") is None:
+            self.skipTest("scipy is not installed")
         solved = solve_pv(
             lambda strike: ForwardStrip.build(self.schedule, strike, 100.0),
             self.loaded,
@@ -82,6 +85,10 @@ class StructuringTest(unittest.TestCase):
         self.assertIsInstance(built.contracts()[0], sjd.AsianForward)
         self.assertNotEqual(built.pv(loaded), 0.0)
 
+    @unittest.skipUnless(
+        importlib.util.find_spec("pandas") and importlib.util.find_spec("matplotlib"),
+        "pandas and matplotlib are not installed",
+    )
     def test_comparison_returns_one_row_per_structure(self):
         structures = {
             "forward": ForwardStrip.build(self.schedule, 2400.0, 100.0),

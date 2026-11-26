@@ -133,7 +133,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y lcov
-          lcov --capture --directory build/linux-debug --output-file coverage.raw
+          # gcov reports a negative hit count inside a Boost header. That tree is
+          # removed on the next line. lcov 2 applies one ignore entry to only one
+          # of lcov and geninfo, so the category is listed twice.
+          lcov --capture --directory build/linux-debug --output-file coverage.raw --ignore-errors negative,negative
           lcov --remove coverage.raw '/usr/*' '*/vcpkg_installed/*' --output-file coverage.info
           genhtml coverage.info --output-directory coverage-html
 
@@ -149,7 +152,11 @@ jobs:
         shell: pwsh
         run: |
           choco install opencppcoverage --no-progress -y
-          & "C:\ProgramData\chocolatey\bin\OpenCppCoverage.exe" --quiet `
+          # Current Chocolatey builds install the executable and do not leave a shim here.
+          $coverage = Get-ChildItem -Path "${env:ProgramFiles}\OpenCppCoverage" -Filter OpenCppCoverage.exe -Recurse -File -ErrorAction SilentlyContinue |
+            Select-Object -First 1 -ExpandProperty FullName
+          if (-not $coverage) { throw "OpenCppCoverage.exe was not found after install" }
+          & $coverage --quiet `
             --sources "${{ github.workspace }}\src" `
             --sources "${{ github.workspace }}\include" `
             --excluded_sources ".*vcpkg_installed.*" `
@@ -181,7 +188,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: windows-2022, build: cp310-win_amd64, vcpkg_root: "C:/vcpkg", bootstrap: "C:/vcpkg/bootstrap-vcpkg.bat" }
+          # Hosted Windows images already contain C:/vcpkg, so this job clones its own copy.
+          - { os: windows-2022, build: cp310-win_amd64, vcpkg_root: "C:/sjd-vcpkg", bootstrap: "C:/sjd-vcpkg/bootstrap-vcpkg.bat" }
           - { os: ubuntu-24.04, build: cp310-manylinux_x86_64, vcpkg_root: "/tmp/vcpkg", bootstrap: "/tmp/vcpkg/bootstrap-vcpkg.sh" }
     steps:
       - uses: actions/checkout@v4
