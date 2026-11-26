@@ -20,8 +20,9 @@ class CollarStrategyTest(unittest.TestCase):
         put, call = collar.contracts()
         self.assertEqual(put.maturity_date(), self.market["collar_maturity"])
         self.assertEqual(call.settlement_date(), self.market["collar_settlement"])
-        self.assertEqual(put.buy_sell, sjd.BuySell.BUY)
-        self.assertEqual(call.buy_sell, sjd.BuySell.SELL)
+        self.assertEqual(collar.client, strategy.Client.PRODUCER)
+        self.assertEqual(put.buy_sell, sjd.BuySell.SELL)
+        self.assertEqual(call.buy_sell, sjd.BuySell.BUY)
 
     def test_portfolio_validates_and_prices(self):
         collar = strategy.sample_collar(self.market, self.forward)
@@ -37,8 +38,33 @@ class CollarStrategyTest(unittest.TestCase):
         )
         self.assertAlmostEqual(
             collar.premium(self.environment),
-            put.get_option_value(self.environment) + call.get_option_value(self.environment),
+            call.get_option_value(self.environment) - put.get_option_value(self.environment),
         )
+
+    def test_consumer_is_the_other_side_of_producer(self):
+        producer = strategy.sample_collar(self.market, self.forward)
+        consumer = strategy.sample_collar(
+            self.market, self.forward, client=strategy.Client.CONSUMER
+        )
+        producer_put, producer_call = producer.contracts()
+        consumer_put, consumer_call = consumer.contracts()
+        self.assertEqual(consumer_put.buy_sell, sjd.BuySell.BUY)
+        self.assertEqual(consumer_call.buy_sell, sjd.BuySell.SELL)
+        producer.portfolio().validate(self.environment)
+        consumer.portfolio().validate(self.environment)
+        self.assertAlmostEqual(
+            producer.portfolio().get_value(self.environment),
+            -consumer.portfolio().get_value(self.environment),
+        )
+        with self.assertRaises(ValueError):
+            strategy.CollarStrategy(
+                maturity=self.market["collar_maturity"],
+                settlement=self.market["collar_settlement"],
+                put_strike=17.0,
+                call_strike=18.0,
+                volume=1.0,
+                client="producer",
+            )
 
     def test_rejects_inverted_wings(self):
         with self.assertRaises(ValueError):
@@ -79,12 +105,20 @@ class CollarStrategyTest(unittest.TestCase):
         )
         collar = strategy.sample_collar(self.market, forward)
         self.assertEqual(len(seagull.contracts()), 3)
+        put, call, floor = seagull.contracts()
+        self.assertEqual(put.buy_sell, sjd.BuySell.SELL)
+        self.assertEqual(call.buy_sell, sjd.BuySell.BUY)
+        self.assertEqual(floor.buy_sell, sjd.BuySell.BUY)
         self.assertAlmostEqual(
             seagull.premium(environment),
-            sum(option.get_option_value(environment) for option in seagull.contracts()),
+            -put.get_option_value(environment)
+            + call.get_option_value(environment)
+            + floor.get_option_value(environment),
         )
-        # get_option_value ignores buy/sell. The sold floor put reduces the book.
-        self.assertLess(
+        # The bank is long the floor put, so the seagull is worth more than the collar.
+        seagull.portfolio().validate(environment)
+        collar.portfolio().validate(environment)
+        self.assertGreater(
             seagull.portfolio().get_value(environment),
             collar.portfolio().get_value(environment),
         )
@@ -100,6 +134,8 @@ class CollarStrategyTest(unittest.TestCase):
             0.5,
         )
         self.assertAlmostEqual(participating.call_volume(), 500.0)
+        self.assertEqual(participating.contracts()[0].buy_sell, sjd.BuySell.SELL)
+        self.assertEqual(participating.contracts()[1].buy_sell, sjd.BuySell.BUY)
         self.assertEqual(participating.contracts()[1].volume, 500.0)
         self.assertTrue(participating.portfolio().validate_report(environment).ok)
 

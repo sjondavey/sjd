@@ -6,7 +6,7 @@ from pathlib import Path
 from .specs import CATALOGUE, Catalogue
 
 SCHEMA_PATH = Path(__file__).with_name("schema.sql")
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 class SchemaVersionError(RuntimeError):
@@ -37,8 +37,7 @@ def initialize(connection: sqlite3.Connection, catalogue: Catalogue | None = Non
         if version != SCHEMA_VERSION:
             raise SchemaVersionError(
                 f"The database is schema version {version}, and this code needs "
-                f"{SCHEMA_VERSION}. Rebuild it, for example by running the "
-                "sample_database notebook."
+                f"{SCHEMA_VERSION}. Rebuild it from an empty database."
             )
     connection.executescript(schema_sql())
     connection.executemany(

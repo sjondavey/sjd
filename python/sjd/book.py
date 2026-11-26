@@ -19,6 +19,7 @@ else:
 
 import sjd
 from sjd.strategy import (
+    Client,
     CollarStrategy,
     ParticipatingForwardStrategy,
     SeagullStrategy,
@@ -54,18 +55,18 @@ _TRADE_FIELDS = {
     "collar": {
         "kind", "schedule", "maturity", "settlement", "put_strike", "put_moneyness",
         "call_strike", "call_moneyness", "volume", "premium_payment_date", "put_premium",
-        "call_premium",
+        "call_premium", "client",
     },
     "strip": {"kind", "settlements", "strikes", "strike", "strike_moneyness", "volume", "buy_sell"},
     "seagull": {
         "kind", "schedule", "maturity", "settlement", "floor_strike", "floor_moneyness",
         "put_strike", "put_moneyness", "call_strike", "call_moneyness", "volume",
-        "premium_payment_date", "floor_premium", "put_premium", "call_premium",
+        "premium_payment_date", "floor_premium", "put_premium", "call_premium", "client",
     },
     "participating_forward": {
         "kind", "schedule", "maturity", "settlement", "put_strike", "put_moneyness",
         "call_strike", "call_moneyness", "participation", "volume", "premium_payment_date",
-        "put_premium", "call_premium",
+        "put_premium", "call_premium", "client",
     },
 }
 
@@ -113,7 +114,13 @@ def load_book(path, market=None) -> Book:
 
 
 def parse_book(text, market=None) -> Book:
-    """Read a TOML book from ``text``."""
+    """Read a TOML book from ``text``.
+
+    ``market`` is the sample market dict or a ``LoadedMarket``. A loaded market
+    supplies the forward, the discount curve, and the anchor. Named schedules
+    still need the sample market's date keys.
+    """
+    market = _market_view(market)
     try:
         data = tomllib.loads(text)
     except tomllib.TOMLDecodeError as error:
@@ -186,6 +193,7 @@ def _collar(entry, where, volume, market) -> CollarStrategy:
     maturity = _date(_need(entry, "maturity", where, market), f"{where}.maturity", market)
     settlement = _date(_need(entry, "settlement", where, market), f"{where}.settlement", market)
     forward = _forward(market, settlement, where)
+    client = _client(entry, where)
     try:
         return CollarStrategy(
             maturity=maturity,
@@ -196,6 +204,7 @@ def _collar(entry, where, volume, market) -> CollarStrategy:
             premium_payment_date=_optional_date(entry, "premium_payment_date", where),
             put_premium=float(entry.get("put_premium", 0.0)),
             call_premium=float(entry.get("call_premium", 0.0)),
+            client=client,
         )
     except ValueError as error:
         raise BookError(f"{where}: {error}") from error
@@ -232,6 +241,7 @@ def _seagull(entry, where, volume, market) -> SeagullStrategy:
     maturity = _date(_need(entry, "maturity", where, market), f"{where}.maturity", market)
     settlement = _date(_need(entry, "settlement", where, market), f"{where}.settlement", market)
     forward = _forward(market, settlement, where)
+    client = _client(entry, where)
     try:
         return SeagullStrategy(
             maturity=maturity,
@@ -244,6 +254,7 @@ def _seagull(entry, where, volume, market) -> SeagullStrategy:
             floor_premium=float(entry.get("floor_premium", 0.0)),
             put_premium=float(entry.get("put_premium", 0.0)),
             call_premium=float(entry.get("call_premium", 0.0)),
+            client=client,
         )
     except ValueError as error:
         raise BookError(f"{where}: {error}") from error
@@ -255,6 +266,7 @@ def _participating(entry, where, volume, market) -> ParticipatingForwardStrategy
     forward = _forward(market, settlement, where)
     if "participation" not in entry:
         raise BookError(f"{where}.participation is required")
+    client = _client(entry, where)
     try:
         return ParticipatingForwardStrategy(
             maturity=maturity,
@@ -266,9 +278,19 @@ def _participating(entry, where, volume, market) -> ParticipatingForwardStrategy
             premium_payment_date=_optional_date(entry, "premium_payment_date", where),
             put_premium=float(entry.get("put_premium", 0.0)),
             call_premium=float(entry.get("call_premium", 0.0)),
+            client=client,
         )
     except ValueError as error:
         raise BookError(f"{where}: {error}") from error
+
+
+def _client(entry, where) -> Client:
+    name = str(entry.get("client", "producer")).lower()
+    if name == "producer":
+        return Client.PRODUCER
+    if name == "consumer":
+        return Client.CONSUMER
+    raise BookError(f"{where}.client must be producer or consumer")
 
 
 def _european(entry, where, volume, market):
@@ -360,22 +382,40 @@ def _need(entry, field, where, market):
     return scheduled[field]
 
 
+def _market_view(market):
+    if market is None or isinstance(market, dict):
+        return market
+    from sjd.markets.rates import LoadedMarket
+
+    if isinstance(market, LoadedMarket):
+        return {
+            "forward": market.forward,
+            "discount": market.discount,
+            "anchor": market.anchor,
+            "environment": market.environment,
+        }
+    raise BookError("market must be the sample market or a loaded market")
+
+
 def _schedule(entry, where, market):
     name = entry.get("schedule")
     if name is None:
         return {}
     if market is None:
         raise BookError(f"{where}.schedule needs a market")
-    if name == "collar":
-        return {"maturity": market["collar_maturity"], "settlement": market["collar_settlement"]}
-    if name == "forward":
-        settlement = market["forward_settlement"]
-        return {"maturity": settlement, "settlement": settlement}
-    if name == "asian":
-        return {
-            "averaging_dates": list(market["averaging_dates"]),
-            "settlement": market["asian_settlement"],
-        }
+    try:
+        if name == "collar":
+            return {"maturity": market["collar_maturity"], "settlement": market["collar_settlement"]}
+        if name == "forward":
+            settlement = market["forward_settlement"]
+            return {"maturity": settlement, "settlement": settlement}
+        if name == "asian":
+            return {
+                "averaging_dates": list(market["averaging_dates"]),
+                "settlement": market["asian_settlement"],
+            }
+    except KeyError:
+        raise BookError(f"{where}.schedule {name!r} is not on this market") from None
     raise BookError(f"{where}.schedule is not collar, forward, or asian")
 
 

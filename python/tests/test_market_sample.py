@@ -10,6 +10,8 @@ from sjd.markets.sample import (
     BRENT_FORWARD,
     GOFO,
     SAMPLE_ANCHOR,
+    SAMPLE_AS_OF,
+    SAMPLE_LABEL,
     USD_CONTINUOUS_RATE,
     XAU_SPOT,
     XPT_FORWARD,
@@ -40,8 +42,8 @@ class MarketSampleTest(unittest.TestCase):
         self.assertEqual(self._count("forward_pillar", "XAU", "ZAR"), 0)
         self.assertEqual(self._count("forward_pillar", "XPT", "ZAR"), 0)
         spot = self.connection.execute(
-            "SELECT value FROM spot WHERE anchor_date = ? AND market = 'XAU'",
-            (SAMPLE_ANCHOR.isoformat(),),
+            "SELECT value FROM spot WHERE label_name = ? AND as_of = ? AND market = 'XAU'",
+            (SAMPLE_LABEL, SAMPLE_AS_OF.strftime("%Y-%m-%dT%H:%M:%S")),
         ).fetchone()[0]
         self.assertEqual(spot, XAU_SPOT)
 
@@ -72,28 +74,28 @@ class MarketSampleTest(unittest.TestCase):
         return self.connection.execute(
             """
             SELECT value FROM forward_pillar
-            WHERE anchor_date = ? AND market = ? AND currency = ? AND pillar_date = ?
+            WHERE label_name = ? AND as_of = ? AND market = ? AND currency = ? AND pillar_date = ?
             """,
-            (SAMPLE_ANCHOR.isoformat(), market, currency, pillar),
+            (SAMPLE_LABEL, SAMPLE_AS_OF.strftime("%Y-%m-%dT%H:%M:%S"), market, currency, pillar),
         ).fetchone()[0]
 
     def _discount(self, currency, pillar):
         return self.connection.execute(
             """
             SELECT discount_factor FROM discount_pillar
-            WHERE anchor_date = ? AND currency = ? AND pillar_date = ?
+            WHERE label_name = ? AND as_of = ? AND currency = ? AND pillar_date = ?
             """,
-            (SAMPLE_ANCHOR.isoformat(), currency, pillar),
+            (SAMPLE_LABEL, SAMPLE_AS_OF.strftime("%Y-%m-%dT%H:%M:%S"), currency, pillar),
         ).fetchone()[0]
 
     def _volatility(self, market, currency, pillar, strike):
         return self.connection.execute(
             """
             SELECT volatility FROM volatility_pillar
-            WHERE anchor_date = ? AND market = ? AND currency = ?
+            WHERE label_name = ? AND as_of = ? AND market = ? AND currency = ?
               AND pillar_date = ? AND strike_dimension = ?
             """,
-            (SAMPLE_ANCHOR.isoformat(), market, currency, pillar, strike),
+            (SAMPLE_LABEL, SAMPLE_AS_OF.strftime("%Y-%m-%dT%H:%M:%S"), market, currency, pillar, strike),
         ).fetchone()[0]
 
     def _count(self, table, market, currency):

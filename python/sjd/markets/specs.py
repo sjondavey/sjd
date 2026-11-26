@@ -19,6 +19,8 @@ Each currency has one discount curve, shared by every quote that settles in
 that currency.
 """
 
+from __future__ import annotations
+
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -116,16 +118,43 @@ class CalendarMonthDates:
 
 @dataclass(frozen=True)
 class GofoForward:
-    """GOFO lease rates, turned into an outright before the curve is built.
+    """Gold lease rates, turned into an outright before the curve is built.
 
-    ``gofo`` is a simple Actual/360 rate from spot to the value date.
-    ``discount_usd`` is the USD discount factor from the anchor date.
+    The stored pillar is the lease rate ``L``, a simple Actual/360 rate from
+    spot to the value date. ``discount`` is the quote currency's discount
+    factor from the anchor date. ``kind = "lease_rate"`` is the same rule.
 
     outright(value) = spot
-        * discount_usd(spot) / discount_usd(value)
-        / (1 + gofo * actual360(spot, value))
+        * discount(spot) / discount(value)
+        / (1 + L * actual360(spot, value))
 
     The outrights are a point curve. ``interpolation`` runs between them.
+    """
+
+    interpolation: CurveInterpolation = CurveInterpolation.LINEAR
+    extrapolate: bool = False
+    roll: ForwardRoll = ForwardRoll.DETERMINISTIC
+
+    @property
+    def averaging(self) -> ForwardAveraging:
+        return ForwardAveraging.POINT
+
+    def __post_init__(self) -> None:
+        _require_curve_interpolation(self.interpolation)
+        _require_bool(self.extrapolate, "Forward extrapolation")
+        require_roll(self.averaging, self.roll)
+
+
+@dataclass(frozen=True)
+class GofoRateForward:
+    """GOFO quoted as the forward rate, not the lease rate.
+
+    ``gofo`` is a simple Actual/360 rate from spot to the value date.
+
+    outright(value) = spot * (1 + gofo * actual360(spot, value))
+
+    The discount curve is not part of this outright. It still discounts the
+    contract. The outrights are a point curve.
     """
 
     interpolation: CurveInterpolation = CurveInterpolation.LINEAR
@@ -192,6 +221,32 @@ class MetalTimesUsdZarForward:
 
 
 @dataclass(frozen=True)
+class CrossForward:
+    """One outright times another, sampled where either input curve has a pillar.
+
+    forward(t) = base_forward(t) * fx_forward(t)
+
+    ``t`` is the base value date. The product is built once, on the anchor
+    date, and then rolls as one curve with this quote's own surface.
+    ``kind = "metal_times_usdzar"`` is the same rule with the field names
+    ``metal_market`` and ``metal_currency``.
+    """
+
+    base_market: str
+    base_currency: str
+    fx_market: str
+    fx_currency: str
+    roll: ForwardRoll = ForwardRoll.DETERMINISTIC
+
+    @property
+    def averaging(self) -> ForwardAveraging:
+        return ForwardAveraging.POINT
+
+    def __post_init__(self) -> None:
+        require_roll(self.averaging, self.roll)
+
+
+@dataclass(frozen=True)
 class DeltaVol:
     """Stored delta surface.
 
@@ -202,6 +257,37 @@ class DeltaVol:
 
     interpolation: SurfaceInterpolation = SurfaceInterpolation.BILINEAR
     extrapolate: bool = False
+
+    def __post_init__(self) -> None:
+        _require_surface_interpolation(self.interpolation)
+        _require_bool(self.extrapolate, "Surface extrapolation")
+
+
+@dataclass(frozen=True)
+class FlatVol:
+    """One volatility per date, with no strike dimension.
+
+    A point market becomes a ``VolatilityCurve``. A calendar-month market
+    becomes a ``VolatilityCurveCMA``. Store the pillar with strike dimension 0.
+    """
+
+    extrapolate: bool = False
+
+    def __post_init__(self) -> None:
+        _require_bool(self.extrapolate, "Volatility extrapolation")
+
+
+@dataclass(frozen=True)
+class PointMoneynessVol:
+    """Stored point moneyness surface.
+
+    Rows are (strike - forward) / forward. Moneyness outside the grid reads
+    the wing. ``extrapolate`` defaults to True, matching
+    ``VolatilitySurfaceMoneyness``.
+    """
+
+    interpolation: SurfaceInterpolation = SurfaceInterpolation.BILINEAR
+    extrapolate: bool = True
 
     def __post_init__(self) -> None:
         _require_surface_interpolation(self.interpolation)
@@ -238,8 +324,8 @@ class DiscountCurveSpec:
         _require_bool(self.extrapolate, "Discount extrapolation")
 
 
-ForwardRule = GofoForward | OutrightForward | MetalTimesUsdZarForward
-VolRule = DeltaVol | CalendarMonthMoneynessVol
+ForwardRule = GofoForward | GofoRateForward | OutrightForward | MetalTimesUsdZarForward | CrossForward
+VolRule = DeltaVol | FlatVol | PointMoneynessVol | CalendarMonthMoneynessVol
 DateRule = PointDates | CalendarMonthDates
 
 
@@ -257,11 +343,11 @@ class QuoteSpec:
 
     @property
     def stores_forward(self) -> bool:
-        return not isinstance(self.forward, MetalTimesUsdZarForward)
+        return cross_markets(self.forward) is None
 
     @property
     def stores_spot(self) -> bool:
-        return isinstance(self.forward, GofoForward)
+        return isinstance(self.forward, (GofoForward, GofoRateForward))
 
 
 @dataclass(frozen=True)
@@ -283,10 +369,28 @@ class MarketSpec:
 
 @dataclass(frozen=True)
 class Catalogue:
-    """Every market, and the discount curve for each settlement currency."""
+    """Every market, and the discount curve for each settlement currency.
+
+    ``source`` is the TOML this catalogue was parsed from, after any base
+    catalogue was merged in. ``load_catalogue(path, base=...)`` needs it.
+    """
 
     markets: Mapping[str, MarketSpec]
     discount_curves: Mapping[str, DiscountCurveSpec]
+    source: str = ""
+
+    def merge(self, other: Catalogue) -> Catalogue:
+        """Quotes in ``other`` replace the same market. Discount curves too."""
+        markets = dict(self.markets)
+        markets.update(other.markets)
+        discounts = dict(self.discount_curves)
+        discounts.update(other.discount_curves)
+        source = self.source
+        if other.source:
+            source = f"{source}\n{other.source}" if source else other.source
+        merged = Catalogue(markets=markets, discount_curves=discounts, source=source)
+        _check_catalogue(merged)
+        return merged
 
     def market_spec(self, market: str) -> MarketSpec:
         key = market.upper()
@@ -337,11 +441,16 @@ def require_roll(averaging: ForwardAveraging, roll: ForwardRoll, what: str = "Fo
 
 _FORWARD_KINDS = {
     "gofo": GofoForward,
+    "lease_rate": GofoForward,
+    "gofo_rate": GofoRateForward,
     "outright": OutrightForward,
     "metal_times_usdzar": MetalTimesUsdZarForward,
+    "cross": CrossForward,
 }
 _VOLATILITY_KINDS = {
     "delta": DeltaVol,
+    "flat": FlatVol,
+    "moneyness": PointMoneynessVol,
     "calendar_month_moneyness": CalendarMonthMoneynessVol,
 }
 _DATE_KINDS = {
@@ -356,21 +465,76 @@ _FORWARD_ENUMS = {
 _SECTIONS = {"calendars", "dates", "discount", "markets"}
 
 
-def load_catalogue(path: str | Path = CATALOGUE_PATH) -> Catalogue:
-    """Read a catalogue file. See ``catalogue.toml`` for the layout."""
+def load_catalogue(path: str | Path = CATALOGUE_PATH, base: Catalogue | None = None) -> Catalogue:
+    """Read a catalogue file. See ``catalogue.toml`` for the layout.
+
+    ``base`` supplies calendars, dates, discount curves, and markets that the
+    file does not repeat. Its quotes are replaced where the file names the
+    same market and currency. The base must have been parsed from TOML.
+    """
     path = Path(path)
     try:
-        return parse_catalogue(path.read_text(encoding="utf-8"))
+        text = path.read_text(encoding="utf-8")
+        inherit = None
+        if base is not None:
+            if not base.source:
+                raise CatalogueError("The base catalogue has no source text to inherit.")
+            inherit = base.source
+        return parse_catalogue(text, inherit=inherit)
     except CatalogueError as error:
         raise CatalogueError(f"{path.name}: {error}") from None
 
 
-def parse_catalogue(text: str) -> Catalogue:
-    """Read catalogue TOML. Unknown keys and unknown names are errors."""
+def parse_catalogue(text: str, inherit: str | None = None) -> Catalogue:
+    """Read catalogue TOML. Unknown keys and unknown names are errors.
+
+    ``inherit`` is an earlier catalogue's TOML. Its sections are the defaults,
+    and ``text`` replaces calendars, dates, discount curves, and quotes by name.
+    """
     try:
         data = tomllib.loads(text)
     except tomllib.TOMLDecodeError as error:
         raise CatalogueError(str(error)) from None
+    source = text
+    if inherit is not None:
+        try:
+            inherited = tomllib.loads(inherit)
+        except tomllib.TOMLDecodeError as error:
+            raise CatalogueError(str(error)) from None
+        data = _merge_toml(inherited, data)
+        source = inherit if inherit.endswith("\n") else inherit + "\n"
+        source += text
+    return _catalogue_from_data(data, source)
+
+
+def _merge_toml(base: Mapping[str, Any], overlay: Mapping[str, Any]) -> dict[str, Any]:
+    merged = dict(base)
+    for key, value in overlay.items():
+        if key == "markets" and isinstance(merged.get(key), dict) and isinstance(value, dict):
+            markets = dict(merged[key])
+            for name, table in value.items():
+                current = markets.get(name)
+                if isinstance(current, dict) and isinstance(table, dict):
+                    market = dict(current)
+                    market.update(table)
+                    if isinstance(current.get("quotes"), dict) and isinstance(table.get("quotes"), dict):
+                        quotes = dict(current["quotes"])
+                        quotes.update(table["quotes"])
+                        market["quotes"] = quotes
+                    markets[name] = market
+                else:
+                    markets[name] = table
+            merged[key] = markets
+        elif key in {"calendars", "dates", "discount"} and isinstance(merged.get(key), dict) and isinstance(value, dict):
+            section = dict(merged[key])
+            section.update(value)
+            merged[key] = section
+        else:
+            merged[key] = value
+    return merged
+
+
+def _catalogue_from_data(data: Mapping[str, Any], source: str) -> Catalogue:
     _require_known_keys(data, _SECTIONS, "The catalogue")
 
     calendars = {
@@ -419,7 +583,7 @@ def parse_catalogue(text: str) -> Catalogue:
             market=market, summary=table.get("summary", ""), quotes=quotes
         )
 
-    catalogue = Catalogue(markets=markets, discount_curves=discount_curves)
+    catalogue = Catalogue(markets=markets, discount_curves=discount_curves, source=source)
     _check_catalogue(catalogue)
     return catalogue
 
@@ -516,6 +680,24 @@ def _require_upper(name: str, where: str) -> None:
         raise CatalogueError(f"{where}.{name} must be upper case.")
 
 
+def cross_markets(forward: ForwardRule) -> tuple[str, str, str, str] | None:
+    """Base market, base currency, FX market, and FX currency of a cross forward."""
+    if isinstance(forward, MetalTimesUsdZarForward):
+        return forward.metal_market, forward.metal_currency, forward.fx_market, forward.fx_currency
+    if isinstance(forward, CrossForward):
+        return forward.base_market, forward.base_currency, forward.fx_market, forward.fx_currency
+    return None
+
+
+def _volatility_matches(averaging: ForwardAveraging, volatility: VolRule) -> bool:
+    monthly = averaging is ForwardAveraging.CALENDAR_MONTH
+    if isinstance(volatility, FlatVol):
+        return True
+    if monthly:
+        return isinstance(volatility, CalendarMonthMoneynessVol)
+    return isinstance(volatility, (DeltaVol, PointMoneynessVol))
+
+
 def _check_catalogue(catalogue: Catalogue) -> None:
     for quote in catalogue.quotes():
         where = f"markets.{quote.market}.quotes.{quote.currency}"
@@ -526,17 +708,19 @@ def _check_catalogue(catalogue: Catalogue) -> None:
                 f"{where} averages by {forward.averaging.name} "
                 f"but its dates are {type(quote.dates).__name__}."
             )
-        if monthly != isinstance(quote.volatility, CalendarMonthMoneynessVol):
+        if not _volatility_matches(forward.averaging, quote.volatility):
             raise CatalogueError(
                 f"{where} averages by {forward.averaging.name} "
                 f"but its surface is {type(quote.volatility).__name__}."
             )
-        if not isinstance(forward, MetalTimesUsdZarForward):
+        crossed = cross_markets(forward)
+        if crossed is None:
             continue
+        base_market, base_currency, fx_market, fx_currency = crossed
         try:
             inputs = [
-                catalogue.quote_spec(forward.metal_market, forward.metal_currency),
-                catalogue.quote_spec(forward.fx_market, forward.fx_currency),
+                catalogue.quote_spec(base_market, base_currency),
+                catalogue.quote_spec(fx_market, fx_currency),
             ]
         except QuoteNotAvailable as error:
             raise CatalogueError(f"{where} crosses a missing quote. {error.args[0]}") from None

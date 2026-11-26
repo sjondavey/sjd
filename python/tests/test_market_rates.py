@@ -1,23 +1,30 @@
 """Rate functions turn the dummy pillars into a RatesEnvironment."""
 
 import sqlite3
+import tempfile
 import unittest
-from datetime import date
+from datetime import date, datetime
+from pathlib import Path
 
 import numpy as np
 
 import sjd
 from sjd.markets.rates import (
+    build_market,
     business_days_after,
     calendar,
+    load_market,
     month_settlement,
+    open_market,
     option_expiry,
     pricing_dates,
     rates_environment,
+    save_market_pillars,
     spot_date,
 )
 from sjd.markets.sample import (
     SAMPLE_ANCHOR,
+    SAMPLE_QUOTES,
     USD_CONTINUOUS_RATE,
     USDZAR_FORWARD,
     XAU_SPOT,
@@ -28,6 +35,7 @@ from sjd.markets.sample import (
 )
 from sjd.markets.schema import initialize
 from sjd.markets.specs import (
+    CATALOGUE,
     MARKETS,
     CalendarSpec,
     ForwardAveraging,
@@ -36,7 +44,7 @@ from sjd.markets.specs import (
     parse_catalogue,
     quote_spec,
 )
-from sjd.markets.store import discount_pillars
+from sjd.markets.store import RatesLabelError, discount_pillars, forward_pillars, volatility_grid
 
 VALUE = date(2026, 12, 16)
 GOFO_DEC = 0.008
@@ -97,6 +105,28 @@ class MarketRatesTest(unittest.TestCase):
         expected = outright * discount_factor(USD_CONTINUOUS_RATE, VALUE)
         self.assertAlmostEqual(self._forward_value(environment, VALUE), expected)
 
+    def test_load_market_returns_the_curves_it_prices_with(self):
+        loaded = load_market("XAU", SAMPLE_ANCHOR, "USD", self.connection)
+        self.assertEqual(loaded.spec.market, "XAU")
+        self.assertEqual(loaded.spec.currency, "USD")
+        self.assertEqual(loaded.anchor, SAMPLE_ANCHOR)
+        settles = date(2026, 9, 18)
+        year_fraction = (VALUE - settles).days / 360.0
+        outright = (
+            XAU_SPOT
+            * loaded.discount.get_discount_factor(settles)
+            / loaded.discount.get_discount_factor(VALUE)
+            / (1.0 + GOFO_DEC * year_fraction)
+        )
+        self.assertAlmostEqual(loaded.forward.get_forward(VALUE), outright)
+        day = date(2027, 1, 15)
+        discounted = loaded.forward.get_forward(day) * loaded.discount.get_discount_factor(day)
+        self.assertAlmostEqual(self._forward_value(loaded.environment, day), discounted)
+        again = rates_environment("XAU", SAMPLE_ANCHOR, "USD", self.connection)
+        self.assertAlmostEqual(
+            self._forward_value(again, day), self._forward_value(loaded.environment, day)
+        )
+
     def test_xau_zar_forward_is_the_usd_outright_times_usdzar(self):
         usd = self._rates("XAU", "USD")
         zar = self._rates("XAU", "ZAR")
@@ -133,6 +163,8 @@ class MarketRatesTest(unittest.TestCase):
     def test_every_quote_runs_a_monte_carlo_with_a_stochastic_roll(self):
         for market in MARKETS.values():
             for quote in market.quotes.values():
+                if (quote.market, quote.currency) not in SAMPLE_QUOTES:
+                    continue
                 monthly = quote.forward.averaging is ForwardAveraging.CALENDAR_MONTH
                 settlement = date(2027, 2, 16) if monthly else date(2027, 3, 16)
                 rolls = [ForwardRoll.FORWARD_VOLATILITY]
@@ -172,22 +204,36 @@ class MarketRatesTest(unittest.TestCase):
         connection = sqlite3.connect(":memory:")
         self.addCleanup(connection.close)
         initialize(connection, catalogue)
-        anchor = SAMPLE_ANCHOR.isoformat()
-        connection.executemany(
-            "INSERT INTO forward_pillar VALUES (?, 'XAG', 'USD', ?, ?)",
-            [(anchor, day.isoformat(), value) for day, value in SILVER_FORWARD],
+        connection.execute("PRAGMA foreign_keys = ON")
+        connection.execute(
+            "INSERT INTO rates_label (name, as_of, anchor_date) VALUES ('silver', '2026-09-16T00:00:00', ?)",
+            (SAMPLE_ANCHOR.isoformat(),),
         )
         connection.executemany(
-            "INSERT INTO discount_pillar VALUES (?, 'USD', ?, ?)",
+            """
+            INSERT INTO forward_pillar (label_name, as_of, market, currency, pillar_date, value)
+            VALUES ('silver', '2026-09-16T00:00:00', 'XAG', 'USD', ?, ?)
+            """,
+            [(day.isoformat(), value) for day, value in SILVER_FORWARD],
+        )
+        connection.executemany(
+            """
+            INSERT INTO discount_pillar (label_name, as_of, currency, pillar_date, discount_factor)
+            VALUES ('silver', '2026-09-16T00:00:00', 'USD', ?, ?)
+            """,
             [
-                (anchor, day.isoformat(), discount_factor(USD_CONTINUOUS_RATE, day))
+                (day.isoformat(), discount_factor(USD_CONTINUOUS_RATE, day))
                 for day, _value in SILVER_FORWARD
             ],
         )
         connection.executemany(
-            "INSERT INTO volatility_pillar VALUES (?, 'XAG', 'USD', ?, ?, ?)",
+            """
+            INSERT INTO volatility_pillar (
+                label_name, as_of, market, currency, pillar_date, strike_dimension, volatility
+            ) VALUES ('silver', '2026-09-16T00:00:00', 'XAG', 'USD', ?, ?, ?)
+            """,
             [
-                (anchor, day.isoformat(), delta, 0.25)
+                (day.isoformat(), delta, 0.25)
                 for day, _value in SILVER_FORWARD
                 for delta in (10.0, 50.0, 90.0)
             ],
@@ -204,6 +250,149 @@ class MarketRatesTest(unittest.TestCase):
         self.assertTrue(report.ok, [issue.message for issue in report.issues])
         with self.assertRaises(QuoteNotAvailable):
             rates_environment("XAG", SAMPLE_ANCHOR, "USD", self.connection)
+
+    def test_saving_and_opening_round_trips_a_quote(self):
+        anchor = SAMPLE_ANCHOR
+        dates, strikes, grid = volatility_grid(self.connection, anchor, "XPT", "USD")
+        volatility = [
+            (day, strike, grid[strike_index][date_index])
+            for date_index, day in enumerate(dates)
+            for strike_index, strike in enumerate(strikes)
+        ]
+        with tempfile.TemporaryDirectory() as folder:
+            saved = Path(folder) / "pillars.db"
+            save_market_pillars(
+                saved,
+                label="close",
+                as_of=datetime(2026, 9, 16, 16, 0),
+                anchor=anchor,
+                market="XPT",
+                currency="USD",
+                discount=discount_pillars(self.connection, anchor, "USD"),
+                forward=forward_pillars(self.connection, anchor, "XPT", "USD"),
+                volatility=volatility,
+            )
+            opened = open_market(saved, "XPT", "USD", label="close")
+        original = self._forward_value(self._rates("XPT", "USD"), VALUE)
+        self.assertAlmostEqual(self._forward_value(opened.environment, VALUE), original)
+        self.assertEqual(opened.spot_date(), spot_date(quote_spec("XPT", "USD"), anchor))
+        self.assertEqual(opened.label.name, "close")
+
+    def test_a_label_opens_the_newest_instance_and_keeps_one_anchor(self):
+        anchor = SAMPLE_ANCHOR
+        dates, strikes, grid = volatility_grid(self.connection, anchor, "XPT", "USD")
+        volatility = [
+            (day, strike, grid[strike_index][date_index])
+            for date_index, day in enumerate(dates)
+            for strike_index, strike in enumerate(strikes)
+        ]
+        discount = discount_pillars(self.connection, anchor, "USD")
+        forward = forward_pillars(self.connection, anchor, "XPT", "USD")
+        later = [(day, value + 1.0) for day, value in forward]
+        with tempfile.TemporaryDirectory() as folder:
+            saved = Path(folder) / "pillars.db"
+            save_market_pillars(
+                saved,
+                label="close",
+                as_of="2026-09-16T10:00:00",
+                anchor=anchor,
+                market="XPT",
+                currency="USD",
+                discount=discount,
+                forward=forward,
+                volatility=volatility,
+            )
+            save_market_pillars(
+                saved,
+                label="close",
+                as_of=datetime(2026, 9, 16, 16, 0),
+                anchor=anchor,
+                market="XPT",
+                currency="USD",
+                discount=discount,
+                forward=later,
+                volatility=volatility,
+            )
+            newest = open_market(saved, "XPT", "USD", label="close")
+            earlier = open_market(saved, "XPT", "USD", label="close", as_of="2026-09-16T10:00:00")
+            with self.assertRaises(RatesLabelError):
+                save_market_pillars(
+                    saved,
+                    label="close",
+                    as_of="2026-09-16T16:00:00",
+                    anchor=date(2026, 9, 17),
+                    market="XPT",
+                    currency="USD",
+                    discount=discount,
+                    forward=forward,
+                    volatility=volatility,
+                )
+        self.assertEqual(newest.label.as_of, datetime(2026, 9, 16, 16, 0))
+        self.assertAlmostEqual(newest.forward.get_forward(VALUE), earlier.forward.get_forward(VALUE) + 1.0)
+
+    def test_a_cross_overlay_prices_like_the_shipped_zar_cross(self):
+        overlay = parse_catalogue(
+            """
+            [markets.XAU.quotes.ZAR]
+            dates = "LOCO_LONDON"
+            forward = { kind = "cross", base_market = "XAU", base_currency = "USD", fx_market = "USDZAR", fx_currency = "ZAR" }
+            volatility = { kind = "delta" }
+            """,
+            inherit=CATALOGUE.source,
+        )
+        connection = sqlite3.connect(":memory:")
+        self.addCleanup(connection.close)
+        load_sample(connection, overlay)
+        crossed = rates_environment("XAU", SAMPLE_ANCHOR, "ZAR", connection, catalogue=overlay)
+        self.assertAlmostEqual(
+            self._forward_value(crossed, VALUE),
+            self._forward_value(self._rates("XAU", "ZAR"), VALUE),
+        )
+
+    def test_gofo_rate_grows_spot_by_the_simple_rate(self):
+        catalogue = parse_catalogue(
+            """
+            [calendars.LONDON_METALS]
+            name = "UnitedKingdom.Metals"
+
+            [dates.LOCO_LONDON]
+            kind = "point"
+            calendar = "LONDON_METALS"
+            spot_lag_business_days = 2
+            expiry_before_value_business_days = 2
+
+            [discount.USD]
+            interpolation = "LINEAR"
+            extrapolate = false
+
+            [markets.XAG]
+            summary = "Silver quoted as a GOFO swap rate."
+
+            [markets.XAG.quotes.USD]
+            dates = "LOCO_LONDON"
+            forward = { kind = "gofo_rate" }
+            volatility = { kind = "flat" }
+            """
+        )
+        anchor = SAMPLE_ANCHOR
+        spot_day = spot_date(quote_spec("XAU", "USD"), anchor)
+        value = date(2026, 12, 16)
+        later = date(2027, 3, 16)
+        rate = 0.03
+        loaded = build_market(
+            "XAG",
+            anchor,
+            "USD",
+            spot=100.0,
+            discount=[(anchor, 1.0), (spot_day, 0.99), (value, 0.97), (later, 0.95)],
+            forward=[(value, rate), (later, rate)],
+            volatility=[(anchor, 0.0, 0.2), (value, 0.0, 0.2), (later, 0.0, 0.2)],
+            catalogue=catalogue,
+        )
+        tau = (value - spot_day).days / 360.0
+        self.assertAlmostEqual(loaded.forward.get_forward(value), 100.0 * (1.0 + rate * tau))
+        rolled = loaded.with_roll(ForwardRoll.FORWARD_VOLATILITY)
+        self.assertAlmostEqual(rolled.forward.get_forward(value), loaded.forward.get_forward(value))
 
     def test_an_unknown_calendar_is_refused_before_any_pillar_is_read(self):
         catalogue = parse_catalogue(SILVER_CATALOGUE.replace('"UnitedKingdom.Metals"', '"Narnia"'))

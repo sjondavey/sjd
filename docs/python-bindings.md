@@ -13,7 +13,12 @@ the environment's discount curve. `Cashflow` is the same class.
 ## FX
 
 `RatesEnvironment.set_foreign_drs` and `foreign_drs` hold the foreign
-discount curve. `set_drs` stays the domestic curve.
+discount curve. `set_drs` stays the domestic curve. `frs`, `drs`, `vrs`,
+and `fixing_rs` read the curves back. An empty slot is `None`.
+
+`EuropeanOption`, `AsianOption`, `EuropeanForward`, and `AsianForward`
+expose `strike`. The two options also expose `type`, `premium_amount`, and
+`premium_payment_date()`.
 
 `ForwardCurveFX` is spot plus the two discount curves. Pass a spot date and
 the spot is moved to the anchor by the two discount factors, or pass the spot

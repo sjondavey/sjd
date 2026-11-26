@@ -70,6 +70,35 @@ rounding = 10
         self.assertTrue(loaded.portfolio().is_margined())
         self.assertEqual(loaded.margin.get_margin_call(10_000.0), 9_000.0)
 
+    def test_client_selects_the_banks_side(self):
+        maturity = self.market["collar_maturity"].isoformat()
+        settlement = self.market["collar_settlement"].isoformat()
+
+        def collar(client_line):
+            text = f"""
+[[trades]]
+kind = "collar"
+maturity = {maturity}
+settlement = {settlement}
+put_strike = 17
+call_strike = 18
+volume = 10
+{client_line}
+"""
+            return book.parse_book(text).contracts()
+
+        producer_put, producer_call = collar('client = "producer"')
+        omitted_put, omitted_call = collar("")
+        consumer_put, consumer_call = collar('client = "consumer"')
+        self.assertEqual(producer_put.buy_sell, sjd.BuySell.SELL)
+        self.assertEqual(producer_call.buy_sell, sjd.BuySell.BUY)
+        self.assertEqual(omitted_put.buy_sell, producer_put.buy_sell)
+        self.assertEqual(omitted_call.buy_sell, producer_call.buy_sell)
+        self.assertEqual(consumer_put.buy_sell, sjd.BuySell.BUY)
+        self.assertEqual(consumer_call.buy_sell, sjd.BuySell.SELL)
+        with self.assertRaisesRegex(book.BookError, "producer or consumer"):
+            collar('client = "dealer"')
+
 
 @unittest.skipUnless(_HAVE_PANDAS, "pandas is not installed")
 class ReportTest(unittest.TestCase):
@@ -84,6 +113,8 @@ class ReportTest(unittest.TestCase):
         frame = reports.prices(loaded.contracts(), environment)
         self.assertEqual(list(frame["kind"]), ["EuropeanOption", "EuropeanOption", "EuropeanForward", "AsianForward"])
         self.assertAlmostEqual(frame["value"].sum(), portfolio.get_value(environment))
+        self.assertEqual(list(frame["put_call"][:2]), ["PUT", "CALL"])
+        self.assertTrue((frame["strike"] > 0).all())
 
         simulation = sjd.simulate(
             portfolio, environment, market["simulation_dates"], paths=4, seed=2, antithetic=False

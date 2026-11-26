@@ -72,6 +72,44 @@ class FxForwardTest(unittest.TestCase):
         self.assertIs(environment.foreign_drs(), foreign)
         self.assertAlmostEqual(environment.foreign_drs().get_discount_factor(SETTLEMENT), 0.90)
 
+    def test_environment_reads_back_every_curve(self):
+        environment = sjd.RatesEnvironment(ANCHOR)
+        self.assertIsNone(environment.frs())
+        self.assertIsNone(environment.drs())
+        self.assertIsNone(environment.vrs())
+        self.assertIsNone(environment.fixing_rs())
+        forward = sjd.ForwardCurve(ANCHOR, DATES, [100.0, 101.0, 104.0])
+        domestic = discount([1.0, 0.99, 0.95])
+        volatility = sjd.VolatilityCurve(ANCHOR, DATES, [0.1, 0.1, 0.1])
+        fixings = sjd.DailyFixingCurve([ANCHOR], [100.0])
+        environment.set_frs(forward)
+        environment.set_drs(domestic)
+        environment.set_vrs(volatility)
+        environment.set_fixing_rs(fixings)
+        self.assertIs(environment.frs(), forward)
+        self.assertIs(environment.drs(), domestic)
+        self.assertIs(environment.vrs(), volatility)
+        self.assertIs(environment.fixing_rs(), fixings)
+        self.assertAlmostEqual(environment.frs().get_forward(SETTLEMENT), 104.0)
+
+    def test_contract_terms_are_readable(self):
+        option = sjd.EuropeanOption(
+            SPOT, SETTLEMENT, 100.0, sjd.PutCall.PUT, 10.0, SETTLEMENT, 1.5, sjd.BuySell.SELL
+        )
+        self.assertEqual(option.strike, 100.0)
+        self.assertEqual(option.type, sjd.PutCall.PUT)
+        self.assertEqual(option.premium_amount, 1.5)
+        self.assertEqual(option.premium_payment_date(), SETTLEMENT)
+        forward = sjd.EuropeanForward(SETTLEMENT, 99.0, 10.0, sjd.BuySell.BUY)
+        self.assertEqual(forward.strike, 99.0)
+        asian = sjd.AsianOption(
+            [SPOT], SETTLEMENT, 80.0, sjd.PutCall.CALL, 2.0, SETTLEMENT, 0.0, sjd.BuySell.BUY
+        )
+        self.assertEqual(asian.strike, 80.0)
+        self.assertEqual(asian.type, sjd.PutCall.CALL)
+        self.assertEqual(asian.premium_amount, 0.0)
+        self.assertEqual(sjd.AsianForward([SPOT], SETTLEMENT, 81.0, 2.0, sjd.BuySell.BUY).strike, 81.0)
+
 
 class StressAndInsuranceTest(unittest.TestCase):
     def environment(self):

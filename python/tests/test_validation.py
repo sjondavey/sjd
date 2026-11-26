@@ -4,7 +4,7 @@ from datetime import date
 import numpy as np
 
 import sjd
-from sjd import examples, stats
+from sjd import examples, stats, strategy
 
 
 class ValidationReportTest(unittest.TestCase):
@@ -226,7 +226,8 @@ class PortfolioAnalysisTest(unittest.TestCase):
         )
         self.assertIs(portfolio.contracts()[0], contracts[0])
         self.assertEqual(self.book["forward"].volume, self.book["volume"])
-        self.assertEqual(self.book["call"].buy_sell, sjd.BuySell.SELL)
+        self.assertEqual(self.book["put"].buy_sell, sjd.BuySell.SELL)
+        self.assertEqual(self.book["call"].buy_sell, sjd.BuySell.BUY)
         self.assertTrue(sjd.Portfolio(contracts).validate_report().ok)
 
     def test_a_portfolio_refuses_what_is_not_a_single_instrument(self):
@@ -310,7 +311,11 @@ class PortfolioAnalysisTest(unittest.TestCase):
         margined.set_margin_balance(mtm)
         self.assertLess(margined.get_regulatory_capital(self.environment), uncollateralised)
 
-    def test_commodity_capital_exceeds_fx_and_netting_does_not_increase_it(self):
+    def test_commodity_capital_exceeds_fx(self):
+        # The sample collar faces a producer: the bank is short the put and long
+        # the call. The sold put is capped on its own. Netted with the bought
+        # call, the package is long the upside, so current-exposure capital rises.
+        # A consumer collar is the other way round.
         credit = examples.credit_parameters()
         collar = [self.book["put"], self.book["call"]]
         separate = sjd.PortfolioB2CEM(collar, sjd.reg_cap_factors("commodity"), credit, False)
@@ -326,15 +331,24 @@ class PortfolioAnalysisTest(unittest.TestCase):
             credit,
             True,
         )
-        for portfolio in (separate, netted, fx_book):
+        consumer = strategy.sample_collar(
+            self.market, self.market["forward"], client=strategy.Client.CONSUMER
+        ).contracts()
+        consumer_separate = sjd.PortfolioB2CEM(consumer, sjd.reg_cap_factors("commodity"), credit, False)
+        consumer_netted = sjd.PortfolioB2CEM(consumer, sjd.reg_cap_factors("commodity"), credit, True)
+        for portfolio in (separate, netted, fx_book, consumer_separate, consumer_netted):
             report = portfolio.validate_report(self.environment)
             self.assertTrue(report.ok, [issue.message for issue in report.issues])
         separate_capital = separate.get_regulatory_capital(self.environment)
         netted_capital = netted.get_regulatory_capital(self.environment)
         fx_capital = fx_book.get_regulatory_capital(self.environment)
         self.assertGreater(separate_capital, 0.0)
-        self.assertLessEqual(netted_capital, separate_capital)
+        self.assertGreater(netted_capital, separate_capital)
         self.assertGreater(netted_capital, fx_capital)
+        self.assertLessEqual(
+            consumer_netted.get_regulatory_capital(self.environment),
+            consumer_separate.get_regulatory_capital(self.environment),
+        )
 
     def test_stochastic_forward_exposes_spot_and_monte_carlo_detail(self):
         market = examples.sample_market(stochastic=True)

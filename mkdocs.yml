@@ -12,6 +12,7 @@ validation:
 exclude_docs: |
   documentation.md
   MODERNISATION_TODO.md
+  notebook-plan.md
   python-front-end.md
   python-bindings.md
   python-packaging.md

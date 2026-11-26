@@ -18,7 +18,12 @@ def main() -> None:
     stage = Path(sys.argv[1])
     root = Path(sys.argv[2])
     env = os.environ.copy()
-    env["PYTHONPATH"] = str(stage)
+    # The stage comes first so this build's sjd is the one that is imported.
+    # The inherited path stays. pip installs numpy and pybind11-stubgen into
+    # the build environment, and into the target environment only after this
+    # step, so dropping the inherited path makes stub generation fail.
+    inherited = env.get("PYTHONPATH")
+    env["PYTHONPATH"] = str(stage) if not inherited else str(stage) + os.pathsep + inherited
     env["SJD_NO_DEBUG_DIALOGS"] = "1"
     subprocess.run(
         [

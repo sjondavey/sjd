@@ -13,11 +13,16 @@
 #                  (optional, default DETERMINISTIC)
 #
 # Forward kinds:
-#   gofo                GOFO lease rates plus a stored spot, turned into outrights
+#   gofo                gold lease rate plus a stored spot, turned into an outright
+#   lease_rate          same as gofo
+#   gofo_rate           GOFO simple Actual/360 forward rate: spot * (1 + rate * tau)
 #   outright            pillars are the forward itself; needs averaging
 #   metal_times_usdzar  not stored; the USD metal outright times USDZAR
+#   cross               not stored; base outright times an FX outright
 # Volatility kinds:
 #   delta                     put delta in percent, 50 at the money
+#   flat                      one volatility per date, strike dimension 0
+#   moneyness                 (strike - forward) / forward on a point curve
 #   calendar_month_moneyness  (strike - forward) / forward by contract month
 # Date kinds: point, calendar_month.
 #

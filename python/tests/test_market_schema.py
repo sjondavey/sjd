@@ -7,6 +7,7 @@ from sjd.markets.schema import SCHEMA_VERSION, SchemaVersionError, initialize
 from sjd.markets.specs import DISCOUNT_CURVES, MARKETS
 
 ANCHOR = "2026-09-16"
+AS_OF = "2026-09-16T00:00:00"
 PILLAR = "2026-12-16"
 
 
@@ -14,6 +15,11 @@ class MarketSchemaTest(unittest.TestCase):
     def setUp(self):
         self.connection = sqlite3.connect(":memory:")
         initialize(self.connection)
+        self.connection.execute(
+            "INSERT INTO rates_label (name, as_of, anchor_date) VALUES ('test', ?, ?)",
+            (AS_OF, ANCHOR),
+        )
+        self.connection.commit()
 
     def tearDown(self):
         self.connection.close()
@@ -51,10 +57,10 @@ class MarketSchemaTest(unittest.TestCase):
             self.connection.execute(
                 """
                 INSERT INTO volatility_pillar (
-                    anchor_date, market, currency, pillar_date, strike_dimension, volatility
-                ) VALUES (?, 'XAU', 'EUR', ?, 50.0, 0.12)
+                    label_name, as_of, market, currency, pillar_date, strike_dimension, volatility
+                ) VALUES ('test', ?, 'XAU', 'EUR', ?, 50.0, 0.12)
                 """,
-                (ANCHOR, PILLAR),
+                (AS_OF, PILLAR),
             )
 
     def test_forward_rows_follow_the_spec(self):
@@ -75,11 +81,11 @@ class MarketSchemaTest(unittest.TestCase):
                     self.connection.execute(
                         """
                         INSERT INTO volatility_pillar (
-                            anchor_date, market, currency, pillar_date,
+                            label_name, as_of, market, currency, pillar_date,
                             strike_dimension, volatility
-                        ) VALUES (?, ?, ?, ?, ?, ?)
+                        ) VALUES ('test', ?, ?, ?, ?, ?, ?)
                         """,
-                        (ANCHOR, quote.market, quote.currency, PILLAR, 50.0, 0.12),
+                        (AS_OF, quote.market, quote.currency, PILLAR, 50.0, 0.12),
                     )
 
     def test_discount_rows_follow_the_currency_curves(self):
@@ -87,19 +93,19 @@ class MarketSchemaTest(unittest.TestCase):
             self.connection.execute(
                 """
                 INSERT INTO discount_pillar (
-                    anchor_date, currency, pillar_date, discount_factor
-                ) VALUES (?, ?, ?, ?)
+                    label_name, as_of, currency, pillar_date, discount_factor
+                ) VALUES ('test', ?, ?, ?, ?)
                 """,
-                (ANCHOR, currency, PILLAR, 0.99),
+                (AS_OF, currency, PILLAR, 0.99),
             )
         with self.assertRaises(sqlite3.IntegrityError):
             self.connection.execute(
                 """
                 INSERT INTO discount_pillar (
-                    anchor_date, currency, pillar_date, discount_factor
-                ) VALUES (?, 'EUR', ?, 0.99)
+                    label_name, as_of, currency, pillar_date, discount_factor
+                ) VALUES ('test', ?, 'EUR', ?, 0.99)
                 """,
-                (ANCHOR, PILLAR),
+                (AS_OF, PILLAR),
             )
 
     def test_spot_is_only_the_gofo_quote(self):
@@ -109,21 +115,28 @@ class MarketSchemaTest(unittest.TestCase):
                     if quote.stores_spot:
                         self.connection.execute(
                             """
-                            INSERT INTO spot (anchor_date, market, currency, value)
-                            VALUES (?, ?, ?, ?)
+                            INSERT INTO spot (label_name, as_of, market, currency, value)
+                            VALUES ('test', ?, ?, ?, ?)
                             """,
-                            (ANCHOR, quote.market, quote.currency, 2300.0),
+                            (AS_OF, quote.market, quote.currency, 2300.0),
                         )
                     else:
                         with self.assertRaises(sqlite3.IntegrityError):
                             self.connection.execute(
                                 """
-                                INSERT INTO spot (anchor_date, market, currency, value)
-                                VALUES (?, ?, ?, ?)
+                                INSERT INTO spot (label_name, as_of, market, currency, value)
+                                VALUES ('test', ?, ?, ?, ?)
                                 """,
-                                (ANCHOR, quote.market, quote.currency, 2300.0),
+                                (AS_OF, quote.market, quote.currency, 2300.0),
                             )
                         self.connection.rollback()
+
+    def test_a_label_anchor_cannot_change(self):
+        with self.assertRaises(sqlite3.IntegrityError) as caught:
+            self.connection.execute(
+                "UPDATE rates_label SET anchor_date = '2026-09-17' WHERE name = 'test'"
+            )
+        self.assertIn("anchor date cannot change", str(caught.exception))
 
     def test_a_pillar_date_is_unique(self):
         self._insert_forward("XAU", "USD", 0.01)
@@ -134,10 +147,10 @@ class MarketSchemaTest(unittest.TestCase):
         self.connection.execute(
             """
             INSERT INTO forward_pillar (
-                anchor_date, market, currency, pillar_date, value
-            ) VALUES (?, ?, ?, ?, ?)
+                label_name, as_of, market, currency, pillar_date, value
+            ) VALUES ('test', ?, ?, ?, ?, ?)
             """,
-            (ANCHOR, market, currency, PILLAR, value),
+            (AS_OF, market, currency, PILLAR, value),
         )
 
 

@@ -5,6 +5,7 @@ Thumbs.db
 CMakeUserPresets.json
 # Python
 .venv/
+python/notebooks/local/
 /site/
 docs/api/bindings.md
 .ipynb_checkpoints/

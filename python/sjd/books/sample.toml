@@ -3,6 +3,7 @@ name = "sample"
 
 [[trades]]
 kind = "collar"
+client = "producer"
 schedule = "collar"
 put_moneyness = 0.97
 call_moneyness = 1.03

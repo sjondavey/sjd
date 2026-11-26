@@ -14,15 +14,18 @@ def prices(contracts, rates_environment):
     pandas = _pandas()
     rows = []
     for contract in contracts:
-        rows.append(
-            {
-                "kind": type(contract).__name__,
-                "settlement": contract.settlement_date(),
-                "volume": contract.volume,
-                "buy_sell": contract.buy_sell.name,
-                "value": contract.get_value(rates_environment),
-            }
-        )
+        row = {
+            "kind": type(contract).__name__,
+            "settlement": contract.settlement_date(),
+            "volume": contract.volume,
+            "buy_sell": contract.buy_sell.name,
+            "value": contract.get_value(rates_environment),
+        }
+        if hasattr(contract, "strike"):
+            row["strike"] = contract.strike
+        if hasattr(contract, "type"):
+            row["put_call"] = contract.type.name
+        rows.append(row)
     return pandas.DataFrame(rows)
 
 

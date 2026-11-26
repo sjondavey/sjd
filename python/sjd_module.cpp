@@ -282,17 +282,19 @@ namespace
         return out.str();
     }
 
-    py::object discount_object(const std::shared_ptr<sjd::DiscountRateSource>& source)
+    py::object discount_object(const std::shared_ptr<sjd::DiscountRateSource>& source,
+                               const char* action = "pickled")
     {
         if (!source)
             return py::none();
         std::shared_ptr<sjd::DiscountCurve> curve = std::dynamic_pointer_cast<sjd::DiscountCurve>(source);
         if (!curve)
-            throw py::type_error("only a DiscountCurve can be pickled");
+            throw py::type_error(std::string("only a DiscountCurve can be ") + action);
         return py::cast(curve);
     }
 
-    py::object volatility_object(const std::shared_ptr<sjd::VolatilityRateSource>& source)
+    py::object volatility_object(const std::shared_ptr<sjd::VolatilityRateSource>& source,
+                                 const char* action = "pickled")
     {
         if (!source)
             return py::none();
@@ -306,7 +308,25 @@ namespace
             return py::cast(surface);
         if (auto surface = std::dynamic_pointer_cast<sjd::VolatilitySurfaceMoneynessCMA>(source))
             return py::cast(surface);
-        throw py::type_error("this volatility source cannot be pickled");
+        throw py::type_error(std::string("this volatility source cannot be ") + action);
+    }
+
+    py::object forward_object(const std::shared_ptr<sjd::ForwardRateSource>& source)
+    {
+        if (!source)
+            return py::none();
+        return py::cast(source);
+    }
+
+    py::object fixing_object(const std::shared_ptr<sjd::FixingRateSource>& source)
+    {
+        if (!source)
+            return py::none();
+        std::shared_ptr<sjd::DailyFixingCurve> curve =
+            std::dynamic_pointer_cast<sjd::DailyFixingCurve>(source);
+        if (!curve)
+            throw py::type_error("only a DailyFixingCurve can be read");
+        return py::cast(curve);
     }
 
     py::tuple forward_state(const sjd::ForwardRateSource& source)
@@ -1663,13 +1683,45 @@ PYBIND11_MODULE(_core, m)
              { re.setFixingRS(curve); })
         .def("set_foreign_drs", [](sjd::RatesEnvironment& re, std::shared_ptr<sjd::DiscountCurve> curve)
              { re.setForeignDRS(curve); })
+        .def("frs",
+             [](sjd::RatesEnvironment& re)
+             {
+                 if (!re.hasFRS())
+                     return py::object(py::none());
+                 return forward_object(re.getFRS());
+             },
+             "The forward curve, or None when that slot is empty.")
+        .def("drs",
+             [](sjd::RatesEnvironment& re)
+             {
+                 if (!re.hasDRS())
+                     return py::object(py::none());
+                 return discount_object(re.getDRS(), "read");
+             },
+             "The domestic discount curve, or None when that slot is empty.")
         .def("foreign_drs",
              [](sjd::RatesEnvironment& re)
              {
                  if (!re.hasForeignDRS())
                      return py::object(py::none());
-                 return discount_object(re.getForeignDRS());
+                 return discount_object(re.getForeignDRS(), "read");
              })
+        .def("vrs",
+             [](sjd::RatesEnvironment& re)
+             {
+                 if (!re.hasVRS())
+                     return py::object(py::none());
+                 return volatility_object(re.getVRS(), "read");
+             },
+             "The volatility curve or surface, or None when that slot is empty.")
+        .def("fixing_rs",
+             [](sjd::RatesEnvironment& re)
+             {
+                 if (!re.hasFixingRS())
+                     return py::object(py::none());
+                 return fixing_object(re.getFixingRS());
+             },
+             "The fixing curve, or None when that slot is empty.")
         .def("__repr__", [](const sjd::RatesEnvironment& environment)
              { return describe("RatesEnvironment", {{"anchor", date_text(environment.getAnchorDate())}}); })
         .def(py::pickle(
@@ -1755,6 +1807,12 @@ PYBIND11_MODULE(_core, m)
              py::arg("maturity"), py::arg("settlement"), py::arg("strike"), py::arg("type"),
              py::arg("volume"), py::arg("premium_payment_date"), py::arg("premium_amount"),
              py::arg("buy_sell"))
+        .def_property_readonly("strike", [](const sjd::EuropeanOption& option) { return option.getStrike(); })
+        .def_property_readonly("type", [](const sjd::EuropeanOption& option) { return option.getType(); })
+        .def_property_readonly(
+            "premium_amount", [](const sjd::EuropeanOption& option) { return option.getPremiumAmount(); })
+        .def("premium_payment_date",
+             [](const sjd::EuropeanOption& option) { return from_ql_date(option.getPremiumPaymentDate()); })
         .def(
             "get_option_value", [](sjd::EuropeanOption& option, std::shared_ptr<sjd::RatesEnvironment> re)
             { return option.getOptionValue(re); }, py::arg("rates_environment"),
@@ -1801,6 +1859,7 @@ PYBIND11_MODULE(_core, m)
                  }),
              py::arg("settlement"), py::arg("strike"), py::arg("volume"), py::arg("buy_sell"),
              "Physically settled forward whose maturity equals settlement.")
+        .def_property_readonly("strike", [](const sjd::EuropeanForward& forward) { return forward.getStrike(); })
         .def("__repr__",
              [](const sjd::EuropeanForward& forward)
              {
@@ -1837,6 +1896,7 @@ PYBIND11_MODULE(_core, m)
              py::arg("buy_sell"), "Asian forward using caller-supplied, already-adjusted averaging dates.")
         .def("averaging_dates",
              [](const sjd::AsianForward& forward) { return py_dates(forward.getAveragingDates()); })
+        .def_property_readonly("strike", [](const sjd::AsianForward& forward) { return forward.getStrike(); })
         .def("__repr__",
              [](const sjd::AsianForward& forward)
              {
@@ -1877,6 +1937,12 @@ PYBIND11_MODULE(_core, m)
              py::arg("buy_sell"))
         .def("averaging_dates",
              [](const sjd::AsianOption& option) { return py_dates(option.getAveragingDates()); })
+        .def_property_readonly("strike", [](const sjd::AsianOption& option) { return option.getStrike(); })
+        .def_property_readonly("type", [](const sjd::AsianOption& option) { return option.getType(); })
+        .def_property_readonly(
+            "premium_amount", [](const sjd::AsianOption& option) { return option.getPremiumAmount(); })
+        .def("premium_payment_date",
+             [](const sjd::AsianOption& option) { return from_ql_date(option.getPremiumPaymentDate()); })
         .def(
             "get_option_value", [](sjd::AsianOption& option, std::shared_ptr<sjd::RatesEnvironment> re)
             { return option.getOptionValue(re); }, py::arg("rates_environment"),

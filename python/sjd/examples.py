@@ -171,7 +171,8 @@ def sample_market(stochastic=False):
 def sample_contracts(forward_curve, market):
     """Collar, outright forward, and Asian forward on ``sample_market`` dates.
 
-    The forward and the Asian are struck below the curve so the book has
+    The collar is the bank's trade with a producer: sell the put and buy the
+    call. The forward and the Asian are struck below the curve so the book has
     positive mark-to-market. That is the case where posted variation margin
     reduces Basel II current-exposure capital.
     """
@@ -187,7 +188,7 @@ def sample_contracts(forward_curve, market):
         volume=volume,
         premium_payment_date=market["collar_settlement"],
         premium_amount=0.0,
-        buy_sell=sjd.BuySell.BUY,
+        buy_sell=sjd.BuySell.SELL,
     )
     call = sjd.EuropeanOption(
         maturity=market["collar_maturity"],
@@ -197,7 +198,7 @@ def sample_contracts(forward_curve, market):
         volume=volume,
         premium_payment_date=market["collar_settlement"],
         premium_amount=0.0,
-        buy_sell=sjd.BuySell.SELL,
+        buy_sell=sjd.BuySell.BUY,
     )
     forward_strike = round(forward_curve.get_forward(market["forward_settlement"]) * 0.98, 2)
     outright = sjd.EuropeanForward(

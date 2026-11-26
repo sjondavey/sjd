@@ -157,8 +157,8 @@ def minimise_collar_put_moneyness(
 
     Each trial builds a ``CollarStrategy.from_moneyness``, values it on
     ``spots``, and scores ``structure_costs[objective]`` plus
-    ``premium_weight * net option premium`` (premium is today's value, not
-    path-averaged). When ``use_b2cem`` is true, capital uses CEM netting sets
+    ``premium_weight * net option premium`` (the bank's option value today,
+    with sold options negative, not path-averaged). When ``use_b2cem`` is true, capital uses CEM netting sets
     from a ``Portfolio`` and a ``CurrentExposureMethod`` and needs ``factors`` and ``credit``.
 
     Returns the best ``strategy``, ``costs``, ``premium``, ``score``, and the
@@ -327,3 +327,14 @@ def minimise_strategy(
         "score": score,
         "result": searched,
     }
+
+
+def solve_pv(build, market, target_pv=0.0, bracket=(0.01, 10_000.0), xtol=1e-6):
+    """Find one parameter that makes a structure worth ``target_pv``.
+
+    This is the deterministic search. ``minimise_strategy`` is the search on
+    simulated paths. See ``sjd.structuring.solve_pv``.
+    """
+    from sjd.structuring import solve_pv as _solve_pv
+
+    return _solve_pv(build, market, target_pv=target_pv, bracket=bracket, xtol=xtol)

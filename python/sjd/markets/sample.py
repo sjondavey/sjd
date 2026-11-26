@@ -1,4 +1,4 @@
-"""One anchor date of dummy pillars for tests.
+"""One rates label of dummy pillars for tests.
 
 The catalogue decides what is written. A quote whose forward is stored gets
 its forward pillars, a quote that needs a spot gets one, and every quote gets
@@ -13,12 +13,24 @@ sample can load.
 
 import math
 import sqlite3
-from datetime import date
+from datetime import date, datetime
 
 from .schema import initialize
-from .specs import CATALOGUE, CalendarMonthMoneynessVol, Catalogue, DeltaVol, QuoteSpec
+from .specs import (
+    CATALOGUE,
+    CalendarMonthMoneynessVol,
+    Catalogue,
+    DeltaVol,
+    FlatVol,
+    ForwardAveraging,
+    PointMoneynessVol,
+    QuoteSpec,
+)
+from .store import ensure_label
 
 SAMPLE_ANCHOR = date(2026, 9, 16)
+SAMPLE_LABEL = "sample"
+SAMPLE_AS_OF = datetime(2026, 9, 16)
 XAU_SPOT = 2400.0
 
 USD_CONTINUOUS_RATE = 0.04
@@ -86,7 +98,12 @@ DELTA_WING = {10.0: 0.04, 25.0: 0.015, 50.0: 0.0, 75.0: 0.015, 90.0: 0.04}
 MONEYNESS = (-0.1, 0.0, 0.1)
 MONEYNESS_WING = {-0.1: 0.03, 0.0: 0.0, 0.1: 0.03}
 
-WINGS = {DeltaVol: DELTA_WING, CalendarMonthMoneynessVol: MONEYNESS_WING}
+WINGS = {
+    DeltaVol: DELTA_WING,
+    CalendarMonthMoneynessVol: MONEYNESS_WING,
+    PointMoneynessVol: MONEYNESS_WING,
+    FlatVol: {0.0: 0.0},
+}
 
 # At-the-money volatility on the anchor date, before the tenor slope.
 ATM_VOLATILITY = {
@@ -97,6 +114,11 @@ ATM_VOLATILITY = {
     ("USDZAR", "ZAR"): 0.12,
     ("DATED_BRENT", "USD"): 0.30,
 }
+
+# Quotes the sample can build. A catalogue market that is not listed here is
+# left out of the dummy database, so adding a commodity does not require a
+# sample row until a test asks for one.
+SAMPLE_QUOTES = frozenset(ATM_VOLATILITY)
 
 
 def year_fraction(day: date, anchor: date = SAMPLE_ANCHOR) -> float:
@@ -121,18 +143,20 @@ def _volatility(quote: QuoteSpec, strike_dimension: float, day: date) -> float:
 
 
 def load_sample(connection: sqlite3.Connection, catalogue: Catalogue | None = None) -> date:
-    """Create the tables if needed and insert the dummy anchor date.
+    """Create the tables if needed and insert the sample rates label.
 
-    The connection is committed before returning.
+    The label is ``sample`` at midnight on the anchor date, so a read by that
+    date still finds it. The connection is committed before returning.
     """
     catalogue = catalogue or CATALOGUE
+    connection.execute("PRAGMA foreign_keys = ON")
     initialize(connection, catalogue)
-    anchor = SAMPLE_ANCHOR.isoformat()
-    quotes = catalogue.quotes()
-    _insert_spots(connection, anchor, quotes)
-    _insert_forwards(connection, anchor, quotes)
-    _insert_discounts(connection, anchor, catalogue)
-    _insert_volatilities(connection, anchor, quotes)
+    stored = ensure_label(connection, SAMPLE_LABEL, SAMPLE_AS_OF, SAMPLE_ANCHOR)
+    quotes = [quote for quote in catalogue.quotes() if (quote.market, quote.currency) in SAMPLE_QUOTES]
+    _insert_spots(connection, stored, quotes)
+    _insert_forwards(connection, stored, quotes)
+    _insert_discounts(connection, stored, catalogue)
+    _insert_volatilities(connection, stored, quotes)
     connection.commit()
     return SAMPLE_ANCHOR
 
@@ -147,33 +171,33 @@ def _sample(table, quote: QuoteSpec, what: str):
         ) from None
 
 
-def _insert_spots(connection: sqlite3.Connection, anchor: str, quotes: list[QuoteSpec]) -> None:
+def _insert_spots(connection: sqlite3.Connection, label, quotes: list[QuoteSpec]) -> None:
     connection.executemany(
-        "INSERT INTO spot (anchor_date, market, currency, value) VALUES (?, ?, ?, ?)",
+        "INSERT INTO spot (label_name, as_of, market, currency, value) VALUES (?, ?, ?, ?, ?)",
         [
-            (anchor, quote.market, quote.currency, _sample(SPOTS, quote, "spot"))
+            (label.name, label.as_of_text, quote.market, quote.currency, _sample(SPOTS, quote, "spot"))
             for quote in quotes
             if quote.stores_spot
         ],
     )
 
 
-def _insert_forwards(connection: sqlite3.Connection, anchor: str, quotes: list[QuoteSpec]) -> None:
+def _insert_forwards(connection: sqlite3.Connection, label, quotes: list[QuoteSpec]) -> None:
     rows = []
     for quote in quotes:
         if quote.stores_forward:
             for day, value in _sample(FORWARDS, quote, "forward pillars"):
-                rows.append((anchor, quote.market, quote.currency, day.isoformat(), value))
+                rows.append((label.name, label.as_of_text, quote.market, quote.currency, day.isoformat(), value))
     connection.executemany(
         """
-        INSERT INTO forward_pillar (anchor_date, market, currency, pillar_date, value)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO forward_pillar (label_name, as_of, market, currency, pillar_date, value)
+        VALUES (?, ?, ?, ?, ?, ?)
         """,
         rows,
     )
 
 
-def _insert_discounts(connection: sqlite3.Connection, anchor: str, catalogue: Catalogue) -> None:
+def _insert_discounts(connection: sqlite3.Connection, label, catalogue: Catalogue) -> None:
     rows = []
     for currency in catalogue.discount_curves:
         if currency not in CONTINUOUS_RATES:
@@ -182,22 +206,31 @@ def _insert_discounts(connection: sqlite3.Connection, anchor: str, catalogue: Ca
             )
         for day in POINT_DATES:
             factor = discount_factor(CONTINUOUS_RATES[currency], day)
-            rows.append((anchor, currency, day.isoformat(), factor))
+            rows.append((label.name, label.as_of_text, currency, day.isoformat(), factor))
     connection.executemany(
         """
-        INSERT INTO discount_pillar (anchor_date, currency, pillar_date, discount_factor)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO discount_pillar (label_name, as_of, currency, pillar_date, discount_factor)
+        VALUES (?, ?, ?, ?, ?)
         """,
         rows,
     )
 
 
-def _insert_volatilities(connection: sqlite3.Connection, anchor: str, quotes: list[QuoteSpec]) -> None:
+def _insert_volatilities(connection: sqlite3.Connection, label, quotes: list[QuoteSpec]) -> None:
     rows = []
     for quote in quotes:
         strikes: tuple[float, ...]
         if isinstance(quote.volatility, CalendarMonthMoneynessVol):
             dates = [day for day, _value in _sample(FORWARDS, quote, "forward pillars")]
+            strikes = MONEYNESS
+        elif isinstance(quote.volatility, FlatVol):
+            if quote.forward.averaging is ForwardAveraging.CALENDAR_MONTH:
+                dates = [day for day, _value in _sample(FORWARDS, quote, "forward pillars")]
+            else:
+                dates = list(POINT_DATES)
+            strikes = (0.0,)
+        elif isinstance(quote.volatility, PointMoneynessVol):
+            dates = list(POINT_DATES)
             strikes = MONEYNESS
         else:
             dates = list(POINT_DATES)
@@ -210,11 +243,11 @@ def _insert_volatilities(connection: sqlite3.Connection, anchor: str, quotes: li
     connection.executemany(
         """
         INSERT INTO volatility_pillar (
-            anchor_date, market, currency, pillar_date, strike_dimension, volatility
-        ) VALUES (?, ?, ?, ?, ?, ?)
+            label_name, as_of, market, currency, pillar_date, strike_dimension, volatility
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
         [
-            (anchor, market, currency, day.isoformat(), strike, vol)
+            (label.name, label.as_of_text, market, currency, day.isoformat(), strike, vol)
             for market, currency, day, strike, vol in rows
         ],
     )

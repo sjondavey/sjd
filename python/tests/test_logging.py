@@ -50,6 +50,23 @@ def test_failed_delta_solve_writes_a_warning(caplog, info_logging):
     assert "Could not convert a delta to a strike" in caplog.text
 
 
+def test_dedupe_warnings_shows_each_core_warning_once(caplog):
+    sjd.set_log_level("INFO", dedupe_warnings=True)
+    sjd.set_log_level("INFO", dedupe_warnings=True)
+    try:
+        with caplog.at_level(logging.WARNING, logger="sjd._core"):
+            core = logging.getLogger("sjd._core")
+            core.warning("flat through the first observation")
+            core.warning("flat through the first observation")
+            core.warning("Extrapolation past the last pillar")
+        assert [record.getMessage() for record in caplog.records] == [
+            "flat through the first observation",
+            "Extrapolation past the last pillar",
+        ]
+    finally:
+        sjd.set_log_level("INFO", dedupe_warnings=False)
+
+
 def test_cem_optimisation_writes_an_info_record(caplog, info_logging):
     market = examples.sample_market(stochastic=True)
     contracts = examples.sample_contracts(market["forward"], market)["contracts"]

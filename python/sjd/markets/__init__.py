@@ -1,12 +1,17 @@
 """Market conventions for building generic rates and contracts."""
 
 from .rates import (
+    LoadedMarket,
+    build_market,
     business_days_after,
     calendar,
+    load_market,
     month_settlement,
+    open_market,
     option_expiry,
     pricing_dates,
     rates_environment,
+    save_market_pillars,
     spot_date,
 )
 from .sample import SAMPLE_ANCHOR, load_sample
@@ -27,6 +32,7 @@ from .specs import (
     parse_catalogue,
     quote_spec,
 )
+from .store import PillarNotFound, RatesLabel, RatesLabelError, rates_label
 
 __all__ = [
     "CATALOGUE",
@@ -37,20 +43,29 @@ __all__ = [
     "DiscountCurveSpec",
     "ForwardAveraging",
     "ForwardRoll",
+    "LoadedMarket",
+    "PillarNotFound",
     "QuoteNotAvailable",
+    "RatesLabel",
+    "RatesLabelError",
     "SurfaceInterpolation",
     "SAMPLE_ANCHOR",
+    "build_market",
     "business_days_after",
     "calendar",
     "initialize",
     "load_catalogue",
+    "load_market",
     "load_sample",
+    "open_market",
     "market_spec",
     "month_settlement",
     "option_expiry",
     "parse_catalogue",
     "pricing_dates",
     "quote_spec",
+    "rates_label",
     "rates_environment",
+    "save_market_pillars",
     "spot_date",
 ]

@@ -3,6 +3,7 @@
 import unittest
 
 from sjd.markets.specs import (
+    CATALOGUE,
     CATALOGUE_PATH,
     MARKETS,
     CalendarMonthDates,
@@ -11,12 +12,15 @@ from sjd.markets.specs import (
     CurveInterpolation,
     DeltaVol,
     DiscountCurveSpec,
+    FlatVol,
     ForwardAveraging,
     ForwardRoll,
     GofoForward,
+    GofoRateForward,
     MetalTimesUsdZarForward,
     OutrightForward,
     PointDates,
+    PointMoneynessVol,
     QuoteNotAvailable,
     SurfaceInterpolation,
     load_catalogue,
@@ -259,6 +263,41 @@ class CatalogueTest(unittest.TestCase):
                     parse_catalogue(text)
                 self.assertIn(message, str(caught.exception))
                 self.assertIn("markets.XAG.quotes", str(caught.exception))
+
+    def test_lease_rate_gofo_rate_flat_and_moneyness_parse(self):
+        lease = parse_catalogue(one_quote('{ kind = "lease_rate" }')).quote_spec("XAG", "USD")
+        self.assertIsInstance(lease.forward, GofoForward)
+        gofo = parse_catalogue(one_quote('{ kind = "gofo_rate" }')).quote_spec("XAG", "USD")
+        self.assertIsInstance(gofo.forward, GofoRateForward)
+        self.assertTrue(gofo.stores_spot)
+        flat = parse_catalogue(
+            one_quote('{ kind = "outright", averaging = "POINT" }', '{ kind = "flat" }')
+        ).quote_spec("XAG", "USD")
+        self.assertIsInstance(flat.volatility, FlatVol)
+        moneyness = parse_catalogue(
+            one_quote('{ kind = "outright", averaging = "POINT" }', '{ kind = "moneyness" }')
+        ).quote_spec("XAG", "USD")
+        self.assertIsInstance(moneyness.volatility, PointMoneynessVol)
+        self.assertTrue(moneyness.volatility.extrapolate)
+
+    def test_an_overlay_reuses_the_shipped_calendars(self):
+        overlay = parse_catalogue(
+            """
+            [markets.XAG]
+            summary = "Loco London silver outright."
+
+            [markets.XAG.quotes.USD]
+            dates = "LOCO_LONDON"
+            forward = { kind = "outright", averaging = "POINT" }
+            volatility = { kind = "flat" }
+            """,
+            inherit=CATALOGUE.source,
+        )
+        self.assertIsInstance(overlay.quote_spec("XAG", "USD").volatility, FlatVol)
+        self.assertIsInstance(overlay.quote_spec("XAU", "USD").forward, GofoForward)
+        self.assertIn("XPT", overlay.markets)
+        merged = CATALOGUE.merge(overlay)
+        self.assertEqual(merged.quote_spec("XAG", "USD").dates.calendar.name, "UnitedKingdom.Metals")
 
 
 if __name__ == "__main__":
