@@ -133,10 +133,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y lcov
-          # gcov reports a negative hit count inside a Boost header. That tree is
-          # removed on the next line. lcov 2 applies one ignore entry to only one
-          # of lcov and geninfo, so the category is listed twice.
-          lcov --capture --directory build/linux-debug --output-file coverage.raw --ignore-errors negative,negative
+          # gcov reports a negative hit count inside a Boost header, and a mismatched
+          # end line for the pybind11 module function. The Boost tree is removed on
+          # the next line. lcov 2 applies one ignore entry to only one of lcov and
+          # geninfo, so each category is listed twice.
+          lcov --capture --directory build/linux-debug --output-file coverage.raw --ignore-errors negative,negative,mismatch,mismatch
           lcov --remove coverage.raw '/usr/*' '*/vcpkg_installed/*' --output-file coverage.info
           genhtml coverage.info --output-directory coverage-html
 

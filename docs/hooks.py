@@ -11,7 +11,7 @@ _DOCS = Path(__file__).resolve().parent
 _BINDINGS = _DOCS / "api" / "bindings.md"
 
 
-def on_pre_build(config) -> None:
+def _stage() -> Path:
     stage = os.environ.get("SJD_PYTHON_STAGE")
     if not stage:
         raise SystemExit("SJD_PYTHON_STAGE must point at build/<preset>/python")
@@ -19,8 +19,19 @@ def on_pre_build(config) -> None:
     stub = root / "sjd" / "_core.pyi"
     if not stub.is_file():
         raise SystemExit(f"no generated stub at {stub}")
-    sys.path.insert(0, str(root))
-    _BINDINGS.write_text(_binding_page(stub), encoding="utf-8")
+    return root
+
+
+def on_startup(**_kwargs: object) -> None:
+    # mkdocstrings copies sys.path while it loads, which is before on_pre_build.
+    root = str(_stage())
+    if root not in sys.path:
+        sys.path.insert(0, root)
+
+
+def on_pre_build(config) -> None:
+    root = _stage()
+    _BINDINGS.write_text(_binding_page(root / "sjd" / "_core.pyi"), encoding="utf-8")
 
 
 def _binding_page(stub: Path) -> str:
